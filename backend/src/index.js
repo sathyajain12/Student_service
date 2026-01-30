@@ -86,12 +86,15 @@ async function handleSubmission(request, env, corsHeaders) {
 
     // 3. Handle File Uploads
     const auth = await getGoogleAuth(env);
+    const fileLinks = {};
     const filePromises = [];
 
     for (const [key, value] of formData.entries()) {
         if (value instanceof File) {
             filePromises.push((async () => {
                 const fileData = await uploadToDrive(auth, value, value.name, env.GOOGLE_DRIVE_FOLDER_ID);
+                fileLinks[key] = fileData.id;
+
                 await env.DB.prepare(
                     `INSERT INTO file_attachments (application_id, file_name, drive_file_id, file_type) 
            VALUES (?, ?, ?, ?)`
@@ -100,6 +103,21 @@ async function handleSubmission(request, env, corsHeaders) {
         }
     }
     await Promise.all(filePromises);
+
+    // 4. Update form-specific table with file links if applicable
+    if (config && formId === 'duplicate-grade-card') {
+        await env.DB.prepare(
+            `UPDATE form_duplicate_grade_card SET 
+             Police_complaint_file = ?, Affidavit_file = ?, Grade_copy_file = ?, SBI_receipt_file = ?
+             WHERE application_id = ?`
+        ).bind(
+            fileLinks['policeComplaint'] || '',
+            fileLinks['affidavit'] || '',
+            fileLinks['gradeCard'] || '',
+            fileLinks['sbiReceipt'] || '',
+            appId
+        ).run();
+    }
 
     // 4. Notifications
     const directorEmail = getDirectorEmail(campus, env);
