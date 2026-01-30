@@ -1,0 +1,8 @@
+node_modules/
+.wrangler/
+dist/
+build/
+.env
+*.log
+.DS_Store
+C:/Users/sathy/.gemini/antigravity/brain/

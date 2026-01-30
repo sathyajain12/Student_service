@@ -1,0 +1,13 @@
+name = "sssihl-student-services-backend"
+main = "src/index.js"
+compatibility_date = "2024-01-01"
+
+[[d1_databases]]
+binding = "DB"
+database_name = "sssihl-student-services"
+database_id = "640c91bf-4c66-484b-afa1-9870996ad70c"
+
+[vars]
+# GOOGLE_SERVICE_ACCOUNT_EMAIL = "..."
+# GOOGLE_PRIVATE_KEY = "..."
+# GOOGLE_DRIVE_FOLDER_ID = "..."

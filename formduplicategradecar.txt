@@ -1,0 +1,398 @@
+/** =========================================== */
+/** FORM 1: DUPLICATE GRADE CARD HANDLER       */
+/** =========================================== */
+
+function submitDuplicateGradeCard(formData, files) {
+  const lock = LockService.getScriptLock();
+  
+  try {
+    lock.waitLock(CONFIG.LOCK_TIMEOUT);
+    
+    // Generate Application ID
+    const appId = generateAppId();
+    
+    // Upload files to Drive
+    const uploadedFiles = {};
+    for (const [key, fileData] of Object.entries(files)) {
+      const blob = processFileUpload(fileData.data, fileData.name, fileData.type);
+      if (blob.success === false) {
+        throw new Error('File processing failed: ' + blob.error);
+      }
+      
+      const result = uploadFileToDrive(blob, `${appId}_${fileData.name}`, 'Duplicate_Grade_Card');
+      if (result.success) {
+        uploadedFiles[key] = result;
+      } else {
+        throw new Error('File upload failed: ' + result.error);
+      }
+    }
+    
+    // Record in spreadsheet
+    recordDuplicateGradeCardSubmission(appId, formData, uploadedFiles);
+    
+    // Send notifications
+    sendDuplicateGradeCardNotifications(appId, formData, uploadedFiles);
+    
+    return {
+      success: true,
+      applicationId: appId
+    };
+    
+  } catch (error) {
+    Logger.log('Error in submitDuplicateGradeCard: ' + error.toString());
+    throw new Error('Submission failed: ' + error.message);
+  } finally {
+    lock.releaseLock();
+  }
+}
+
+function recordDuplicateGradeCardSubmission(appId, formData, files) {
+  const sheet = getSheet(CONFIG.SHEETS.DUPLICATE_GRADE_CARD);
+  
+  // Ensure headers exist
+  if (sheet.getLastRow() === 0) {
+    const headers = [
+      'Timestamp',
+      'Application ID',
+      'Email',
+      'Applicant Name',
+      'Mobile',
+      'Registration No',
+      'Campus',
+      'Programme',
+      'Period of Study',
+      'Semester',
+      'Reason for Loss',
+      'Police Complaint',
+      'Affidavit',
+      'Grade Card Copy',
+      'SBI Receipt',
+      'Director Status',
+      'Director Comments',
+      'Director Date',
+      'Controller Status',
+      'Controller Comments',
+      'Controller Date',
+      'Final Status'
+    ];
+    sheet.getRange(1, 1, 1, headers.length).setValues([headers]);
+    sheet.getRange(1, 1, 1, headers.length)
+      .setFontWeight('bold')
+      .setBackground('#1e3a8a')
+      .setFontColor('white');
+    sheet.setFrozenRows(1);
+  }
+  
+  // Prepare row data
+  const rowData = [
+    new Date(),
+    appId,
+    formData.email,
+    formData.applicantName,
+    formData.mobile,
+    formData.regNo,
+    formData.campus,
+    formData.program,
+    formData.periodOfStudy,
+    formData.semester,
+    formData.reason,
+    files.policeComplaint ? files.policeComplaint.fileUrl : '',
+    files.affidavit ? files.affidavit.fileUrl : '',
+    files.gradeCard ? files.gradeCard.fileUrl : '',
+    files.sbiReceipt ? files.sbiReceipt.fileUrl : '',
+    'Pending',
+    '',
+    '',
+    '',
+    '',
+    '',
+    'Submitted'
+  ];
+  
+  // Append to sheet
+  sheet.appendRow(rowData);
+  
+  // Format the new row
+  const lastRow = sheet.getLastRow();
+  sheet.getRange(lastRow, 16).setBackground('#fff3cd'); // Status: Pending (yellow)
+}
+
+function sendDuplicateGradeCardNotifications(appId, formData, files) {
+  const directorEmail = getDirectorEmail(formData.campus);
+  const controllerEmail = CONFIG.CONTROLLER_EMAIL;
+  
+  // Create PDF document
+  const pdfDocument = createDuplicateGradeCardPDF(appId, formData, files);
+  
+  // Send to Director
+  sendDuplicateGradeCardToDirector(appId, formData, files, directorEmail, controllerEmail, pdfDocument);
+  
+  // Send confirmation to student
+  sendDuplicateGradeCardConfirmation(appId, formData);
+}
+
+function createDuplicateGradeCardPDF(appId, formData, files) {
+  try {
+    const doc = DocumentApp.create(`APPLICATION ${appId} - Duplicate Grade Card`);
+    const body = doc.getBody();
+    
+    // Title
+    const titleTable = body.appendTable([['APPLICATION FOR DUPLICATE GRADE CARD']]);
+    const titleCell = titleTable.getCell(0, 0);
+    titleCell.setBackgroundColor('#90D5FF');
+    const titlePara = titleCell.getChild(0).asParagraph();
+    titlePara.setAlignment(DocumentApp.HorizontalAlignment.CENTER)
+      .editAsText()
+      .setBold(true)
+      .setFontSize(14);
+    
+    body.appendParagraph('').setSpacingAfter(10);
+    
+    // Application Details
+    body.appendParagraph('Application ID: ' + appId)
+      .setBold(true)
+      .setFontSize(12);
+    
+    body.appendParagraph('').setSpacingAfter(10);
+    
+    // Student Details
+    const studentDetailsHeading = body.appendTable([['Student Details']]);
+    const studentHeadCell = studentDetailsHeading.getCell(0, 0);
+    studentHeadCell.setBackgroundColor('#90D5FF');
+    studentHeadCell.getChild(0).asParagraph()
+      .editAsText()
+      .setBold(true);
+    
+    const studentDetails = [
+      ['Applicant Name & Address', formData.applicantName],
+      ['Email', formData.email],
+      ['Mobile', formData.mobile],
+      ['Registration Number', formData.regNo],
+      ['Campus', formData.campus],
+      ['Programme', formData.program],
+      ['Period of Study', formData.periodOfStudy]
+    ];
+    
+    const studentTable = body.appendTable(studentDetails);
+    for (let i = 0; i < studentDetails.length; i++) {
+      studentTable.getCell(i, 0).setBackgroundColor('#f3f4f6');
+      studentTable.getCell(i, 0).getChild(0).asParagraph().editAsText().setBold(true);
+    }
+    
+    body.appendParagraph('').setSpacingAfter(10);
+    
+    // Request Details
+    const requestHeading = body.appendTable([['Request Details']]);
+    const requestHeadCell = requestHeading.getCell(0, 0);
+    requestHeadCell.setBackgroundColor('#90D5FF');
+    requestHeadCell.getChild(0).asParagraph()
+      .editAsText()
+      .setBold(true);
+    
+    const requestDetails = [
+      ['Semester Required', formData.semester],
+      ['Reason for Loss', formData.reason]
+    ];
+    
+    const requestTable = body.appendTable(requestDetails);
+    for (let i = 0; i < requestDetails.length; i++) {
+      requestTable.getCell(i, 0).setBackgroundColor('#f3f4f6');
+      requestTable.getCell(i, 0).getChild(0).asParagraph().editAsText().setBold(true);
+    }
+    
+    body.appendParagraph('').setSpacingAfter(10);
+    
+    // Documents
+    const docsHeading = body.appendTable([['Submitted Documents']]);
+    const docsHeadCell = docsHeading.getCell(0, 0);
+    docsHeadCell.setBackgroundColor('#90D5FF');
+    docsHeadCell.getChild(0).asParagraph()
+      .editAsText()
+      .setBold(true);
+    
+    const docs = [
+      ['Police Complaint', files.policeComplaint ? '✓ Uploaded' : '✗ Not provided'],
+      ['Sworn Affidavit', files.affidavit ? '✓ Uploaded' : '✗ Not provided'],
+      ['Original Grade Card Copy', files.gradeCard ? '✓ Uploaded' : '✗ Not provided'],
+      ['SBI Receipt (₹500)', files.sbiReceipt ? '✓ Uploaded' : '✗ Not provided']
+    ];
+    
+    body.appendTable(docs);
+    
+    doc.saveAndClose();
+    
+    return DriveApp.getFileById(doc.getId()).getAs('application/pdf');
+    
+  } catch (error) {
+    Logger.log('Error creating PDF: ' + error.toString());
+    return null;
+  }
+}
+
+function sendDuplicateGradeCardToDirector(appId, formData, files, directorEmail, controllerEmail, pdfDocument) {
+  const approveMailBody = encodeURIComponent(
+    `Dear Controller,\n\nI have reviewed the Duplicate Grade Card application (${appId}).\nI hereby APPROVE this application.\n\nRegards,\nDirector`
+  );
+  
+  const rejectMailBody = encodeURIComponent(
+    `Dear Controller,\n\nI have reviewed the Duplicate Grade Card application (${appId}).\nI hereby REJECT this application.\n\nComments: (please enter your reason below)\n--------------------------------------------------\n`
+  );
+  
+  const approveMailto = `mailto:${controllerEmail}?subject=Director%20Approve%20${appId}&body=${approveMailBody}`;
+  const rejectMailto = `mailto:${controllerEmail}?subject=Director%20Reject%20${appId}&body=${rejectMailBody}`;
+  
+  const htmlBody = `
+    <div style="font-family: Arial, sans-serif; max-width: 800px; margin: 0 auto;">
+      <div style="background: #1e3a8a; color: white; padding: 20px; text-align: center;">
+        <h2>📄 Duplicate Grade Card Application Review</h2>
+      </div>
+      
+      <div style="padding: 30px; background: #f9fafb;">
+        <p style="font-size: 16px;">Dear Director,</p>
+        <p style="font-size: 14px; line-height: 1.6;">
+          A student from your campus has submitted an application for a Duplicate Grade Card 
+          that requires your review and approval.
+        </p>
+        
+        <div style="background: white; padding: 20px; border-radius: 8px; margin: 20px 0; border-left: 4px solid #1e40af;">
+          <h3 style="color: #1e3a8a; margin-bottom: 15px;">📋 Application Summary</h3>
+          <table style="width: 100%; border-collapse: collapse;">
+            <tr style="border-bottom: 1px solid #e5e7eb;">
+              <td style="padding: 8px; font-weight: bold; color: #374151;">Application ID:</td>
+              <td style="padding: 8px; color: #1f2937;">${appId}</td>
+            </tr>
+            <tr style="border-bottom: 1px solid #e5e7eb;">
+              <td style="padding: 8px; font-weight: bold; color: #374151;">Student Name:</td>
+              <td style="padding: 8px; color: #1f2937;">${formData.applicantName.split('\n')[0]}</td>
+            </tr>
+            <tr style="border-bottom: 1px solid #e5e7eb;">
+              <td style="padding: 8px; font-weight: bold; color: #374151;">Registration No:</td>
+              <td style="padding: 8px; color: #1f2937;">${formData.regNo}</td>
+            </tr>
+            <tr style="border-bottom: 1px solid #e5e7eb;">
+              <td style="padding: 8px; font-weight: bold; color: #374151;">Campus:</td>
+              <td style="padding: 8px; color: #1f2937;">${formData.campus}</td>
+            </tr>
+            <tr style="border-bottom: 1px solid #e5e7eb;">
+              <td style="padding: 8px; font-weight: bold; color: #374151;">Programme:</td>
+              <td style="padding: 8px; color: #1f2937;">${formData.program}</td>
+            </tr>
+            <tr style="border-bottom: 1px solid #e5e7eb;">
+              <td style="padding: 8px; font-weight: bold; color: #374151;">Semester:</td>
+              <td style="padding: 8px; color: #1f2937;">${formData.semester}</td>
+            </tr>
+            <tr>
+              <td style="padding: 8px; font-weight: bold; color: #374151;">Email:</td>
+              <td style="padding: 8px; color: #1f2937;">${formData.email}</td>
+            </tr>
+          </table>
+        </div>
+        
+        <div style="background: #fffbeb; padding: 15px; border-radius: 8px; border-left: 4px solid #f59e0b; margin: 20px 0;">
+          <h4 style="color: #92400e; margin-bottom: 8px;">📝 Reason for Loss</h4>
+          <p style="color: #78350f; margin: 0; line-height: 1.6;">${formData.reason}</p>
+        </div>
+        
+        <div style="text-align: center; margin: 30px 0;">
+          <p style="font-size: 16px; font-weight: bold; margin-bottom: 20px;">
+            Please review the attached documents and click your decision:
+          </p>
+          <a href="${approveMailto}" 
+             style="display: inline-block; background: #059669; color: white; padding: 15px 40px; 
+                    text-decoration: none; border-radius: 8px; margin: 0 10px; font-weight: bold;">
+            ✅ APPROVE
+          </a>
+          <a href="${rejectMailto}" 
+             style="display: inline-block; background: #dc2626; color: white; padding: 15px 40px; 
+                    text-decoration: none; border-radius: 8px; margin: 0 10px; font-weight: bold;">
+            ❌ REJECT
+          </a>
+        </div>
+        
+        <div style="background: #eff6ff; padding: 15px; border-radius: 8px; margin-top: 20px;">
+          <p style="font-size: 13px; color: #1e40af; margin: 0;">
+            📎 <strong>Attachments:</strong> Application PDF and all submitted documents are attached to this email.
+          </p>
+        </div>
+      </div>
+      
+      <div style="background: #f3f4f6; padding: 20px; text-align: center; color: #6b7280; font-size: 12px;">
+        <p>This is an automated email from Student Services Portal - SSSIHL</p>
+      </div>
+    </div>
+  `;
+  
+  // Prepare attachments
+  const attachments = [];
+  if (pdfDocument) {
+    attachments.push(pdfDocument);
+  }
+  
+  for (const [key, fileInfo] of Object.entries(files)) {
+    try {
+      const file = DriveApp.getFileById(fileInfo.fileId);
+      attachments.push(file.getBlob());
+    } catch (e) {
+      Logger.log('Could not attach file: ' + e.toString());
+    }
+  }
+  
+  sendEmail({
+    to: directorEmail,
+    subject: `Review Required: Duplicate Grade Card Application ${appId}`,
+    htmlBody: htmlBody,
+    attachments: attachments
+  });
+}
+
+function sendDuplicateGradeCardConfirmation(appId, formData) {
+  const htmlBody = `
+    <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+      <div style="background: #1e3a8a; color: white; padding: 20px; text-align: center;">
+        <h2>✅ Application Submitted Successfully</h2>
+      </div>
+      
+      <div style="padding: 30px; background: #f9fafb;">
+        <p style="font-size: 16px;">Dear ${formData.applicantName.split('\n')[0]},</p>
+        
+        <p style="font-size: 14px; line-height: 1.8;">
+          Your application for a Duplicate Grade Card has been submitted successfully 
+          and is now under review.
+        </p>
+        
+        <div style="background: white; padding: 20px; border-radius: 8px; border: 2px solid #1e40af; margin: 20px 0;">
+          <p style="font-size: 18px; font-weight: bold; color: #1e3a8a; margin: 0;">
+            Application ID: <span style="color: #1e40af;">${appId}</span>
+          </p>
+        </div>
+        
+        <div style="background: #eff6ff; padding: 15px; border-radius: 8px; margin: 20px 0;">
+          <h3 style="color: #1e3a8a; margin-bottom: 10px;">📋 What's Next?</h3>
+          <ol style="color: #374151; line-height: 1.8; padding-left: 20px;">
+            <li>Your application is now pending review by the <strong>Director</strong></li>
+            <li>Once approved by Director, it will be forwarded to the <strong>Controller</strong></li>
+            <li>You will receive email notifications at each stage</li>
+            <li>Keep your Application ID for future reference</li>
+          </ol>
+        </div>
+        
+        <div style="background: #fef3c7; padding: 15px; border-radius: 8px; margin: 20px 0;">
+          <p style="color: #92400e; margin: 0;">
+            <strong>⏱️ Note:</strong> The review process typically takes 3-5 working days.
+          </p>
+        </div>
+      </div>
+      
+      <div style="background: #f3f4f6; padding: 20px; text-align: center; color: #6b7280; font-size: 12px;">
+        <p>This is an automated email from Student Services Portal - SSSIHL</p>
+        <p>For queries, contact: controller@sssihl.edu.in</p>
+      </div>
+    </div>
+  `;
+  
+  sendEmail({
+    to: formData.email,
+    subject: `Application Submitted: ${appId} - Duplicate Grade Card`,
+    htmlBody: htmlBody
+  });
+}
