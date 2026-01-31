@@ -17,7 +17,7 @@ export default function Portal({ onSelectForm }) {
     <div className="container">
       <header style={{ textAlign: 'center', marginBottom: '60px' }}>
         <h1 className="title-gradient" style={{ fontSize: '3.5rem', marginBottom: '10px' }}>
-          Student Services Portal
+          Examination Services Portal
         </h1>
         <p style={{ color: 'var(--text-muted)', fontSize: '1.2rem' }}>
           Sri Sathya Sai Institute of Higher Learning
