@@ -1,66 +1,133 @@
 import React from 'react';
+import {
+  FileText,
+  BarChart3,
+  PenTool,
+  GraduationCap,
+  UserCircle,
+  RotateCcw,
+  Hash,
+  ScrollText,
+  Send,
+  CheckCircle2,
+  Info
+} from 'lucide-react';
 
 const FORMS = [
-  { id: 'duplicate-grade-card', title: 'Duplicate Grade Card', icon: '📄', category: 'Academic', desc: 'Apply for loss or damage of grade cards.' },
-  { id: 'cgpa-conversion', title: 'CGPA Conversion', icon: '📊', category: 'Academic', desc: 'Convert CGPA to percentage marks.' },
-  { id: 'supplementary-exam', title: 'Supplementary Exam', icon: '📝', category: 'Exam', desc: 'Register for backlog papers.' },
-  { id: 'duplicate-degree', title: 'Duplicate Degree', icon: '🎓', category: 'Degree', desc: 'Replace lost degree certificates.' },
-  { id: 'name-change', title: 'Name Change', icon: '👤', category: 'Records', desc: 'Update your official name.' },
-  { id: 'repeat-paper', title: 'Repeat Paper', icon: '🔄', category: 'Exam', desc: 'Repeat CIE and ESE papers.' },
-  { id: 'retotaling', title: 'Re-totaling', icon: '🔢', category: 'Exam', desc: 'Verify your marks total.' },
-  { id: 'on-request-degree', title: 'On-Request Degree', icon: '📜', category: 'Degree', desc: 'Early degree issuance.' },
-  { id: 'migration', title: 'Migration Certificate', icon: '🚀', category: 'Transfer', desc: 'Transfer to another university.' },
+  { id: 'duplicate-grade-card', title: 'Duplicate Grade Card', Icon: FileText, category: 'Academic', desc: 'Apply for loss or damage of grade cards.' },
+  { id: 'cgpa-conversion', title: 'CGPA Conversion', Icon: BarChart3, category: 'Academic', desc: 'Convert CGPA to percentage marks.' },
+  { id: 'supplementary-exam', title: 'Supplementary Exam', Icon: PenTool, category: 'Exam', desc: 'Register for backlog papers.' },
+  { id: 'duplicate-degree', title: 'Duplicate Degree', Icon: GraduationCap, category: 'Degree', desc: 'Replace lost degree certificates.' },
+  { id: 'name-change', title: 'Name Change', Icon: UserCircle, category: 'Records', desc: 'Update your official name.' },
+  { id: 'repeat-paper', title: 'Repeat Paper', Icon: RotateCcw, category: 'Exam', desc: 'Repeat CIE and ESE papers.' },
+  { id: 'retotaling', title: 'Re-totaling', Icon: Hash, category: 'Exam', desc: 'Verify your marks total.' },
+  { id: 'on-request-degree', title: 'On-Request Degree', Icon: ScrollText, category: 'Degree', desc: 'Early degree issuance.' },
+  { id: 'migration', title: 'Migration Certificate', Icon: Send, category: 'Transfer', desc: 'Transfer to another university.' },
 ];
 
 export default function Portal({ onSelectForm }) {
   return (
-    <div className="container">
-      <header style={{ textAlign: 'center', marginBottom: '60px' }}>
-        <h1 className="title-gradient" style={{ fontSize: '3.5rem', marginBottom: '10px' }}>
-          Examination Services Portal
+    <div className="container animate-fade-in">
+      <header style={{ textAlign: 'center', marginBottom: '80px' }}>
+        <h1 className="title-gradient" style={{ fontSize: '3.8rem', marginBottom: '15px' }}>
+          Student Service Portal
         </h1>
-        <p style={{ color: 'var(--text-muted)', fontSize: '1.2rem' }}>
+        <p style={{ color: 'var(--text-muted)', fontSize: '1.25rem', fontWeight: '500' }}>
           Sri Sathya Sai Institute of Higher Learning
         </p>
       </header>
 
-      <div className="glass-card" style={{ padding: '40px', marginBottom: '40px' }}>
-        <h2 style={{ marginBottom: '20px', color: '#60a5fa' }}>📋 Official Instructions</h2>
-        <ul style={{ listStyle: 'none', display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))', gap: '15px' }}>
-          <li>✨ Select a service from the grid below</li>
-          <li>✨ Prepare required PDF documents</li>
-          <li>✨ Keep your Application ID for tracking</li>
-          <li>✨ Monitor your email for status updates</li>
-        </ul>
+      <div className="glass-card" style={{ padding: '40px', marginBottom: '60px', position: 'relative', overflow: 'hidden' }}>
+        <div style={{ position: 'absolute', top: 0, left: 0, width: '4px', height: '100%', background: 'var(--accent-gradient)' }}></div>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '25px' }}>
+          <Info size={24} color="var(--accent-light)" />
+          <h2 style={{ fontSize: '1.6rem', color: 'var(--accent-light)' }}>Submission Guidelines</h2>
+        </div>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))', gap: '25px' }}>
+          {[
+            'Select a service from the options below',
+            'Prepare all required documents in PDF format',
+            'Save your Application ID for future reference',
+            'Notifications will be sent to your registered email'
+          ].map((text, i) => (
+            <div key={i} style={{ display: 'flex', alignItems: 'flex-start', gap: '12px' }}>
+              <CheckCircle2 size={18} color="var(--success)" style={{ marginTop: '4px', flexShrink: 0 }} />
+              <p style={{ color: '#d1d5db', fontSize: '0.95rem' }}>{text}</p>
+            </div>
+          ))}
+        </div>
       </div>
 
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))', gap: '30px' }}>
-        {FORMS.map((form) => (
-          <div
-            key={form.id}
-            className="glass-card"
-            style={{
-              padding: '30px',
-              cursor: 'pointer',
-              transition: 'transform 0.3s ease',
-              display: 'flex',
-              flexDirection: 'column'
-            }}
-            onClick={() => onSelectForm(form.id)}
-            onMouseEnter={(e) => e.currentTarget.style.transform = 'translateY(-10px)'}
-            onMouseLeave={(e) => e.currentTarget.style.transform = 'translateY(0)'}
-          >
-            <span style={{ fontSize: '3rem', marginBottom: '15px' }}>{form.icon}</span>
-            <h3 style={{ fontSize: '1.4rem', marginBottom: '10px' }}>{form.title}</h3>
-            <p style={{ color: 'var(--text-muted)', fontSize: '0.9rem', flexGrow: 1 }}>{form.desc}</p>
-            <div style={{ marginTop: '20px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-              <span style={{ fontSize: '0.8rem', background: 'rgba(59, 130, 246, 0.2)', padding: '4px 10px', borderRadius: '20px' }}>
-                {form.category}
-              </span>
-              <span style={{ color: '#60a5fa', fontWeight: 'bold' }}>Apply →</span>
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(340px, 1fr))', gap: '30px' }}>
+        {FORMS.map((form) => {
+          const Icon = form.Icon;
+          return (
+            <div
+              key={form.id}
+              className="glass-card"
+              style={{
+                padding: '35px',
+                cursor: 'pointer',
+                display: 'flex',
+                flexDirection: 'column',
+                position: 'relative',
+                border: '1px solid rgba(255, 255, 255, 0.05)'
+              }}
+              onClick={() => onSelectForm(form.id)}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.transform = 'translateY(-8px)';
+                e.currentTarget.style.borderColor = 'rgba(59, 130, 246, 0.3)';
+                e.currentTarget.style.background = 'rgba(15, 23, 42, 0.8)';
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.transform = 'translateY(0)';
+                e.currentTarget.style.borderColor = 'var(--glass-border)';
+                e.currentTarget.style.background = 'var(--glass)';
+              }}
+            >
+              <div style={{
+                width: '60px',
+                height: '60px',
+                borderRadius: '16px',
+                background: 'rgba(59, 130, 246, 0.1)',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                marginBottom: '20px',
+                color: 'var(--accent-light)'
+              }}>
+                <Icon size={32} />
+              </div>
+              <h3 style={{ fontSize: '1.45rem', marginBottom: '12px', color: 'white' }}>{form.title}</h3>
+              <p style={{ color: 'var(--text-muted)', fontSize: '0.95rem', flexGrow: 1, leading: '1.5' }}>{form.desc}</p>
+
+              <div style={{
+                marginTop: '30px',
+                display: 'flex',
+                justifyContent: 'space-between',
+                alignItems: 'center',
+                paddingTop: '20px',
+                borderTop: '1px solid rgba(255, 255, 255, 0.05)'
+              }}>
+                <span style={{
+                  fontSize: '0.75rem',
+                  fontWeight: '700',
+                  textTransform: 'uppercase',
+                  letterSpacing: '0.05em',
+                  background: 'rgba(255, 255, 255, 0.05)',
+                  color: 'var(--text-muted)',
+                  padding: '6px 12px',
+                  borderRadius: '10px'
+                }}>
+                  {form.category}
+                </span>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '6px', color: 'var(--accent-light)', fontWeight: '600', fontSize: '0.9rem' }}>
+                  Apply Now <Send size={14} />
+                </div>
+              </div>
             </div>
-          </div>
-        ))}
+          );
+        })}
       </div>
     </div >
   );

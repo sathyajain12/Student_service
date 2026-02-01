@@ -1,0 +1,14 @@
+
+ Ôøà´©Å wrangler 4.61.1
+ÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇ
+Total Upload: 18242.10 KiB / gzip: 701.48 KiB
+Worker Startup Time: 155 ms
+Your Worker has access to the following bindings:
+Binding                                                                            Resource                  
+env.DB (sssihl-student-services)                                                   D1 Database               
+env.GOOGLE_SERVICE_ACCOUNT_EMAIL ("sssihl-students-service@examination-s...")      Environment Variable      
+
+Uploaded sssihl-student-services-backend (25.63 sec)
+Deployed sssihl-student-services-backend triggers (4.93 sec)
+  https://sssihl-student-services-backend.sathyajain9.workers.dev
+Current Version ID: ceeb8b2c-492c-498e-9748-49988a0622d2
