@@ -9,6 +9,6 @@ database_name = "sssihl-student-services"
 database_id = "640c91bf-4c66-484b-afa1-9870996ad70c"
 
 [vars]
-# GOOGLE_SERVICE_ACCOUNT_EMAIL = "..."
+GOOGLE_SERVICE_ACCOUNT_EMAIL = "sssihl-students-service@examination-service.iam.gserviceaccount.com"
 # GOOGLE_PRIVATE_KEY = "..."
 # GOOGLE_DRIVE_FOLDER_ID = "..."

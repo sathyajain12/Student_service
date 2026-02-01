@@ -6,7 +6,7 @@ const COMMON_ACADEMIC_FIELDS = [
     { name: 'mobile', label: 'Mobile Number', type: 'text', required: true },
     { name: 'email', label: 'Email Address', type: 'email', required: true },
     { name: 'correspondenceAddress', label: 'Correspondence Address', type: 'textarea', required: true },
-    
+
 ];
 
 export const FORM_CONFIGS = {
@@ -28,41 +28,41 @@ export const FORM_CONFIGS = {
     'cgpa-conversion': {
         title: 'CGPA to Marks Conversion',
         fields: [...COMMON_ACADEMIC_FIELDS,
-            {
-                name: "periodOfStudy",
-                label: "Period of Study",
-                type: "daterange",
-                required: true,
-                placeholder: "Select period of study"
-            },
-            {
-                name: "monthOfPassing",
-                label: "Month and Year of Passing",
-                type: "daterange",
-                required: true,
-                placeholder: "Select month and year"
-            },
-            {
-                name: 'cgpa',
-                label: 'CGPA',
-                type: 'number',
-                required: true,
-                placeholder: 'Enter your CGPA'
-            },
-            {
-                name: 'cgpaMarksEquivalence',
-                label: 'CGPA Marks Equivalent Statement wanted for',
-                type: 'checkbox',
-                options: ['Undergraduate', 'Postgraduate', 'Professional'],
-                required: true
-            }
+        {
+            name: "periodOfStudy",
+            label: "Period of Study",
+            type: "daterange",
+            required: true,
+            placeholder: "Select period of study"
+        },
+        {
+            name: "monthOfPassing",
+            label: "Month and Year of Passing",
+            type: "daterange",
+            required: true,
+            placeholder: "Select month and year"
+        },
+        {
+            name: 'cgpa',
+            label: 'CGPA',
+            type: 'number',
+            required: true,
+            placeholder: 'Enter your CGPA'
+        },
+        {
+            name: 'cgpaMarksEquivalence',
+            label: 'CGPA Marks Equivalent Statement wanted for',
+            type: 'checkbox',
+            options: ['Undergraduate', 'Postgraduate', 'Professional'],
+            required: true
+        }
         ],
         files: [
-          
+
         ]
     },
     'supplementary-exam': {
-        title: 'Supplementary Examination',
+        title: 'Application for End-Semester Supplementary Examinations',
         fields: [
             {
                 name: "periodOfStudy",
@@ -104,33 +104,33 @@ export const FORM_CONFIGS = {
 
         ],
         files: [
-             
+
         ]
     },
     'duplicate-degree': {
-        title: 'Duplicate Degree Certificate',
+        title: 'Application for duplicate Degree Certificate',
         fields: [...COMMON_ACADEMIC_FIELDS,
-               {
-                name: "periodOfStudy",
-                label: "Period of Study",
-                type: "daterange",
-                required: true,
-                placeholder: "Select period of study"
-            },
-            {
-                name: 'yearOforiginalDegree',
-                label: 'Year of Original Degree Issue',
-                type: 'date',
-                required: true
-            },
-        
-            {
-                name: 'reason',
-                label: 'State clearly the reason for the loss of the Original Degree Certificate.',
-                type: 'textarea',
-                description: 'This must be supported by an affidavit–see Instructions',
-                required: true
-            }],
+        {
+            name: "periodOfStudy",
+            label: "Period of Study",
+            type: "daterange",
+            required: true,
+            placeholder: "Select period of study"
+        },
+        {
+            name: 'yearOforiginalDegree',
+            label: 'Year of Original Degree Issue',
+            type: 'date',
+            required: true
+        },
+
+        {
+            name: 'reason',
+            label: 'State clearly the reason for the loss of the Original Degree Certificate.',
+            type: 'textarea',
+            description: 'This must be supported by an affidavit–see Instructions',
+            required: true
+        }],
         files: [
             {
                 name: 'policeComplaint',
@@ -213,10 +213,10 @@ export const FORM_CONFIGS = {
                 required: true
             },
             {
-                name:'permanentAddress',
-                label:'Permanent Address',
-                type:'textarea',
-                required:true
+                name: 'permanentAddress',
+                label: 'Permanent Address',
+                type: 'textarea',
+                required: true
 
             },
             {
@@ -235,23 +235,23 @@ export const FORM_CONFIGS = {
         title: 'Application for repeating a paper for supplementary examinations(CIE and ESE)',
         description: 'FOR THOSE WHO HAVE EXHAUSTED SUPPLEMENTARY EXAMINATION CHANCES',
         fields: [
-             {
+            {
                 name: "periodOfStudy",
                 label: "Period of Study",
                 type: "daterange",
                 required: true,
                 placeholder: "Select period of study"
             },
-            {   
+            {
                 type: 'heading',
                 label: 'Student Details',
                 name: 'heading1'
             },
             ...COMMON_ACADEMIC_FIELDS,
             {
-               type: 'heading',
-               label: 'List of Paper(s) for which Candidate intends to repeat the paper.',
-               name: 'heading2'
+                type: 'heading',
+                label: 'List of Paper(s) for which Candidate intends to repeat the paper.',
+                name: 'heading2'
             },
             {
                 name: 'paperCodes',
@@ -276,7 +276,7 @@ export const FORM_CONFIGS = {
                 type: 'paragraph',
                 name: 'declaration',
                 content: 'I request that my name may kindly be registered for repeating the above paper(s).\n\nIf I, on medical grounds, find it difficult to repeat the paper(s), I will duly inform the Director of the Campus and the Controller of Examinations in advance, so that my candidature for the next examination may not stand forfeited.'
-            }             
+            }
         ],
         files: []
     },
@@ -284,29 +284,29 @@ export const FORM_CONFIGS = {
     'retotaling': {
         title: 'Application for Re-Totalling of Marks',
         fields: [...COMMON_ACADEMIC_FIELDS,
-            {
-                name: 'examType',
-                label: 'Examination Type',  
-                type: 'checkbox',
-                requuired: true,
-                options: ['End-Semester Examinations', 'Supplementary Examinations' ]
-            },
+        {
+            name: 'examType',
+            label: 'Examination Type',
+            type: 'checkbox',
+            requuired: true,
+            options: ['End-Semester Examinations', 'Supplementary Examinations']
+        },
 
-            {
-                name: 'periodOfStudy',
-                label: 'Period of Examination',
-                type: 'daterange',
-                required: true,
-                placeholder: 'Select period of Examination'
-            },
-        
-            {
-                name: 'subjectCode',
-                label: 'Subject Code',
-                type: 'text',
-                required: true
-            }],
-        
+        {
+            name: 'periodOfStudy',
+            label: 'Period of Examination',
+            type: 'daterange',
+            required: true,
+            placeholder: 'Select period of Examination'
+        },
+
+        {
+            name: 'subjectCode',
+            label: 'Subject Code',
+            type: 'text',
+            required: true
+        }],
+
         files: [
             {
                 name: 'gradeCard',
@@ -321,7 +321,7 @@ export const FORM_CONFIGS = {
         ]
     },
     'on-request-degree': {
-        title: 'On-Request Degree Certificate',
+        title: 'Application for On-Request Degree Certificate',
         fields: [
             {
                 type: 'heading',
@@ -333,7 +333,7 @@ export const FORM_CONFIGS = {
                 name: 'degreeAppliedFor',
                 label: 'Degree Applied For',
                 type: 'select',
-                options: ['Undergraduate Degree', 'Postgraduate Degree', 'Professional Degree','PhD'],
+                options: ['Undergraduate Degree', 'Postgraduate Degree', 'Professional Degree', 'PhD'],
                 required: true
             },
         ],
@@ -396,7 +396,7 @@ export const FORM_CONFIGS = {
                 label: 'Mobile Number',
                 type: 'text',
             }
-            ],
+        ],
         files: [{
             name: 'gradeCard',
             label: 'Consolidated Grade Card',
