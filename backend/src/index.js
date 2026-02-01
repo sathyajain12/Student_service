@@ -1,4 +1,6 @@
-import { getGoogleAuth, uploadToDrive, sendEmail } from './google-api';
+import { getGoogleAuth, sendEmail } from './google-api';
+
+const ADMIN_EMAIL = 'sathyajain9@gmail.com';
 
 export default {
     async fetch(request, env) {
@@ -8,7 +10,7 @@ export default {
         const corsHeaders = {
             'Access-Control-Allow-Origin': '*',
             'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
-            'Access-Control-Allow-Headers': 'Content-Type',
+            'Access-Control-Allow-Headers': 'Content-Type, Authorization',
         };
 
         if (request.method === 'OPTIONS') {
@@ -16,6 +18,7 @@ export default {
         }
 
         try {
+            // Public routes
             if (url.pathname === '/submit' && request.method === 'POST') {
                 return await handleSubmission(request, env, corsHeaders);
             }
@@ -26,6 +29,29 @@ export default {
 
             if (url.pathname === '/status' && request.method === 'GET') {
                 return await handleStatusRequest(url, env, corsHeaders);
+            }
+
+            // Admin routes
+            if (url.pathname === '/admin/login' && request.method === 'POST') {
+                return await handleAdminLogin(request, env, corsHeaders);
+            }
+
+            if (url.pathname === '/admin/applications' && request.method === 'GET') {
+                return await handleGetApplications(request, env, corsHeaders);
+            }
+
+            if (url.pathname.startsWith('/admin/application/') && request.method === 'GET') {
+                const id = url.pathname.split('/').pop();
+                return await handleGetApplication(id, request, env, corsHeaders);
+            }
+
+            if (url.pathname.startsWith('/admin/file/') && request.method === 'GET') {
+                const fileId = url.pathname.split('/').pop();
+                return await handleGetFile(fileId, request, env, corsHeaders);
+            }
+
+            if (url.pathname === '/admin/stats' && request.method === 'GET') {
+                return await handleGetStats(request, env, corsHeaders);
             }
 
             return new Response('Not Found', { status: 404, headers: corsHeaders });
@@ -39,20 +65,235 @@ export default {
     }
 };
 
+// ==================== ADMIN FUNCTIONS ====================
+
+async function verifyAdminToken(request, env) {
+    const authHeader = request.headers.get('Authorization');
+    if (!authHeader || !authHeader.startsWith('Bearer ')) {
+        return null;
+    }
+    const token = authHeader.substring(7);
+
+    // Simple token verification (token is username:timestamp hashed)
+    try {
+        const [username, timestamp] = atob(token).split(':');
+        const admin = await env.DB.prepare(
+            'SELECT * FROM admin_users WHERE username = ?'
+        ).bind(username).first();
+
+        // Token valid for 24 hours
+        if (admin && (Date.now() - parseInt(timestamp)) < 86400000) {
+            return admin;
+        }
+    } catch (e) {
+        return null;
+    }
+    return null;
+}
+
+async function handleAdminLogin(request, env, corsHeaders) {
+    const { username, password } = await request.json();
+
+    // Simple password hash (in production, use bcrypt or similar)
+    const encoder = new TextEncoder();
+    const data = encoder.encode(password);
+    const hashBuffer = await crypto.subtle.digest('SHA-256', data);
+    const hashArray = Array.from(new Uint8Array(hashBuffer));
+    const passwordHash = hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+
+    const admin = await env.DB.prepare(
+        'SELECT * FROM admin_users WHERE username = ? AND password_hash = ?'
+    ).bind(username, passwordHash).first();
+
+    if (!admin) {
+        return new Response(JSON.stringify({ error: 'Invalid credentials' }), {
+            status: 401,
+            headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+        });
+    }
+
+    // Create simple token
+    const token = btoa(`${username}:${Date.now()}`);
+
+    return new Response(JSON.stringify({ success: true, token, username: admin.username }), {
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+    });
+}
+
+async function handleGetApplications(request, env, corsHeaders) {
+    const admin = await verifyAdminToken(request, env);
+    if (!admin) {
+        return new Response(JSON.stringify({ error: 'Unauthorized' }), {
+            status: 401,
+            headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+        });
+    }
+
+    const applications = await env.DB.prepare(
+        `SELECT id, student_email, form_type, applicant_name, reg_no, campus, status, 
+                director_status, controller_status, created_at, updated_at 
+         FROM applications ORDER BY created_at DESC`
+    ).all();
+
+    return new Response(JSON.stringify(applications.results), {
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+    });
+}
+
+async function handleGetApplication(id, request, env, corsHeaders) {
+    const admin = await verifyAdminToken(request, env);
+    if (!admin) {
+        return new Response(JSON.stringify({ error: 'Unauthorized' }), {
+            status: 401,
+            headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+        });
+    }
+
+    const application = await env.DB.prepare(
+        'SELECT * FROM applications WHERE id = ?'
+    ).bind(id).first();
+
+    if (!application) {
+        return new Response(JSON.stringify({ error: 'Application not found' }), {
+            status: 404,
+            headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+        });
+    }
+
+    // Get associated files
+    const files = await env.DB.prepare(
+        'SELECT id, field_name, file_name, file_type, file_size, created_at FROM file_blobs WHERE application_id = ?'
+    ).bind(id).all();
+
+    return new Response(JSON.stringify({ application, files: files.results }), {
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+    });
+}
+
+async function handleGetFile(fileId, request, env, corsHeaders) {
+    const admin = await verifyAdminToken(request, env);
+    if (!admin) {
+        return new Response(JSON.stringify({ error: 'Unauthorized' }), {
+            status: 401,
+            headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+        });
+    }
+
+    const file = await env.DB.prepare(
+        'SELECT * FROM file_blobs WHERE id = ?'
+    ).bind(fileId).first();
+
+    if (!file) {
+        return new Response(JSON.stringify({ error: 'File not found' }), {
+            status: 404,
+            headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+        });
+    }
+
+    // Decode base64 and return as file
+    const binaryString = atob(file.file_data);
+    const bytes = new Uint8Array(binaryString.length);
+    for (let i = 0; i < binaryString.length; i++) {
+        bytes[i] = binaryString.charCodeAt(i);
+    }
+
+    return new Response(bytes, {
+        headers: {
+            ...corsHeaders,
+            'Content-Type': file.file_type,
+            'Content-Disposition': `attachment; filename="${file.file_name}"`
+        }
+    });
+}
+
+async function handleGetStats(request, env, corsHeaders) {
+    const admin = await verifyAdminToken(request, env);
+    if (!admin) {
+        return new Response(JSON.stringify({ error: 'Unauthorized' }), {
+            status: 401,
+            headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+        });
+    }
+
+    const total = await env.DB.prepare('SELECT COUNT(*) as count FROM applications').first();
+    const pending = await env.DB.prepare("SELECT COUNT(*) as count FROM applications WHERE status = 'PENDING'").first();
+    const approved = await env.DB.prepare("SELECT COUNT(*) as count FROM applications WHERE status = 'COMPLETED'").first();
+    const rejected = await env.DB.prepare("SELECT COUNT(*) as count FROM applications WHERE status = 'REJECTED'").first();
+
+    const byFormType = await env.DB.prepare(
+        'SELECT form_type, COUNT(*) as count FROM applications GROUP BY form_type'
+    ).all();
+
+    return new Response(JSON.stringify({
+        total: total.count,
+        pending: pending.count,
+        approved: approved.count,
+        rejected: rejected.count,
+        byFormType: byFormType.results
+    }), {
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+    });
+}
+
+// ==================== HELPER FUNCTIONS ====================
+
+async function storeFileBlob(env, appId, fieldName, file) {
+    const arrayBuffer = await file.arrayBuffer();
+    const uint8Array = new Uint8Array(arrayBuffer);
+
+    // Convert to base64 in chunks
+    let base64 = '';
+    const chunkSize = 32768;
+    for (let i = 0; i < uint8Array.length; i += chunkSize) {
+        const chunk = uint8Array.slice(i, Math.min(i + chunkSize, uint8Array.length));
+        base64 += btoa(String.fromCharCode.apply(null, chunk));
+    }
+
+    await env.DB.prepare(
+        `INSERT INTO file_blobs (application_id, field_name, file_name, file_type, file_size, file_data)
+         VALUES (?, ?, ?, ?, ?, ?)`
+    ).bind(appId, fieldName, file.name, file.type, file.size, base64).run();
+}
+
+async function sendAdminNotification(env, appId, formType, applicantName, email) {
+    if (env.GOOGLE_SERVICE_ACCOUNT_EMAIL && env.GOOGLE_PRIVATE_KEY) {
+        try {
+            const accessToken = await getGoogleAuth(env);
+            await sendEmail(accessToken, {
+                to: ADMIN_EMAIL,
+                subject: `New Application Received: ${formType} - ${appId}`,
+                htmlBody: `
+                    <h2>New Application Submitted</h2>
+                    <p><strong>Application ID:</strong> ${appId}</p>
+                    <p><strong>Form Type:</strong> ${formType}</p>
+                    <p><strong>Applicant:</strong> ${applicantName}</p>
+                    <p><strong>Email:</strong> ${email}</p>
+                    <p><strong>Submitted:</strong> ${new Date().toLocaleString()}</p>
+                    <hr>
+                    <p>Login to the admin portal to view details and download files.</p>
+                `
+            });
+        } catch (e) {
+            console.error('Failed to send admin notification:', e);
+        }
+    }
+}
+
+// ==================== FORM HANDLERS ====================
+
 async function handleSubmission(request, env, corsHeaders) {
     const formData = await request.formData();
     const formType = formData.get('formType');
 
     // Route to appropriate handler based on form type
     switch (formType) {
-        case 'Duplicate Grade Card':
+        case 'Application for duplicate Grade Card':
             return await handleDuplicateGradeCard(formData, request, env, corsHeaders);
-        case 'CGPA to Marks Conversion':
+        case 'Application for CGPA to Marks Conversion':
             return await handleCGPAConversion(formData, request, env, corsHeaders);
-        case 'Supplementary Examination':
-        case 'End sem supplementary registration': // Map user's confirmed form type
+        case 'Application for End-Semester Supplementary Examinations':
             return await handleSupplementaryExam(formData, request, env, corsHeaders);
-        case 'Duplicate Degree Certificate':
+        case 'Application for duplicate Degree Certificate':
             return await handleDuplicateDegree(formData, request, env, corsHeaders);
         case 'Application for Registration of Student Name change in the Institute Records':
             return await handleNameChange(formData, request, env, corsHeaders);
@@ -60,7 +301,7 @@ async function handleSubmission(request, env, corsHeaders) {
             return await handleRepeatPaper(formData, request, env, corsHeaders);
         case 'Application for Re-Totalling of Marks':
             return await handleRetotaling(formData, request, env, corsHeaders);
-        case 'On-Request Degree Certificate':
+        case 'Application for On-Request Degree Certificate':
             return await handleOnRequestDegree(formData, request, env, corsHeaders);
         case 'Application for Migration Certificate':
             return await handleMigration(formData, request, env, corsHeaders);
@@ -108,54 +349,15 @@ async function handleDuplicateGradeCard(formData, request, env, corsHeaders) {
         formData.get('reason') || ''
     ).run();
 
-    // 3. Handle Google integration (Files & Email)
-    if (env.GOOGLE_SERVICE_ACCOUNT_EMAIL && env.GOOGLE_PRIVATE_KEY) {
-        const auth = await getGoogleAuth(env);
-
-        // Files
-        if (env.GOOGLE_DRIVE_FOLDER_ID) {
-            const fileLinks = {};
-            for (const [key, value] of formData.entries()) {
-                if (value instanceof File) {
-                    const fileData = await uploadToDrive(auth, value, value.name, env.GOOGLE_DRIVE_FOLDER_ID);
-                    fileLinks[key] = fileData.id;
-
-                    await env.DB.prepare(
-                        `INSERT INTO file_attachments (application_id, file_name, drive_file_id, file_type)
-                         VALUES (?, ?, ?, ?)`
-                    ).bind(appId, value.name, fileData.id, value.type).run();
-                }
-            }
-
-            await env.DB.prepare(
-                `UPDATE form_duplicate_grade_card SET
-                 Police_complaint_file = ?, Affidavit_file = ?, Grade_copy_file = ?, SBI_receipt_file = ?
-                 WHERE Application_id = ?`
-            ).bind(
-                fileLinks['policeComplaint'] || '',
-                fileLinks['affidavit'] || '',
-                fileLinks['gradeCard'] || '',
-                fileLinks['sbiReceipt'] || '',
-                appId
-            ).run();
-        }
-
-        // 5. Send notification email (Selective)
-        if (shouldNotifyDirector(formType)) {
-            const directorEmail = getDirectorEmail(campus, env);
-            const url = new URL(request.url);
-            await sendEmail(auth, {
-                to: directorEmail,
-                subject: `New Application: ${formType} - ${appId}`,
-                htmlBody: `<h3>New Application Received</h3>
-                       <p><strong>App ID:</strong> ${appId}</p>
-                       <p><strong>Form:</strong> ${formType}</p>
-                       <p><strong>Student:</strong> ${applicantName} (${email})</p>
-                       <p><a href="${url.origin}/approve?id=${appId}&role=Director&action=Approve">Approve</a> |
-                          <a href="${url.origin}/approve?id=${appId}&role=Director&action=Reject">Reject</a></p>`
-            });
+    // 3. Store file blobs
+    for (const [key, value] of formData.entries()) {
+        if (value instanceof File && value.size > 0) {
+            await storeFileBlob(env, appId, key, value);
         }
     }
+
+    // 4. Send admin notification
+    await sendAdminNotification(env, appId, formType, applicantName, email);
 
     return new Response(JSON.stringify({ success: true, appId }), {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' }
@@ -172,13 +374,11 @@ async function handleCGPAConversion(formData, request, env, corsHeaders) {
 
     const appId = `APP-${Date.now()}`;
 
-    // 1. Save to main applications table
     await env.DB.prepare(
         `INSERT INTO applications (id, student_email, form_type, applicant_name, reg_no, campus)
          VALUES (?, ?, ?, ?, ?, ?)`
     ).bind(appId, email, formType, applicantName, regNo, campus).run();
 
-    // 2. Save to form-specific table
     await env.DB.prepare(
         `INSERT INTO form_cgpa_conversion
          (application_id, student_name, student_address, Mobile_Number, Registration_Number,
@@ -196,22 +396,13 @@ async function handleCGPAConversion(formData, request, env, corsHeaders) {
         parseFloat(formData.get('cgpa')) || 0.0
     ).run();
 
-    // 3. Send notification email (if Google credentials configured) (Selective)
-    if (env.GOOGLE_SERVICE_ACCOUNT_EMAIL && env.GOOGLE_PRIVATE_KEY && shouldNotifyDirector(formType)) {
-        const auth = await getGoogleAuth(env);
-        const directorEmail = getDirectorEmail(campus, env);
-        const url = new URL(request.url);
-        await sendEmail(auth, {
-            to: directorEmail,
-            subject: `New Application: ${formType} - ${appId}`,
-            htmlBody: `<h3>New Application Received</h3>
-                   <p><strong>App ID:</strong> ${appId}</p>
-                   <p><strong>Form:</strong> ${formType}</p>
-                   <p><strong>Student:</strong> ${applicantName} (${email})</p>
-                   <p><a href="${url.origin}/approve?id=${appId}&role=Director&action=Approve">Approve</a> |
-                      <a href="${url.origin}/approve?id=${appId}&role=Director&action=Reject">Reject</a></p>`
-        });
+    for (const [key, value] of formData.entries()) {
+        if (value instanceof File && value.size > 0) {
+            await storeFileBlob(env, appId, key, value);
+        }
     }
+
+    await sendAdminNotification(env, appId, formType, applicantName, email);
 
     return new Response(JSON.stringify({ success: true, appId }), {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' }
@@ -228,13 +419,11 @@ async function handleSupplementaryExam(formData, request, env, corsHeaders) {
 
     const appId = `APP-${Date.now()}`;
 
-    // 1. Save to main applications table
     await env.DB.prepare(
         `INSERT INTO applications (id, student_email, form_type, applicant_name, reg_no, campus)
          VALUES (?, ?, ?, ?, ?, ?)`
     ).bind(appId, email, formType, applicantName, regNo, campus).run();
 
-    // 2. Save to form-specific table
     await env.DB.prepare(
         `INSERT INTO form_supplementary_exam
          (application_id, student_email, Period_of_Study, student_name, Registration_Number,
@@ -255,22 +444,13 @@ async function handleSupplementaryExam(formData, request, env, corsHeaders) {
         formData.get('semester') || ''
     ).run();
 
-    // 3. Send notification email (if Google credentials configured) (Selective)
-    if (env.GOOGLE_SERVICE_ACCOUNT_EMAIL && env.GOOGLE_PRIVATE_KEY && shouldNotifyDirector(formType)) {
-        const auth = await getGoogleAuth(env);
-        const directorEmail = getDirectorEmail(campus, env);
-        const url = new URL(request.url);
-        await sendEmail(auth, {
-            to: directorEmail,
-            subject: `New Application: ${formType} - ${appId}`,
-            htmlBody: `<h3>New Application Received</h3>
-                   <p><strong>App ID:</strong> ${appId}</p>
-                   <p><strong>Form:</strong> ${formType}</p>
-                   <p><strong>Student:</strong> ${applicantName} (${email})</p>
-                   <p><a href="${url.origin}/approve?id=${appId}&role=Director&action=Approve">Approve</a> |
-                      <a href="${url.origin}/approve?id=${appId}&role=Director&action=Reject">Reject</a></p>`
-        });
+    for (const [key, value] of formData.entries()) {
+        if (value instanceof File && value.size > 0) {
+            await storeFileBlob(env, appId, key, value);
+        }
     }
+
+    await sendAdminNotification(env, appId, formType, applicantName, email);
 
     return new Response(JSON.stringify({ success: true, appId }), {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' }
@@ -287,13 +467,11 @@ async function handleRepeatPaper(formData, request, env, corsHeaders) {
 
     const appId = `APP-${Date.now()}`;
 
-    // 1. Save to main applications table
     await env.DB.prepare(
         `INSERT INTO applications (id, student_email, form_type, applicant_name, reg_no, campus)
          VALUES (?, ?, ?, ?, ?, ?)`
     ).bind(appId, email, formType, applicantName, regNo, campus).run();
 
-    // 2. Save to form-specific table
     await env.DB.prepare(
         `INSERT INTO form_repeat_paper
          (application_id, Period_of_Study, student_name, reg_no, Campus, Programme,
@@ -313,22 +491,13 @@ async function handleRepeatPaper(formData, request, env, corsHeaders) {
         formData.get('semester') || ''
     ).run();
 
-    // 3. Send notification email (if Google credentials configured) (Selective)
-    if (env.GOOGLE_SERVICE_ACCOUNT_EMAIL && env.GOOGLE_PRIVATE_KEY && shouldNotifyDirector(formType)) {
-        const auth = await getGoogleAuth(env);
-        const directorEmail = getDirectorEmail(campus, env);
-        const url = new URL(request.url);
-        await sendEmail(auth, {
-            to: directorEmail,
-            subject: `New Application: ${formType} - ${appId}`,
-            htmlBody: `<h3>New Application Received</h3>
-                   <p><strong>App ID:</strong> ${appId}</p>
-                   <p><strong>Form:</strong> ${formType}</p>
-                   <p><strong>Student:</strong> ${applicantName} (${email})</p>
-                   <p><a href="${url.origin}/approve?id=${appId}&role=Director&action=Approve">Approve</a> |
-                      <a href="${url.origin}/approve?id=${appId}&role=Director&action=Reject">Reject</a></p>`
-        });
+    for (const [key, value] of formData.entries()) {
+        if (value instanceof File && value.size > 0) {
+            await storeFileBlob(env, appId, key, value);
+        }
     }
+
+    await sendAdminNotification(env, appId, formType, applicantName, email);
 
     return new Response(JSON.stringify({ success: true, appId }), {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' }
@@ -345,13 +514,11 @@ async function handleDuplicateDegree(formData, request, env, corsHeaders) {
 
     const appId = `APP-${Date.now()}`;
 
-    // 1. Save to main applications table
     await env.DB.prepare(
         `INSERT INTO applications (id, student_email, form_type, applicant_name, reg_no, campus)
          VALUES (?, ?, ?, ?, ?, ?)`
     ).bind(appId, email, formType, applicantName, regNo, campus).run();
 
-    // 2. Save to form-specific table (without file links first)
     await env.DB.prepare(
         `INSERT INTO form_duplicate_degree
          (application_id, student_name, student_email, student_address, reg_no, Campus,
@@ -370,53 +537,13 @@ async function handleDuplicateDegree(formData, request, env, corsHeaders) {
         formData.get('reason') || ''
     ).run();
 
-    // 3. Google Integration
-    if (env.GOOGLE_SERVICE_ACCOUNT_EMAIL && env.GOOGLE_PRIVATE_KEY) {
-        const auth = await getGoogleAuth(env);
-
-        // Files
-        if (env.GOOGLE_DRIVE_FOLDER_ID) {
-            const fileLinks = {};
-            for (const [key, value] of formData.entries()) {
-                if (value instanceof File) {
-                    const fileData = await uploadToDrive(auth, value, value.name, env.GOOGLE_DRIVE_FOLDER_ID);
-                    fileLinks[key] = fileData.id;
-
-                    await env.DB.prepare(
-                        `INSERT INTO file_attachments (application_id, file_name, drive_file_id, file_type)
-                         VALUES (?, ?, ?, ?)`
-                    ).bind(appId, value.name, fileData.id, value.type).run();
-                }
-            }
-
-            await env.DB.prepare(
-                `UPDATE form_duplicate_degree SET
-                 Police_complaint_file = ?, Press_notification_file = ?, Affidavit_file = ?
-                 WHERE application_id = ?`
-            ).bind(
-                fileLinks['policeComplaint'] || '',
-                fileLinks['pressNotification'] || '',
-                fileLinks['affidavit'] || '',
-                appId
-            ).run();
-        }
-
-        // Email (Selective)
-        if (shouldNotifyDirector(formType)) {
-            const directorEmail = getDirectorEmail(campus, env);
-            const url = new URL(request.url);
-            await sendEmail(auth, {
-                to: directorEmail,
-                subject: `New Application: ${formType} - ${appId}`,
-                htmlBody: `<h3>New Application Received</h3>
-                       <p><strong>App ID:</strong> ${appId}</p>
-                       <p><strong>Form:</strong> ${formType}</p>
-                       <p><strong>Student:</strong> ${applicantName} (${email})</p>
-                       <p><a href="${url.origin}/approve?id=${appId}&role=Director&action=Approve">Approve</a> |
-                          <a href="${url.origin}/approve?id=${appId}&role=Director&action=Reject">Reject</a></p>`
-            });
+    for (const [key, value] of formData.entries()) {
+        if (value instanceof File && value.size > 0) {
+            await storeFileBlob(env, appId, key, value);
         }
     }
+
+    await sendAdminNotification(env, appId, formType, applicantName, email);
 
     return new Response(JSON.stringify({ success: true, appId }), {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' }
@@ -433,13 +560,11 @@ async function handleNameChange(formData, request, env, corsHeaders) {
 
     const appId = `APP-${Date.now()}`;
 
-    // 1. Save to main applications table
     await env.DB.prepare(
         `INSERT INTO applications (id, student_email, form_type, applicant_name, reg_no, campus)
          VALUES (?, ?, ?, ?, ?, ?)`
     ).bind(appId, email, formType, applicantName, regNo, campus).run();
 
-    // 2. Save to form-specific table (without file links first)
     await env.DB.prepare(
         `INSERT INTO form_name_change
          (application_id, existing_name, Father_name, reg_no, Campus, Mobile_Number,
@@ -457,52 +582,13 @@ async function handleNameChange(formData, request, env, corsHeaders) {
         formData.get('newName') || ''
     ).run();
 
-    // 3. Google Integration
-    if (env.GOOGLE_SERVICE_ACCOUNT_EMAIL && env.GOOGLE_PRIVATE_KEY) {
-        const auth = await getGoogleAuth(env);
-
-        // Files
-        if (env.GOOGLE_DRIVE_FOLDER_ID) {
-            const fileLinks = {};
-            for (const [key, value] of formData.entries()) {
-                if (value instanceof File) {
-                    const fileData = await uploadToDrive(auth, value, value.name, env.GOOGLE_DRIVE_FOLDER_ID);
-                    fileLinks[key] = fileData.id;
-
-                    await env.DB.prepare(
-                        `INSERT INTO file_attachments (application_id, file_name, drive_file_id, file_type)
-                         VALUES (?, ?, ?, ?)`
-                    ).bind(appId, value.name, fileData.id, value.type).run();
-                }
-            }
-
-            await env.DB.prepare(
-                `UPDATE form_name_change SET
-                 gazzete_notification_file = ?, SBI_receipt_file = ?
-                 WHERE application_id = ?`
-            ).bind(
-                fileLinks['gazetteNotification'] || '',
-                fileLinks['sbiReceipt'] || '',
-                appId
-            ).run();
-        }
-
-        // Email (Selective)
-        if (shouldNotifyDirector(formType)) {
-            const directorEmail = getDirectorEmail(campus, env);
-            const url = new URL(request.url);
-            await sendEmail(auth, {
-                to: directorEmail,
-                subject: `New Application: ${formType} - ${appId}`,
-                htmlBody: `<h3>New Application Received</h3>
-                       <p><strong>App ID:</strong> ${appId}</p>
-                       <p><strong>Form:</strong> ${formType}</p>
-                       <p><strong>Student:</strong> ${applicantName} (${email})</p>
-                       <p><a href="${url.origin}/approve?id=${appId}&role=Director&action=Approve">Approve</a> |
-                          <a href="${url.origin}/approve?id=${appId}&role=Director&action=Reject">Reject</a></p>`
-            });
+    for (const [key, value] of formData.entries()) {
+        if (value instanceof File && value.size > 0) {
+            await storeFileBlob(env, appId, key, value);
         }
     }
+
+    await sendAdminNotification(env, appId, formType, applicantName, email);
 
     return new Response(JSON.stringify({ success: true, appId }), {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' }
@@ -519,13 +605,11 @@ async function handleRetotaling(formData, request, env, corsHeaders) {
 
     const appId = `APP-${Date.now()}`;
 
-    // 1. Save to main applications table
     await env.DB.prepare(
         `INSERT INTO applications (id, student_email, form_type, applicant_name, reg_no, campus)
          VALUES (?, ?, ?, ?, ?, ?)`
     ).bind(appId, email, formType, applicantName, regNo, campus).run();
 
-    // 2. Save to form-specific table (without file links first)
     await env.DB.prepare(
         `INSERT INTO form_retotaling
          (application_id, exam_type, student_name, reg_no, Campus, Programme,
@@ -544,52 +628,13 @@ async function handleRetotaling(formData, request, env, corsHeaders) {
         formData.get('email') || ''
     ).run();
 
-    // 3. Google Integration
-    if (env.GOOGLE_SERVICE_ACCOUNT_EMAIL && env.GOOGLE_PRIVATE_KEY) {
-        const auth = await getGoogleAuth(env);
-
-        // Files
-        if (env.GOOGLE_DRIVE_FOLDER_ID) {
-            const fileLinks = {};
-            for (const [key, value] of formData.entries()) {
-                if (value instanceof File) {
-                    const fileData = await uploadToDrive(auth, value, value.name, env.GOOGLE_DRIVE_FOLDER_ID);
-                    fileLinks[key] = fileData.id;
-
-                    await env.DB.prepare(
-                        `INSERT INTO file_attachments (application_id, file_name, drive_file_id, file_type)
-                         VALUES (?, ?, ?, ?)`
-                    ).bind(appId, value.name, fileData.id, value.type).run();
-                }
-            }
-
-            await env.DB.prepare(
-                `UPDATE form_retotaling SET
-                 scanned_copy_of_grade_card_file = ?, SBI_receipt_file = ?
-                 WHERE application_id = ?`
-            ).bind(
-                fileLinks['gradeCard'] || '',
-                fileLinks['sbiReceipt'] || '',
-                appId
-            ).run();
-        }
-
-        // Email (Selective)
-        if (shouldNotifyDirector(formType)) {
-            const directorEmail = getDirectorEmail(campus, env);
-            const url = new URL(request.url);
-            await sendEmail(auth, {
-                to: directorEmail,
-                subject: `New Application: ${formType} - ${appId}`,
-                htmlBody: `<h3>New Application Received</h3>
-                       <p><strong>App ID:</strong> ${appId}</p>
-                       <p><strong>Form:</strong> ${formType}</p>
-                       <p><strong>Student:</strong> ${applicantName} (${email})</p>
-                       <p><a href="${url.origin}/approve?id=${appId}&role=Director&action=Approve">Approve</a> |
-                          <a href="${url.origin}/approve?id=${appId}&role=Director&action=Reject">Reject</a></p>`
-            });
+    for (const [key, value] of formData.entries()) {
+        if (value instanceof File && value.size > 0) {
+            await storeFileBlob(env, appId, key, value);
         }
     }
+
+    await sendAdminNotification(env, appId, formType, applicantName, email);
 
     return new Response(JSON.stringify({ success: true, appId }), {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' }
@@ -606,13 +651,11 @@ async function handleOnRequestDegree(formData, request, env, corsHeaders) {
 
     const appId = `APP-${Date.now()}`;
 
-    // 1. Save to main applications table
     await env.DB.prepare(
         `INSERT INTO applications (id, student_email, form_type, applicant_name, reg_no, campus)
          VALUES (?, ?, ?, ?, ?, ?)`
     ).bind(appId, email, formType, applicantName, regNo, campus).run();
 
-    // 2. Save to form-specific table (without file links first)
     await env.DB.prepare(
         `INSERT INTO form_on_request_degree
          (application_id, student_name, reg_no, Campus, Student_address, Mobile_Number, Degree_applied_for)
@@ -627,52 +670,13 @@ async function handleOnRequestDegree(formData, request, env, corsHeaders) {
         formData.get('degreeAppliedFor') || ''
     ).run();
 
-    // 3. Google Integration
-    if (env.GOOGLE_SERVICE_ACCOUNT_EMAIL && env.GOOGLE_PRIVATE_KEY) {
-        const auth = await getGoogleAuth(env);
-
-        // Files
-        if (env.GOOGLE_DRIVE_FOLDER_ID) {
-            const fileLinks = {};
-            for (const [key, value] of formData.entries()) {
-                if (value instanceof File) {
-                    const fileData = await uploadToDrive(auth, value, value.name, env.GOOGLE_DRIVE_FOLDER_ID);
-                    fileLinks[key] = fileData.id;
-
-                    await env.DB.prepare(
-                        `INSERT INTO file_attachments (application_id, file_name, drive_file_id, file_type)
-                         VALUES (?, ?, ?, ?)`
-                    ).bind(appId, value.name, fileData.id, value.type).run();
-                }
-            }
-
-            await env.DB.prepare(
-                `UPDATE form_on_request_degree SET
-                 qualifying_degree_file = ?, SBI_receipt_file = ?
-                 WHERE application_id = ?`
-            ).bind(
-                fileLinks['qualifyingCert'] || '',
-                fileLinks['sbiReceipt'] || '',
-                appId
-            ).run();
-        }
-
-        // Email (Selective)
-        if (shouldNotifyDirector(formType)) {
-            const directorEmail = getDirectorEmail(campus, env);
-            const url = new URL(request.url);
-            await sendEmail(auth, {
-                to: directorEmail,
-                subject: `New Application: ${formType} - ${appId}`,
-                htmlBody: `<h3>New Application Received</h3>
-                       <p><strong>App ID:</strong> ${appId}</p>
-                       <p><strong>Form:</strong> ${formType}</p>
-                       <p><strong>Student:</strong> ${applicantName} (${email})</p>
-                       <p><a href="${url.origin}/approve?id=${appId}&role=Director&action=Approve">Approve</a> |
-                          <a href="${url.origin}/approve?id=${appId}&role=Director&action=Reject">Reject</a></p>`
-            });
+    for (const [key, value] of formData.entries()) {
+        if (value instanceof File && value.size > 0) {
+            await storeFileBlob(env, appId, key, value);
         }
     }
+
+    await sendAdminNotification(env, appId, formType, applicantName, email);
 
     return new Response(JSON.stringify({ success: true, appId }), {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' }
@@ -688,13 +692,11 @@ async function handleMigration(formData, request, env, corsHeaders) {
 
     const appId = `APP-${Date.now()}`;
 
-    // 1. Save to main applications table (migration form doesn't have email/regNo in all cases)
     await env.DB.prepare(
         `INSERT INTO applications (id, student_email, form_type, applicant_name, reg_no, campus)
          VALUES (?, ?, ?, ?, ?, ?)`
     ).bind(appId, '', formType, applicantName, '', campus).run();
 
-    // 2. Save to form-specific table
     await env.DB.prepare(
         `INSERT INTO form_migration_certificate
          (application_id, student_name, Mobile_Number, admission_year, Campus_of_admission,
@@ -712,40 +714,13 @@ async function handleMigration(formData, request, env, corsHeaders) {
         formData.get('migrationAddress') || ''
     ).run();
 
-    // 3. Google Integration (Files & Email)
-    if (env.GOOGLE_SERVICE_ACCOUNT_EMAIL && env.GOOGLE_PRIVATE_KEY) {
-        const auth = await getGoogleAuth(env);
-
-        // Files
-        if (env.GOOGLE_DRIVE_FOLDER_ID) {
-            for (const [key, value] of formData.entries()) {
-                if (value instanceof File) {
-                    const fileData = await uploadToDrive(auth, value, value.name, env.GOOGLE_DRIVE_FOLDER_ID);
-
-                    await env.DB.prepare(
-                        `INSERT INTO file_attachments (application_id, file_name, drive_file_id, file_type)
-                         VALUES (?, ?, ?, ?)`
-                    ).bind(appId, value.name, fileData.id, value.type).run();
-                }
-            }
-        }
-
-        // Email (Selective)
-        if (shouldNotifyDirector(formType)) {
-            const directorEmail = getDirectorEmail(campus, env);
-            const url = new URL(request.url);
-            await sendEmail(auth, {
-                to: directorEmail,
-                subject: `New Application: ${formType} - ${appId}`,
-                htmlBody: `<h3>New Application Received</h3>
-                       <p><strong>App ID:</strong> ${appId}</p>
-                       <p><strong>Form:</strong> ${formType}</p>
-                       <p><strong>Student:</strong> ${applicantName}</p>
-                       <p><a href="${url.origin}/approve?id=${appId}&role=Director&action=Approve">Approve</a> |
-                          <a href="${url.origin}/approve?id=${appId}&role=Director&action=Reject">Reject</a></p>`
-            });
+    for (const [key, value] of formData.entries()) {
+        if (value instanceof File && value.size > 0) {
+            await storeFileBlob(env, appId, key, value);
         }
     }
+
+    await sendAdminNotification(env, appId, formType, applicantName, '');
 
     return new Response(JSON.stringify({ success: true, appId }), {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' }
@@ -768,32 +743,6 @@ async function handleApproval(url, env, corsHeaders) {
             await env.DB.prepare(
                 `UPDATE applications SET status = 'REJECTED', updated_at = CURRENT_TIMESTAMP WHERE id = ?`
             ).bind(id).run();
-        }
-
-        // If approved by Director, notify the Controller
-        if (statusValue === 'APPROVED' && env.GOOGLE_SERVICE_ACCOUNT_EMAIL && env.GOOGLE_PRIVATE_KEY) {
-            const app = await env.DB.prepare(
-                `SELECT form_type, applicant_name, student_email FROM applications WHERE id = ?`
-            ).bind(id).first();
-
-            if (app) {
-                const auth = await getGoogleAuth(env);
-                const controllerEmail = getControllerEmail();
-                const origin = url.origin;
-                await sendEmail(auth, {
-                    to: controllerEmail,
-                    subject: `Director Approved: ${app.form_type} - ${id}`,
-                    htmlBody: `<h3>Application Approved by Director</h3>
-                           <p><strong>App ID:</strong> ${id}</p>
-                           <p><strong>Form:</strong> ${app.form_type}</p>
-                           <p><strong>Student:</strong> ${app.applicant_name} (${app.student_email})</p>
-                           <p>The Director has approved this application. Please take necessary action.</p>
-                           <p>
-                             <a href="${origin}/approve?id=${id}&role=Controller&action=Approve">Approve Application</a> | 
-                             <a href="${origin}/approve?id=${id}&role=Controller&action=Reject">Reject Application</a>
-                           </p>`
-                });
-            }
         }
     } else if (role === 'Controller') {
         await env.DB.prepare(
@@ -826,12 +775,7 @@ async function handleStatusRequest(url, env, corsHeaders) {
             });
         }
 
-        const needsDirectorApproval = shouldNotifyDirector(app.form_type);
-
-        return new Response(JSON.stringify({
-            ...app,
-            needs_director_approval: needsDirectorApproval
-        }), {
+        return new Response(JSON.stringify(app), {
             headers: { ...corsHeaders, 'Content-Type': 'application/json' }
         });
     } catch (error) {
@@ -840,30 +784,4 @@ async function handleStatusRequest(url, env, corsHeaders) {
             headers: { ...corsHeaders, 'Content-Type': 'application/json' }
         });
     }
-}
-
-function getDirectorEmail(campus, env) {
-    // Map campus to emails (could be in D1 or KV too)
-    const map = {
-        'Prashanti Nilayam Campus': 'saisathyajain@sssihl.edu.in',
-        'Anantapur Campus': 'results@sssihl.edu.in',
-        'Brindavan Campus': 'sathyajain9@gmail.com',
-        'Nandigiri Campus': 'sathyajain99@outlook.com'
-    };
-    return map[campus] || map['Prashanti Nilayam Campus'];
-}
-
-function getControllerEmail() {
-    return 'saisathyajain@gmail.com'; // Dummy email as requested
-}
-
-function shouldNotifyDirector(formType) {
-    const forms = [
-        'Application for duplicate Degree Certificate',
-        'Application for Registration of Student Name change in the Institute Records',
-        'Application for repeating a paper for supplementary examinations(CIE and ESE)',
-        'Application for End-Semester Supplementary Examinations',
-
-    ];
-    return forms.includes(formType);
 }

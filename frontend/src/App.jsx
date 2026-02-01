@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import Portal from './pages/Portal';
+import AdminPortal from './pages/AdminPortal';
 import FormBuilder from './components/FormBuilder';
 import StatusTracker from './components/StatusTracker';
 import LoadingScreen from './components/LoadingScreen';
@@ -8,10 +9,17 @@ import './index.css';
 
 function App() {
   const [isLoading, setIsLoading] = useState(true);
-  const [view, setView] = useState('portal'); // 'portal' | 'form' | 'status'
+  const [view, setView] = useState('portal'); // 'portal' | 'form' | 'status' | 'admin'
   const [currentFormId, setCurrentFormId] = useState(null);
 
   useEffect(() => {
+    // Check if URL is /admin
+    if (window.location.pathname === '/admin') {
+      setView('admin');
+      setIsLoading(false);
+      return;
+    }
+
     const timer = setTimeout(() => {
       setIsLoading(false);
     }, 2500);
@@ -29,6 +37,11 @@ function App() {
     setCurrentFormId(null);
     setView('portal');
   };
+
+  // Admin portal (no loading screen)
+  if (view === 'admin') {
+    return <AdminPortal />;
+  }
 
   return (
     <div className="App">

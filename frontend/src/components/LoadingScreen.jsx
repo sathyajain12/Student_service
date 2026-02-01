@@ -2,7 +2,7 @@ import React from 'react';
 import { Loader2, Sparkles } from 'lucide-react';
 
 export default function LoadingScreen() {
-    const logoUrl = "https://www.sssihl.edu.in/wp-content/uploads/2020/11/cropped-SSSIHL-Logo_Site_Title-150x150.png";
+    const logoUrl = "/logo.png";
 
     return (
         <div className="loading-overlay">
@@ -65,7 +65,7 @@ export default function LoadingScreen() {
                         WebkitTextFillColor: 'transparent',
                         fontWeight: '800'
                     }}>
-                        SSSIHL Portal
+                        SSSIHL-Examination Services
                     </h2>
                     <p style={{
                         color: 'var(--text-muted)',

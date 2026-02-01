@@ -15,15 +15,15 @@ import {
 } from 'lucide-react';
 
 const FORMS = [
-  { id: 'duplicate-grade-card', title: 'Duplicate Grade Card', Icon: FileText, category: 'Academic', desc: 'Apply for loss or damage of grade cards.' },
-  { id: 'cgpa-conversion', title: 'CGPA Conversion', Icon: BarChart3, category: 'Academic', desc: 'Convert CGPA to percentage marks.' },
-  { id: 'supplementary-exam', title: 'Supplementary Exam', Icon: PenTool, category: 'Exam', desc: 'Register for backlog papers.' },
-  { id: 'duplicate-degree', title: 'Duplicate Degree', Icon: GraduationCap, category: 'Degree', desc: 'Replace lost degree certificates.' },
-  { id: 'name-change', title: 'Name Change', Icon: UserCircle, category: 'Records', desc: 'Update your official name.' },
-  { id: 'repeat-paper', title: 'Repeat Paper', Icon: RotateCcw, category: 'Exam', desc: 'Repeat CIE and ESE papers.' },
-  { id: 'retotaling', title: 'Re-totaling', Icon: Hash, category: 'Exam', desc: 'Verify your marks total.' },
-  { id: 'on-request-degree', title: 'On-Request Degree', Icon: ScrollText, category: 'Degree', desc: 'Early degree issuance.' },
-  { id: 'migration', title: 'Migration Certificate', Icon: Send, category: 'Transfer', desc: 'Transfer to another university.' },
+  { id: 'duplicate-grade-card', title: 'Application for duplicate Grade Card', Icon: FileText, category: 'Academic', desc: 'Apply for loss or damage of grade cards.' },
+  { id: 'cgpa-conversion', title: 'Application for CGPA to Marks Conversion', Icon: BarChart3, category: 'Academic', desc: 'Convert CGPA to percentage marks.' },
+  { id: 'supplementary-exam', title: 'Application for End-Semester Supplementary Examinations', Icon: PenTool, category: 'Exam', desc: 'Register for backlog papers.' },
+  { id: 'duplicate-degree', title: 'Application for duplicate Degree Certificate', Icon: GraduationCap, category: 'Degree', desc: 'Replace lost degree certificates.' },
+  { id: 'name-change', title: 'Application for Registration of Student Name change in the Institute Records', Icon: UserCircle, category: 'Records', desc: 'Update your official name.' },
+  { id: 'repeat-paper', title: 'Application for repeating a paper for supplementary examinations(CIE and ESE)', Icon: RotateCcw, category: 'Exam', desc: 'Repeat CIE and ESE papers.' },
+  { id: 'retotaling', title: 'Application for Re-Totalling of Marks', Icon: Hash, category: 'Exam', desc: 'Verify your marks total.' },
+  { id: 'on-request-degree', title: 'Application for On-Request Degree Certificate', Icon: ScrollText, category: 'Degree', desc: 'Early degree issuance.' },
+  { id: 'migration', title: 'Application for Migration Certificate', Icon: Send, category: 'Transfer', desc: 'Transfer to another university.' },
 ];
 
 export default function Portal({ onSelectForm, onTrackStatus }) {
@@ -32,13 +32,13 @@ export default function Portal({ onSelectForm, onTrackStatus }) {
       <header style={{ textAlign: 'center', marginBottom: '80px', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
         <div style={{ marginBottom: '25px', display: 'flex', justifyContent: 'center' }}>
           <img
-            src="https://www.sssihl.edu.in/wp-content/uploads/2020/11/cropped-SSSIHL-Logo_Site_Title-150x150.png"
+            src="/logo.png"
             alt="SSSIHL Logo"
             style={{ width: '100px', height: '100px', objectFit: 'contain' }}
           />
         </div>
         <h1 className="title-gradient" style={{ fontSize: '3.8rem', marginBottom: '15px' }}>
-          Student Service Portal
+          SSSIHL-Examination Services
         </h1>
         <p style={{ color: 'var(--primary)', fontSize: '1.6rem', fontWeight: '700', marginBottom: '30px', letterSpacing: '0.01em' }}>
           Sri Sathya Sai Institute of Higher Learning
