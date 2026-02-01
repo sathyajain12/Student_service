@@ -10,7 +10,8 @@ import {
   ScrollText,
   Send,
   CheckCircle2,
-  Info
+  Info,
+  Search
 } from 'lucide-react';
 
 const FORMS = [

@@ -10,7 +10,8 @@ import {
     AlertCircle,
     ArrowLeft,
     Loader2,
-    ChevronRight
+    ChevronRight,
+    X
 } from 'lucide-react';
 
 export default function StatusTracker({ onBack }) {
