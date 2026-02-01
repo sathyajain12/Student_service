@@ -80,6 +80,16 @@ export default function StatusTracker({ onBack }) {
 
     return (
         <div className="animate-fade-in">
+            <div style={{ textAlign: 'center', marginBottom: '30px', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+                <img
+                    src="https://www.sssihl.edu.in/wp-content/uploads/2020/11/cropped-SSSIHL-Logo_Site_Title-150x150.png"
+                    alt="SSSIHL Logo"
+                    style={{ width: '80px', height: '80px', objectFit: 'contain', marginBottom: '10px' }}
+                />
+                <p style={{ color: 'var(--primary)', fontSize: '1.2rem', fontWeight: '700' }}>
+                    Sri Sathya Sai Institute of Higher Learning
+                </p>
+            </div>
             <div style={{ display: 'flex', alignItems: 'center', gap: '15px', marginBottom: '40px' }}>
                 <button
                     onClick={onBack}

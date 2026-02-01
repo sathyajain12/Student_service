@@ -30,10 +30,17 @@ export default function Portal({ onSelectForm, onTrackStatus }) {
   return (
     <div className="container animate-fade-in">
       <header style={{ textAlign: 'center', marginBottom: '80px', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+        <div style={{ marginBottom: '25px', display: 'flex', justifyContent: 'center' }}>
+          <img
+            src="https://www.sssihl.edu.in/wp-content/uploads/2020/11/cropped-SSSIHL-Logo_Site_Title-150x150.png"
+            alt="SSSIHL Logo"
+            style={{ width: '100px', height: '100px', objectFit: 'contain' }}
+          />
+        </div>
         <h1 className="title-gradient" style={{ fontSize: '3.8rem', marginBottom: '15px' }}>
           Student Service Portal
         </h1>
-        <p style={{ color: 'var(--text-muted)', fontSize: '1.25rem', fontWeight: '500', marginBottom: '30px' }}>
+        <p style={{ color: 'var(--primary)', fontSize: '1.6rem', fontWeight: '700', marginBottom: '30px', letterSpacing: '0.01em' }}>
           Sri Sathya Sai Institute of Higher Learning
         </p>
 

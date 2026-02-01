@@ -1,13 +1,22 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import Portal from './pages/Portal';
 import FormBuilder from './components/FormBuilder';
 import StatusTracker from './components/StatusTracker';
+import LoadingScreen from './components/LoadingScreen';
 import { FORM_CONFIGS } from './formConfigs';
 import './index.css';
 
 function App() {
+  const [isLoading, setIsLoading] = useState(true);
   const [view, setView] = useState('portal'); // 'portal' | 'form' | 'status'
   const [currentFormId, setCurrentFormId] = useState(null);
+
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setIsLoading(false);
+    }, 2500);
+    return () => clearTimeout(timer);
+  }, []);
 
   const selectedConfig = FORM_CONFIGS[currentFormId];
 
@@ -23,36 +32,42 @@ function App() {
 
   return (
     <div className="App">
-      {view === 'portal' && (
-        <Portal
-          onSelectForm={handleSelectForm}
-          onTrackStatus={() => setView('status')}
-        />
-      )}
+      {isLoading && <LoadingScreen />}
 
-      {view === 'form' && (
-        <div className="container" style={{ maxWidth: '900px' }}>
-          <div className="glass-card" style={{ padding: '40px' }}>
-            {selectedConfig ? (
-              <FormBuilder
-                config={selectedConfig}
-                onCancel={handleBackToPortal}
-                onTrackStatus={() => setView('status')}
-              />
-            ) : (
-              <p style={{ color: 'var(--text-muted)' }}>
-                This form configuration is coming soon.
-                <button onClick={handleBackToPortal} className="btn-secondary" style={{ marginTop: '20px' }}>Back</button>
-              </p>
-            )}
-          </div>
-        </div>
-      )}
+      {!isLoading && (
+        <>
+          {view === 'portal' && (
+            <Portal
+              onSelectForm={handleSelectForm}
+              onTrackStatus={() => setView('status')}
+            />
+          )}
 
-      {view === 'status' && (
-        <div className="container" style={{ maxWidth: '900px' }}>
-          <StatusTracker onBack={handleBackToPortal} />
-        </div>
+          {view === 'form' && (
+            <div className="container" style={{ maxWidth: '900px' }}>
+              <div className="glass-card" style={{ padding: '40px' }}>
+                {selectedConfig ? (
+                  <FormBuilder
+                    config={selectedConfig}
+                    onCancel={handleBackToPortal}
+                    onTrackStatus={() => setView('status')}
+                  />
+                ) : (
+                  <p style={{ color: 'var(--text-muted)' }}>
+                    This form configuration is coming soon.
+                    <button onClick={handleBackToPortal} className="btn-secondary" style={{ marginTop: '20px' }}>Back</button>
+                  </p>
+                )}
+              </div>
+            </div>
+          )}
+
+          {view === 'status' && (
+            <div className="container" style={{ maxWidth: '900px' }}>
+              <StatusTracker onBack={handleBackToPortal} />
+            </div>
+          )}
+        </>
       )}
     </div>
   );
