@@ -3,6 +3,204 @@ import { LogOut, FileText, Download, Users, Clock, CheckCircle, XCircle, ArrowLe
 
 const API_URL = import.meta.env.VITE_BACKEND_URL || 'http://localhost:8787';
 
+// Styles
+const styles = {
+    page: {
+        minHeight: '100vh',
+        background: 'linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f0f23 100%)',
+        padding: '24px',
+        fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen, Ubuntu, sans-serif'
+    },
+    container: {
+        maxWidth: '1200px',
+        margin: '0 auto'
+    },
+    card: {
+        background: 'rgba(255, 255, 255, 0.08)',
+        backdropFilter: 'blur(20px)',
+        borderRadius: '16px',
+        border: '1px solid rgba(255, 255, 255, 0.1)',
+        padding: '24px'
+    },
+    loginCard: {
+        background: 'rgba(255, 255, 255, 0.08)',
+        backdropFilter: 'blur(20px)',
+        borderRadius: '16px',
+        border: '1px solid rgba(255, 255, 255, 0.1)',
+        padding: '40px',
+        width: '100%',
+        maxWidth: '400px'
+    },
+    header: {
+        display: 'flex',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+        marginBottom: '32px'
+    },
+    title: {
+        fontSize: '28px',
+        fontWeight: 'bold',
+        color: '#ffffff',
+        margin: 0
+    },
+    statsGrid: {
+        display: 'grid',
+        gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))',
+        gap: '16px',
+        marginBottom: '32px'
+    },
+    statCard: {
+        background: 'rgba(255, 255, 255, 0.05)',
+        backdropFilter: 'blur(10px)',
+        borderRadius: '12px',
+        border: '1px solid rgba(255, 255, 255, 0.1)',
+        padding: '20px',
+        display: 'flex',
+        alignItems: 'center',
+        gap: '16px'
+    },
+    statIcon: {
+        padding: '12px',
+        borderRadius: '10px',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center'
+    },
+    statLabel: {
+        color: 'rgba(255, 255, 255, 0.6)',
+        fontSize: '14px',
+        margin: 0
+    },
+    statValue: {
+        color: '#ffffff',
+        fontSize: '28px',
+        fontWeight: 'bold',
+        margin: 0
+    },
+    table: {
+        width: '100%',
+        borderCollapse: 'collapse'
+    },
+    th: {
+        textAlign: 'left',
+        color: 'rgba(255, 255, 255, 0.6)',
+        fontSize: '12px',
+        fontWeight: '600',
+        padding: '16px',
+        textTransform: 'uppercase',
+        letterSpacing: '0.5px',
+        borderBottom: '1px solid rgba(255, 255, 255, 0.1)'
+    },
+    td: {
+        padding: '16px',
+        color: '#ffffff',
+        fontSize: '14px',
+        borderBottom: '1px solid rgba(255, 255, 255, 0.05)'
+    },
+    button: {
+        padding: '10px 20px',
+        background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+        color: '#ffffff',
+        border: 'none',
+        borderRadius: '8px',
+        cursor: 'pointer',
+        fontWeight: '600',
+        fontSize: '14px',
+        transition: 'all 0.3s ease'
+    },
+    logoutButton: {
+        padding: '10px 20px',
+        background: 'rgba(239, 68, 68, 0.2)',
+        color: '#ef4444',
+        border: 'none',
+        borderRadius: '8px',
+        cursor: 'pointer',
+        display: 'flex',
+        alignItems: 'center',
+        gap: '8px',
+        fontSize: '14px'
+    },
+    input: {
+        width: '100%',
+        padding: '14px 16px',
+        background: 'rgba(255, 255, 255, 0.08)',
+        border: '1px solid rgba(255, 255, 255, 0.15)',
+        borderRadius: '10px',
+        color: '#ffffff',
+        fontSize: '15px',
+        outline: 'none',
+        boxSizing: 'border-box'
+    },
+    label: {
+        color: 'rgba(255, 255, 255, 0.7)',
+        fontSize: '14px',
+        marginBottom: '8px',
+        display: 'block'
+    },
+    badge: {
+        padding: '4px 12px',
+        borderRadius: '20px',
+        fontSize: '12px',
+        fontWeight: '600',
+        textTransform: 'uppercase'
+    },
+    backButton: {
+        display: 'flex',
+        alignItems: 'center',
+        gap: '8px',
+        color: 'rgba(255, 255, 255, 0.7)',
+        background: 'none',
+        border: 'none',
+        cursor: 'pointer',
+        fontSize: '14px',
+        marginBottom: '24px'
+    },
+    fileRow: {
+        display: 'flex',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+        background: 'rgba(255, 255, 255, 0.05)',
+        padding: '16px',
+        borderRadius: '10px',
+        marginBottom: '8px'
+    },
+    detailGrid: {
+        display: 'grid',
+        gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))',
+        gap: '16px',
+        marginBottom: '24px'
+    },
+    detailCard: {
+        background: 'rgba(255, 255, 255, 0.05)',
+        padding: '16px',
+        borderRadius: '10px'
+    },
+    detailLabel: {
+        color: 'rgba(255, 255, 255, 0.5)',
+        fontSize: '12px',
+        marginBottom: '4px'
+    },
+    detailValue: {
+        color: '#ffffff',
+        fontSize: '14px',
+        fontWeight: '500'
+    }
+};
+
+const getStatusStyle = (status) => {
+    const baseStyle = { ...styles.badge };
+    switch (status) {
+        case 'COMPLETED':
+        case 'APPROVED':
+            return { ...baseStyle, background: '#10b981', color: '#ffffff' };
+        case 'REJECTED':
+            return { ...baseStyle, background: '#ef4444', color: '#ffffff' };
+        case 'PENDING':
+        default:
+            return { ...baseStyle, background: '#f59e0b', color: '#ffffff' };
+    }
+};
+
 export default function AdminPortal() {
     const [token, setToken] = useState(localStorage.getItem('adminToken') || '');
     const [isLoggedIn, setIsLoggedIn] = useState(!!localStorage.getItem('adminToken'));
@@ -103,11 +301,6 @@ export default function AdminPortal() {
     };
 
     const downloadFile = (fileId, fileName) => {
-        const link = document.createElement('a');
-        link.href = `${API_URL}/admin/file/${fileId}`;
-        link.download = fileName;
-
-        // Add auth header via fetch and create blob URL
         fetch(`${API_URL}/admin/file/${fileId}`, {
             headers: { 'Authorization': `Bearer ${token}` }
         })
@@ -122,59 +315,43 @@ export default function AdminPortal() {
             });
     };
 
-    const getStatusColor = (status) => {
-        switch (status) {
-            case 'COMPLETED':
-            case 'APPROVED':
-                return 'bg-green-500';
-            case 'REJECTED':
-                return 'bg-red-500';
-            case 'PENDING':
-            default:
-                return 'bg-yellow-500';
-        }
-    };
-
+    // Login Screen
     if (!isLoggedIn) {
         return (
-            <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 flex items-center justify-center p-4">
-                <div className="bg-white/10 backdrop-blur-lg rounded-2xl p-8 w-full max-w-md border border-white/20 shadow-2xl">
-                    <h2 className="text-2xl font-bold text-white text-center mb-6">Admin Login</h2>
+            <div style={{ ...styles.page, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                <div style={styles.loginCard}>
+                    <h2 style={{ ...styles.title, textAlign: 'center', marginBottom: '32px' }}>Admin Login</h2>
 
-                    <form onSubmit={handleLogin} className="space-y-4">
-                        <div>
-                            <label className="text-white/80 text-sm block mb-1">Username</label>
+                    <form onSubmit={handleLogin}>
+                        <div style={{ marginBottom: '20px' }}>
+                            <label style={styles.label}>Username</label>
                             <input
                                 type="text"
                                 value={username}
                                 onChange={(e) => setUsername(e.target.value)}
-                                className="w-full px-4 py-3 bg-white/10 border border-white/20 rounded-lg text-white placeholder-white/50 focus:outline-none focus:ring-2 focus:ring-purple-500"
+                                style={styles.input}
                                 placeholder="Enter username"
                                 required
                             />
                         </div>
 
-                        <div>
-                            <label className="text-white/80 text-sm block mb-1">Password</label>
+                        <div style={{ marginBottom: '20px' }}>
+                            <label style={styles.label}>Password</label>
                             <input
                                 type="password"
                                 value={password}
                                 onChange={(e) => setPassword(e.target.value)}
-                                className="w-full px-4 py-3 bg-white/10 border border-white/20 rounded-lg text-white placeholder-white/50 focus:outline-none focus:ring-2 focus:ring-purple-500"
+                                style={styles.input}
                                 placeholder="Enter password"
                                 required
                             />
                         </div>
 
                         {loginError && (
-                            <p className="text-red-400 text-sm text-center">{loginError}</p>
+                            <p style={{ color: '#ef4444', fontSize: '14px', textAlign: 'center', marginBottom: '16px' }}>{loginError}</p>
                         )}
 
-                        <button
-                            type="submit"
-                            disabled={loading}
-                            className="w-full py-3 bg-purple-600 hover:bg-purple-700 text-white rounded-lg font-semibold transition-colors disabled:opacity-50"
-                        >
+                        <button type="submit" disabled={loading} style={{ ...styles.button, width: '100%', padding: '14px' }}>
                             {loading ? 'Logging in...' : 'Login'}
                         </button>
                     </form>
@@ -183,87 +360,77 @@ export default function AdminPortal() {
         );
     }
 
+    // Application Details View
     if (selectedApp && appDetails) {
         return (
-            <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 p-6">
-                <div className="max-w-4xl mx-auto">
-                    <button
-                        onClick={() => { setSelectedApp(null); setAppDetails(null); }}
-                        className="flex items-center gap-2 text-white/80 hover:text-white mb-6"
-                    >
-                        <ArrowLeft size={20} /> Back to Applications
+            <div style={styles.page}>
+                <div style={styles.container}>
+                    <button onClick={() => { setSelectedApp(null); setAppDetails(null); }} style={styles.backButton}>
+                        <ArrowLeft size={18} /> Back to Applications
                     </button>
 
-                    <div className="bg-white/10 backdrop-blur-lg rounded-2xl p-6 border border-white/20">
-                        <h2 className="text-2xl font-bold text-white mb-4">
-                            Application Details
-                        </h2>
+                    <div style={styles.card}>
+                        <h2 style={{ ...styles.title, marginBottom: '24px' }}>Application Details</h2>
 
-                        <div className="grid grid-cols-2 gap-4 mb-6">
-                            <div className="bg-white/5 p-4 rounded-lg">
-                                <p className="text-white/60 text-sm">Application ID</p>
-                                <p className="text-white font-semibold">{appDetails.application.id}</p>
+                        <div style={styles.detailGrid}>
+                            <div style={styles.detailCard}>
+                                <p style={styles.detailLabel}>Application ID</p>
+                                <p style={styles.detailValue}>{appDetails.application.id}</p>
                             </div>
-                            <div className="bg-white/5 p-4 rounded-lg">
-                                <p className="text-white/60 text-sm">Status</p>
-                                <span className={`px-3 py-1 rounded-full text-white text-sm ${getStatusColor(appDetails.application.status)}`}>
+                            <div style={styles.detailCard}>
+                                <p style={styles.detailLabel}>Status</p>
+                                <span style={getStatusStyle(appDetails.application.status)}>
                                     {appDetails.application.status}
                                 </span>
                             </div>
-                            <div className="bg-white/5 p-4 rounded-lg">
-                                <p className="text-white/60 text-sm">Form Type</p>
-                                <p className="text-white">{appDetails.application.form_type}</p>
+                            <div style={styles.detailCard}>
+                                <p style={styles.detailLabel}>Form Type</p>
+                                <p style={styles.detailValue}>{appDetails.application.form_type}</p>
                             </div>
-                            <div className="bg-white/5 p-4 rounded-lg">
-                                <p className="text-white/60 text-sm">Applicant</p>
-                                <p className="text-white">{appDetails.application.applicant_name}</p>
+                            <div style={styles.detailCard}>
+                                <p style={styles.detailLabel}>Applicant</p>
+                                <p style={styles.detailValue}>{appDetails.application.applicant_name}</p>
                             </div>
-                            <div className="bg-white/5 p-4 rounded-lg">
-                                <p className="text-white/60 text-sm">Email</p>
-                                <p className="text-white">{appDetails.application.student_email}</p>
+                            <div style={styles.detailCard}>
+                                <p style={styles.detailLabel}>Email</p>
+                                <p style={styles.detailValue}>{appDetails.application.student_email}</p>
                             </div>
-                            <div className="bg-white/5 p-4 rounded-lg">
-                                <p className="text-white/60 text-sm">Campus</p>
-                                <p className="text-white">{appDetails.application.campus}</p>
+                            <div style={styles.detailCard}>
+                                <p style={styles.detailLabel}>Campus</p>
+                                <p style={styles.detailValue}>{appDetails.application.campus}</p>
                             </div>
-                            <div className="bg-white/5 p-4 rounded-lg">
-                                <p className="text-white/60 text-sm">Submitted</p>
-                                <p className="text-white">{new Date(appDetails.application.created_at).toLocaleString()}</p>
+                            <div style={styles.detailCard}>
+                                <p style={styles.detailLabel}>Submitted</p>
+                                <p style={styles.detailValue}>{new Date(appDetails.application.created_at).toLocaleString()}</p>
                             </div>
-                            <div className="bg-white/5 p-4 rounded-lg">
-                                <p className="text-white/60 text-sm">Registration No</p>
-                                <p className="text-white">{appDetails.application.reg_no || 'N/A'}</p>
+                            <div style={styles.detailCard}>
+                                <p style={styles.detailLabel}>Registration No</p>
+                                <p style={styles.detailValue}>{appDetails.application.reg_no || 'N/A'}</p>
                             </div>
                         </div>
 
-                        <h3 className="text-xl font-semibold text-white mb-4">Attached Files</h3>
+                        <h3 style={{ color: '#ffffff', marginBottom: '16px' }}>Attached Files</h3>
                         {appDetails.files && appDetails.files.length > 0 ? (
-                            <div className="space-y-2">
+                            <div>
                                 {appDetails.files.map((file) => (
-                                    <div
-                                        key={file.id}
-                                        className="flex items-center justify-between bg-white/5 p-4 rounded-lg"
-                                    >
-                                        <div className="flex items-center gap-3">
-                                            <FileText className="text-purple-400" size={20} />
+                                    <div key={file.id} style={styles.fileRow}>
+                                        <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                                            <FileText style={{ color: '#a78bfa' }} size={20} />
                                             <div>
-                                                <p className="text-white font-medium">{file.file_name}</p>
-                                                <p className="text-white/60 text-sm">
+                                                <p style={{ color: '#ffffff', margin: 0, fontWeight: '500' }}>{file.file_name}</p>
+                                                <p style={{ color: 'rgba(255,255,255,0.5)', margin: 0, fontSize: '12px' }}>
                                                     {file.file_type} • {(file.file_size / 1024).toFixed(1)} KB
                                                 </p>
                                             </div>
                                         </div>
-                                        <button
-                                            onClick={() => downloadFile(file.id, file.file_name)}
-                                            className="flex items-center gap-2 px-4 py-2 bg-purple-600 hover:bg-purple-700 text-white rounded-lg transition-colors"
-                                        >
-                                            <Download size={16} /> Download
+                                        <button onClick={() => downloadFile(file.id, file.file_name)} style={styles.button}>
+                                            <Download size={16} style={{ marginRight: '6px' }} /> Download
                                         </button>
                                     </div>
                                 ))}
                             </div>
                         ) : (
-                            <p className="text-white/60">No files attached</p>
+                            <p style={{ color: 'rgba(255,255,255,0.5)' }}>No files attached</p>
                         )}
                     </div>
                 </div>
@@ -271,112 +438,93 @@ export default function AdminPortal() {
         );
     }
 
+    // Dashboard View
     return (
-        <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 p-6">
-            <div className="max-w-6xl mx-auto">
+        <div style={styles.page}>
+            <div style={styles.container}>
                 {/* Header */}
-                <div className="flex items-center justify-between mb-8">
-                    <h1 className="text-3xl font-bold text-white">Admin Dashboard</h1>
-                    <button
-                        onClick={handleLogout}
-                        className="flex items-center gap-2 px-4 py-2 bg-red-500/20 hover:bg-red-500/30 text-red-400 rounded-lg transition-colors"
-                    >
+                <div style={styles.header}>
+                    <h1 style={styles.title}>Admin Dashboard</h1>
+                    <button onClick={handleLogout} style={styles.logoutButton}>
                         <LogOut size={18} /> Logout
                     </button>
                 </div>
 
                 {/* Stats Cards */}
                 {stats && (
-                    <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
-                        <div className="bg-white/10 backdrop-blur-lg rounded-xl p-6 border border-white/20">
-                            <div className="flex items-center gap-4">
-                                <div className="p-3 bg-blue-500/20 rounded-lg">
-                                    <Users className="text-blue-400" size={24} />
-                                </div>
-                                <div>
-                                    <p className="text-white/60 text-sm">Total Applications</p>
-                                    <p className="text-2xl font-bold text-white">{stats.total}</p>
-                                </div>
+                    <div style={styles.statsGrid}>
+                        <div style={styles.statCard}>
+                            <div style={{ ...styles.statIcon, background: 'rgba(59, 130, 246, 0.2)' }}>
+                                <Users style={{ color: '#3b82f6' }} size={24} />
+                            </div>
+                            <div>
+                                <p style={styles.statLabel}>Total Applications</p>
+                                <p style={styles.statValue}>{stats.total}</p>
                             </div>
                         </div>
 
-                        <div className="bg-white/10 backdrop-blur-lg rounded-xl p-6 border border-white/20">
-                            <div className="flex items-center gap-4">
-                                <div className="p-3 bg-yellow-500/20 rounded-lg">
-                                    <Clock className="text-yellow-400" size={24} />
-                                </div>
-                                <div>
-                                    <p className="text-white/60 text-sm">Pending</p>
-                                    <p className="text-2xl font-bold text-white">{stats.pending}</p>
-                                </div>
+                        <div style={styles.statCard}>
+                            <div style={{ ...styles.statIcon, background: 'rgba(245, 158, 11, 0.2)' }}>
+                                <Clock style={{ color: '#f59e0b' }} size={24} />
+                            </div>
+                            <div>
+                                <p style={styles.statLabel}>Pending</p>
+                                <p style={styles.statValue}>{stats.pending}</p>
                             </div>
                         </div>
 
-                        <div className="bg-white/10 backdrop-blur-lg rounded-xl p-6 border border-white/20">
-                            <div className="flex items-center gap-4">
-                                <div className="p-3 bg-green-500/20 rounded-lg">
-                                    <CheckCircle className="text-green-400" size={24} />
-                                </div>
-                                <div>
-                                    <p className="text-white/60 text-sm">Approved</p>
-                                    <p className="text-2xl font-bold text-white">{stats.approved}</p>
-                                </div>
+                        <div style={styles.statCard}>
+                            <div style={{ ...styles.statIcon, background: 'rgba(16, 185, 129, 0.2)' }}>
+                                <CheckCircle style={{ color: '#10b981' }} size={24} />
+                            </div>
+                            <div>
+                                <p style={styles.statLabel}>Approved</p>
+                                <p style={styles.statValue}>{stats.approved}</p>
                             </div>
                         </div>
 
-                        <div className="bg-white/10 backdrop-blur-lg rounded-xl p-6 border border-white/20">
-                            <div className="flex items-center gap-4">
-                                <div className="p-3 bg-red-500/20 rounded-lg">
-                                    <XCircle className="text-red-400" size={24} />
-                                </div>
-                                <div>
-                                    <p className="text-white/60 text-sm">Rejected</p>
-                                    <p className="text-2xl font-bold text-white">{stats.rejected}</p>
-                                </div>
+                        <div style={styles.statCard}>
+                            <div style={{ ...styles.statIcon, background: 'rgba(239, 68, 68, 0.2)' }}>
+                                <XCircle style={{ color: '#ef4444' }} size={24} />
+                            </div>
+                            <div>
+                                <p style={styles.statLabel}>Rejected</p>
+                                <p style={styles.statValue}>{stats.rejected}</p>
                             </div>
                         </div>
                     </div>
                 )}
 
                 {/* Applications Table */}
-                <div className="bg-white/10 backdrop-blur-lg rounded-2xl border border-white/20 overflow-hidden">
-                    <div className="p-6 border-b border-white/10">
-                        <h2 className="text-xl font-semibold text-white">Recent Applications</h2>
-                    </div>
+                <div style={styles.card}>
+                    <h2 style={{ color: '#ffffff', marginBottom: '20px' }}>Recent Applications</h2>
 
-                    <div className="overflow-x-auto">
-                        <table className="w-full">
+                    <div style={{ overflowX: 'auto' }}>
+                        <table style={styles.table}>
                             <thead>
-                                <tr className="bg-white/5">
-                                    <th className="text-left text-white/60 text-sm font-medium px-6 py-4">ID</th>
-                                    <th className="text-left text-white/60 text-sm font-medium px-6 py-4">Form Type</th>
-                                    <th className="text-left text-white/60 text-sm font-medium px-6 py-4">Applicant</th>
-                                    <th className="text-left text-white/60 text-sm font-medium px-6 py-4">Campus</th>
-                                    <th className="text-left text-white/60 text-sm font-medium px-6 py-4">Status</th>
-                                    <th className="text-left text-white/60 text-sm font-medium px-6 py-4">Date</th>
-                                    <th className="text-left text-white/60 text-sm font-medium px-6 py-4">Action</th>
+                                <tr>
+                                    <th style={styles.th}>ID</th>
+                                    <th style={styles.th}>Form Type</th>
+                                    <th style={styles.th}>Applicant</th>
+                                    <th style={styles.th}>Campus</th>
+                                    <th style={styles.th}>Status</th>
+                                    <th style={styles.th}>Date</th>
+                                    <th style={styles.th}>Action</th>
                                 </tr>
                             </thead>
                             <tbody>
                                 {applications.map((app) => (
-                                    <tr key={app.id} className="border-t border-white/5 hover:bg-white/5 transition-colors">
-                                        <td className="px-6 py-4 text-white font-mono text-sm">{app.id}</td>
-                                        <td className="px-6 py-4 text-white text-sm max-w-xs truncate">{app.form_type}</td>
-                                        <td className="px-6 py-4 text-white text-sm">{app.applicant_name}</td>
-                                        <td className="px-6 py-4 text-white text-sm">{app.campus}</td>
-                                        <td className="px-6 py-4">
-                                            <span className={`px-3 py-1 rounded-full text-white text-xs ${getStatusColor(app.status)}`}>
-                                                {app.status}
-                                            </span>
+                                    <tr key={app.id} style={{ cursor: 'pointer' }}>
+                                        <td style={{ ...styles.td, fontFamily: 'monospace', fontSize: '12px' }}>{app.id}</td>
+                                        <td style={{ ...styles.td, maxWidth: '200px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{app.form_type}</td>
+                                        <td style={styles.td}>{app.applicant_name}</td>
+                                        <td style={styles.td}>{app.campus}</td>
+                                        <td style={styles.td}>
+                                            <span style={getStatusStyle(app.status)}>{app.status}</span>
                                         </td>
-                                        <td className="px-6 py-4 text-white/60 text-sm">
-                                            {new Date(app.created_at).toLocaleDateString()}
-                                        </td>
-                                        <td className="px-6 py-4">
-                                            <button
-                                                onClick={() => fetchAppDetails(app.id)}
-                                                className="px-4 py-2 bg-purple-600 hover:bg-purple-700 text-white text-sm rounded-lg transition-colors"
-                                            >
+                                        <td style={styles.td}>{new Date(app.created_at).toLocaleDateString()}</td>
+                                        <td style={styles.td}>
+                                            <button onClick={() => fetchAppDetails(app.id)} style={styles.button}>
                                                 View
                                             </button>
                                         </td>
@@ -386,9 +534,9 @@ export default function AdminPortal() {
                         </table>
 
                         {applications.length === 0 && (
-                            <div className="text-center py-12 text-white/60">
+                            <p style={{ textAlign: 'center', padding: '40px', color: 'rgba(255,255,255,0.5)' }}>
                                 No applications found
-                            </div>
+                            </p>
                         )}
                     </div>
                 </div>

@@ -1,6 +1,6 @@
 import { getGoogleAuth, sendEmail } from './google-api';
 
-const ADMIN_EMAIL = 'sathyajain9@gmail.com';
+const ADMIN_EMAIL = 'saisathyajain@sssihl.edu.in';
 
 export default {
     async fetch(request, env) {
@@ -238,25 +238,44 @@ async function handleGetStats(request, env, corsHeaders) {
 // ==================== HELPER FUNCTIONS ====================
 
 async function storeFileBlob(env, appId, fieldName, file) {
-    const arrayBuffer = await file.arrayBuffer();
-    const uint8Array = new Uint8Array(arrayBuffer);
+    try {
+        const arrayBuffer = await file.arrayBuffer();
+        const uint8Array = new Uint8Array(arrayBuffer);
 
-    // Convert to base64 in chunks
-    let base64 = '';
-    const chunkSize = 32768;
-    for (let i = 0; i < uint8Array.length; i += chunkSize) {
-        const chunk = uint8Array.slice(i, Math.min(i + chunkSize, uint8Array.length));
-        base64 += btoa(String.fromCharCode.apply(null, chunk));
+        // Convert to base64 properly - use a single encoding for the entire file
+        // For smaller files (< 1MB), encode directly
+        let base64;
+        if (uint8Array.length < 1024 * 1024) {
+            // For small files, encode directly
+            let binary = '';
+            for (let i = 0; i < uint8Array.length; i++) {
+                binary += String.fromCharCode(uint8Array[i]);
+            }
+            base64 = btoa(binary);
+        } else {
+            // For larger files, use chunks but ensure chunk size is multiple of 3
+            const chunkSize = 30000; // Multiple of 3 to avoid padding issues
+            let binary = '';
+            for (let i = 0; i < uint8Array.length; i++) {
+                binary += String.fromCharCode(uint8Array[i]);
+            }
+            base64 = btoa(binary);
+        }
+
+        await env.DB.prepare(
+            `INSERT INTO file_blobs (application_id, field_name, file_name, file_type, file_size, file_data)
+             VALUES (?, ?, ?, ?, ?, ?)`
+        ).bind(appId, fieldName, file.name, file.type, file.size, base64).run();
+
+        console.log(`Stored file blob: ${file.name} for app ${appId}`);
+    } catch (error) {
+        console.error(`Failed to store file blob: ${error.message}`);
+        throw error;
     }
-
-    await env.DB.prepare(
-        `INSERT INTO file_blobs (application_id, field_name, file_name, file_type, file_size, file_data)
-         VALUES (?, ?, ?, ?, ?, ?)`
-    ).bind(appId, fieldName, file.name, file.type, file.size, base64).run();
 }
 
 async function sendAdminNotification(env, appId, formType, applicantName, email) {
-    if (env.GOOGLE_SERVICE_ACCOUNT_EMAIL && env.GOOGLE_PRIVATE_KEY) {
+    if (env.GOOGLE_CLIENT_ID && env.GOOGLE_CLIENT_SECRET && env.GOOGLE_REFRESH_TOKEN) {
         try {
             const accessToken = await getGoogleAuth(env);
             await sendEmail(accessToken, {
@@ -278,6 +297,64 @@ async function sendAdminNotification(env, appId, formType, applicantName, email)
         }
     }
 }
+
+// Director email functions
+function getDirectorEmail(campus) {
+    const map = {
+        'Prashanti Nilayam Campus': 'saisathyajain@sssihl.edu.in',
+        'Anantapur Campus': 'results@sssihl.edu.in',
+        'Brindavan Campus': 'sathyajain9@gmail.com',
+        'Nandigiri Campus': 'sathyajain99@outlook.com'
+    };
+    return map[campus] || map['Prashanti Nilayam Campus'];
+}
+
+function shouldNotifyDirector(formType) {
+    const forms = [
+        'Application for duplicate Grade Card',
+        'Application for End-Semester Supplementary Examinations',
+        'Application for Registration of Student Name change in the Institute Records',
+        'Application for repeating a paper for supplementary examinations(CIE and ESE)',
+    ];
+    return forms.includes(formType);
+}
+
+async function sendDirectorNotification(env, request, appId, formType, applicantName, email, campus) {
+    if (!shouldNotifyDirector(formType)) {
+        return;
+    }
+
+    if (env.GOOGLE_CLIENT_ID && env.GOOGLE_CLIENT_SECRET && env.GOOGLE_REFRESH_TOKEN) {
+        try {
+            const accessToken = await getGoogleAuth(env);
+            const directorEmail = getDirectorEmail(campus);
+            const url = new URL(request.url);
+
+            await sendEmail(accessToken, {
+                to: directorEmail,
+                subject: `Approval Required: ${formType} - ${appId}`,
+                htmlBody: `
+                    <h2>Application Requires Your Approval</h2>
+                    <p><strong>Application ID:</strong> ${appId}</p>
+                    <p><strong>Form Type:</strong> ${formType}</p>
+                    <p><strong>Applicant:</strong> ${applicantName}</p>
+                    <p><strong>Email:</strong> ${email}</p>
+                    <p><strong>Campus:</strong> ${campus}</p>
+                    <p><strong>Submitted:</strong> ${new Date().toLocaleString()}</p>
+                    <hr>
+                    <p>
+                        <a href="${url.origin}/approve?id=${appId}&role=Director&action=Approve" style="background:#10b981;color:#fff;padding:10px 20px;text-decoration:none;border-radius:5px;margin-right:10px;">✓ Approve</a>
+                        <a href="${url.origin}/approve?id=${appId}&role=Director&action=Reject" style="background:#ef4444;color:#fff;padding:10px 20px;text-decoration:none;border-radius:5px;">✗ Reject</a>
+                    </p>
+                `
+            });
+            console.log(`Director email sent to ${directorEmail} for app ${appId}`);
+        } catch (e) {
+            console.error('Failed to send director notification:', e);
+        }
+    }
+}
+
 
 // ==================== FORM HANDLERS ====================
 
@@ -359,6 +436,9 @@ async function handleDuplicateGradeCard(formData, request, env, corsHeaders) {
     // 4. Send admin notification
     await sendAdminNotification(env, appId, formType, applicantName, email);
 
+    // 5. Send director notification if required
+    await sendDirectorNotification(env, request, appId, formType, applicantName, email, campus);
+
     return new Response(JSON.stringify({ success: true, appId }), {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' }
     });
@@ -403,6 +483,7 @@ async function handleCGPAConversion(formData, request, env, corsHeaders) {
     }
 
     await sendAdminNotification(env, appId, formType, applicantName, email);
+    await sendDirectorNotification(env, request, appId, formType, applicantName, email, campus);
 
     return new Response(JSON.stringify({ success: true, appId }), {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' }
@@ -451,6 +532,7 @@ async function handleSupplementaryExam(formData, request, env, corsHeaders) {
     }
 
     await sendAdminNotification(env, appId, formType, applicantName, email);
+    await sendDirectorNotification(env, request, appId, formType, applicantName, email, campus);
 
     return new Response(JSON.stringify({ success: true, appId }), {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' }
@@ -498,6 +580,7 @@ async function handleRepeatPaper(formData, request, env, corsHeaders) {
     }
 
     await sendAdminNotification(env, appId, formType, applicantName, email);
+    await sendDirectorNotification(env, request, appId, formType, applicantName, email, campus);
 
     return new Response(JSON.stringify({ success: true, appId }), {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' }
@@ -544,6 +627,7 @@ async function handleDuplicateDegree(formData, request, env, corsHeaders) {
     }
 
     await sendAdminNotification(env, appId, formType, applicantName, email);
+    await sendDirectorNotification(env, request, appId, formType, applicantName, email, campus);
 
     return new Response(JSON.stringify({ success: true, appId }), {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' }
@@ -589,6 +673,7 @@ async function handleNameChange(formData, request, env, corsHeaders) {
     }
 
     await sendAdminNotification(env, appId, formType, applicantName, email);
+    await sendDirectorNotification(env, request, appId, formType, applicantName, email, campus);
 
     return new Response(JSON.stringify({ success: true, appId }), {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' }

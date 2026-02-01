@@ -1,70 +1,39 @@
-// Google API functions using native fetch for Cloudflare Workers compatibility
-// Simplified to only handle email sending (no Google Drive)
+// Google API functions using OAuth 2.0 with Refresh Token
+// For sending emails from sathyajain9@gmail.com
 
 export async function getGoogleAuth(env) {
-  // Create JWT token for Google API authentication
-  const header = {
-    alg: 'RS256',
-    typ: 'JWT'
-  };
+  console.log('Getting Google Auth with OAuth...');
+  console.log('Client ID present:', !!env.GOOGLE_CLIENT_ID);
+  console.log('Client Secret present:', !!env.GOOGLE_CLIENT_SECRET);
+  console.log('Refresh Token present:', !!env.GOOGLE_REFRESH_TOKEN);
 
-  const now = Math.floor(Date.now() / 1000);
-  const payload = {
-    iss: env.GOOGLE_SERVICE_ACCOUNT_EMAIL,
-    scope: 'https://www.googleapis.com/auth/gmail.send',
-    aud: 'https://oauth2.googleapis.com/token',
-    exp: now + 3600,
-    iat: now
-  };
-
-  const privateKey = env.GOOGLE_PRIVATE_KEY.replace(/\\n/g, '\n');
-
-  // Import the private key
-  const pemContents = privateKey
-    .replace('-----BEGIN PRIVATE KEY-----', '')
-    .replace('-----END PRIVATE KEY-----', '')
-    .replace(/\s/g, '');
-
-  const binaryKey = Uint8Array.from(atob(pemContents), c => c.charCodeAt(0));
-
-  const cryptoKey = await crypto.subtle.importKey(
-    'pkcs8',
-    binaryKey,
-    { name: 'RSASSA-PKCS1-v1_5', hash: 'SHA-256' },
-    false,
-    ['sign']
-  );
-
-  // Encode header and payload
-  const encoder = new TextEncoder();
-  const headerB64 = btoa(JSON.stringify(header)).replace(/=/g, '').replace(/\+/g, '-').replace(/\//g, '_');
-  const payloadB64 = btoa(JSON.stringify(payload)).replace(/=/g, '').replace(/\+/g, '-').replace(/\//g, '_');
-  const signInput = `${headerB64}.${payloadB64}`;
-
-  // Sign the JWT
-  const signature = await crypto.subtle.sign(
-    'RSASSA-PKCS1-v1_5',
-    cryptoKey,
-    encoder.encode(signInput)
-  );
-
-  const signatureB64 = btoa(String.fromCharCode(...new Uint8Array(signature)))
-    .replace(/=/g, '').replace(/\+/g, '-').replace(/\//g, '_');
-
-  const jwt = `${signInput}.${signatureB64}`;
-
-  // Exchange JWT for access token
-  const tokenResponse = await fetch('https://oauth2.googleapis.com/token', {
+  // Use refresh token to get a new access token
+  const response = await fetch('https://oauth2.googleapis.com/token', {
     method: 'POST',
     headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-    body: `grant_type=urn:ietf:params:oauth:grant-type:jwt-bearer&assertion=${jwt}`
+    body: new URLSearchParams({
+      client_id: env.GOOGLE_CLIENT_ID,
+      client_secret: env.GOOGLE_CLIENT_SECRET,
+      refresh_token: env.GOOGLE_REFRESH_TOKEN,
+      grant_type: 'refresh_token'
+    })
   });
 
-  const tokenData = await tokenResponse.json();
-  return tokenData.access_token;
+  const data = await response.json();
+
+  if (!response.ok) {
+    console.error('OAuth error response:', JSON.stringify(data));
+    throw new Error(`OAuth failed: ${data.error_description || data.error}`);
+  }
+
+  console.log('OAuth successful, got access token');
+  return data.access_token;
 }
 
 export async function sendEmail(accessToken, { to, subject, htmlBody }) {
+  console.log('Sending email to:', to);
+  console.log('Subject:', subject);
+
   const message = [
     'Content-Type: text/html; charset="UTF-8"',
     'MIME-Version: 1.0',
@@ -88,8 +57,13 @@ export async function sendEmail(accessToken, { to, subject, htmlBody }) {
     body: JSON.stringify({ raw: encodedMessage })
   });
 
+  const result = await response.json();
+
   if (!response.ok) {
-    const error = await response.json();
-    throw new Error(`Email send failed: ${JSON.stringify(error)}`);
+    console.error('Email send error:', JSON.stringify(result));
+    throw new Error(`Email send failed: ${JSON.stringify(result)}`);
   }
+
+  console.log(`Email sent successfully to ${to}, message ID:`, result.id);
+  return result;
 }
