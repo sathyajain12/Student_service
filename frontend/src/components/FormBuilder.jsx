@@ -90,7 +90,7 @@ export default function FormBuilder({ config, onSubmit, onCancel }) {
                     <ArrowLeft size={20} />
                 </button>
                 <div>
-                    <h2 style={{ fontSize: '1.8rem', color: 'white', marginBottom: '8px' }}>{config.title}</h2>
+                    <h2 style={{ fontSize: '1.8rem', color: 'var(--text-main)', marginBottom: '8px' }}>{config.title}</h2>
 
                     {config.titleLink && (
                         <div style={{ marginBottom: '12px' }}>
@@ -99,10 +99,10 @@ export default function FormBuilder({ config, onSubmit, onCancel }) {
                                 target="_blank"
                                 rel="noopener noreferrer"
                                 style={{
-                                    color: 'var(--accent-light)',
+                                    color: 'var(--accent)',
                                     textDecoration: 'none',
                                     fontSize: '0.9rem',
-                                    fontWeight: '500',
+                                    fontWeight: '600',
                                     display: 'flex',
                                     alignItems: 'center',
                                     gap: '5px'
@@ -129,14 +129,14 @@ export default function FormBuilder({ config, onSubmit, onCancel }) {
                                 display: 'flex',
                                 alignItems: 'center',
                                 gap: '10px',
-                                borderBottom: '1px solid rgba(255, 255, 255, 0.05)',
+                                borderBottom: '1px solid var(--glass-border)',
                                 paddingBottom: '12px'
                             }}>
                                 <div style={{ width: '4px', height: '24px', background: 'var(--accent-gradient)', borderRadius: '2px' }}></div>
                                 <h3 style={{
-                                    color: 'var(--accent-light)',
+                                    color: 'var(--accent)',
                                     fontSize: '1.3rem',
-                                    fontWeight: '600'
+                                    fontWeight: '700'
                                 }}>
                                     {field.label}
                                 </h3>
@@ -146,13 +146,13 @@ export default function FormBuilder({ config, onSubmit, onCancel }) {
                                 marginTop: '10px',
                                 marginBottom: '25px',
                                 padding: '20px',
-                                background: 'rgba(59, 130, 246, 0.03)',
-                                border: '1px solid rgba(59, 130, 246, 0.1)',
+                                background: 'rgba(15, 23, 42, 0.03)',
+                                border: '1px solid var(--glass-border)',
                                 borderRadius: '14px',
                                 lineHeight: '1.6'
                             }}>
                                 <p style={{
-                                    color: '#d1d5db',
+                                    color: 'var(--text-main)',
                                     fontSize: '0.92rem',
                                     margin: 0,
                                     whiteSpace: 'pre-line'
@@ -166,7 +166,7 @@ export default function FormBuilder({ config, onSubmit, onCancel }) {
                                     <span>{field.label} {field.required && <span style={{ color: 'var(--error)' }}>*</span>}</span>
                                 </label>
                                 {field.description && (
-                                    <p style={{ fontSize: '0.82rem', color: '#94a3b8', marginTop: '-4px', marginBottom: '8px' }}>
+                                    <p style={{ fontSize: '0.82rem', color: 'var(--text-muted)', marginTop: '-4px', marginBottom: '8px' }}>
                                         {field.description}
                                     </p>
                                 )}
@@ -252,15 +252,15 @@ export default function FormBuilder({ config, onSubmit, onCancel }) {
                 {config.files && config.files.length > 0 && (
                     <div style={{
                         padding: '30px',
-                        background: 'rgba(59, 130, 246, 0.03)',
-                        border: '1px solid rgba(59, 130, 246, 0.1)',
+                        background: 'rgba(15, 23, 42, 0.02)',
+                        border: '1px solid var(--glass-border)',
                         borderRadius: '20px',
                         marginTop: '30px',
                         marginBottom: '30px'
                     }}>
                         <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '25px' }}>
-                            <Paperclip size={20} color="var(--accent-light)" />
-                            <h4 style={{ fontSize: '1.2rem', color: 'white' }}>Required Documents (PDF)</h4>
+                            <Paperclip size={20} color="var(--accent)" />
+                            <h4 style={{ fontSize: '1.2rem', color: 'var(--text-main)' }}>Required Documents (PDF)</h4>
                         </div>
 
                         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '20px' }}>
@@ -285,8 +285,8 @@ export default function FormBuilder({ config, onSubmit, onCancel }) {
                                         {files[file.name] ? (
                                             <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '8px' }}>
                                                 <FileText size={32} />
-                                                <span style={{ fontSize: '0.9rem', color: 'white', fontWeight: '500' }}>{files[file.name].name}</span>
-                                                <span style={{ fontSize: '0.75rem', color: 'var(--success)' }}>File Ready</span>
+                                                <span style={{ fontSize: '0.9rem', color: 'var(--text-main)', fontWeight: '600' }}>{files[file.name].name}</span>
+                                                <span style={{ fontSize: '0.75rem', color: 'var(--success)', fontWeight: '700' }}>File Ready</span>
                                             </div>
                                         ) : (
                                             <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '8px' }}>
@@ -309,15 +309,15 @@ export default function FormBuilder({ config, onSubmit, onCancel }) {
                         display: 'flex',
                         alignItems: 'center',
                         gap: '12px',
-                        background: status.type === 'success' ? 'rgba(16, 185, 129, 0.1)' : status.type === 'error' ? 'rgba(239, 68, 68, 0.1)' : 'rgba(59, 130, 246, 0.1)',
-                        border: `1px solid ${status.type === 'success' ? 'rgba(16, 185, 129, 0.2)' : status.type === 'error' ? 'rgba(239, 68, 68, 0.2)' : 'rgba(59, 130, 246, 0.2)'}`,
-                        color: 'white',
+                        background: status.type === 'success' ? 'rgba(5, 150, 105, 0.08)' : status.type === 'error' ? 'rgba(220, 38, 38, 0.08)' : 'rgba(37, 99, 235, 0.08)',
+                        border: `1px solid ${status.type === 'success' ? 'rgba(5, 150, 105, 0.2)' : status.type === 'error' ? 'rgba(220, 38, 38, 0.2)' : 'rgba(37, 99, 235, 0.2)'}`,
+                        color: 'var(--text-main)',
                         animation: 'fadeIn 0.4s ease'
                     }}>
                         {status.type === 'success' ? <CheckCircle2 size={24} color="var(--success)" /> :
                             status.type === 'error' ? <AlertCircle size={24} color="var(--error)" /> :
-                                <Loader2 size={24} className="animate-spin" color="var(--accent-light)" />}
-                        <span style={{ fontSize: '0.95rem', fontWeight: '500' }}>{status.message}</span>
+                                <Loader2 size={24} className="animate-spin" color="var(--accent)" />}
+                        <span style={{ fontSize: '0.95rem', fontWeight: '600' }}>{status.message}</span>
                     </div>
                 )}
 

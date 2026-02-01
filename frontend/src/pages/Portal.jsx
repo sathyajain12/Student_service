@@ -40,8 +40,8 @@ export default function Portal({ onSelectForm }) {
       <div className="glass-card" style={{ padding: '40px', marginBottom: '60px', position: 'relative', overflow: 'hidden' }}>
         <div style={{ position: 'absolute', top: 0, left: 0, width: '4px', height: '100%', background: 'var(--accent-gradient)' }}></div>
         <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '25px' }}>
-          <Info size={24} color="var(--accent-light)" />
-          <h2 style={{ fontSize: '1.6rem', color: 'var(--accent-light)' }}>Submission Guidelines</h2>
+          <Info size={24} color="var(--accent)" />
+          <h2 style={{ fontSize: '1.6rem', color: 'var(--accent)' }}>Submission Guidelines</h2>
         </div>
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))', gap: '25px' }}>
           {[
@@ -52,7 +52,7 @@ export default function Portal({ onSelectForm }) {
           ].map((text, i) => (
             <div key={i} style={{ display: 'flex', alignItems: 'flex-start', gap: '12px' }}>
               <CheckCircle2 size={18} color="var(--success)" style={{ marginTop: '4px', flexShrink: 0 }} />
-              <p style={{ color: '#d1d5db', fontSize: '0.95rem' }}>{text}</p>
+              <p style={{ color: 'var(--text-main)', fontSize: '0.95rem', fontWeight: '500' }}>{text}</p>
             </div>
           ))}
         </div>
@@ -71,34 +71,35 @@ export default function Portal({ onSelectForm }) {
                 display: 'flex',
                 flexDirection: 'column',
                 position: 'relative',
-                border: '1px solid rgba(255, 255, 255, 0.05)'
+                background: 'white',
+                border: '1px solid var(--glass-border)'
               }}
               onClick={() => onSelectForm(form.id)}
               onMouseEnter={(e) => {
                 e.currentTarget.style.transform = 'translateY(-8px)';
-                e.currentTarget.style.borderColor = 'rgba(59, 130, 246, 0.3)';
-                e.currentTarget.style.background = 'rgba(15, 23, 42, 0.8)';
+                e.currentTarget.style.borderColor = 'var(--accent)';
+                e.currentTarget.style.boxShadow = '0 20px 40px -15px rgba(15, 23, 42, 0.15)';
               }}
               onMouseLeave={(e) => {
                 e.currentTarget.style.transform = 'translateY(0)';
                 e.currentTarget.style.borderColor = 'var(--glass-border)';
-                e.currentTarget.style.background = 'var(--glass)';
+                e.currentTarget.style.boxShadow = 'var(--card-shadow)';
               }}
             >
               <div style={{
                 width: '60px',
                 height: '60px',
                 borderRadius: '16px',
-                background: 'rgba(59, 130, 246, 0.1)',
+                background: 'rgba(37, 99, 235, 0.05)',
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
                 marginBottom: '20px',
-                color: 'var(--accent-light)'
+                color: 'var(--accent)'
               }}>
                 <Icon size={32} />
               </div>
-              <h3 style={{ fontSize: '1.45rem', marginBottom: '12px', color: 'white' }}>{form.title}</h3>
+              <h3 style={{ fontSize: '1.45rem', marginBottom: '12px', color: 'var(--primary)' }}>{form.title}</h3>
               <p style={{ color: 'var(--text-muted)', fontSize: '0.95rem', flexGrow: 1, leading: '1.5' }}>{form.desc}</p>
 
               <div style={{
@@ -107,21 +108,21 @@ export default function Portal({ onSelectForm }) {
                 justifyContent: 'space-between',
                 alignItems: 'center',
                 paddingTop: '20px',
-                borderTop: '1px solid rgba(255, 255, 255, 0.05)'
+                borderTop: '1px solid var(--glass-border)'
               }}>
                 <span style={{
                   fontSize: '0.75rem',
                   fontWeight: '700',
                   textTransform: 'uppercase',
                   letterSpacing: '0.05em',
-                  background: 'rgba(255, 255, 255, 0.05)',
+                  background: 'rgba(15, 23, 42, 0.05)',
                   color: 'var(--text-muted)',
                   padding: '6px 12px',
                   borderRadius: '10px'
                 }}>
                   {form.category}
                 </span>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '6px', color: 'var(--accent-light)', fontWeight: '600', fontSize: '0.9rem' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '6px', color: 'var(--accent)', fontWeight: '700', fontSize: '0.9rem' }}>
                   Apply Now <Send size={14} />
                 </div>
               </div>
