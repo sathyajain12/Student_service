@@ -1,32 +1,57 @@
 import React, { useState } from 'react';
 import Portal from './pages/Portal';
 import FormBuilder from './components/FormBuilder';
+import StatusTracker from './components/StatusTracker';
 import { FORM_CONFIGS } from './formConfigs';
 import './index.css';
 
 function App() {
+  const [view, setView] = useState('portal'); // 'portal' | 'form' | 'status'
   const [currentFormId, setCurrentFormId] = useState(null);
 
   const selectedConfig = FORM_CONFIGS[currentFormId];
 
+  const handleSelectForm = (id) => {
+    setCurrentFormId(id);
+    setView('form');
+  };
+
+  const handleBackToPortal = () => {
+    setCurrentFormId(null);
+    setView('portal');
+  };
+
   return (
     <div className="App">
-      {!currentFormId ? (
-        <Portal onSelectForm={setCurrentFormId} />
-      ) : (
+      {view === 'portal' && (
+        <Portal
+          onSelectForm={handleSelectForm}
+          onTrackStatus={() => setView('status')}
+        />
+      )}
+
+      {view === 'form' && (
         <div className="container" style={{ maxWidth: '900px' }}>
           <div className="glass-card" style={{ padding: '40px' }}>
             {selectedConfig ? (
               <FormBuilder
                 config={selectedConfig}
-                onCancel={() => setCurrentFormId(null)}
+                onCancel={handleBackToPortal}
+                onTrackStatus={() => setView('status')}
               />
             ) : (
               <p style={{ color: 'var(--text-muted)' }}>
                 This form configuration is coming soon.
+                <button onClick={handleBackToPortal} className="btn-secondary" style={{ marginTop: '20px' }}>Back</button>
               </p>
             )}
           </div>
+        </div>
+      )}
+
+      {view === 'status' && (
+        <div className="container" style={{ maxWidth: '900px' }}>
+          <StatusTracker onBack={handleBackToPortal} />
         </div>
       )}
     </div>

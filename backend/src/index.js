@@ -24,6 +24,10 @@ export default {
                 return await handleApproval(url, env, corsHeaders);
             }
 
+            if (url.pathname === '/status' && request.method === 'GET') {
+                return await handleStatusRequest(url, env, corsHeaders);
+            }
+
             return new Response('Not Found', { status: 404, headers: corsHeaders });
         } catch (error) {
             console.error(error);
@@ -753,14 +757,21 @@ async function handleApproval(url, env, corsHeaders) {
     const role = url.searchParams.get('role');
     const action = url.searchParams.get('action');
 
+    const statusValue = action === 'Approve' ? 'APPROVED' : 'REJECTED';
+
     if (role === 'Director') {
-        const status = action === 'Approve' ? 'APPROVED' : 'REJECTED';
         await env.DB.prepare(
             `UPDATE applications SET director_status = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?`
-        ).bind(status, id).run();
+        ).bind(statusValue, id).run();
+
+        if (statusValue === 'REJECTED') {
+            await env.DB.prepare(
+                `UPDATE applications SET status = 'REJECTED', updated_at = CURRENT_TIMESTAMP WHERE id = ?`
+            ).bind(id).run();
+        }
 
         // If approved by Director, notify the Controller
-        if (status === 'APPROVED' && env.GOOGLE_SERVICE_ACCOUNT_EMAIL && env.GOOGLE_PRIVATE_KEY) {
+        if (statusValue === 'APPROVED' && env.GOOGLE_SERVICE_ACCOUNT_EMAIL && env.GOOGLE_PRIVATE_KEY) {
             const app = await env.DB.prepare(
                 `SELECT form_type, applicant_name, student_email FROM applications WHERE id = ?`
             ).bind(id).first();
@@ -768,6 +779,7 @@ async function handleApproval(url, env, corsHeaders) {
             if (app) {
                 const auth = await getGoogleAuth(env);
                 const controllerEmail = getControllerEmail();
+                const origin = url.origin;
                 await sendEmail(auth, {
                     to: controllerEmail,
                     subject: `Director Approved: ${app.form_type} - ${id}`,
@@ -775,13 +787,59 @@ async function handleApproval(url, env, corsHeaders) {
                            <p><strong>App ID:</strong> ${id}</p>
                            <p><strong>Form:</strong> ${app.form_type}</p>
                            <p><strong>Student:</strong> ${app.applicant_name} (${app.student_email})</p>
-                           <p>The Director has approved this application. Please take necessary action.</p>`
+                           <p>The Director has approved this application. Please take necessary action.</p>
+                           <p>
+                             <a href="${origin}/approve?id=${id}&role=Controller&action=Approve">Approve Application</a> | 
+                             <a href="${origin}/approve?id=${id}&role=Controller&action=Reject">Reject Application</a>
+                           </p>`
                 });
             }
         }
+    } else if (role === 'Controller') {
+        await env.DB.prepare(
+            `UPDATE applications SET controller_status = ?, status = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?`
+        ).bind(statusValue, statusValue === 'APPROVED' ? 'COMPLETED' : 'REJECTED', id).run();
     }
 
     return new Response(`Application ${id} ${action}d by ${role}`, { headers: corsHeaders });
+}
+
+async function handleStatusRequest(url, env, corsHeaders) {
+    const id = url.searchParams.get('id');
+    if (!id) {
+        return new Response(JSON.stringify({ error: 'Application ID is required' }), {
+            status: 400,
+            headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+        });
+    }
+
+    try {
+        const app = await env.DB.prepare(
+            `SELECT id, student_email, form_type, applicant_name, reg_no, campus, status, director_status, controller_status, created_at, updated_at 
+             FROM applications WHERE id = ?`
+        ).bind(id).first();
+
+        if (!app) {
+            return new Response(JSON.stringify({ error: 'Application not found' }), {
+                status: 404,
+                headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+            });
+        }
+
+        const needsDirectorApproval = shouldNotifyDirector(app.form_type);
+
+        return new Response(JSON.stringify({
+            ...app,
+            needs_director_approval: needsDirectorApproval
+        }), {
+            headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+        });
+    } catch (error) {
+        return new Response(JSON.stringify({ error: error.message }), {
+            status: 500,
+            headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+        });
+    }
 }
 
 function getDirectorEmail(campus, env) {

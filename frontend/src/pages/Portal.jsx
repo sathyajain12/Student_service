@@ -25,16 +25,40 @@ const FORMS = [
   { id: 'migration', title: 'Migration Certificate', Icon: Send, category: 'Transfer', desc: 'Transfer to another university.' },
 ];
 
-export default function Portal({ onSelectForm }) {
+export default function Portal({ onSelectForm, onTrackStatus }) {
   return (
     <div className="container animate-fade-in">
-      <header style={{ textAlign: 'center', marginBottom: '80px' }}>
+      <header style={{ textAlign: 'center', marginBottom: '80px', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
         <h1 className="title-gradient" style={{ fontSize: '3.8rem', marginBottom: '15px' }}>
           Student Service Portal
         </h1>
-        <p style={{ color: 'var(--text-muted)', fontSize: '1.25rem', fontWeight: '500' }}>
+        <p style={{ color: 'var(--text-muted)', fontSize: '1.25rem', fontWeight: '500', marginBottom: '30px' }}>
           Sri Sathya Sai Institute of Higher Learning
         </p>
+
+        <button
+          onClick={onTrackStatus}
+          className="btn-secondary"
+          style={{
+            display: 'flex',
+            alignItems: 'center',
+            gap: '10px',
+            padding: '12px 24px',
+            border: '2px solid var(--accent)',
+            color: 'var(--accent)',
+            background: 'white'
+          }}
+          onMouseEnter={(e) => {
+            e.currentTarget.style.background = 'var(--accent)';
+            e.currentTarget.style.color = 'white';
+          }}
+          onMouseLeave={(e) => {
+            e.currentTarget.style.background = 'white';
+            e.currentTarget.style.color = 'var(--accent)';
+          }}
+        >
+          <Search size={18} /> Track Your Application Status
+        </button>
       </header>
 
       <div className="glass-card" style={{ padding: '40px', marginBottom: '60px', position: 'relative', overflow: 'hidden' }}>

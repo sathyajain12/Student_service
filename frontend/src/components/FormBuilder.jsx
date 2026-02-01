@@ -14,7 +14,7 @@ import {
     Loader2
 } from 'lucide-react';
 
-export default function FormBuilder({ config, onSubmit, onCancel }) {
+export default function FormBuilder({ config, onSubmit, onCancel, onTrackStatus }) {
     const [formData, setFormData] = useState({});
     const [dateRanges, setDateRanges] = useState({});
     const [files, setFiles] = useState({});
@@ -303,21 +303,44 @@ export default function FormBuilder({ config, onSubmit, onCancel }) {
 
                 {status && (
                     <div style={{
-                        padding: '20px',
-                        borderRadius: '16px',
+                        padding: '24px',
+                        borderRadius: '20px',
                         marginBottom: '30px',
                         display: 'flex',
-                        alignItems: 'center',
-                        gap: '12px',
+                        flexDirection: 'column',
+                        gap: '15px',
                         background: status.type === 'success' ? 'rgba(5, 150, 105, 0.08)' : status.type === 'error' ? 'rgba(220, 38, 38, 0.08)' : 'rgba(37, 99, 235, 0.08)',
                         border: `1px solid ${status.type === 'success' ? 'rgba(5, 150, 105, 0.2)' : status.type === 'error' ? 'rgba(220, 38, 38, 0.2)' : 'rgba(37, 99, 235, 0.2)'}`,
                         color: 'var(--text-main)',
                         animation: 'fadeIn 0.4s ease'
                     }}>
-                        {status.type === 'success' ? <CheckCircle2 size={24} color="var(--success)" /> :
-                            status.type === 'error' ? <AlertCircle size={24} color="var(--error)" /> :
-                                <Loader2 size={24} className="animate-spin" color="var(--accent)" />}
-                        <span style={{ fontSize: '0.95rem', fontWeight: '600' }}>{status.message}</span>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                            {status.type === 'success' ? <CheckCircle2 size={24} color="var(--success)" /> :
+                                status.type === 'error' ? <AlertCircle size={24} color="var(--error)" /> :
+                                    <Loader2 size={24} className="animate-spin" color="var(--accent)" />}
+                            <span style={{ fontSize: '1rem', fontWeight: '700' }}>{status.message}</span>
+                        </div>
+
+                        {status.type === 'success' && (
+                            <div style={{ display: 'flex', gap: '10px', marginTop: '5px' }}>
+                                <button
+                                    type="button"
+                                    onClick={onTrackStatus}
+                                    className="btn-primary"
+                                    style={{ padding: '10px 20px', fontSize: '0.9rem' }}
+                                >
+                                    Track Status Now
+                                </button>
+                                <button
+                                    type="button"
+                                    onClick={onCancel}
+                                    className="btn-secondary"
+                                    style={{ padding: '10px 20px', fontSize: '0.9rem' }}
+                                >
+                                    Return to Portal
+                                </button>
+                            </div>
+                        )}
                     </div>
                 )}
 
