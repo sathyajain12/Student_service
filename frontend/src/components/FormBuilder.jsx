@@ -81,17 +81,41 @@ export default function FormBuilder({ config, onSubmit, onCancel }) {
 
     return (
         <div className="animate-fade-in">
-            <div style={{ display: 'flex', alignItems: 'center', gap: '15px', marginBottom: '40px' }}>
+            <div style={{ display: 'flex', alignItems: 'flex-start', gap: '15px', marginBottom: '40px' }}>
                 <button
                     onClick={onCancel}
                     className="btn-secondary"
-                    style={{ padding: '10px', borderRadius: '12px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+                    style={{ padding: '10px', borderRadius: '12px', display: 'flex', alignItems: 'center', justifyContent: 'center', marginTop: '4px' }}
                 >
                     <ArrowLeft size={20} />
                 </button>
                 <div>
-                    <h2 style={{ fontSize: '1.8rem', color: 'white' }}>{config.title}</h2>
-                    <p style={{ color: 'var(--text-muted)', fontSize: '0.9rem' }}>Please fill in all required fields accurately.</p>
+                    <h2 style={{ fontSize: '1.8rem', color: 'white', marginBottom: '8px' }}>{config.title}</h2>
+
+                    {config.titleLink && (
+                        <div style={{ marginBottom: '12px' }}>
+                            <a
+                                href={config.titleLink.url}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                style={{
+                                    color: 'var(--accent-light)',
+                                    textDecoration: 'none',
+                                    fontSize: '0.9rem',
+                                    fontWeight: '500',
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    gap: '5px'
+                                }}
+                            >
+                                {config.titleLink.text} <ArrowLeft size={14} style={{ transform: 'rotate(180deg)' }} />
+                            </a>
+                        </div>
+                    )}
+
+                    <p style={{ color: 'var(--text-muted)', fontSize: '0.95rem', lineHeight: '1.5' }}>
+                        {config.description || "Please fill in all required fields accurately to ensure smooth processing of your application."}
+                    </p>
                 </div>
             </div>
 
