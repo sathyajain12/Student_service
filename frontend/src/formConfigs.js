@@ -11,7 +11,7 @@ const COMMON_ACADEMIC_FIELDS = [
 
 export const FORM_CONFIGS = {
     'duplicate-grade-card': {
-        title: 'Duplicate Grade Card',
+        title: 'Application for duplicate Grade Card',
         fields: [
             ...COMMON_ACADEMIC_FIELDS,
             { name: 'periodOfStudy', label: 'Period of Study', type: 'text', required: true, placeholder: 'e.g., June 2019 - March 2022' },
@@ -26,7 +26,7 @@ export const FORM_CONFIGS = {
         ]
     },
     'cgpa-conversion': {
-        title: 'CGPA to Marks Conversion',
+        title: 'Application for CGPA to Marks Conversion',
         fields: [...COMMON_ACADEMIC_FIELDS,
         {
             name: "periodOfStudy",
