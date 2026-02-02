@@ -817,25 +817,60 @@ async function handleApproval(url, env, corsHeaders) {
     const role = url.searchParams.get('role');
     const action = url.searchParams.get('action');
 
-    const statusValue = action === 'Approve' ? 'APPROVED' : 'REJECTED';
+    console.log(`Approval request received - ID: ${id}, Role: ${role}, Action: ${action}`);
 
-    if (role === 'Director') {
-        await env.DB.prepare(
-            `UPDATE applications SET director_status = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?`
-        ).bind(statusValue, id).run();
-
-        if (statusValue === 'REJECTED') {
-            await env.DB.prepare(
-                `UPDATE applications SET status = 'REJECTED', updated_at = CURRENT_TIMESTAMP WHERE id = ?`
-            ).bind(id).run();
-        }
-    } else if (role === 'Controller') {
-        await env.DB.prepare(
-            `UPDATE applications SET controller_status = ?, status = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?`
-        ).bind(statusValue, statusValue === 'APPROVED' ? 'COMPLETED' : 'REJECTED', id).run();
+    if (!id || !role || !action) {
+        console.error('Missing required parameters for approval');
+        return new Response('Missing required parameters', {
+            status: 400,
+            headers: corsHeaders
+        });
     }
 
-    return new Response(`Application ${id} ${action}d by ${role}`, { headers: corsHeaders });
+    const statusValue = action === 'Approve' ? 'APPROVED' : 'REJECTED';
+
+    try {
+        if (role === 'Director') {
+            console.log(`Updating director_status to ${statusValue} for application ${id}`);
+            const result = await env.DB.prepare(
+                `UPDATE applications SET director_status = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?`
+            ).bind(statusValue, id).run();
+
+            console.log(`Update result:`, result);
+
+            if (statusValue === 'REJECTED') {
+                console.log(`Setting overall status to REJECTED for application ${id}`);
+                await env.DB.prepare(
+                    `UPDATE applications SET status = 'REJECTED', updated_at = CURRENT_TIMESTAMP WHERE id = ?`
+                ).bind(id).run();
+            }
+        } else if (role === 'Controller') {
+            console.log(`Updating controller_status to ${statusValue} for application ${id}`);
+            const result = await env.DB.prepare(
+                `UPDATE applications SET controller_status = ?, status = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?`
+            ).bind(statusValue, statusValue === 'APPROVED' ? 'COMPLETED' : 'REJECTED', id).run();
+
+            console.log(`Update result:`, result);
+        }
+
+        // Verify the update
+        const verification = await env.DB.prepare(
+            `SELECT id, director_status, controller_status, status FROM applications WHERE id = ?`
+        ).bind(id).first();
+
+        console.log(`Verification query result:`, verification);
+
+        return new Response(
+            `Application ${id} ${action}d by ${role}\n\nCurrent status: ${JSON.stringify(verification, null, 2)}`,
+            { headers: { ...corsHeaders, 'Content-Type': 'text/plain' } }
+        );
+    } catch (error) {
+        console.error('Error in handleApproval:', error);
+        return new Response(`Error: ${error.message}`, {
+            status: 500,
+            headers: corsHeaders
+        });
+    }
 }
 
 async function handleStatusRequest(url, env, corsHeaders) {
