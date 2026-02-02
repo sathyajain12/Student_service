@@ -218,6 +218,41 @@ export default function FormBuilder({ config, onSubmit, onCancel, onTrackStatus 
                                                 </label>
                                             ))}
                                         </div>
+                                    ) : field.type === 'radio' ? (
+                                        <div style={{ display: 'flex', gap: '24px', flexWrap: 'wrap' }}>
+                                            {field.options.map(option => (
+                                                <label key={option} style={{
+                                                    display: 'flex',
+                                                    alignItems: 'center',
+                                                    gap: '10px',
+                                                    cursor: 'pointer',
+                                                    padding: '12px 20px',
+                                                    borderRadius: '12px',
+                                                    border: formData[field.name] === option ? '2px solid var(--accent)' : '2px solid var(--glass-border)',
+                                                    background: formData[field.name] === option ? 'rgba(37, 99, 235, 0.05)' : 'white',
+                                                    transition: 'all 0.2s ease'
+                                                }}>
+                                                    <input
+                                                        type="radio"
+                                                        name={field.name}
+                                                        value={option}
+                                                        checked={formData[field.name] === option}
+                                                        onChange={handleChange}
+                                                        required={field.required}
+                                                        style={{
+                                                            width: '18px',
+                                                            height: '18px',
+                                                            accentColor: 'var(--accent)'
+                                                        }}
+                                                    />
+                                                    <span style={{
+                                                        fontSize: '0.95rem',
+                                                        fontWeight: formData[field.name] === option ? '600' : '500',
+                                                        color: formData[field.name] === option ? 'var(--accent)' : 'var(--text-main)'
+                                                    }}>{option}</span>
+                                                </label>
+                                            ))}
+                                        </div>
                                     ) : field.type === 'select' ? (
                                         <div style={{ position: 'relative' }}>
                                             <select
