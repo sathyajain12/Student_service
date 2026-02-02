@@ -892,20 +892,172 @@ async function handleApproval(url, env, corsHeaders) {
 
         // Verify the update
         const verification = await env.DB.prepare(
-            `SELECT id, director_status, controller_status, status FROM applications WHERE id = ?`
+            `SELECT id, director_status, controller_status, status, applicant_name, form_type FROM applications WHERE id = ?`
         ).bind(id).first();
 
         console.log(`Verification query result:`, verification);
 
-        return new Response(
-            `Application ${id} ${action}d by ${role}\n\nCurrent status: ${JSON.stringify(verification, null, 2)}`,
-            { headers: { ...corsHeaders, 'Content-Type': 'text/plain' } }
-        );
+        // Return a nice HTML page
+        const isApproved = action === 'Approve';
+        const html = `
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>${isApproved ? 'Application Approved' : 'Application Rejected'} - SSSIHL</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+        .card {
+            background: white;
+            border-radius: 20px;
+            padding: 50px;
+            max-width: 500px;
+            width: 100%;
+            text-align: center;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+        }
+        .icon {
+            width: 80px;
+            height: 80px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 25px;
+            font-size: 40px;
+        }
+        .icon.success { background: #d1fae5; }
+        .icon.error { background: #fee2e2; }
+        h1 {
+            color: #1f2937;
+            font-size: 1.8rem;
+            margin-bottom: 10px;
+        }
+        .subtitle {
+            color: #6b7280;
+            font-size: 1rem;
+            margin-bottom: 30px;
+        }
+        .details {
+            background: #f9fafb;
+            border-radius: 12px;
+            padding: 20px;
+            text-align: left;
+        }
+        .detail-row {
+            display: flex;
+            justify-content: space-between;
+            padding: 10px 0;
+            border-bottom: 1px solid #e5e7eb;
+        }
+        .detail-row:last-child { border-bottom: none; }
+        .detail-label { color: #6b7280; font-size: 0.9rem; }
+        .detail-value { color: #1f2937; font-weight: 600; font-size: 0.9rem; }
+        .status-badge {
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            font-weight: 600;
+        }
+        .status-approved { background: #d1fae5; color: #059669; }
+        .status-rejected { background: #fee2e2; color: #dc2626; }
+        .footer {
+            margin-top: 30px;
+            color: #9ca3af;
+            font-size: 0.85rem;
+        }
+    </style>
+</head>
+<body>
+    <div class="card">
+        <div class="icon ${isApproved ? 'success' : 'error'}">
+            ${isApproved ? '✓' : '✗'}
+        </div>
+        <h1>Application ${isApproved ? 'Approved' : 'Rejected'}</h1>
+        <p class="subtitle">Your decision has been recorded successfully</p>
+
+        <div class="details">
+            <div class="detail-row">
+                <span class="detail-label">Application ID</span>
+                <span class="detail-value">${id}</span>
+            </div>
+            <div class="detail-row">
+                <span class="detail-label">Applicant</span>
+                <span class="detail-value">${verification?.applicant_name || 'N/A'}</span>
+            </div>
+            <div class="detail-row">
+                <span class="detail-label">Form Type</span>
+                <span class="detail-value">${verification?.form_type || 'N/A'}</span>
+            </div>
+            <div class="detail-row">
+                <span class="detail-label">Decision By</span>
+                <span class="detail-value">${role}</span>
+            </div>
+            <div class="detail-row">
+                <span class="detail-label">Status</span>
+                <span class="status-badge ${isApproved ? 'status-approved' : 'status-rejected'}">${isApproved ? 'APPROVED' : 'REJECTED'}</span>
+            </div>
+        </div>
+
+        <p class="footer">Sri Sathya Sai Institute of Higher Learning<br>Examination Services Portal</p>
+    </div>
+</body>
+</html>`;
+
+        return new Response(html, {
+            headers: { ...corsHeaders, 'Content-Type': 'text/html' }
+        });
     } catch (error) {
         console.error('Error in handleApproval:', error);
-        return new Response(`Error: ${error.message}`, {
+        const errorHtml = `
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Error - SSSIHL</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: #fee2e2;
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+        .card {
+            background: white;
+            border-radius: 20px;
+            padding: 50px;
+            max-width: 400px;
+            text-align: center;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.1);
+        }
+        h1 { color: #dc2626; margin-bottom: 10px; }
+        p { color: #6b7280; }
+    </style>
+</head>
+<body>
+    <div class="card">
+        <h1>Something went wrong</h1>
+        <p>Please try again or contact support.</p>
+    </div>
+</body>
+</html>`;
+        return new Response(errorHtml, {
             status: 500,
-            headers: corsHeaders
+            headers: { ...corsHeaders, 'Content-Type': 'text/html' }
         });
     }
 }
