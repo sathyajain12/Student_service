@@ -147,6 +147,11 @@ export const FORM_CONFIGS = {
                 label: 'Sworn Affidavit',
                 required: true
             },
+            {
+                name: 'sbiReceipt',
+                label: 'SBI Collect Receipt (₹1000)',
+                required: true
+            },
         ]
     },
     'name-change': {
