@@ -21,7 +21,7 @@ export const FORM_CONFIGS = {
         files: [
             { name: 'policeComplaint', label: 'Police Complaint (if lodged)', required: false },
             { name: 'affidavit', label: 'Sworn Affidavit', required: true },
-            { name: 'gradeCard', label: 'Original Grade Card (Scanned)', required: true },
+            { name: 'gradeCard', label: 'Original Grade Card (Scanned) (Optional)', required: false },
             { name: 'sbiReceipt', label: 'SBI Collect Receipt (₹500)', required: true },
         ]
     },
@@ -108,7 +108,7 @@ export const FORM_CONFIGS = {
         ]
     },
     'duplicate-degree': {
-        title: 'Application for duplicate Degree Certificate',
+        title: 'Application for Duplicate Degree Certificate',
         fields: [...COMMON_ACADEMIC_FIELDS,
         {
             name: "periodOfStudy",
