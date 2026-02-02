@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { LogOut, FileText, Download, Users, Clock, CheckCircle, XCircle, ArrowLeft } from 'lucide-react';
+import { LogOut, FileText, Download, Users, Clock, CheckCircle, XCircle, ArrowLeft, RefreshCw } from 'lucide-react';
 
 const API_URL = import.meta.env.VITE_BACKEND_URL || 'http://localhost:8787';
 
@@ -213,12 +213,26 @@ export default function AdminPortal() {
     const [applications, setApplications] = useState([]);
     const [selectedApp, setSelectedApp] = useState(null);
     const [appDetails, setAppDetails] = useState(null);
+    const [lastUpdated, setLastUpdated] = useState(null);
+    const [isRefreshing, setIsRefreshing] = useState(false);
 
     useEffect(() => {
         if (isLoggedIn) {
             fetchStats();
             fetchApplications();
         }
+    }, [isLoggedIn]);
+
+    // Auto-refresh every 30 seconds when logged in
+    useEffect(() => {
+        if (!isLoggedIn) return;
+
+        const interval = setInterval(() => {
+            fetchStats();
+            fetchApplications();
+        }, 30000); // 30 seconds
+
+        return () => clearInterval(interval);
     }, [isLoggedIn]);
 
     const handleLogin = async (e) => {
@@ -265,6 +279,7 @@ export default function AdminPortal() {
             if (response.ok) {
                 const data = await response.json();
                 setStats(data);
+                setLastUpdated(new Date());
             }
         } catch (err) {
             console.error('Failed to fetch stats:', err);
@@ -279,10 +294,17 @@ export default function AdminPortal() {
             if (response.ok) {
                 const data = await response.json();
                 setApplications(data);
+                setLastUpdated(new Date());
             }
         } catch (err) {
             console.error('Failed to fetch applications:', err);
         }
+    };
+
+    const handleManualRefresh = async () => {
+        setIsRefreshing(true);
+        await Promise.all([fetchStats(), fetchApplications()]);
+        setTimeout(() => setIsRefreshing(false), 500);
     };
 
     const fetchAppDetails = async (id) => {
@@ -440,14 +462,48 @@ export default function AdminPortal() {
 
     // Dashboard View
     return (
-        <div style={styles.page}>
-            <div style={styles.container}>
+        <>
+            <style>{`
+                @keyframes spin {
+                    from { transform: rotate(0deg); }
+                    to { transform: rotate(360deg); }
+                }
+            `}</style>
+            <div style={styles.page}>
+                <div style={styles.container}>
                 {/* Header */}
                 <div style={styles.header}>
                     <h1 style={styles.title}>Admin Dashboard</h1>
-                    <button onClick={handleLogout} style={styles.logoutButton}>
-                        <LogOut size={18} /> Logout
-                    </button>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
+                        <button
+                            onClick={handleManualRefresh}
+                            disabled={isRefreshing}
+                            style={{
+                                padding: '10px 20px',
+                                background: 'rgba(59, 130, 246, 0.2)',
+                                color: '#3b82f6',
+                                border: 'none',
+                                borderRadius: '8px',
+                                cursor: isRefreshing ? 'not-allowed' : 'pointer',
+                                display: 'flex',
+                                alignItems: 'center',
+                                gap: '8px',
+                                fontSize: '14px',
+                                opacity: isRefreshing ? 0.6 : 1
+                            }}
+                        >
+                            <RefreshCw size={18} style={{ animation: isRefreshing ? 'spin 1s linear infinite' : 'none' }} />
+                            {isRefreshing ? 'Refreshing...' : 'Refresh'}
+                        </button>
+                        {lastUpdated && (
+                            <span style={{ color: 'rgba(255, 255, 255, 0.5)', fontSize: '12px' }}>
+                                Last updated: {lastUpdated.toLocaleTimeString()}
+                            </span>
+                        )}
+                        <button onClick={handleLogout} style={styles.logoutButton}>
+                            <LogOut size={18} /> Logout
+                        </button>
+                    </div>
                 </div>
 
                 {/* Stats Cards */}
@@ -542,5 +598,6 @@ export default function AdminPortal() {
                 </div>
             </div>
         </div>
+        </>
     );
 }
