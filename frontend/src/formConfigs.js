@@ -12,6 +12,7 @@ const COMMON_ACADEMIC_FIELDS = [
 export const FORM_CONFIGS = {
     'duplicate-grade-card': {
         title: 'Application for duplicate Grade Card',
+        description: 'Note: This form is applicable only for students from batches before 2021. Students from 2021 batch onwards can download their Grade Cards directly from DigiLocker.',
         fields: [
             ...COMMON_ACADEMIC_FIELDS,
             { name: 'periodOfStudy', label: 'Period of Study', type: 'text', required: true, placeholder: 'e.g., June 2019 - March 2022' },
