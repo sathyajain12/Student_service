@@ -217,7 +217,7 @@ async function handleGetStats(request, env, corsHeaders) {
 
     const total = await env.DB.prepare('SELECT COUNT(*) as count FROM applications').first();
     const pending = await env.DB.prepare("SELECT COUNT(*) as count FROM applications WHERE status = 'PENDING'").first();
-    const approved = await env.DB.prepare("SELECT COUNT(*) as count FROM applications WHERE status = 'COMPLETED'").first();
+    const approved = await env.DB.prepare("SELECT COUNT(*) as count FROM applications WHERE status IN ('APPROVED', 'COMPLETED')").first();
     const rejected = await env.DB.prepare("SELECT COUNT(*) as count FROM applications WHERE status = 'REJECTED'").first();
 
     const byFormType = await env.DB.prepare(
