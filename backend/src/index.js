@@ -831,19 +831,14 @@ async function handleApproval(url, env, corsHeaders) {
 
     try {
         if (role === 'Director') {
-            console.log(`Updating director_status to ${statusValue} for application ${id}`);
+            // Set overall status to APPROVED when director approves, REJECTED when director rejects
+            const overallStatus = statusValue === 'APPROVED' ? 'APPROVED' : 'REJECTED';
+            console.log(`Updating director_status to ${statusValue} and status to ${overallStatus} for application ${id}`);
             const result = await env.DB.prepare(
-                `UPDATE applications SET director_status = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?`
-            ).bind(statusValue, id).run();
+                `UPDATE applications SET director_status = ?, status = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?`
+            ).bind(statusValue, overallStatus, id).run();
 
             console.log(`Update result:`, result);
-
-            if (statusValue === 'REJECTED') {
-                console.log(`Setting overall status to REJECTED for application ${id}`);
-                await env.DB.prepare(
-                    `UPDATE applications SET status = 'REJECTED', updated_at = CURRENT_TIMESTAMP WHERE id = ?`
-                ).bind(id).run();
-            }
         } else if (role === 'Controller') {
             console.log(`Updating controller_status to ${statusValue} for application ${id}`);
             const result = await env.DB.prepare(
