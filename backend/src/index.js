@@ -54,6 +54,10 @@ export default {
                 return await handleGetStats(request, env, corsHeaders);
             }
 
+            if (url.pathname === '/admin/complete' && request.method === 'POST') {
+                return await handleMarkCompleted(request, env, corsHeaders);
+            }
+
             return new Response('Not Found', { status: 404, headers: corsHeaders });
         } catch (error) {
             console.error(error);
@@ -233,6 +237,44 @@ async function handleGetStats(request, env, corsHeaders) {
     }), {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' }
     });
+}
+
+async function handleMarkCompleted(request, env, corsHeaders) {
+    const admin = await verifyAdminToken(request, env);
+    if (!admin) {
+        return new Response(JSON.stringify({ error: 'Unauthorized' }), {
+            status: 401,
+            headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+        });
+    }
+
+    try {
+        const { applicationId } = await request.json();
+
+        if (!applicationId) {
+            return new Response(JSON.stringify({ error: 'Application ID is required' }), {
+                status: 400,
+                headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+            });
+        }
+
+        // Update the application status to COMPLETED
+        await env.DB.prepare(
+            `UPDATE applications SET controller_status = 'APPROVED', status = 'COMPLETED', updated_at = CURRENT_TIMESTAMP WHERE id = ?`
+        ).bind(applicationId).run();
+
+        console.log(`Application ${applicationId} marked as completed by admin`);
+
+        return new Response(JSON.stringify({ success: true, message: 'Application marked as completed' }), {
+            headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+        });
+    } catch (error) {
+        console.error('Error marking application as completed:', error);
+        return new Response(JSON.stringify({ error: error.message }), {
+            status: 500,
+            headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+        });
+    }
 }
 
 // ==================== HELPER FUNCTIONS ====================

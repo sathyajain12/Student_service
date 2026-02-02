@@ -332,9 +332,40 @@ export default function AdminPortal() {
                 const a = document.createElement('a');
                 a.href = url;
                 a.download = fileName;
-                a.click();
                 window.URL.revokeObjectURL(url);
             });
+    };
+
+    const markAsCompleted = async (applicationId) => {
+        if (!confirm('Are you sure you want to mark this application as Completed & Dispatched?')) {
+            return;
+        }
+
+        try {
+            const response = await fetch(`${API_URL}/admin/complete`, {
+                method: 'POST',
+                headers: {
+                    'Authorization': `Bearer ${token}`,
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ applicationId })
+            });
+
+            const data = await response.json();
+
+            if (response.ok) {
+                alert('Application marked as Completed & Dispatched!');
+                // Refresh the application details and list
+                fetchAppDetails(applicationId);
+                fetchStats();
+                fetchApplications();
+            } else {
+                alert('Error: ' + (data.error || 'Failed to update status'));
+            }
+        } catch (err) {
+            console.error('Failed to mark as completed:', err);
+            alert('Failed to update status. Please try again.');
+        }
     };
 
     // Login Screen
@@ -430,6 +461,36 @@ export default function AdminPortal() {
                                 <p style={styles.detailValue}>{appDetails.application.reg_no || 'N/A'}</p>
                             </div>
                         </div>
+
+                        {/* Mark as Completed Button - only show for APPROVED or PENDING status */}
+                        {(appDetails.application.status === 'APPROVED' || appDetails.application.status === 'PENDING') && (
+                            <div style={{ marginBottom: '24px', padding: '20px', background: 'rgba(16, 185, 129, 0.1)', borderRadius: '12px', border: '1px solid rgba(16, 185, 129, 0.3)' }}>
+                                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '16px' }}>
+                                    <div>
+                                        <h4 style={{ color: '#10b981', margin: 0, marginBottom: '4px' }}>Ready to Complete?</h4>
+                                        <p style={{ color: 'rgba(255,255,255,0.6)', margin: 0, fontSize: '14px' }}>Mark this application as completed and dispatched</p>
+                                    </div>
+                                    <button
+                                        onClick={() => markAsCompleted(appDetails.application.id)}
+                                        style={{
+                                            padding: '12px 24px',
+                                            background: 'linear-gradient(135deg, #10b981 0%, #059669 100%)',
+                                            color: '#ffffff',
+                                            border: 'none',
+                                            borderRadius: '8px',
+                                            cursor: 'pointer',
+                                            fontWeight: '600',
+                                            fontSize: '14px',
+                                            display: 'flex',
+                                            alignItems: 'center',
+                                            gap: '8px'
+                                        }}
+                                    >
+                                        <CheckCircle size={18} /> Mark as Completed & Dispatched
+                                    </button>
+                                </div>
+                            </div>
+                        )}
 
                         <h3 style={{ color: '#ffffff', marginBottom: '16px' }}>Attached Files</h3>
                         {appDetails.files && appDetails.files.length > 0 ? (
