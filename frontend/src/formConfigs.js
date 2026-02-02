@@ -310,8 +310,8 @@ export const FORM_CONFIGS = {
         files: [
             {
                 name: 'gradeCard',
-                label: 'Grade Card',
-                required: true
+                label: 'Grade Card (Optional)',
+                required: false
             },
             {
                 name: 'sbiReceipt',
