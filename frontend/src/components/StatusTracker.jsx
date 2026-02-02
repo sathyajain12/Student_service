@@ -62,7 +62,7 @@ export default function StatusTracker({ onBack }) {
 
         stages.push({
             id: 'controller',
-            label: 'Controller Review',
+            label: 'Under-Process',
             status: app.controller_status === 'APPROVED' ? 'COMPLETED' : (app.controller_status === 'REJECTED' ? 'REJECTED' : 'PENDING'),
             icon: CheckCircle2,
             date: app.controller_status !== 'PENDING' ? app.updated_at : null
