@@ -233,7 +233,7 @@ export const FORM_CONFIGS = {
         ],
         files: [
             { name: 'gazetteNotification', label: 'Gazette Notification', required: true },
-            { name: 'previousQualificationCertificates', label: 'Previous Qualification Certificates', required: true },
+            { name: 'previousQualificationCertificate', label: 'Previous Qualification Certificate', required: true },
             { name: 'sbiReceipt', label: 'SBI Collect Receipt', required: true },
         ]
     },
