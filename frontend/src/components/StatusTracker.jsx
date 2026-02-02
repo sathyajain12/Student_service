@@ -54,7 +54,7 @@ export default function StatusTracker({ onBack }) {
             stages.push({
                 id: 'director',
                 label: 'Director Approval',
-                status: app.director_status === 'APPROVED' ? 'COMPLETED' : (app.status === 'REJECTED' ? 'REJECTED' : 'PENDING'),
+                status: app.director_status === 'APPROVED' ? 'COMPLETED' : (app.director_status === 'REJECTED' ? 'REJECTED' : 'PENDING'),
                 icon: User,
                 date: app.director_status !== 'PENDING' ? app.updated_at : null
             });
@@ -63,15 +63,15 @@ export default function StatusTracker({ onBack }) {
         stages.push({
             id: 'controller',
             label: 'Controller Review',
-            status: app.controller_status === 'APPROVED' ? 'COMPLETED' : (app.status === 'REJECTED' && app.controller_status === 'REJECTED' ? 'REJECTED' : 'PENDING'),
+            status: app.controller_status === 'APPROVED' ? 'COMPLETED' : (app.controller_status === 'REJECTED' ? 'REJECTED' : 'PENDING'),
             icon: CheckCircle2,
             date: app.controller_status !== 'PENDING' ? app.updated_at : null
         });
 
         stages.push({
             id: 'complete',
-            label: 'Final Status',
-            status: app.status === 'COMPLETED' ? 'COMPLETED' : (app.status === 'REJECTED' ? 'REJECTED' : 'PENDING'),
+            label: 'Completed',
+            status: app.status === 'COMPLETED' ? 'COMPLETED' : (app.status === 'REJECTED' ? 'REJECTED' : (app.status === 'APPROVED' ? 'IN_PROGRESS' : 'PENDING')),
             icon: Clock
         });
 
@@ -180,59 +180,62 @@ export default function StatusTracker({ onBack }) {
                     </div>
 
                     <div className="glass-card" style={{ padding: '40px' }}>
-                        <h4 style={{ fontSize: '1.2rem', color: 'var(--text-main)', marginBottom: '30px' }}>Application Timeline</h4>
-                        <div style={{ display: 'flex', flexDirection: 'column', gap: '0' }}>
+                        <h4 style={{ fontSize: '1.2rem', color: 'var(--text-main)', marginBottom: '30px', textAlign: 'center' }}>Application Timeline</h4>
+                        <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'center', gap: '0', overflowX: 'auto', padding: '20px 0' }}>
                             {getStatusDetails(application).map((stage, index, array) => {
                                 const Icon = stage.icon;
                                 const isLast = index === array.length - 1;
                                 const isCompleted = stage.status === 'COMPLETED';
                                 const isRejected = stage.status === 'REJECTED';
+                                const isInProgress = stage.status === 'IN_PROGRESS';
                                 const isPending = stage.status === 'PENDING';
 
                                 return (
-                                    <div key={stage.id} style={{ display: 'flex', gap: '25px' }}>
-                                        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+                                    <div key={stage.id} style={{ display: 'flex', alignItems: 'flex-start', minWidth: '140px' }}>
+                                        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', textAlign: 'center' }}>
                                             <div style={{
-                                                width: '44px',
-                                                height: '44px',
+                                                width: '50px',
+                                                height: '50px',
                                                 borderRadius: '50%',
                                                 display: 'flex',
                                                 alignItems: 'center',
                                                 justifyContent: 'center',
-                                                background: isCompleted ? 'var(--success)' : isRejected ? 'var(--error)' : 'white',
-                                                border: isPending ? '2px solid #cbd5e1' : 'none',
-                                                color: (isCompleted || isRejected) ? 'white' : '#cbd5e1',
-                                                zIndex: 1
+                                                background: isCompleted ? 'var(--success)' : isRejected ? 'var(--error)' : isInProgress ? 'var(--accent)' : 'white',
+                                                border: isPending ? '3px solid #cbd5e1' : 'none',
+                                                color: (isCompleted || isRejected || isInProgress) ? 'white' : '#cbd5e1',
+                                                zIndex: 1,
+                                                boxShadow: (isCompleted || isInProgress) ? '0 4px 12px rgba(0,0,0,0.15)' : 'none'
                                             }}>
-                                                {isCompleted ? <CheckCircle2 size={24} /> : isRejected ? <X size={24} /> : <Icon size={24} />}
+                                                {isCompleted ? <CheckCircle2 size={26} /> : isRejected ? <X size={26} /> : <Icon size={26} />}
                                             </div>
-                                            {!isLast && (
-                                                <div style={{
-                                                    width: '2px',
-                                                    height: '50px',
-                                                    background: isCompleted ? 'var(--success)' : '#cbd5e1',
-                                                    margin: '5px 0'
-                                                }}></div>
-                                            )}
-                                        </div>
-                                        <div style={{ paddingTop: '8px', paddingBottom: isLast ? '0' : '40px' }}>
-                                            <h5 style={{
-                                                fontSize: '1.05rem',
-                                                color: isPending ? 'var(--text-muted)' : 'var(--text-main)',
-                                                fontWeight: isPending ? '500' : '700',
-                                                marginBottom: '4px'
-                                            }}>
-                                                {stage.label}
-                                            </h5>
-                                            <p style={{ fontSize: '0.85rem', color: 'var(--text-muted)' }}>
-                                                {isCompleted ? `Verified & Approved` : isRejected ? `Application Rejected` : `Awaiting review`}
-                                            </p>
-                                            {stage.date && (
-                                                <p style={{ fontSize: '0.75rem', color: 'var(--accent)', fontWeight: '600', marginTop: '4px' }}>
-                                                    {new Date(stage.date).toLocaleDateString()}
+                                            <div style={{ marginTop: '15px', maxWidth: '120px' }}>
+                                                <h5 style={{
+                                                    fontSize: '0.9rem',
+                                                    color: isPending ? 'var(--text-muted)' : 'var(--text-main)',
+                                                    fontWeight: isPending ? '500' : '700',
+                                                    marginBottom: '6px'
+                                                }}>
+                                                    {stage.label}
+                                                </h5>
+                                                <p style={{ fontSize: '0.75rem', color: isCompleted ? 'var(--success)' : isRejected ? 'var(--error)' : isInProgress ? 'var(--accent)' : 'var(--text-muted)' }}>
+                                                    {isCompleted ? 'Approved' : isRejected ? 'Rejected' : isInProgress ? 'In Progress' : 'Pending'}
                                                 </p>
-                                            )}
+                                                {stage.date && (
+                                                    <p style={{ fontSize: '0.7rem', color: 'var(--text-muted)', marginTop: '4px' }}>
+                                                        {new Date(stage.date).toLocaleDateString()}
+                                                    </p>
+                                                )}
+                                            </div>
                                         </div>
+                                        {!isLast && (
+                                            <div style={{
+                                                height: '3px',
+                                                width: '60px',
+                                                background: isCompleted ? 'var(--success)' : '#e2e8f0',
+                                                marginTop: '24px',
+                                                flexShrink: 0
+                                            }}></div>
+                                        )}
                                     </div>
                                 );
                             })}
