@@ -272,10 +272,16 @@ export default function AdminPortal() {
     };
 
     const fetchStats = async () => {
+        const currentToken = localStorage.getItem('adminToken');
+        if (!currentToken) return;
         try {
             const response = await fetch(`${API_URL}/admin/stats`, {
-                headers: { 'Authorization': `Bearer ${token}` }
+                headers: { 'Authorization': `Bearer ${currentToken}` }
             });
+            if (response.status === 401) {
+                handleLogout();
+                return;
+            }
             if (response.ok) {
                 const data = await response.json();
                 setStats(data);
@@ -287,10 +293,16 @@ export default function AdminPortal() {
     };
 
     const fetchApplications = async () => {
+        const currentToken = localStorage.getItem('adminToken');
+        if (!currentToken) return;
         try {
             const response = await fetch(`${API_URL}/admin/applications`, {
-                headers: { 'Authorization': `Bearer ${token}` }
+                headers: { 'Authorization': `Bearer ${currentToken}` }
             });
+            if (response.status === 401) {
+                handleLogout();
+                return;
+            }
             if (response.ok) {
                 const data = await response.json();
                 setApplications(data);
