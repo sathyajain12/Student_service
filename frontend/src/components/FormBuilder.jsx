@@ -16,6 +16,63 @@ import {
     Trash2
 } from 'lucide-react';
 
+// Country and State/Province data
+const COUNTRIES = [
+    'India', 'United States', 'United Kingdom', 'Canada', 'Australia',
+    'Germany', 'France', 'Japan', 'China', 'Brazil', 'South Africa',
+    'United Arab Emirates', 'Singapore', 'Malaysia', 'New Zealand',
+    'Italy', 'Spain', 'Netherlands', 'Sweden', 'Switzerland',
+    'Saudi Arabia', 'Qatar', 'Kuwait', 'Oman', 'Bahrain',
+    'Sri Lanka', 'Bangladesh', 'Nepal', 'Pakistan', 'Afghanistan',
+    'Thailand', 'Vietnam', 'Indonesia', 'Philippines', 'South Korea',
+    'Russia', 'Mexico', 'Argentina', 'Chile', 'Colombia',
+    'Nigeria', 'Kenya', 'Egypt', 'Morocco', 'Ghana'
+].sort();
+
+const COUNTRY_STATES = {
+    'India': [
+        'Andhra Pradesh', 'Arunachal Pradesh', 'Assam', 'Bihar', 'Chhattisgarh',
+        'Goa', 'Gujarat', 'Haryana', 'Himachal Pradesh', 'Jharkhand', 'Karnataka',
+        'Kerala', 'Madhya Pradesh', 'Maharashtra', 'Manipur', 'Meghalaya', 'Mizoram',
+        'Nagaland', 'Odisha', 'Punjab', 'Rajasthan', 'Sikkim', 'Tamil Nadu',
+        'Telangana', 'Tripura', 'Uttar Pradesh', 'Uttarakhand', 'West Bengal',
+        'Andaman and Nicobar Islands', 'Chandigarh', 'Dadra and Nagar Haveli and Daman and Diu',
+        'Delhi', 'Jammu and Kashmir', 'Ladakh', 'Lakshadweep', 'Puducherry'
+    ],
+    'United States': [
+        'Alabama', 'Alaska', 'Arizona', 'Arkansas', 'California', 'Colorado',
+        'Connecticut', 'Delaware', 'Florida', 'Georgia', 'Hawaii', 'Idaho',
+        'Illinois', 'Indiana', 'Iowa', 'Kansas', 'Kentucky', 'Louisiana',
+        'Maine', 'Maryland', 'Massachusetts', 'Michigan', 'Minnesota', 'Mississippi',
+        'Missouri', 'Montana', 'Nebraska', 'Nevada', 'New Hampshire', 'New Jersey',
+        'New Mexico', 'New York', 'North Carolina', 'North Dakota', 'Ohio', 'Oklahoma',
+        'Oregon', 'Pennsylvania', 'Rhode Island', 'South Carolina', 'South Dakota',
+        'Tennessee', 'Texas', 'Utah', 'Vermont', 'Virginia', 'Washington',
+        'West Virginia', 'Wisconsin', 'Wyoming', 'District of Columbia'
+    ],
+    'United Kingdom': [
+        'England', 'Scotland', 'Wales', 'Northern Ireland'
+    ],
+    'Canada': [
+        'Alberta', 'British Columbia', 'Manitoba', 'New Brunswick',
+        'Newfoundland and Labrador', 'Northwest Territories', 'Nova Scotia',
+        'Nunavut', 'Ontario', 'Prince Edward Island', 'Quebec', 'Saskatchewan', 'Yukon'
+    ],
+    'Australia': [
+        'Australian Capital Territory', 'New South Wales', 'Northern Territory',
+        'Queensland', 'South Australia', 'Tasmania', 'Victoria', 'Western Australia'
+    ],
+    'Germany': [
+        'Baden-Württemberg', 'Bavaria', 'Berlin', 'Brandenburg', 'Bremen',
+        'Hamburg', 'Hesse', 'Lower Saxony', 'Mecklenburg-Vorpommern',
+        'North Rhine-Westphalia', 'Rhineland-Palatinate', 'Saarland',
+        'Saxony', 'Saxony-Anhalt', 'Schleswig-Holstein', 'Thuringia'
+    ],
+    'United Arab Emirates': [
+        'Abu Dhabi', 'Ajman', 'Dubai', 'Fujairah', 'Ras Al Khaimah', 'Sharjah', 'Umm Al Quwain'
+    ]
+};
+
 export default function FormBuilder({ config, onSubmit, onCancel, onTrackStatus }) {
     const [formData, setFormData] = useState({});
     const [dateRanges, setDateRanges] = useState({});
@@ -307,6 +364,51 @@ export default function FormBuilder({ config, onSubmit, onCancel, onTrackStatus 
                                             >
                                                 <option value="">Select Option</option>
                                                 {field.options.map(opt => <option key={opt} value={opt}>{opt}</option>)}
+                                            </select>
+                                            <ChevronDown size={18} style={{ position: 'absolute', right: '16px', top: '50%', transform: 'translateY(-50%)', color: 'var(--text-muted)', pointerEvents: 'none' }} />
+                                        </div>
+                                    ) : field.type === 'countrySelect' ? (
+                                        <div style={{ position: 'relative' }}>
+                                            <select
+                                                name={field.name}
+                                                required={field.required}
+                                                value={formData[field.name] || ''}
+                                                onChange={(e) => {
+                                                    handleChange(e);
+                                                    // Clear state when country changes
+                                                    setFormData(prev => ({ ...prev, stateProvince: '' }));
+                                                }}
+                                                className="form-input"
+                                                style={{ width: '100%', appearance: 'none' }}
+                                            >
+                                                <option value="">Select Country</option>
+                                                {COUNTRIES.map(country => (
+                                                    <option key={country} value={country}>{country}</option>
+                                                ))}
+                                            </select>
+                                            <ChevronDown size={18} style={{ position: 'absolute', right: '16px', top: '50%', transform: 'translateY(-50%)', color: 'var(--text-muted)', pointerEvents: 'none' }} />
+                                        </div>
+                                    ) : field.type === 'stateSelect' ? (
+                                        <div style={{ position: 'relative' }}>
+                                            <select
+                                                name={field.name}
+                                                required={field.required}
+                                                value={formData[field.name] || ''}
+                                                onChange={handleChange}
+                                                className="form-input"
+                                                style={{ width: '100%', appearance: 'none' }}
+                                                disabled={!formData.country}
+                                            >
+                                                <option value="">
+                                                    {formData.country ? 'Select State/Province/Region' : 'Select Country First'}
+                                                </option>
+                                                {formData.country && COUNTRY_STATES[formData.country] ? (
+                                                    COUNTRY_STATES[formData.country].map(state => (
+                                                        <option key={state} value={state}>{state}</option>
+                                                    ))
+                                                ) : formData.country ? (
+                                                    <option value={formData.country}>{formData.country}</option>
+                                                ) : null}
                                             </select>
                                             <ChevronDown size={18} style={{ position: 'absolute', right: '16px', top: '50%', transform: 'translateY(-50%)', color: 'var(--text-muted)', pointerEvents: 'none' }} />
                                         </div>

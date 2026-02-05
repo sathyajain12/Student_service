@@ -5,8 +5,13 @@ const COMMON_ACADEMIC_FIELDS = [
     { name: 'program', label: 'Academic Programme', type: 'text', required: true },
     { name: 'mobile', label: 'Mobile Number', type: 'text', required: true },
     { name: 'email', label: 'Email Address', type: 'email', required: true },
-    { name: 'correspondenceAddress', label: 'Correspondence Address', type: 'textarea', required: true },
-
+    { type: 'heading', label: 'Address', name: 'addressHeading' },
+    { name: 'addressLine1', label: 'Address Line 1', type: 'text', required: true },
+    { name: 'addressLine2', label: 'Address Line 2', type: 'text', required: false },
+    { name: 'country', label: 'Country', type: 'countrySelect', required: true },
+    { name: 'stateProvince', label: 'State/Province/Region', type: 'stateSelect', required: true },
+    { name: 'city', label: 'City', type: 'text', required: true },
+    { name: 'postalCode', label: 'Postal Code', type: 'text', required: true },
 ];
 
 export const FORM_CONFIGS = {
@@ -143,7 +148,13 @@ export const FORM_CONFIGS = {
             { name: 'program', label: 'Academic Programme', type: 'text', required: true },
             { name: 'mobile', label: 'Mobile Number', type: 'text', required: true },
             { name: 'email', label: 'Email Address', type: 'email', required: true },
-            { name: 'permanentAddress', label: 'Permanent Address', type: 'text', required: true },
+            { type: 'heading', label: 'Permanent Address', name: 'addressHeading' },
+            { name: 'addressLine1', label: 'Address Line 1', type: 'text', required: true },
+            { name: 'addressLine2', label: 'Address Line 2', type: 'text', required: false },
+            { name: 'country', label: 'Country', type: 'countrySelect', required: true },
+            { name: 'stateProvince', label: 'State/Province/Region', type: 'stateSelect', required: true },
+            { name: 'city', label: 'City', type: 'text', required: true },
+            { name: 'postalCode', label: 'Postal Code', type: 'text', required: true },
             {
                 name: "periodOfStudy",
                 label: "Period of Study",
@@ -195,7 +206,7 @@ export const FORM_CONFIGS = {
             'You must have a valid Gazette Notification for the name change.',
             'Upload your Previous Qualification Certificate as proof.',
             'The new name should exactly match the Gazette notification.',
-            'Both permanent and correspondence addresses are required.',
+            'Complete address details are required.',
             'Processing may take 10-15 working days after verification.'
         ],
         titleLink: {
@@ -253,19 +264,13 @@ export const FORM_CONFIGS = {
                 required: true,
                 placeholder: "Select period of study"
             },
-            {
-                name: 'correspondenceAddress',
-                label: 'Correspondence Address',
-                type: 'textarea',
-                required: true
-            },
-            {
-                name: 'permanentAddress',
-                label: 'Permanent Address',
-                type: 'textarea',
-                required: true
-
-            },
+            { type: 'heading', label: 'Address', name: 'addressHeading' },
+            { name: 'addressLine1', label: 'Address Line 1', type: 'text', required: true },
+            { name: 'addressLine2', label: 'Address Line 2', type: 'text', required: false },
+            { name: 'country', label: 'Country', type: 'countrySelect', required: true },
+            { name: 'stateProvince', label: 'State/Province/Region', type: 'stateSelect', required: true },
+            { name: 'city', label: 'City', type: 'text', required: true },
+            { name: 'postalCode', label: 'Postal Code', type: 'text', required: true },
             {
                 name: 'newName',
                 label: 'Changed Name as per the Gazette notification',
@@ -405,7 +410,7 @@ export const FORM_CONFIGS = {
         instructions: [
             'This certificate is required for joining another University/Institute.',
             'Upload your Consolidated Grade Card as proof.',
-            'Provide complete postal address including PIN code, district, and state.',
+            'Provide complete postal address details.',
             'Mention the University/Institute you propose to join.',
             'Indicate whether you have received your Degree Certificate.',
             'The Migration Certificate will be posted to the address provided.'
@@ -450,17 +455,18 @@ export const FORM_CONFIGS = {
                 required: true
             },
             {
-                name: 'migrationAddress',
-                label: 'Address to which the Migration Certificate should be posted',
-                description: '( Full complete postal address, including the town/city, PIN code, district and state)',
-                type: 'textarea',
-                required: true
-            },
-            {
                 name: 'mobile',
                 label: 'Mobile Number',
                 type: 'text',
-            }
+                required: true
+            },
+            { type: 'heading', label: 'Address to which the Migration Certificate should be posted', name: 'addressHeading' },
+            { name: 'addressLine1', label: 'Address Line 1', type: 'text', required: true },
+            { name: 'addressLine2', label: 'Address Line 2', type: 'text', required: false },
+            { name: 'country', label: 'Country', type: 'countrySelect', required: true },
+            { name: 'stateProvince', label: 'State/Province/Region', type: 'stateSelect', required: true },
+            { name: 'city', label: 'City', type: 'text', required: true },
+            { name: 'postalCode', label: 'Postal Code', type: 'text', required: true }
         ],
         files: [{
             name: 'gradeCard',
