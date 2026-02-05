@@ -4,12 +4,13 @@ import AdminPortal from './pages/AdminPortal';
 import FormBuilder from './components/FormBuilder';
 import StatusTracker from './components/StatusTracker';
 import LoadingScreen from './components/LoadingScreen';
+import InstructionsScreen from './components/InstructionsScreen';
 import { FORM_CONFIGS } from './formConfigs';
 import './index.css';
 
 function App() {
   const [isLoading, setIsLoading] = useState(true);
-  const [view, setView] = useState('portal'); // 'portal' | 'form' | 'status' | 'admin'
+  const [view, setView] = useState('portal'); // 'portal' | 'instructions' | 'form' | 'status' | 'admin'
   const [currentFormId, setCurrentFormId] = useState(null);
 
   useEffect(() => {
@@ -30,6 +31,10 @@ function App() {
 
   const handleSelectForm = (id) => {
     setCurrentFormId(id);
+    setView('instructions');
+  };
+
+  const handleProceedToForm = () => {
     setView('form');
   };
 
@@ -54,6 +59,25 @@ function App() {
               onSelectForm={handleSelectForm}
               onTrackStatus={() => setView('status')}
             />
+          )}
+
+          {view === 'instructions' && (
+            <div className="container" style={{ maxWidth: '900px' }}>
+              <div className="glass-card" style={{ padding: '40px' }}>
+                {selectedConfig ? (
+                  <InstructionsScreen
+                    config={selectedConfig}
+                    onProceed={handleProceedToForm}
+                    onCancel={handleBackToPortal}
+                  />
+                ) : (
+                  <p style={{ color: 'var(--text-muted)' }}>
+                    This form configuration is coming soon.
+                    <button onClick={handleBackToPortal} className="btn-secondary" style={{ marginTop: '20px' }}>Back</button>
+                  </p>
+                )}
+              </div>
+            </div>
           )}
 
           {view === 'form' && (

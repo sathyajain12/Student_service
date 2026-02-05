@@ -11,8 +11,16 @@ const COMMON_ACADEMIC_FIELDS = [
 
 export const FORM_CONFIGS = {
     'duplicate-grade-card': {
-        title: 'Application for duplicate Grade Card',
+        title: 'Application for Duplicate Grade Card',
         description: 'Note: This form is applicable only for students from batches before 2021. Students from 2021 batch onwards can download their Grade Cards directly from DigiLocker.',
+        instructions: [
+            'This form is applicable only for students from batches before 2021.',
+            'Students from 2021 batch onwards can download their Grade Cards directly from DigiLocker.',
+            'A fee of ₹500 must be paid via SBI Collect before submission.',
+            'You must upload a Police Complaint (if lodged) and a Sworn Affidavit.',
+            'Keep your SBI Collect receipt ready for upload.',
+            'Original Grade Card scan is optional but recommended if available.'
+        ],
         fields: [
             ...COMMON_ACADEMIC_FIELDS,
             { name: 'periodOfStudy', label: 'Period of Study', type: 'text', required: true, placeholder: 'e.g., June 2019 - March 2022' },
@@ -20,7 +28,7 @@ export const FORM_CONFIGS = {
             { name: 'reason', label: 'Reason for Loss', type: 'textarea', required: true },
         ],
         files: [
-            { name: 'policeComplaint', label: 'Police Complaint (if lodged)', required: false },
+            { name: 'policeComplaint', label: 'Police Complaint (if lodged)', required: true },
             { name: 'affidavit', label: 'Sworn Affidavit', required: true },
             { name: 'gradeCard', label: 'Original Grade Card (Scanned) (Optional)', required: false },
             { name: 'sbiReceipt', label: 'SBI Collect Receipt (₹500)', required: true },
@@ -28,6 +36,13 @@ export const FORM_CONFIGS = {
     },
     'cgpa-conversion': {
         title: 'Application for CGPA to Marks Conversion',
+        instructions: [
+            'This service converts your CGPA to equivalent percentage marks.',
+            'Ensure you have your correct CGPA value ready.',
+            'Select the appropriate degree level (Undergraduate/Postgraduate/Professional).',
+            'The conversion certificate will be sent to your registered email.',
+            'Processing may take 3-5 working days.'
+        ],
         fields: [...COMMON_ACADEMIC_FIELDS,
         {
             name: "periodOfStudy",
@@ -64,6 +79,13 @@ export const FORM_CONFIGS = {
     },
     'supplementary-exam': {
         title: 'Application for End-Semester Supplementary Examinations',
+        instructions: [
+            'This form is for students who need to appear for supplementary examinations.',
+            'Ensure you have the correct Paper Code(s) and Paper Title(s).',
+            'Select the appropriate semester for which you are applying.',
+            'Check the examination schedule for supplementary exam dates.',
+            'Application must be submitted before the deadline mentioned in the notification.'
+        ],
         fields: [
             {
                 name: "periodOfStudy",
@@ -110,6 +132,14 @@ export const FORM_CONFIGS = {
     },
     'duplicate-degree': {
         title: 'Application for Duplicate Degree Certificate',
+        instructions: [
+            'A fee of ₹1000 must be paid via SBI Collect before submission.',
+            'You must lodge a Police Complaint and upload the same.',
+            'A Press Notification/Advertisement regarding the loss is mandatory.',
+            'A Sworn Affidavit on non-judicial stamp paper is required.',
+            'Clearly state the reason for loss of the original degree certificate.',
+            'Processing may take 15-30 working days after verification.'
+        ],
         fields: [...COMMON_ACADEMIC_FIELDS,
         {
             name: "periodOfStudy",
@@ -157,6 +187,14 @@ export const FORM_CONFIGS = {
     },
     'name-change': {
         title: 'Application for Registration of Student Name change in the Institute Records',
+        instructions: [
+            'A fee of ₹500 must be paid via SBI Collect before submission.',
+            'You must have a valid Gazette Notification for the name change.',
+            'Upload your Previous Qualification Certificate as proof.',
+            'The new name should exactly match the Gazette notification.',
+            'Both permanent and correspondence addresses are required.',
+            'Processing may take 10-15 working days after verification.'
+        ],
         titleLink: {
             text: 'Please click here to make the payment of ₹500 using SBI Collect',
             url: 'https://www.onlinesbi.sbi/sbicollect/icollecthome.htm?corpID=350506&categoryName=SSSIHL%20Exams%20App%20Change%20of%20Name'
@@ -241,6 +279,13 @@ export const FORM_CONFIGS = {
     'repeat-paper': {
         title: 'Application for repeating a paper for supplementary examinations(CIE and ESE)',
         description: 'FOR THOSE WHO HAVE EXHAUSTED SUPPLEMENTARY EXAMINATION CHANCES',
+        instructions: [
+            'This form is only for students who have exhausted their supplementary examination chances.',
+            'You will need to repeat both CIE (Continuous Internal Evaluation) and ESE (End Semester Examination).',
+            'Ensure you have the correct Paper Code(s) and Paper Title(s).',
+            'If unable to repeat on medical grounds, inform the Director and Controller of Examinations in advance.',
+            'Failure to inform in advance may result in forfeiture of candidature for the next examination.'
+        ],
         fields: [
             {
                 name: "periodOfStudy",
@@ -290,6 +335,14 @@ export const FORM_CONFIGS = {
 
     'retotaling': {
         title: 'Application for Re-Totalling of Marks',
+        instructions: [
+            'This service is for verification of marks totaling in your answer script.',
+            'Select whether it is for End-Semester or Supplementary Examinations.',
+            'A fee must be paid via SBI Collect before submission.',
+            'Provide the correct Subject Code for which re-totaling is requested.',
+            'Grade Card upload is optional but recommended.',
+            'Results will be communicated within 15 working days.'
+        ],
         fields: [...COMMON_ACADEMIC_FIELDS,
         {
             name: 'examType',
@@ -329,6 +382,13 @@ export const FORM_CONFIGS = {
     },
     'on-request-degree': {
         title: 'Application for On-Request Degree Certificate',
+        instructions: [
+            'This service is for early issuance of degree certificate before the convocation.',
+            'A fee must be paid via SBI Collect before submission.',
+            'Upload your Qualifying Certificate as proof of completion.',
+            'Select the appropriate degree type (Undergraduate/Postgraduate/Professional/PhD).',
+            'Processing may take 7-10 working days after verification.'
+        ],
         fields: [
             {
                 type: 'heading',
@@ -352,6 +412,14 @@ export const FORM_CONFIGS = {
     },
     'migration': {
         title: 'Application for Migration Certificate',
+        instructions: [
+            'This certificate is required for joining another University/Institute.',
+            'Upload your Consolidated Grade Card as proof.',
+            'Provide complete postal address including PIN code, district, and state.',
+            'Mention the University/Institute you propose to join.',
+            'Indicate whether you have received your Degree Certificate.',
+            'The Migration Certificate will be posted to the address provided.'
+        ],
         fields: [
             {
                 name: 'applicantName',

@@ -1,0 +1,118 @@
+import React from 'react';
+import {
+    ArrowLeft,
+    ArrowRight,
+    AlertCircle,
+    CheckCircle2,
+    BookOpen
+} from 'lucide-react';
+
+export default function InstructionsScreen({ config, onProceed, onCancel }) {
+    const instructions = config.instructions || [];
+
+    return (
+        <div className="animate-fade-in">
+            <div style={{ display: 'flex', alignItems: 'flex-start', gap: '15px', marginBottom: '40px' }}>
+                <button
+                    onClick={onCancel}
+                    className="btn-secondary"
+                    style={{ padding: '10px', borderRadius: '12px', display: 'flex', alignItems: 'center', justifyContent: 'center', marginTop: '4px' }}
+                >
+                    <ArrowLeft size={20} />
+                </button>
+                <div>
+                    <h2 style={{ fontSize: '1.8rem', color: 'var(--text-main)', marginBottom: '8px' }}>{config.title}</h2>
+                    <p style={{ color: 'var(--text-muted)', fontSize: '0.95rem', lineHeight: '1.5' }}>
+                        Please read the following instructions carefully before proceeding.
+                    </p>
+                </div>
+            </div>
+
+            <div style={{
+                padding: '30px',
+                background: 'rgba(37, 99, 235, 0.03)',
+                border: '1px solid var(--glass-border)',
+                borderRadius: '20px',
+                marginBottom: '30px',
+                position: 'relative',
+                overflow: 'hidden'
+            }}>
+                <div style={{ position: 'absolute', top: 0, left: 0, width: '4px', height: '100%', background: 'var(--accent-gradient)' }}></div>
+
+                <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '25px' }}>
+                    <BookOpen size={24} color="var(--accent)" />
+                    <h3 style={{ fontSize: '1.3rem', color: 'var(--accent)', fontWeight: '700' }}>Instructions</h3>
+                </div>
+
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+                    {instructions.map((instruction, index) => (
+                        <div key={index} style={{ display: 'flex', alignItems: 'flex-start', gap: '14px' }}>
+                            <div style={{
+                                minWidth: '28px',
+                                height: '28px',
+                                borderRadius: '50%',
+                                background: 'var(--accent)',
+                                color: 'white',
+                                display: 'flex',
+                                alignItems: 'center',
+                                justifyContent: 'center',
+                                fontSize: '0.85rem',
+                                fontWeight: '700',
+                                marginTop: '2px'
+                            }}>
+                                {index + 1}
+                            </div>
+                            <p style={{
+                                color: 'var(--text-main)',
+                                fontSize: '0.95rem',
+                                fontWeight: '500',
+                                lineHeight: '1.6',
+                                margin: 0
+                            }}>
+                                {instruction}
+                            </p>
+                        </div>
+                    ))}
+                </div>
+            </div>
+
+            <div style={{
+                padding: '20px',
+                background: 'rgba(245, 158, 11, 0.08)',
+                border: '1px solid rgba(245, 158, 11, 0.2)',
+                borderRadius: '16px',
+                marginBottom: '30px',
+                display: 'flex',
+                alignItems: 'flex-start',
+                gap: '12px'
+            }}>
+                <AlertCircle size={22} color="#f59e0b" style={{ marginTop: '2px', flexShrink: 0 }} />
+                <p style={{ color: 'var(--text-main)', fontSize: '0.9rem', margin: 0, lineHeight: '1.5' }}>
+                    By proceeding, you acknowledge that you have read and understood the above instructions.
+                    Please ensure all required documents are ready before filling the form.
+                </p>
+            </div>
+
+            <div style={{ display: 'flex', gap: '15px' }}>
+                <button
+                    onClick={onProceed}
+                    className="btn-primary"
+                    style={{
+                        flexGrow: 1,
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        gap: '10px'
+                    }}
+                >
+                    <CheckCircle2 size={18} />
+                    I Understand, Proceed to Form
+                    <ArrowRight size={18} />
+                </button>
+                <button onClick={onCancel} className="btn-secondary">
+                    Cancel
+                </button>
+            </div>
+        </div>
+    );
+}
