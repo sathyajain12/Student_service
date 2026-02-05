@@ -18,6 +18,7 @@ export const FORM_CONFIGS = {
             'Students from 2021 batch onwards can download their Grade Cards directly from DigiLocker.',
             'A fee of ₹500 must be paid via SBI Collect before submission.',
             'You must upload a Police Complaint and a Sworn Affidavit.',
+            'The Sworn Affidavit must be sworn before a Notary / First-Class Magistrate with the following text: "Whereas the Sri Sathya Sai Institute of Higher Learning, Prasanthi Nilayam has accorded me the Original Grade Card bearing the Regd. No___ Semester No___ of the Programme that has been lost whilst in my possession, having been so lost, an application to the Institute for the grant of a Duplicate having been made, subject to the condition, that if, the Original Grade Card is recovered by me, I shall surrender it to the Institute."',
             'Keep your SBI Collect receipt ready for upload.',
             'Original Grade Card scan is optional but recommended if available.'
         ],
@@ -41,7 +42,7 @@ export const FORM_CONFIGS = {
             'Ensure you have your correct CGPA value ready.',
             'Select the appropriate degree level (Undergraduate/Postgraduate/Professional).',
             'The conversion certificate will be sent to your registered email.',
-            'Processing may take 3-5 working days.'
+            
         ],
         fields: [...COMMON_ACADEMIC_FIELDS,
         {
