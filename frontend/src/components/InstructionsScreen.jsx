@@ -7,6 +7,40 @@ import {
     BookOpen
 } from 'lucide-react';
 
+// Helper function to parse **bold** text and signature blocks
+const formatText = (text) => {
+    // Split text into lines first to handle signature blocks
+    const lines = text.split('\n');
+
+    return lines.map((line, lineIndex) => {
+        // Check for signature block pattern (Date and Student Signature on same line)
+        if (line.match(/^Date\s+Student Signature$/) || line.match(/^Date\t+Student Signature$/)) {
+            return (
+                <span key={lineIndex} style={{ display: 'flex', justifyContent: 'space-between', width: '100%' }}>
+                    <span>Date</span>
+                    <span>Student Signature</span>
+                    {lineIndex < lines.length - 1 && '\n'}
+                </span>
+            );
+        }
+
+        // Parse bold text within the line
+        const parts = line.split(/(\*\*.*?\*\*)/g);
+        const formattedParts = parts.map((part, i) => {
+            if (part.startsWith('**') && part.endsWith('**')) {
+                return <strong key={i}>{part.slice(2, -2)}</strong>;
+            }
+            return part;
+        });
+
+        // Add newline if not the last line
+        if (lineIndex < lines.length - 1) {
+            return <React.Fragment key={lineIndex}>{formattedParts}{'\n'}</React.Fragment>;
+        }
+        return <React.Fragment key={lineIndex}>{formattedParts}</React.Fragment>;
+    });
+};
+
 export default function InstructionsScreen({ config, onProceed, onCancel }) {
     const instructions = config.instructions || [];
 
@@ -67,9 +101,10 @@ export default function InstructionsScreen({ config, onProceed, onCancel }) {
                                 fontSize: '0.95rem',
                                 fontWeight: '500',
                                 lineHeight: '1.6',
-                                margin: 0
+                                margin: 0,
+                                whiteSpace: 'pre-wrap'
                             }}>
-                                {instruction}
+                                {formatText(instruction)}
                             </p>
                         </div>
                     ))}

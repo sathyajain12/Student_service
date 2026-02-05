@@ -189,6 +189,20 @@ button {
 }
 
 /* DatePicker Overrides for Light Theme */
+.react-datepicker-wrapper {
+  width: 100% !important;
+  display: block !important;
+}
+
+.react-datepicker__input-container {
+  width: 100% !important;
+  display: block !important;
+}
+
+.react-datepicker__input-container input {
+  width: 100% !important;
+}
+
 .react-datepicker {
   border-radius: 16px !important;
   border: 1px solid var(--glass-border) !important;
@@ -201,6 +215,30 @@ button {
   border-bottom: 1px solid #e2e8f0 !important;
   border-top-left-radius: 16px !important;
   border-top-right-radius: 16px !important;
+}
+
+.react-datepicker__month-container {
+  padding: 8px;
+}
+
+.react-datepicker__month-text {
+  padding: 8px 12px !important;
+  border-radius: 8px !important;
+  transition: all 0.2s ease !important;
+}
+
+.react-datepicker__month-text:hover {
+  background-color: rgba(37, 99, 235, 0.1) !important;
+}
+
+.react-datepicker__month-text--selected,
+.react-datepicker__month-text--in-range {
+  background-color: var(--accent) !important;
+  color: white !important;
+}
+
+.react-datepicker__month-text--in-selecting-range {
+  background-color: rgba(37, 99, 235, 0.2) !important;
 }
 
 /* Animations */

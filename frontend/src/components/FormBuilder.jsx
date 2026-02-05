@@ -11,7 +11,9 @@ import {
     FileText,
     Paperclip,
     ArrowLeft,
-    Loader2
+    Loader2,
+    Plus,
+    Trash2
 } from 'lucide-react';
 
 export default function FormBuilder({ config, onSubmit, onCancel, onTrackStatus }) {
@@ -21,6 +23,7 @@ export default function FormBuilder({ config, onSubmit, onCancel, onTrackStatus 
     const [loading, setLoading] = useState(false);
     const [status, setStatus] = useState(null);
     const fileInputRefs = useRef({});
+    const [paperTables, setPaperTables] = useState({});
 
     const handleChange = (e) => {
         const { name, value } = e.target;
@@ -46,6 +49,47 @@ export default function FormBuilder({ config, onSubmit, onCancel, onTrackStatus 
 
     const triggerFileInput = (fieldName) => {
         fileInputRefs.current[fieldName]?.click();
+    };
+
+    const initializePaperTable = (fieldName) => {
+        if (!paperTables[fieldName]) {
+            setPaperTables(prev => ({
+                ...prev,
+                [fieldName]: [{ paperCode: '', paperTitle: '', semester: '' }]
+            }));
+        }
+    };
+
+    const handlePaperTableChange = (fieldName, rowIndex, column, value) => {
+        setPaperTables(prev => {
+            const newTable = [...(prev[fieldName] || [])];
+            newTable[rowIndex] = { ...newTable[rowIndex], [column]: value };
+
+            // Update formData with stringified table data
+            const tableData = JSON.stringify(newTable);
+            setFormData(fd => ({ ...fd, [fieldName]: tableData }));
+
+            return { ...prev, [fieldName]: newTable };
+        });
+    };
+
+    const addPaperTableRow = (fieldName) => {
+        setPaperTables(prev => {
+            const newTable = [...(prev[fieldName] || []), { paperCode: '', paperTitle: '', semester: '' }];
+            setFormData(fd => ({ ...fd, [fieldName]: JSON.stringify(newTable) }));
+            return { ...prev, [fieldName]: newTable };
+        });
+    };
+
+    const removePaperTableRow = (fieldName, rowIndex) => {
+        setPaperTables(prev => {
+            const newTable = (prev[fieldName] || []).filter((_, i) => i !== rowIndex);
+            if (newTable.length === 0) {
+                newTable.push({ paperCode: '', paperTitle: '', semester: '' });
+            }
+            setFormData(fd => ({ ...fd, [fieldName]: JSON.stringify(newTable) }));
+            return { ...prev, [fieldName]: newTable };
+        });
     };
 
     const handleSubmit = async (e) => {
@@ -182,7 +226,7 @@ export default function FormBuilder({ config, onSubmit, onCancel, onTrackStatus 
                                             style={{ width: '100%', resize: 'vertical' }}
                                         />
                                     ) : field.type === 'daterange' ? (
-                                        <div style={{ position: 'relative' }}>
+                                        <div style={{ position: 'relative', maxWidth: '280px' }}>
                                             <DatePicker
                                                 selectsRange={true}
                                                 startDate={dateRanges[field.name]?.[0]}
@@ -196,12 +240,11 @@ export default function FormBuilder({ config, onSubmit, onCancel, onTrackStatus 
                                                     }
                                                 }}
                                                 className="form-input"
-                                                style={{ width: '100%' }}
                                                 dateFormat="MM/yyyy"
                                                 showMonthYearPicker
                                                 placeholderText={field.placeholder || "Select date range"}
                                             />
-                                            <Calendar size={18} style={{ position: 'absolute', right: '16px', top: '50%', transform: 'translateY(-50%)', color: 'var(--text-muted)' }} />
+                                            <Calendar size={18} style={{ position: 'absolute', right: '16px', top: '50%', transform: 'translateY(-50%)', color: 'var(--text-muted)', pointerEvents: 'none' }} />
                                         </div>
                                     ) : field.type === 'checkbox' ? (
                                         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '12px' }}>
@@ -266,6 +309,157 @@ export default function FormBuilder({ config, onSubmit, onCancel, onTrackStatus 
                                                 {field.options.map(opt => <option key={opt} value={opt}>{opt}</option>)}
                                             </select>
                                             <ChevronDown size={18} style={{ position: 'absolute', right: '16px', top: '50%', transform: 'translateY(-50%)', color: 'var(--text-muted)', pointerEvents: 'none' }} />
+                                        </div>
+                                    ) : field.type === 'paperTable' ? (
+                                        <div style={{ width: '100%' }}>
+                                            {(() => {
+                                                if (!paperTables[field.name]) {
+                                                    initializePaperTable(field.name);
+                                                }
+                                                return null;
+                                            })()}
+                                            <table style={{
+                                                width: '100%',
+                                                borderCollapse: 'collapse',
+                                                border: '1px solid var(--glass-border)',
+                                                borderRadius: '12px',
+                                                overflow: 'hidden'
+                                            }}>
+                                                <thead>
+                                                    <tr style={{ background: 'rgba(15, 23, 42, 0.03)' }}>
+                                                        <th style={{
+                                                            padding: '14px 16px',
+                                                            textAlign: 'left',
+                                                            fontWeight: '700',
+                                                            fontSize: '0.85rem',
+                                                            color: 'var(--text-main)',
+                                                            borderBottom: '1px solid var(--glass-border)',
+                                                            textTransform: 'uppercase',
+                                                            letterSpacing: '0.03em'
+                                                        }}>Paper Code</th>
+                                                        <th style={{
+                                                            padding: '14px 16px',
+                                                            textAlign: 'left',
+                                                            fontWeight: '700',
+                                                            fontSize: '0.85rem',
+                                                            color: 'var(--text-main)',
+                                                            borderBottom: '1px solid var(--glass-border)',
+                                                            textTransform: 'uppercase',
+                                                            letterSpacing: '0.03em'
+                                                        }}>Paper Title</th>
+                                                        <th style={{
+                                                            padding: '14px 16px',
+                                                            textAlign: 'left',
+                                                            fontWeight: '700',
+                                                            fontSize: '0.85rem',
+                                                            color: 'var(--text-main)',
+                                                            borderBottom: '1px solid var(--glass-border)',
+                                                            textTransform: 'uppercase',
+                                                            letterSpacing: '0.03em'
+                                                        }}>Semester Number</th>
+                                                        <th style={{
+                                                            padding: '14px 16px',
+                                                            width: '60px',
+                                                            borderBottom: '1px solid var(--glass-border)'
+                                                        }}></th>
+                                                    </tr>
+                                                </thead>
+                                                <tbody>
+                                                    {(paperTables[field.name] || [{ paperCode: '', paperTitle: '', semester: '' }]).map((row, rowIndex) => (
+                                                        <tr key={rowIndex} style={{ borderBottom: '1px solid var(--glass-border)' }}>
+                                                            <td style={{ padding: '10px 12px' }}>
+                                                                <input
+                                                                    type="text"
+                                                                    value={row.paperCode}
+                                                                    onChange={(e) => handlePaperTableChange(field.name, rowIndex, 'paperCode', e.target.value)}
+                                                                    className="form-input"
+                                                                    style={{ width: '100%', padding: '10px 12px' }}
+                                                                    placeholder="e.g., CS101"
+                                                                    required={field.required && rowIndex === 0}
+                                                                />
+                                                            </td>
+                                                            <td style={{ padding: '10px 12px' }}>
+                                                                <input
+                                                                    type="text"
+                                                                    value={row.paperTitle}
+                                                                    onChange={(e) => handlePaperTableChange(field.name, rowIndex, 'paperTitle', e.target.value)}
+                                                                    className="form-input"
+                                                                    style={{ width: '100%', padding: '10px 12px' }}
+                                                                    placeholder="e.g., Data Structures"
+                                                                    required={field.required && rowIndex === 0}
+                                                                />
+                                                            </td>
+                                                            <td style={{ padding: '10px 12px' }}>
+                                                                <select
+                                                                    value={row.semester}
+                                                                    onChange={(e) => handlePaperTableChange(field.name, rowIndex, 'semester', e.target.value)}
+                                                                    className="form-input"
+                                                                    style={{ width: '100%', padding: '10px 12px', appearance: 'none' }}
+                                                                    required={field.required && rowIndex === 0}
+                                                                >
+                                                                    <option value="">Select</option>
+                                                                    {['I', 'II', 'III', 'IV', 'V', 'VI', 'VII', 'VIII'].map(sem => (
+                                                                        <option key={sem} value={sem}>{sem}</option>
+                                                                    ))}
+                                                                </select>
+                                                            </td>
+                                                            <td style={{ padding: '10px 12px', textAlign: 'center' }}>
+                                                                <button
+                                                                    type="button"
+                                                                    onClick={() => removePaperTableRow(field.name, rowIndex)}
+                                                                    style={{
+                                                                        background: 'rgba(220, 38, 38, 0.08)',
+                                                                        border: 'none',
+                                                                        borderRadius: '8px',
+                                                                        padding: '8px',
+                                                                        cursor: 'pointer',
+                                                                        display: 'flex',
+                                                                        alignItems: 'center',
+                                                                        justifyContent: 'center',
+                                                                        color: 'var(--error)',
+                                                                        transition: 'all 0.2s ease'
+                                                                    }}
+                                                                    onMouseEnter={(e) => {
+                                                                        e.currentTarget.style.background = 'rgba(220, 38, 38, 0.15)';
+                                                                    }}
+                                                                    onMouseLeave={(e) => {
+                                                                        e.currentTarget.style.background = 'rgba(220, 38, 38, 0.08)';
+                                                                    }}
+                                                                >
+                                                                    <Trash2 size={16} />
+                                                                </button>
+                                                            </td>
+                                                        </tr>
+                                                    ))}
+                                                </tbody>
+                                            </table>
+                                            <button
+                                                type="button"
+                                                onClick={() => addPaperTableRow(field.name)}
+                                                style={{
+                                                    marginTop: '12px',
+                                                    display: 'flex',
+                                                    alignItems: 'center',
+                                                    gap: '8px',
+                                                    padding: '10px 18px',
+                                                    background: 'rgba(37, 99, 235, 0.08)',
+                                                    border: '1px dashed var(--accent)',
+                                                    borderRadius: '10px',
+                                                    color: 'var(--accent)',
+                                                    fontWeight: '600',
+                                                    fontSize: '0.9rem',
+                                                    cursor: 'pointer',
+                                                    transition: 'all 0.2s ease'
+                                                }}
+                                                onMouseEnter={(e) => {
+                                                    e.currentTarget.style.background = 'rgba(37, 99, 235, 0.15)';
+                                                }}
+                                                onMouseLeave={(e) => {
+                                                    e.currentTarget.style.background = 'rgba(37, 99, 235, 0.08)';
+                                                }}
+                                            >
+                                                <Plus size={18} /> Add Another Paper
+                                            </button>
                                         </div>
                                     ) : (
                                         <input

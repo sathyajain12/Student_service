@@ -18,10 +18,14 @@ export const FORM_CONFIGS = {
             'Students from 2021 batch onwards can download their Grade Cards directly from DigiLocker.',
             'A fee of ₹500 must be paid via SBI Collect before submission.',
             'You must upload a Police Complaint and a Sworn Affidavit.',
-            'The Sworn Affidavit must be sworn before a Notary / First-Class Magistrate with the following text: /n/n "Whereas the Sri Sathya Sai Institute of Higher Learning, Prasanthi Nilayam has accorded me the Original Grade Card bearing the Regd. No___ Semester No___ of the Programme that has been lost whilst in my possession, having been so lost, an application to the Institute for the grant of a Duplicate having been made, subject to the condition, that if, the Original Grade Card is recovered by me, I shall surrender it to the Institute."',
+            'The Sworn Affidavit must be sworn before a Notary / First-Class Magistrate with the following text:\n\n"**Whereas the Sri Sathya Sai Institute of Higher Learning, Prasanthi Nilayam has accorded me the Original Grade Card bearing the Regd. No___ Semester No___ of the Programme that has been lost whilst in my possession, having been so lost, an application to the Institute for the grant of a Duplicate having been made, subject to the condition, that if, the Original Grade Card is recovered by me, I shall surrender it to the Institute."**',
             'Keep your SBI Collect receipt ready for upload.',
             'Original Grade Card scan is optional but recommended if available.'
         ],
+        titleLink: {
+            text: 'Please click here to make the payment of ₹500 using SBI Collect',
+            url: 'https://www.onlinesbi.sbi/sbicollect/icollecthome.htm?corpID=350506&categoryName=SSSIHL%20Exams%20App%20Duplicate%20Grade%20Card'
+        },
         fields: [
             ...COMMON_ACADEMIC_FIELDS,
             { name: 'periodOfStudy', label: 'Period of Study', type: 'text', required: true, placeholder: 'e.g., June 2019 - March 2022' },
@@ -38,10 +42,9 @@ export const FORM_CONFIGS = {
     'cgpa-conversion': {
         title: 'Application for CGPA to Marks Conversion',
         instructions: [
-            'This service converts your CGPA to equivalent percentage marks.',
-            'Ensure you have your correct CGPA value ready.',
-            'Select the appropriate degree level (Undergraduate/Postgraduate/Professional).',
-            'The conversion certificate will be sent to your registered email.',
+            'As the Institute follows a grading system, grade cards-which are already issued to the students by the Institute-serve as Statement of Marks. No other mark statements are issued. However, if required, a Statement of CGPA Equivalent Percentage of Marks is issued on application to pursue further studies or to seek a job.',
+            'No Fee is charged for the issue of a Statement of CGPA Equivalent Percentage of Marks.',   
+            
             
         ],
         fields: [...COMMON_ACADEMIC_FIELDS,
@@ -84,8 +87,8 @@ export const FORM_CONFIGS = {
             'This form is for students who need to appear for supplementary examinations.',
             'Ensure you have the correct Paper Code(s) and Paper Title(s).',
             'Select the appropriate semester for which you are applying.',
-            'Check the examination schedule for supplementary exam dates.',
-            'Application must be submitted before the deadline mentioned in the notification.'
+            
+            
         ],
         fields: [
             {
@@ -107,22 +110,9 @@ export const FORM_CONFIGS = {
                 name: 'heading2'
             },
             {
-                type: 'text',
-                label: 'Paper Code(s)',
-                name: 'paperCodes',
-                required: true
-            },
-            {
-                type: 'text',
-                label: 'Paper Title(s)',
-                name: 'paperTitles',
-                required: true
-            },
-            {
-                name: 'semester',
-                label: 'Semester',
-                type: 'select',
-                options: ['I', 'II', 'III', 'IV', 'V', 'VI', 'VII', 'VIII'],
+                type: 'paperTable',
+                label: 'Papers for Supplementary Examination',
+                name: 'paperDetails',
                 required: true
             },
 
@@ -134,35 +124,47 @@ export const FORM_CONFIGS = {
     'duplicate-degree': {
         title: 'Application for Duplicate Degree Certificate',
         instructions: [
-            'A fee of ₹1000 must be paid via SBI Collect before submission.',
-            'You must lodge a Police Complaint and upload the same.',
-            'A Press Notification/Advertisement regarding the loss is mandatory.',
-            'A Sworn Affidavit on non-judicial stamp paper is required.',
+            'Before applying for the Duplicate Degree Certificate, the candidate should have explored all the possibilities of retracing the Original Degree Certificate and, only if she / he is convinced that the Original Degree Certificate has been lost irrecoverably, she / he can apply for the same.',
+            'In the event of loss in transit / misplacement of the Original Degree Certificate, a police complaint has to be lodged and an acknowledgement obtained from the police station. The scanned copy of the complaint and the original acknowledgment must be uploaded in the Google form.',
+            'A press notification as per the format (given below) has to be published in a daily and the scanned copy of the newspaper cutting has to be uploaded in the Google form.',
+            'An affidavit, sworn before a Notary / First-class Magistrate must be enclosed as per the format.',
             'Clearly state the reason for loss of the original degree certificate.',
-            'Processing may take 15-30 working days after verification.'
+            '**FORMAT OF THE NEWSPAPER NOTIFICATION**\n\nNotice is hereby given that the undersigned has lost her / his original certificate of her / his _________________________________ Academic Programme issued to her / him by Sri Sathya Sai Institute of Higher Learning. Whoever finds it, is hereby requested to return the same to the undersigned immediately. Anyone found in possession in spite of this Notice will be deemed to be in unauthorized and illegal possession of it and shall be liable for any misuse of the same.\n\nName of the Candidate:\nTelephone No:\nAddress:\n\nDate:\n\nStudent Signature:',
+            '**FORMAT FOR AFFIDAVIT**\n\nI, _________________________________, daughter/son of\n_________________________________, age ____, resident of _________ do hereby take oath / solemnly affirm and declare as under:\n\n1. That the Original Degree Certificate of _________________________________Academic Programme which was issued to me by the Sri Sathya Sai Institute of Higher Learning, Prasanthi Nilayam, has been irrecoverably lost / destroyed.\n\n2. That I have made a thorough and diligent search of the Original Degree Certificate, but in spite of my best efforts, I have not been able to recover the same.\n\n3. The duplicate copy of ________ Degree Certificate is now required by me, for the purpose of\n___________________________________________________________________________\n(Give reasons stating why the duplicate copy is required and where it is to be submitted or produced).\n\n4. I understand that if my Original Degree Certificate, which has been lost is put to any unfair use by me or by any person in whose hands the Original Degree Certificate might fall, then I shall be liable for all consequences arising therefrom and I agree to indemnify and always keep indemnified and hold harmless the Institute for any such loss or consequences, which the Institute may sustain by reason of any improper or unfair use of the aforesaid Degree Certificate.\n\nDate:\n\nStudent Signature:'
         ],
-        fields: [...COMMON_ACADEMIC_FIELDS,
-        {
-            name: "periodOfStudy",
-            label: "Period of Study",
-            type: "daterange",
-            required: true,
-            placeholder: "Select period of study"
+        titleLink: {
+            text: 'Please click here to make the payment of ₹1000 using SBI Collect',
+            url: 'https://www.onlinesbi.sbi/sbicollect/icollecthome.htm?corpID=350506&categoryName=SSSIHL%20Exams%20App%20Duplicate%20Grade%20Cardhttps://onlinesbi.sbi.bank.in/sbicollect/icollecthome.htm'
         },
-        {
-            name: 'yearOforiginalDegree',
-            label: 'Year of Original Degree Issue',
-            type: 'date',
-            required: true
-        },
-
-        {
-            name: 'reason',
-            label: 'State clearly the reason for the loss of the Original Degree Certificate.',
-            type: 'textarea',
-            description: 'This must be supported by an affidavit–see Instructions',
-            required: true
-        }],
+        fields: [
+            { name: 'applicantName', label: 'Candidate Name', type: 'text', required: true },
+            { name: 'regNo', label: 'Registered Number', type: 'number', required: true },
+            { name: 'campus', label: 'Campus', type: 'select', options: ['Prashanti Nilayam Campus', 'Anantapur Campus', 'Brindavan Campus', 'Nandigiri Campus'], required: true },
+            { name: 'program', label: 'Academic Programme', type: 'text', required: true },
+            { name: 'mobile', label: 'Mobile Number', type: 'text', required: true },
+            { name: 'email', label: 'Email Address', type: 'email', required: true },
+            { name: 'permanentAddress', label: 'Permanent Address', type: 'text', required: true },
+            {
+                name: "periodOfStudy",
+                label: "Period of Study",
+                type: "daterange",
+                required: true,
+                placeholder: "Select period of study"
+            },
+            {
+                name: 'yearOforiginalDegree',
+                label: 'Year of Original Degree Issue',
+                type: 'date',
+                required: true
+            },
+            {
+                name: 'reason',
+                label: 'State clearly the reason for the loss of the Original Degree Certificate.',
+                type: 'textarea',
+                description: 'This must be supported by an affidavit–see Instructions',
+                required: true
+            }
+        ],
         files: [
             {
                 name: 'policeComplaint',
@@ -307,22 +309,9 @@ export const FORM_CONFIGS = {
                 name: 'heading2'
             },
             {
-                name: 'paperCodes',
-                label: 'Paper Codes',
-                type: 'text',
-                required: true
-            },
-            {
-                name: 'paperTitles',
-                label: 'Paper Titles',
-                type: 'text',
-                required: true
-            },
-            {
-                name: 'semester',
-                label: 'Semester',
-                type: 'select',
-                options: ['I', 'II', 'III', 'IV', 'V', 'VI', 'VII', 'VIII'],
+                type: 'paperTable',
+                label: 'Papers to Repeat',
+                name: 'paperDetails',
                 required: true
             },
             {
