@@ -17,7 +17,7 @@ export const FORM_CONFIGS = {
             'This form is applicable only for students from batches before 2021.',
             'Students from 2021 batch onwards can download their Grade Cards directly from DigiLocker.',
             'A fee of ₹500 must be paid via SBI Collect before submission.',
-            'You must upload a Police Complaint (if lodged) and a Sworn Affidavit.',
+            'You must upload a Police Complaint and a Sworn Affidavit.',
             'Keep your SBI Collect receipt ready for upload.',
             'Original Grade Card scan is optional but recommended if available.'
         ],
@@ -28,7 +28,7 @@ export const FORM_CONFIGS = {
             { name: 'reason', label: 'Reason for Loss', type: 'textarea', required: true },
         ],
         files: [
-            { name: 'policeComplaint', label: 'Police Complaint (if lodged)', required: true },
+            { name: 'policeComplaint', label: 'Police Complaint', required: true },
             { name: 'affidavit', label: 'Sworn Affidavit', required: true },
             { name: 'gradeCard', label: 'Original Grade Card (Scanned) (Optional)', required: false },
             { name: 'sbiReceipt', label: 'SBI Collect Receipt (₹500)', required: true },
