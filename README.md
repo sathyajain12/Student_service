@@ -171,3 +171,4 @@ For issues or questions:
 - Check [DEPLOYMENT_GUIDE.md](DEPLOYMENT_GUIDE.md)
 - Review Cloudflare Workers documentation
 - Contact the development team
+# Trigger deployment
