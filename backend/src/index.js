@@ -1283,7 +1283,6 @@ async function handleApproval(url, env, corsHeaders) {
         console.log(`Verification query result:`, verification);
 
         // Send student notification email
-        const url = new URL(request.url);
         try {
             await sendStudentDecisionEmail(env, verification, action === 'Approve', url.origin);
             console.log(`Student notification sent to ${verification.student_email}`);
