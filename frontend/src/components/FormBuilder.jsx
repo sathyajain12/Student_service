@@ -337,7 +337,13 @@ export default function FormBuilder({ config, onSubmit, onCancel, onTrackStatus 
                                                         name={field.name}
                                                         value={option}
                                                         checked={formData[field.name] === option}
-                                                        onChange={handleChange}
+                                                        onChange={(e) => {
+                                                            handleChange(e);
+                                                            // Clear dependent fields when examType changes
+                                                            if (field.name === 'examType') {
+                                                                setFormData(prev => ({ ...prev, examMonth: '' }));
+                                                            }
+                                                        }}
                                                         required={field.required}
                                                         style={{
                                                             width: '18px',
@@ -364,6 +370,28 @@ export default function FormBuilder({ config, onSubmit, onCancel, onTrackStatus 
                                             >
                                                 <option value="">Select Option</option>
                                                 {field.options.map(opt => <option key={opt} value={opt}>{opt}</option>)}
+                                            </select>
+                                            <ChevronDown size={18} style={{ position: 'absolute', right: '16px', top: '50%', transform: 'translateY(-50%)', color: 'var(--text-muted)', pointerEvents: 'none' }} />
+                                        </div>
+                                    ) : field.type === 'conditionalSelect' ? (
+                                        <div style={{ position: 'relative' }}>
+                                            <select
+                                                name={field.name}
+                                                required={field.required}
+                                                value={formData[field.name] || ''}
+                                                onChange={(e) => {
+                                                    handleChange(e);
+                                                }}
+                                                className="form-input"
+                                                style={{ width: '100%', appearance: 'none' }}
+                                                disabled={!formData[field.dependsOn]}
+                                            >
+                                                <option value="">
+                                                    {formData[field.dependsOn] ? 'Select Month' : 'Select Examination Type First'}
+                                                </option>
+                                                {formData[field.dependsOn] && field.optionsMap[formData[field.dependsOn]]?.map(option => (
+                                                    <option key={option} value={option}>{option}</option>
+                                                ))}
                                             </select>
                                             <ChevronDown size={18} style={{ position: 'absolute', right: '16px', top: '50%', transform: 'translateY(-50%)', color: 'var(--text-muted)', pointerEvents: 'none' }} />
                                         </div>

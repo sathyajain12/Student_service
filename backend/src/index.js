@@ -496,7 +496,7 @@ function getDirectorEmail(campus) {
 
 function shouldNotifyDirector(formType) {
     const forms = [
-        'Application for duplicate Grade Card',
+        'Application for Duplicate Grade Card',
         'Application for End-Semester Supplementary Examinations',
         'Application for Registration of Student Name change in the Institute Records',
         'Application for repeating a paper for supplementary examinations(CIE and ESE)',
@@ -549,13 +549,13 @@ async function handleSubmission(request, env, corsHeaders) {
 
     // Route to appropriate handler based on form type
     switch (formType) {
-        case 'Application for duplicate Grade Card':
+        case 'Application for Duplicate Grade Card':
             return await handleDuplicateGradeCard(formData, request, env, corsHeaders);
         case 'Application for CGPA to Marks Conversion':
             return await handleCGPAConversion(formData, request, env, corsHeaders);
         case 'Application for End-Semester Supplementary Examinations':
             return await handleSupplementaryExam(formData, request, env, corsHeaders);
-        case 'Application for duplicate Degree Certificate':
+        case 'Application for Duplicate Degree Certificate':
             return await handleDuplicateDegree(formData, request, env, corsHeaders);
         case 'Application for Registration of Student Name change in the Institute Records':
             return await handleNameChange(formData, request, env, corsHeaders);
@@ -929,6 +929,9 @@ async function handleRetotaling(formData, request, env, corsHeaders) {
 
     const appId = generateAppId('RT');
 
+    // Combine examMonth and examYear
+    const periodOfExam = `${formData.get('examMonth') || ''} ${formData.get('examYear') || ''}`.trim();
+
     await env.DB.prepare(
         `INSERT INTO applications (id, student_email, form_type, applicant_name, reg_no, campus)
          VALUES (?, ?, ?, ?, ?, ?)`
@@ -936,12 +939,13 @@ async function handleRetotaling(formData, request, env, corsHeaders) {
 
     await env.DB.prepare(
         `INSERT INTO form_retotaling
-         (application_id, exam_type, student_name, reg_no, Campus, Programme,
+         (application_id, exam_type, period_of_examination, student_name, reg_no, Campus, Programme,
           paper_codes_titles_for_retotaling, Mobile_Number, address_line1, address_line2, country, state_province, city, postal_code, student_email)
-         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
     ).bind(
         appId,
         formData.get('examType') || '',
+        periodOfExam,
         formData.get('applicantName') || '',
         formData.get('regNo') || '',
         formData.get('campus') || '',

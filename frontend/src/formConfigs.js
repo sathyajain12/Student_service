@@ -342,17 +342,29 @@ export const FORM_CONFIGS = {
         {
             name: 'examType',
             label: 'Examination Type',
-            type: 'checkbox',
-            requuired: true,
+            type: 'radio',
+            required: true,
             options: ['End-Semester Examinations', 'Supplementary Examinations']
         },
 
         {
-            name: 'periodOfStudy',
-            label: 'Period of Examination',
-            type: 'daterange',
+            name: 'examMonth',
+            label: 'Month of Examination',
+            type: 'conditionalSelect',
             required: true,
-            placeholder: 'Select period of Examination'
+            dependsOn: 'examType',
+            optionsMap: {
+                'End-Semester Examinations': ['April', 'February'],
+                'Supplementary Examinations': ['June', 'December']
+            }
+        },
+
+        {
+            name: 'examYear',
+            label: 'Year of Examination',
+            type: 'select',
+            required: true,
+            options: ['2024', '2025', '2026']
         },
 
         {
