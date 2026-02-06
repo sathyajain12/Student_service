@@ -2,6 +2,16 @@ import { getGoogleAuth, sendEmail } from './google-api';
 
 const ADMIN_EMAIL = 'saisathyajain@sssihl.edu.in';
 
+// Application ID generation with form-specific prefixes
+function generateAppId(prefix) {
+    const now = new Date();
+    const yy = String(now.getFullYear()).slice(-2);
+    const mm = String(now.getMonth() + 1).padStart(2, '0');
+    const dd = String(now.getDate()).padStart(2, '0');
+    const random = String(Math.floor(Math.random() * 1000)).padStart(3, '0');
+    return `${prefix}${yy}${mm}${dd}${random}`;
+}
+
 export default {
     async fetch(request, env) {
         const url = new URL(request.url);
@@ -573,7 +583,7 @@ async function handleDuplicateGradeCard(formData, request, env, corsHeaders) {
     const campus = formData.get('campus');
     const formType = formData.get('formType');
 
-    const appId = `APP-${Date.now()}`;
+    const appId = generateAppId('DGC');
 
     // 1. Save to main applications table
     await env.DB.prepare(
@@ -632,7 +642,7 @@ async function handleCGPAConversion(formData, request, env, corsHeaders) {
     const campus = formData.get('campus');
     const formType = formData.get('formType');
 
-    const appId = `APP-${Date.now()}`;
+    const appId = generateAppId('CGPA');
 
     await env.DB.prepare(
         `INSERT INTO applications (id, student_email, form_type, applicant_name, reg_no, campus)
@@ -683,7 +693,7 @@ async function handleSupplementaryExam(formData, request, env, corsHeaders) {
     const campus = formData.get('campus');
     const formType = formData.get('formType');
 
-    const appId = `APP-${Date.now()}`;
+    const appId = generateAppId('SE');
 
     await env.DB.prepare(
         `INSERT INTO applications (id, student_email, form_type, applicant_name, reg_no, campus)
@@ -749,7 +759,7 @@ async function handleRepeatPaper(formData, request, env, corsHeaders) {
     const campus = formData.get('campus');
     const formType = formData.get('formType');
 
-    const appId = `APP-${Date.now()}`;
+    const appId = generateAppId('RP');
 
     await env.DB.prepare(
         `INSERT INTO applications (id, student_email, form_type, applicant_name, reg_no, campus)
@@ -814,7 +824,7 @@ async function handleDuplicateDegree(formData, request, env, corsHeaders) {
     const campus = formData.get('campus');
     const formType = formData.get('formType');
 
-    const appId = `APP-${Date.now()}`;
+    const appId = generateAppId('DD');
 
     await env.DB.prepare(
         `INSERT INTO applications (id, student_email, form_type, applicant_name, reg_no, campus)
@@ -866,7 +876,7 @@ async function handleNameChange(formData, request, env, corsHeaders) {
     const campus = formData.get('campus');
     const formType = formData.get('formType');
 
-    const appId = `APP-${Date.now()}`;
+    const appId = generateAppId('NC');
 
     await env.DB.prepare(
         `INSERT INTO applications (id, student_email, form_type, applicant_name, reg_no, campus)
@@ -917,7 +927,7 @@ async function handleRetotaling(formData, request, env, corsHeaders) {
     const campus = formData.get('campus');
     const formType = formData.get('formType');
 
-    const appId = `APP-${Date.now()}`;
+    const appId = generateAppId('RT');
 
     await env.DB.prepare(
         `INSERT INTO applications (id, student_email, form_type, applicant_name, reg_no, campus)
@@ -968,7 +978,7 @@ async function handleOnRequestDegree(formData, request, env, corsHeaders) {
     const campus = formData.get('campus');
     const formType = formData.get('formType');
 
-    const appId = `APP-${Date.now()}`;
+    const appId = generateAppId('ORD');
 
     await env.DB.prepare(
         `INSERT INTO applications (id, student_email, form_type, applicant_name, reg_no, campus)
@@ -1014,7 +1024,7 @@ async function handleMigration(formData, request, env, corsHeaders) {
     const formType = formData.get('formType');
     const mobile = formData.get('mobile');
 
-    const appId = `APP-${Date.now()}`;
+    const appId = generateAppId('MC');
 
     await env.DB.prepare(
         `INSERT INTO applications (id, student_email, form_type, applicant_name, reg_no, campus)
