@@ -540,6 +540,175 @@ async function sendDirectorNotification(env, request, appId, formType, applicant
     }
 }
 
+// Student email notification functions
+function getStudentEmailSubject(formType, appId, isApproved) {
+    if (isApproved) {
+        return `Application Approved - ${formType} - ${appId}`;
+    } else {
+        return `Application Status Update - ${formType} - ${appId}`;
+    }
+}
+
+function generateStudentEmailHTML(verification, isApproved, portalUrl) {
+    const statusColor = isApproved ? '#059669' : '#dc2626';
+    const statusBgColor = isApproved ? '#d1fae5' : '#fee2e2';
+    const statusText = isApproved ? 'APPROVED' : 'REJECTED';
+    const heading = isApproved ? 'Application Approved' : 'Application Status Update';
+    const message = isApproved
+        ? 'We are pleased to inform you that your application has been approved by the Director.'
+        : 'Your application status has been updated. Please see the details below.';
+
+    const submissionDate = verification.created_at
+        ? new Date(verification.created_at).toLocaleString('en-IN', {
+            dateStyle: 'long',
+            timeStyle: 'short',
+            timeZone: 'Asia/Kolkata'
+          })
+        : 'N/A';
+
+    return `
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>${heading}</title>
+</head>
+<body style="margin: 0; padding: 0; font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background-color: #f1f5f9;">
+    <table width="100%" cellpadding="0" cellspacing="0" style="background-color: #f1f5f9; padding: 40px 20px;">
+        <tr>
+            <td align="center">
+                <table width="100%" cellpadding="0" cellspacing="0" style="max-width: 600px; background-color: #ffffff; border-radius: 16px; overflow: hidden; box-shadow: 0 10px 25px -5px rgba(15, 23, 42, 0.1);">
+                    <!-- Header -->
+                    <tr>
+                        <td align="center" style="background: linear-gradient(135deg, #2563eb 0%, #7c3aed 100%); padding: 40px 20px;">
+                            <table cellpadding="0" cellspacing="0">
+                                <tr>
+                                    <td align="center">
+                                        <div style="width: 80px; height: 80px; background-color: white; border-radius: 50%; display: inline-block; margin-bottom: 16px;"></div>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td align="center" style="color: #ffffff; font-size: 24px; font-weight: 700; font-family: 'Outfit', sans-serif; padding-top: 10px;">
+                                        SSSIHL
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td align="center" style="color: rgba(255, 255, 255, 0.9); font-size: 14px; padding-top: 4px;">
+                                        Examination Services
+                                    </td>
+                                </tr>
+                            </table>
+                        </td>
+                    </tr>
+
+                    <!-- Content -->
+                    <tr>
+                        <td style="padding: 40px 30px;">
+                            <h1 style="margin: 0 0 12px 0; color: #0f172a; font-size: 24px; font-weight: 700; font-family: 'Outfit', sans-serif;">${heading}</h1>
+                            <p style="margin: 0 0 30px 0; color: #64748b; font-size: 16px; line-height: 1.6;">${message}</p>
+
+                            <!-- Details Table -->
+                            <table width="100%" cellpadding="12" cellspacing="0" style="background-color: #f8fafc; border-radius: 12px; margin-bottom: 30px;">
+                                <tr>
+                                    <td style="border-bottom: 1px solid #e2e8f0; padding: 14px; color: #64748b; font-size: 14px;">Application ID</td>
+                                    <td style="border-bottom: 1px solid #e2e8f0; padding: 14px; color: #0f172a; font-size: 14px; font-weight: 600; text-align: right;">${verification.id}</td>
+                                </tr>
+                                <tr>
+                                    <td style="border-bottom: 1px solid #e2e8f0; padding: 14px; color: #64748b; font-size: 14px;">Applicant</td>
+                                    <td style="border-bottom: 1px solid #e2e8f0; padding: 14px; color: #0f172a; font-size: 14px; font-weight: 600; text-align: right;">${verification.applicant_name}</td>
+                                </tr>
+                                <tr>
+                                    <td style="border-bottom: 1px solid #e2e8f0; padding: 14px; color: #64748b; font-size: 14px;">Form Type</td>
+                                    <td style="border-bottom: 1px solid #e2e8f0; padding: 14px; color: #0f172a; font-size: 14px; font-weight: 600; text-align: right;">${verification.form_type}</td>
+                                </tr>
+                                <tr>
+                                    <td style="border-bottom: 1px solid #e2e8f0; padding: 14px; color: #64748b; font-size: 14px;">Campus</td>
+                                    <td style="border-bottom: 1px solid #e2e8f0; padding: 14px; color: #0f172a; font-size: 14px; font-weight: 600; text-align: right;">${verification.campus || 'N/A'}</td>
+                                </tr>
+                                <tr>
+                                    <td style="border-bottom: 1px solid #e2e8f0; padding: 14px; color: #64748b; font-size: 14px;">Submitted On</td>
+                                    <td style="border-bottom: 1px solid #e2e8f0; padding: 14px; color: #0f172a; font-size: 14px; font-weight: 600; text-align: right;">${submissionDate}</td>
+                                </tr>
+                                <tr>
+                                    <td style="padding: 14px; color: #64748b; font-size: 14px;">Status</td>
+                                    <td style="padding: 14px; text-align: right;">
+                                        <span style="background-color: ${statusBgColor}; color: ${statusColor}; padding: 6px 14px; border-radius: 20px; font-size: 12px; font-weight: 700; display: inline-block;">${statusText}</span>
+                                    </td>
+                                </tr>
+                            </table>
+
+                            <!-- Next Steps -->
+                            <div style="background-color: #eff6ff; border-left: 4px solid #2563eb; padding: 20px; border-radius: 8px; margin-bottom: 30px;">
+                                <h3 style="margin: 0 0 12px 0; color: #1e40af; font-size: 16px; font-weight: 600;">Next Steps</h3>
+                                <ul style="margin: 0; padding-left: 20px; color: #1e40af; font-size: 14px; line-height: 1.8;">
+                                    ${isApproved
+                                        ? `<li>Your request is being processed by the Examination Department</li>
+                                           <li>You will receive further updates via email</li>
+                                           <li>Track your application status anytime at: <a href="${portalUrl}" style="color: #2563eb; text-decoration: none; font-weight: 600;">${portalUrl}</a></li>`
+                                        : `<li>For queries or clarifications, please contact: <a href="mailto:examination@sssihl.edu.in" style="color: #2563eb; text-decoration: none;">examination@sssihl.edu.in</a></li>
+                                           <li>Track your application status: <a href="${portalUrl}" style="color: #2563eb; text-decoration: none; font-weight: 600;">${portalUrl}</a></li>`
+                                    }
+                                </ul>
+                            </div>
+
+                            <!-- CTA Button -->
+                            <table width="100%" cellpadding="0" cellspacing="0">
+                                <tr>
+                                    <td align="center">
+                                        <a href="${portalUrl}" style="display: inline-block; background: linear-gradient(135deg, #2563eb 0%, #7c3aed 100%); color: #ffffff; text-decoration: none; padding: 14px 32px; border-radius: 10px; font-weight: 600; font-size: 15px;">Track Application Status</a>
+                                    </td>
+                                </tr>
+                            </table>
+                        </td>
+                    </tr>
+
+                    <!-- Footer -->
+                    <tr>
+                        <td style="background-color: #f8fafc; padding: 30px; text-align: center; border-top: 1px solid #e2e8f0;">
+                            <p style="margin: 0 0 8px 0; color: #0f172a; font-size: 15px; font-weight: 600;">Sri Sathya Sai Institute of Higher Learning</p>
+                            <p style="margin: 0 0 4px 0; color: #64748b; font-size: 13px;">Examination Services Portal</p>
+                            <p style="margin: 0; color: #94a3b8; font-size: 12px;">This is an automated notification. Please do not reply to this email.</p>
+                        </td>
+                    </tr>
+                </table>
+            </td>
+        </tr>
+    </table>
+</body>
+</html>
+    `;
+}
+
+async function sendStudentDecisionEmail(env, verification, isApproved, portalUrl) {
+    // Validate student email exists
+    if (!verification.student_email) {
+        console.log('No student email found, skipping notification');
+        return;
+    }
+
+    try {
+        // Get OAuth access token
+        const accessToken = await getGoogleAuth(env);
+
+        // Generate email subject and body
+        const subject = getStudentEmailSubject(verification.form_type, verification.id, isApproved);
+        const htmlBody = generateStudentEmailHTML(verification, isApproved, portalUrl);
+
+        // Send email
+        await sendEmail(accessToken, {
+            to: verification.student_email,
+            subject: subject,
+            htmlBody: htmlBody
+        });
+
+        console.log(`Student decision email sent successfully to ${verification.student_email}`);
+    } catch (error) {
+        console.error('Error sending student decision email:', error);
+        throw error; // Re-throw to be caught in handleApproval
+    }
+}
+
 
 // ==================== FORM HANDLERS ====================
 
@@ -1108,95 +1277,296 @@ async function handleApproval(url, env, corsHeaders) {
 
         // Verify the update
         const verification = await env.DB.prepare(
-            `SELECT id, director_status, controller_status, status, applicant_name, form_type FROM applications WHERE id = ?`
+            `SELECT id, director_status, controller_status, status, applicant_name, form_type, student_email, reg_no, campus, created_at, updated_at FROM applications WHERE id = ?`
         ).bind(id).first();
 
         console.log(`Verification query result:`, verification);
 
+        // Send student notification email
+        const url = new URL(request.url);
+        try {
+            await sendStudentDecisionEmail(env, verification, action === 'Approve', url.origin);
+            console.log(`Student notification sent to ${verification.student_email}`);
+        } catch (emailError) {
+            console.error('Failed to send student email:', emailError);
+            // Continue - email failure is non-critical
+        }
+
         // Return a nice HTML page
         const isApproved = action === 'Approve';
+
+        // Format dates nicely
+        const submissionDate = verification?.created_at
+            ? new Date(verification.created_at).toLocaleString('en-IN', {
+                dateStyle: 'long',
+                timeStyle: 'short',
+                timeZone: 'Asia/Kolkata'
+              })
+            : 'N/A';
+
+        const decisionDate = new Date().toLocaleString('en-IN', {
+            dateStyle: 'long',
+            timeStyle: 'short',
+            timeZone: 'Asia/Kolkata'
+        });
+
         const html = `
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Director Approval Decision - SSSIHL Examination Services">
     <title>${isApproved ? 'Application Approved' : 'Application Rejected'} - SSSIHL</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Outfit:wght@300;400;600;700;800&display=swap" rel="stylesheet">
     <style>
-        * { margin: 0; padding: 0; box-sizing: border-box; }
+        :root {
+            --primary: #1e293b;
+            --accent: #2563eb;
+            --accent-gradient: linear-gradient(135deg, #2563eb 0%, #7c3aed 100%);
+            --glass: rgba(255, 255, 255, 0.8);
+            --glass-border: rgba(15, 23, 42, 0.08);
+            --text-main: #0f172a;
+            --text-muted: #64748b;
+            --success: #059669;
+            --success-bg: #d1fae5;
+            --error: #dc2626;
+            --error-bg: #fee2e2;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
         body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background:
+                radial-gradient(ellipse at top right, rgba(147, 51, 234, 0.15), transparent 50%),
+                radial-gradient(ellipse at bottom left, rgba(59, 130, 246, 0.15), transparent 50%),
+                radial-gradient(ellipse at top left, rgba(236, 72, 153, 0.1), transparent 50%),
+                #f1f5f9;
             min-height: 100vh;
             display: flex;
+            flex-direction: column;
             align-items: center;
             justify-content: center;
-            padding: 20px;
+            padding: 40px 20px;
         }
-        .card {
-            background: white;
-            border-radius: 20px;
-            padding: 50px;
-            max-width: 500px;
-            width: 100%;
+
+        .header {
             text-align: center;
-            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+            margin-bottom: 40px;
+            animation: fadeIn 0.6s ease;
         }
-        .icon {
-            width: 80px;
-            height: 80px;
+
+        .logo {
+            width: 100px;
+            height: 100px;
+            margin: 0 auto 20px;
+            background: white;
             border-radius: 50%;
             display: flex;
             align-items: center;
             justify-content: center;
-            margin: 0 auto 25px;
-            font-size: 40px;
+            box-shadow: 0 10px 25px -5px rgba(15, 23, 42, 0.15);
         }
-        .icon.success { background: #d1fae5; }
-        .icon.error { background: #fee2e2; }
+
+        .logo img {
+            width: 80px;
+            height: 80px;
+            border-radius: 50%;
+        }
+
+        .university-name {
+            font-family: 'Outfit', sans-serif;
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: var(--primary);
+            margin-bottom: 6px;
+        }
+
+        .university-subtitle {
+            font-size: 0.95rem;
+            color: var(--text-muted);
+            font-weight: 500;
+        }
+
+        .glass-card {
+            background: var(--glass);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border: 1px solid var(--glass-border);
+            border-radius: 24px;
+            padding: 50px;
+            max-width: 600px;
+            width: 100%;
+            text-align: center;
+            box-shadow: 0 10px 25px -5px rgba(15, 23, 42, 0.08), 0 8px 10px -6px rgba(15, 23, 42, 0.05);
+            animation: slideUp 0.8s ease-out;
+        }
+
+        .status-icon {
+            width: 100px;
+            height: 100px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 30px;
+            font-size: 50px;
+            font-weight: bold;
+            background: ${isApproved ? 'var(--success-bg)' : 'var(--error-bg)'};
+            color: ${isApproved ? 'var(--success)' : 'var(--error)'};
+        }
+
         h1 {
-            color: #1f2937;
-            font-size: 1.8rem;
-            margin-bottom: 10px;
+            font-family: 'Outfit', sans-serif;
+            color: var(--text-main);
+            font-size: 2.2rem;
+            font-weight: 700;
+            margin-bottom: 12px;
+            letter-spacing: -0.02em;
         }
+
         .subtitle {
-            color: #6b7280;
-            font-size: 1rem;
+            color: var(--text-muted);
+            font-size: 1.05rem;
+            margin-bottom: 40px;
+            font-weight: 500;
+        }
+
+        .details {
+            background: #f8fafc;
+            border-radius: 16px;
+            padding: 24px;
+            text-align: left;
             margin-bottom: 30px;
         }
-        .details {
-            background: #f9fafb;
-            border-radius: 12px;
-            padding: 20px;
-            text-align: left;
-        }
+
         .detail-row {
             display: flex;
             justify-content: space-between;
-            padding: 10px 0;
-            border-bottom: 1px solid #e5e7eb;
+            align-items: center;
+            padding: 14px 0;
+            border-bottom: 1px solid #e2e8f0;
         }
-        .detail-row:last-child { border-bottom: none; }
-        .detail-label { color: #6b7280; font-size: 0.9rem; }
-        .detail-value { color: #1f2937; font-weight: 600; font-size: 0.9rem; }
-        .status-badge {
-            padding: 4px 12px;
-            border-radius: 20px;
-            font-size: 0.8rem;
+
+        .detail-row:last-child {
+            border-bottom: none;
+        }
+
+        .detail-label {
+            color: var(--text-muted);
+            font-size: 0.9rem;
+            font-weight: 500;
+        }
+
+        .detail-value {
+            color: var(--text-main);
             font-weight: 600;
+            font-size: 0.95rem;
+            text-align: right;
+            max-width: 60%;
+            word-wrap: break-word;
         }
-        .status-approved { background: #d1fae5; color: #059669; }
-        .status-rejected { background: #fee2e2; color: #dc2626; }
+
+        .status-badge {
+            padding: 6px 16px;
+            border-radius: 20px;
+            font-size: 0.85rem;
+            font-weight: 700;
+            display: inline-block;
+            background: ${isApproved ? 'var(--success-bg)' : 'var(--error-bg)'};
+            color: ${isApproved ? 'var(--success)' : 'var(--error)'};
+        }
+
         .footer {
             margin-top: 30px;
-            color: #9ca3af;
+            padding-top: 25px;
+            border-top: 1px solid rgba(15, 23, 42, 0.08);
+            color: var(--primary);
+            font-size: 0.95rem;
+            font-weight: 600;
+        }
+
+        .footer-subtitle {
+            color: var(--text-muted);
             font-size: 0.85rem;
+            margin-top: 6px;
+            font-weight: 500;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(-20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        @keyframes slideUp {
+            from { opacity: 0; transform: translateY(30px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        @media (max-width: 640px) {
+            body {
+                padding: 30px 15px;
+            }
+
+            .glass-card {
+                padding: 35px 25px;
+            }
+
+            .logo {
+                width: 80px;
+                height: 80px;
+            }
+
+            .logo img {
+                width: 60px;
+                height: 60px;
+            }
+
+            .university-name {
+                font-size: 1.25rem;
+            }
+
+            h1 {
+                font-size: 1.75rem;
+            }
+
+            .status-icon {
+                width: 80px;
+                height: 80px;
+                font-size: 40px;
+            }
+
+            .detail-row {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 6px;
+            }
+
+            .detail-value {
+                max-width: 100%;
+                text-align: left;
+            }
         }
     </style>
 </head>
 <body>
-    <div class="card">
-        <div class="icon ${isApproved ? 'success' : 'error'}">
+    <div class="header">
+        <div class="logo">
+            <img src="${url.origin}/logo.png" alt="SSSIHL Logo" onerror="this.style.display='none'" />
+        </div>
+        <h2 class="university-name">SSSIHL</h2>
+        <p class="university-subtitle">Examination Services Portal</p>
+    </div>
+
+    <div class="glass-card">
+        <div class="status-icon">
             ${isApproved ? '✓' : '✗'}
         </div>
         <h1>Application ${isApproved ? 'Approved' : 'Rejected'}</h1>
@@ -1208,24 +1578,39 @@ async function handleApproval(url, env, corsHeaders) {
                 <span class="detail-value">${id}</span>
             </div>
             <div class="detail-row">
-                <span class="detail-label">Applicant</span>
+                <span class="detail-label">Applicant Name</span>
                 <span class="detail-value">${verification?.applicant_name || 'N/A'}</span>
+            </div>
+            <div class="detail-row">
+                <span class="detail-label">Registration Number</span>
+                <span class="detail-value">${verification?.reg_no || 'N/A'}</span>
+            </div>
+            <div class="detail-row">
+                <span class="detail-label">Campus</span>
+                <span class="detail-value">${verification?.campus || 'N/A'}</span>
             </div>
             <div class="detail-row">
                 <span class="detail-label">Form Type</span>
                 <span class="detail-value">${verification?.form_type || 'N/A'}</span>
             </div>
             <div class="detail-row">
-                <span class="detail-label">Decision By</span>
-                <span class="detail-value">${role}</span>
+                <span class="detail-label">Submitted On</span>
+                <span class="detail-value">${submissionDate}</span>
+            </div>
+            <div class="detail-row">
+                <span class="detail-label">Decision Date</span>
+                <span class="detail-value">${decisionDate}</span>
             </div>
             <div class="detail-row">
                 <span class="detail-label">Status</span>
-                <span class="status-badge ${isApproved ? 'status-approved' : 'status-rejected'}">${isApproved ? 'APPROVED' : 'REJECTED'}</span>
+                <span class="status-badge">${isApproved ? 'APPROVED' : 'REJECTED'}</span>
             </div>
         </div>
 
-        <p class="footer">Sri Sathya Sai Institute of Higher Learning<br>Examination Services Portal</p>
+        <div class="footer">
+            Sri Sathya Sai Institute of Higher Learning
+            <div class="footer-subtitle">Examination Services Portal</div>
+        </div>
     </div>
 </body>
 </html>`;
