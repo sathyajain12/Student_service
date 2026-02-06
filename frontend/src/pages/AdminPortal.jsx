@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { LogOut, FileText, Download, Users, Clock, CheckCircle, XCircle, ArrowLeft, RefreshCw } from 'lucide-react';
+import { LogOut, FileText, Download, Users, Clock, CheckCircle, XCircle, ArrowLeft, RefreshCw, Upload } from 'lucide-react';
 
 const API_URL = import.meta.env.VITE_BACKEND_URL || 'http://localhost:8787';
 
@@ -215,6 +215,9 @@ export default function AdminPortal() {
     const [appDetails, setAppDetails] = useState(null);
     const [lastUpdated, setLastUpdated] = useState(null);
     const [isRefreshing, setIsRefreshing] = useState(false);
+    const [uploading, setUploading] = useState(false);
+    const [uploadError, setUploadError] = useState(null);
+    const [uploadSuccess, setUploadSuccess] = useState(false);
 
     useEffect(() => {
         if (isLoggedIn) {
@@ -380,6 +383,50 @@ export default function AdminPortal() {
         }
     };
 
+    const uploadResponseDocument = async (applicationId, file) => {
+        setUploading(true);
+        setUploadError(null);
+        setUploadSuccess(false);
+
+        try {
+            const formData = new FormData();
+            formData.append('applicationId', applicationId);
+            formData.append('responseDocument', file);
+
+            const response = await fetch(`${API_URL}/admin/upload-response`, {
+                method: 'POST',
+                headers: {
+                    'Authorization': `Bearer ${token}`
+                },
+                body: formData
+            });
+
+            const data = await response.json();
+
+            if (response.ok) {
+                setUploadSuccess(true);
+                // Refresh application details to show the new file
+                fetchAppDetails(applicationId);
+            } else {
+                setUploadError(data.error || 'Failed to upload document');
+            }
+        } catch (err) {
+            console.error('Failed to upload response document:', err);
+            setUploadError('Failed to upload document. Please try again.');
+        } finally {
+            setUploading(false);
+        }
+    };
+
+    const handleFileSelect = (event, applicationId) => {
+        const file = event.target.files[0];
+        if (file) {
+            uploadResponseDocument(applicationId, file);
+        }
+        // Reset the input so the same file can be selected again
+        event.target.value = '';
+    };
+
     // Login Screen
     if (!isLoggedIn) {
         return (
@@ -501,6 +548,78 @@ export default function AdminPortal() {
                                         <CheckCircle size={18} /> Mark as Completed & Dispatched
                                     </button>
                                 </div>
+                            </div>
+                        )}
+
+                        {/* Upload Response Document Section */}
+                        <div style={{
+                            marginBottom: '24px',
+                            padding: '20px',
+                            background: 'rgba(59, 130, 246, 0.1)',
+                            borderRadius: '12px',
+                            border: '1px solid rgba(59, 130, 246, 0.3)'
+                        }}>
+                            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '16px' }}>
+                                <div>
+                                    <h4 style={{ color: '#3b82f6', margin: 0, marginBottom: '4px' }}>Upload Response Document</h4>
+                                    <p style={{ color: 'rgba(255,255,255,0.6)', margin: 0, fontSize: '14px' }}>
+                                        Upload the completed certificate or document for the student
+                                    </p>
+                                </div>
+                                <label style={{
+                                    padding: '12px 24px',
+                                    background: 'linear-gradient(135deg, #3b82f6 0%, #2563eb 100%)',
+                                    color: '#ffffff',
+                                    border: 'none',
+                                    borderRadius: '8px',
+                                    cursor: uploading ? 'not-allowed' : 'pointer',
+                                    fontWeight: '600',
+                                    fontSize: '14px',
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    gap: '8px',
+                                    opacity: uploading ? 0.6 : 1
+                                }}>
+                                    <Upload size={18} />
+                                    {uploading ? 'Uploading...' : 'Choose File to Upload'}
+                                    <input
+                                        type="file"
+                                        accept=".pdf,.jpg,.jpeg,.png"
+                                        onChange={(e) => handleFileSelect(e, appDetails.application.id)}
+                                        style={{ display: 'none' }}
+                                        disabled={uploading}
+                                    />
+                                </label>
+                            </div>
+
+                            {uploadError && (
+                                <p style={{ color: '#ef4444', fontSize: '14px', marginTop: '12px', marginBottom: 0 }}>{uploadError}</p>
+                            )}
+                            {uploadSuccess && (
+                                <p style={{ color: '#10b981', fontSize: '14px', marginTop: '12px', marginBottom: 0 }}>Document uploaded successfully!</p>
+                            )}
+                        </div>
+
+                        {/* Response Documents - Admin Uploaded */}
+                        {appDetails.responseDocuments && appDetails.responseDocuments.length > 0 && (
+                            <div style={{ marginBottom: '24px' }}>
+                                <h3 style={{ color: '#ffffff', marginBottom: '16px' }}>Response Documents (Uploaded by Admin)</h3>
+                                {appDetails.responseDocuments.map((file) => (
+                                    <div key={file.id} style={{ ...styles.fileRow, borderLeft: '4px solid #10b981' }}>
+                                        <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                                            <FileText style={{ color: '#10b981' }} size={20} />
+                                            <div>
+                                                <p style={{ color: '#ffffff', margin: 0, fontWeight: '500' }}>{file.file_name}</p>
+                                                <p style={{ color: 'rgba(255,255,255,0.5)', margin: 0, fontSize: '12px' }}>
+                                                    {file.file_type} • {(file.file_size / 1024).toFixed(1)} KB • Uploaded by: {file.uploaded_by || 'Admin'}
+                                                </p>
+                                            </div>
+                                        </div>
+                                        <button onClick={() => downloadFile(file.id, file.file_name)} style={styles.button}>
+                                            <Download size={16} style={{ marginRight: '6px' }} /> Download
+                                        </button>
+                                    </div>
+                                ))}
                             </div>
                         )}
 

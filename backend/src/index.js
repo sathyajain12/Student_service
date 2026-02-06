@@ -31,6 +31,12 @@ export default {
                 return await handleStatusRequest(url, env, corsHeaders);
             }
 
+            // Public download for students (response documents only)
+            if (url.pathname.startsWith('/download/') && request.method === 'GET') {
+                const fileId = url.pathname.split('/').pop();
+                return await handlePublicDownload(fileId, url, env, corsHeaders);
+            }
+
             // Admin routes
             if (url.pathname === '/admin/login' && request.method === 'POST') {
                 return await handleAdminLogin(request, env, corsHeaders);
@@ -56,6 +62,10 @@ export default {
 
             if (url.pathname === '/admin/complete' && request.method === 'POST') {
                 return await handleMarkCompleted(request, env, corsHeaders);
+            }
+
+            if (url.pathname === '/admin/upload-response' && request.method === 'POST') {
+                return await handleUploadResponse(request, env, corsHeaders);
             }
 
             return new Response('Not Found', { status: 404, headers: corsHeaders });
@@ -164,12 +174,25 @@ async function handleGetApplication(id, request, env, corsHeaders) {
         });
     }
 
-    // Get associated files
-    const files = await env.DB.prepare(
-        'SELECT id, field_name, file_name, file_type, file_size, created_at FROM file_blobs WHERE application_id = ?'
+    // Get student-uploaded files
+    const studentFiles = await env.DB.prepare(
+        `SELECT id, field_name, file_name, file_type, file_size, created_at
+         FROM file_blobs
+         WHERE application_id = ? AND (is_response = FALSE OR is_response IS NULL)`
     ).bind(id).all();
 
-    return new Response(JSON.stringify({ application, files: files.results }), {
+    // Get admin-uploaded response documents
+    const responseFiles = await env.DB.prepare(
+        `SELECT id, field_name, file_name, file_type, file_size, created_at, uploaded_by
+         FROM file_blobs
+         WHERE application_id = ? AND is_response = TRUE`
+    ).bind(id).all();
+
+    return new Response(JSON.stringify({
+        application,
+        files: studentFiles.results,
+        responseDocuments: responseFiles.results
+    }), {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' }
     });
 }
@@ -275,6 +298,116 @@ async function handleMarkCompleted(request, env, corsHeaders) {
             headers: { ...corsHeaders, 'Content-Type': 'application/json' }
         });
     }
+}
+
+// Handler for admin uploading response document
+async function handleUploadResponse(request, env, corsHeaders) {
+    const admin = await verifyAdminToken(request, env);
+    if (!admin) {
+        return new Response(JSON.stringify({ error: 'Unauthorized' }), {
+            status: 401,
+            headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+        });
+    }
+
+    try {
+        const formData = await request.formData();
+        const applicationId = formData.get('applicationId');
+        const file = formData.get('responseDocument');
+
+        if (!applicationId || !file) {
+            return new Response(JSON.stringify({ error: 'Application ID and file are required' }), {
+                status: 400,
+                headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+            });
+        }
+
+        // Verify application exists
+        const app = await env.DB.prepare(
+            'SELECT id FROM applications WHERE id = ?'
+        ).bind(applicationId).first();
+
+        if (!app) {
+            return new Response(JSON.stringify({ error: 'Application not found' }), {
+                status: 404,
+                headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+            });
+        }
+
+        // Store the response document
+        const arrayBuffer = await file.arrayBuffer();
+        const uint8Array = new Uint8Array(arrayBuffer);
+        let binary = '';
+        for (let i = 0; i < uint8Array.length; i++) {
+            binary += String.fromCharCode(uint8Array[i]);
+        }
+        const base64 = btoa(binary);
+
+        await env.DB.prepare(
+            `INSERT INTO file_blobs (application_id, field_name, file_name, file_type, file_size, file_data, is_response, uploaded_by)
+             VALUES (?, ?, ?, ?, ?, ?, ?, ?)`
+        ).bind(
+            applicationId,
+            'response_document',
+            file.name,
+            file.type,
+            file.size,
+            base64,
+            true,
+            admin.username
+        ).run();
+
+        console.log(`Response document uploaded: ${file.name} for app ${applicationId} by admin ${admin.username}`);
+
+        return new Response(JSON.stringify({ success: true, message: 'Response document uploaded successfully' }), {
+            headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+        });
+    } catch (error) {
+        console.error('Error uploading response document:', error);
+        return new Response(JSON.stringify({ error: error.message }), {
+            status: 500,
+            headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+        });
+    }
+}
+
+// Handler for public download (students downloading response documents)
+async function handlePublicDownload(fileId, url, env, corsHeaders) {
+    const appId = url.searchParams.get('appId');
+
+    if (!appId) {
+        return new Response(JSON.stringify({ error: 'Application ID is required' }), {
+            status: 400,
+            headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+        });
+    }
+
+    // Only allow downloading response documents (is_response = true) with matching appId
+    const file = await env.DB.prepare(
+        'SELECT * FROM file_blobs WHERE id = ? AND application_id = ? AND is_response = TRUE'
+    ).bind(fileId, appId).first();
+
+    if (!file) {
+        return new Response(JSON.stringify({ error: 'File not found or access denied' }), {
+            status: 404,
+            headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+        });
+    }
+
+    // Decode base64 and return as file
+    const binaryString = atob(file.file_data);
+    const bytes = new Uint8Array(binaryString.length);
+    for (let i = 0; i < binaryString.length; i++) {
+        bytes[i] = binaryString.charCodeAt(i);
+    }
+
+    return new Response(bytes, {
+        headers: {
+            ...corsHeaders,
+            'Content-Type': file.file_type,
+            'Content-Disposition': `attachment; filename="${file.file_name}"`
+        }
+    });
 }
 
 // ==================== HELPER FUNCTIONS ====================
@@ -451,14 +584,19 @@ async function handleDuplicateGradeCard(formData, request, env, corsHeaders) {
     // 2. Save to form-specific table
     await env.DB.prepare(
         `INSERT INTO form_duplicate_grade_card
-         (Application_id, student_email, student_name, student_address, Mobile_Number,
+         (Application_id, student_email, student_name, address_line1, address_line2, country, state_province, city, postal_code, Mobile_Number,
           Registration_Number, Campus, Programme, Period_of_Study, Semester, Reason)
-         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
     ).bind(
         appId,
         formData.get('email') || '',
         formData.get('applicantName') || '',
-        formData.get('correspondenceAddress') || '',
+        formData.get('addressLine1') || '',
+        formData.get('addressLine2') || '',
+        formData.get('country') || '',
+        formData.get('stateProvince') || '',
+        formData.get('city') || '',
+        formData.get('postalCode') || '',
         formData.get('mobile') || '',
         formData.get('regNo') || '',
         formData.get('campus') || '',
@@ -503,13 +641,18 @@ async function handleCGPAConversion(formData, request, env, corsHeaders) {
 
     await env.DB.prepare(
         `INSERT INTO form_cgpa_conversion
-         (application_id, student_name, student_address, Mobile_Number, Registration_Number,
+         (application_id, student_name, address_line1, address_line2, country, state_province, city, postal_code, Mobile_Number, Registration_Number,
           Programme, Period_of_Study, graduation_year, CGPA)
-         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
     ).bind(
         appId,
         formData.get('applicantName') || '',
-        formData.get('correspondenceAddress') || '',
+        formData.get('addressLine1') || '',
+        formData.get('addressLine2') || '',
+        formData.get('country') || '',
+        formData.get('stateProvince') || '',
+        formData.get('city') || '',
+        formData.get('postalCode') || '',
         formData.get('mobile') || '',
         formData.get('regNo') || '',
         formData.get('program') || '',
@@ -547,11 +690,23 @@ async function handleSupplementaryExam(formData, request, env, corsHeaders) {
          VALUES (?, ?, ?, ?, ?, ?)`
     ).bind(appId, email, formType, applicantName, regNo, campus).run();
 
+    // Parse paper details JSON and format for storage
+    const paperDetailsJson = formData.get('paperDetails') || '[]';
+    let paperCodes = '', paperTitles = '', semester = '';
+    try {
+        const papers = JSON.parse(paperDetailsJson);
+        paperCodes = papers.map(p => p.paperCode).join(', ');
+        paperTitles = papers.map(p => p.paperTitle).join(', ');
+        semester = papers.map(p => p.semester).join(', ');
+    } catch (e) {
+        console.error('Failed to parse paper details:', e);
+    }
+
     await env.DB.prepare(
         `INSERT INTO form_supplementary_exam
          (application_id, student_email, Period_of_Study, student_name, Registration_Number,
-          Campus, Programme, Mobile_Number, student_address, paper_codes, paper_titles, Semester)
-         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
+          Campus, Programme, Mobile_Number, address_line1, address_line2, country, state_province, city, postal_code, paper_codes, paper_titles, Semester)
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
     ).bind(
         appId,
         formData.get('email') || '',
@@ -561,10 +716,15 @@ async function handleSupplementaryExam(formData, request, env, corsHeaders) {
         formData.get('campus') || '',
         formData.get('program') || '',
         formData.get('mobile') || '',
-        formData.get('correspondenceAddress') || '',
-        formData.get('paperCodes') || '',
-        formData.get('paperTitles') || '',
-        formData.get('semester') || ''
+        formData.get('addressLine1') || '',
+        formData.get('addressLine2') || '',
+        formData.get('country') || '',
+        formData.get('stateProvince') || '',
+        formData.get('city') || '',
+        formData.get('postalCode') || '',
+        paperCodes,
+        paperTitles,
+        semester
     ).run();
 
     for (const [key, value] of formData.entries()) {
@@ -596,11 +756,23 @@ async function handleRepeatPaper(formData, request, env, corsHeaders) {
          VALUES (?, ?, ?, ?, ?, ?)`
     ).bind(appId, email, formType, applicantName, regNo, campus).run();
 
+    // Parse paper details JSON and format for storage
+    const paperDetailsJson = formData.get('paperDetails') || '[]';
+    let paperCodes = '', paperTitles = '', semester = '';
+    try {
+        const papers = JSON.parse(paperDetailsJson);
+        paperCodes = papers.map(p => p.paperCode).join(', ');
+        paperTitles = papers.map(p => p.paperTitle).join(', ');
+        semester = papers.map(p => p.semester).join(', ');
+    } catch (e) {
+        console.error('Failed to parse paper details:', e);
+    }
+
     await env.DB.prepare(
         `INSERT INTO form_repeat_paper
          (application_id, Period_of_Study, student_name, reg_no, Campus, Programme,
-          Mobile_Number, student_address, paper_codes, paper_titles, Semester)
-         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
+          Mobile_Number, address_line1, address_line2, country, state_province, city, postal_code, paper_codes, paper_titles, Semester)
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
     ).bind(
         appId,
         formData.get('periodOfStudy') || '',
@@ -609,10 +781,15 @@ async function handleRepeatPaper(formData, request, env, corsHeaders) {
         formData.get('campus') || '',
         formData.get('program') || '',
         formData.get('mobile') || '',
-        formData.get('correspondenceAddress') || '',
-        formData.get('paperCodes') || '',
-        formData.get('paperTitles') || '',
-        formData.get('semester') || ''
+        formData.get('addressLine1') || '',
+        formData.get('addressLine2') || '',
+        formData.get('country') || '',
+        formData.get('stateProvince') || '',
+        formData.get('city') || '',
+        formData.get('postalCode') || '',
+        paperCodes,
+        paperTitles,
+        semester
     ).run();
 
     for (const [key, value] of formData.entries()) {
@@ -646,14 +823,19 @@ async function handleDuplicateDegree(formData, request, env, corsHeaders) {
 
     await env.DB.prepare(
         `INSERT INTO form_duplicate_degree
-         (application_id, student_name, student_email, student_address, reg_no, Campus,
+         (application_id, student_name, student_email, address_line1, address_line2, country, state_province, city, postal_code, reg_no, Campus,
           Programme, Period_of_Study, year_of_passing, Reason)
-         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
     ).bind(
         appId,
         formData.get('applicantName') || '',
         formData.get('email') || '',
-        formData.get('correspondenceAddress') || '',
+        formData.get('addressLine1') || '',
+        formData.get('addressLine2') || '',
+        formData.get('country') || '',
+        formData.get('stateProvince') || '',
+        formData.get('city') || '',
+        formData.get('postalCode') || '',
         formData.get('regNo') || '',
         formData.get('campus') || '',
         formData.get('program') || '',
@@ -694,8 +876,8 @@ async function handleNameChange(formData, request, env, corsHeaders) {
     await env.DB.prepare(
         `INSERT INTO form_name_change
          (application_id, existing_name, Father_name, reg_no, Campus, Mobile_Number,
-          Period_of_Study, student_address, changed_name)
-         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`
+          Period_of_Study, address_line1, address_line2, country, state_province, city, postal_code, changed_name)
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
     ).bind(
         appId,
         formData.get('applicantName') || '',
@@ -704,7 +886,12 @@ async function handleNameChange(formData, request, env, corsHeaders) {
         formData.get('campus') || '',
         formData.get('mobile') || '',
         formData.get('periodOfStudy') || '',
-        formData.get('correspondenceAddress') || '',
+        formData.get('addressLine1') || '',
+        formData.get('addressLine2') || '',
+        formData.get('country') || '',
+        formData.get('stateProvince') || '',
+        formData.get('city') || '',
+        formData.get('postalCode') || '',
         formData.get('newName') || ''
     ).run();
 
@@ -740,8 +927,8 @@ async function handleRetotaling(formData, request, env, corsHeaders) {
     await env.DB.prepare(
         `INSERT INTO form_retotaling
          (application_id, exam_type, student_name, reg_no, Campus, Programme,
-          paper_codes_titles_for_retotaling, Mobile_Number, student_address, student_email)
-         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
+          paper_codes_titles_for_retotaling, Mobile_Number, address_line1, address_line2, country, state_province, city, postal_code, student_email)
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
     ).bind(
         appId,
         formData.get('examType') || '',
@@ -751,7 +938,12 @@ async function handleRetotaling(formData, request, env, corsHeaders) {
         formData.get('program') || '',
         formData.get('subjectCode') || '',
         formData.get('mobile') || '',
-        formData.get('correspondenceAddress') || '',
+        formData.get('addressLine1') || '',
+        formData.get('addressLine2') || '',
+        formData.get('country') || '',
+        formData.get('stateProvince') || '',
+        formData.get('city') || '',
+        formData.get('postalCode') || '',
         formData.get('email') || ''
     ).run();
 
@@ -785,14 +977,19 @@ async function handleOnRequestDegree(formData, request, env, corsHeaders) {
 
     await env.DB.prepare(
         `INSERT INTO form_on_request_degree
-         (application_id, student_name, reg_no, Campus, Student_address, Mobile_Number, Degree_applied_for)
-         VALUES (?, ?, ?, ?, ?, ?, ?)`
+         (application_id, student_name, reg_no, Campus, address_line1, address_line2, country, state_province, city, postal_code, Mobile_Number, Degree_applied_for)
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
     ).bind(
         appId,
         formData.get('applicantName') || '',
         formData.get('regNo') || '',
         formData.get('campus') || '',
-        formData.get('correspondenceAddress') || '',
+        formData.get('addressLine1') || '',
+        formData.get('addressLine2') || '',
+        formData.get('country') || '',
+        formData.get('stateProvince') || '',
+        formData.get('city') || '',
+        formData.get('postalCode') || '',
         formData.get('mobile') || '',
         formData.get('degreeAppliedFor') || ''
     ).run();
@@ -827,8 +1024,8 @@ async function handleMigration(formData, request, env, corsHeaders) {
     await env.DB.prepare(
         `INSERT INTO form_migration_certificate
          (application_id, student_name, Mobile_Number, admission_year, Campus_of_admission,
-          last_examination_passed, degree_recieved, university_to_migrate, correspondence_address)
-         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`
+          last_examination_passed, degree_recieved, university_to_migrate, address_line1, address_line2, country, state_province, city, postal_code)
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
     ).bind(
         appId,
         formData.get('applicantName') || '',
@@ -838,7 +1035,12 @@ async function handleMigration(formData, request, env, corsHeaders) {
         formData.get('lastExam') || '',
         formData.get('degreeRecieved') || '',
         formData.get('universityInstitute') || '',
-        formData.get('migrationAddress') || ''
+        formData.get('addressLine1') || '',
+        formData.get('addressLine2') || '',
+        formData.get('country') || '',
+        formData.get('stateProvince') || '',
+        formData.get('city') || '',
+        formData.get('postalCode') || ''
     ).run();
 
     for (const [key, value] of formData.entries()) {
@@ -1084,7 +1286,17 @@ async function handleStatusRequest(url, env, corsHeaders) {
             });
         }
 
-        return new Response(JSON.stringify(app), {
+        // Fetch response documents (admin-uploaded files)
+        const responseFiles = await env.DB.prepare(
+            `SELECT id, file_name, file_type, file_size, created_at
+             FROM file_blobs
+             WHERE application_id = ? AND is_response = TRUE`
+        ).bind(id).all();
+
+        return new Response(JSON.stringify({
+            ...app,
+            responseDocuments: responseFiles.results || []
+        }), {
             headers: { ...corsHeaders, 'Content-Type': 'application/json' }
         });
     } catch (error) {

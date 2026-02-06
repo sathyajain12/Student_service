@@ -11,7 +11,8 @@ import {
     ArrowLeft,
     Loader2,
     ChevronRight,
-    X
+    X,
+    Download
 } from 'lucide-react';
 
 export default function StatusTracker({ onBack }) {
@@ -42,6 +43,30 @@ export default function StatusTracker({ onBack }) {
             setError('Failed to fetch status. Please try again later.');
         } finally {
             setLoading(false);
+        }
+    };
+
+    const downloadResponseDocument = async (fileId, fileName, applicationId) => {
+        try {
+            const backendUrl = import.meta.env.VITE_BACKEND_URL || 'http://localhost:8787';
+            const response = await fetch(`${backendUrl}/download/${fileId}?appId=${applicationId}`);
+
+            if (!response.ok) {
+                throw new Error('Failed to download file');
+            }
+
+            const blob = await response.blob();
+            const url = window.URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = fileName;
+            document.body.appendChild(a);
+            a.click();
+            window.URL.revokeObjectURL(url);
+            document.body.removeChild(a);
+        } catch (err) {
+            console.error('Download failed:', err);
+            alert('Failed to download document. Please try again.');
         }
     };
 
@@ -241,6 +266,90 @@ export default function StatusTracker({ onBack }) {
                             })}
                         </div>
                     </div>
+
+                    {/* Response Documents Download Section */}
+                    {application.responseDocuments && application.responseDocuments.length > 0 && (
+                        <div className="glass-card" style={{ padding: '30px', marginTop: '30px' }}>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '20px' }}>
+                                <div style={{
+                                    width: '40px',
+                                    height: '40px',
+                                    borderRadius: '10px',
+                                    background: 'rgba(5, 150, 105, 0.1)',
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    justifyContent: 'center'
+                                }}>
+                                    <FileText size={20} style={{ color: 'var(--success)' }} />
+                                </div>
+                                <div>
+                                    <h4 style={{ fontSize: '1.1rem', color: 'var(--text-main)', margin: 0 }}>
+                                        Your Documents are Ready!
+                                    </h4>
+                                    <p style={{ fontSize: '0.85rem', color: 'var(--text-muted)', margin: 0 }}>
+                                        Download your requested documents below
+                                    </p>
+                                </div>
+                            </div>
+
+                            <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                                {application.responseDocuments.map((doc) => (
+                                    <div
+                                        key={doc.id}
+                                        style={{
+                                            display: 'flex',
+                                            alignItems: 'center',
+                                            justifyContent: 'space-between',
+                                            padding: '16px 20px',
+                                            background: 'rgba(5, 150, 105, 0.05)',
+                                            border: '1px solid rgba(5, 150, 105, 0.2)',
+                                            borderRadius: '12px',
+                                            flexWrap: 'wrap',
+                                            gap: '12px'
+                                        }}
+                                    >
+                                        <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                                            <FileText size={24} style={{ color: 'var(--success)' }} />
+                                            <div>
+                                                <p style={{
+                                                    color: 'var(--text-main)',
+                                                    fontWeight: '600',
+                                                    margin: 0,
+                                                    fontSize: '0.95rem'
+                                                }}>
+                                                    {doc.file_name}
+                                                </p>
+                                                <p style={{
+                                                    color: 'var(--text-muted)',
+                                                    fontSize: '0.8rem',
+                                                    margin: 0,
+                                                    marginTop: '4px'
+                                                }}>
+                                                    {(doc.file_size / 1024).toFixed(1)} KB •
+                                                    Uploaded {new Date(doc.created_at).toLocaleDateString()}
+                                                </p>
+                                            </div>
+                                        </div>
+                                        <button
+                                            onClick={() => downloadResponseDocument(doc.id, doc.file_name, application.id)}
+                                            className="btn-primary"
+                                            style={{
+                                                display: 'flex',
+                                                alignItems: 'center',
+                                                gap: '8px',
+                                                padding: '10px 20px',
+                                                background: 'var(--success)',
+                                                fontSize: '0.9rem'
+                                            }}
+                                        >
+                                            <Download size={18} />
+                                            Download
+                                        </button>
+                                    </div>
+                                ))}
+                            </div>
+                        </div>
+                    )}
                 </div>
             )}
         </div>
