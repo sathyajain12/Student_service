@@ -63,7 +63,7 @@ export async function sendEmail(accessToken, { to, subject, htmlBody, attachment
     // HTML body part
     parts.push(`--${boundary}`);
     parts.push('Content-Type: text/html; charset="UTF-8"');
-    parts.push('Content-Transfer-Encoding: quoted-printable');
+    parts.push('Content-Transfer-Encoding: 7bit');
     parts.push('');
     parts.push(htmlBody);
     parts.push('');
