@@ -781,12 +781,7 @@ function generateStudentConfirmationHTML(appId, formType, applicantName, email, 
                             <table cellpadding="0" cellspacing="0">
                                 <tr>
                                     <td align="center">
-                                        <div style="width: 80px; height: 80px; background-color: white; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 16px;">
-                                            <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="#2563eb" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-                                                <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
-                                                <polyline points="22 4 12 14.01 9 11.01"></polyline>
-                                            </svg>
-                                        </div>
+                                        <img src="https://student-service.pages.dev/logo.png" alt="SSSIHL Logo" style="width: 80px; height: 80px; display: block; margin: 0 auto 16px;">
                                     </td>
                                 </tr>
                                 <tr>

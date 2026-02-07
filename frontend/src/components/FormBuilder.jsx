@@ -600,6 +600,9 @@ export default function FormBuilder({ config, onSubmit, onCancel, onTrackStatus 
                                             onChange={handleChange}
                                             className="form-input"
                                             style={{ width: '100%' }}
+                                            {...(field.step && { step: field.step })}
+                                            {...(field.min && { min: field.min })}
+                                            {...(field.max && { max: field.max })}
                                         />
                                     )}
                                 </div>

@@ -72,7 +72,10 @@ export const FORM_CONFIGS = {
             label: 'CGPA',
             type: 'number',
             required: true,
-            placeholder: 'Enter your CGPA'
+            placeholder: 'Enter your CGPA',
+            step: '0.01',
+            min: '0',
+            max: '10'
         },
         {
             name: 'cgpaMarksEquivalence',
