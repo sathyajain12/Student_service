@@ -55,9 +55,7 @@ export default function Portal({ onSelectForm, onTrackStatus }) {
             Examination Services Portal
           </p>
         </div>
-        <p style={{ color: 'var(--text-muted)', fontSize: '0.95rem', fontWeight: '500', marginBottom: '30px' }}>
-          Prasanthi Nilayam, Andhra Pradesh
-        </p>
+       
 
         <button
           onClick={onTrackStatus}
