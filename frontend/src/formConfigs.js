@@ -33,7 +33,7 @@ export const FORM_CONFIGS = {
         },
         fields: [
             ...COMMON_ACADEMIC_FIELDS,
-            { name: 'periodOfStudy', label: 'Period of Study', type: 'text', required: true, placeholder: 'e.g., June 2019 - March 2022' },
+            { name: 'periodOfStudy', label: 'Period of Study', type: 'daterange', required: true, placeholder: 'e.g., June 2019 - March 2022' },
             { name: 'semester', label: 'Semester', type: 'select', options: ['I', 'II', 'III', 'IV', 'V', 'VI', 'VII', 'VIII'], required: true },
             { name: 'reason', label: 'Reason for Loss', type: 'textarea', required: true },
         ],
