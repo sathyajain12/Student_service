@@ -561,7 +561,7 @@ async function sendDirectorNotification(env, request, appId, formType, applicant
                     <p style="margin: 4px 0;">&bull; Submission Date: ${new Date().toLocaleString()}</p>
                     <p style="margin: 4px 0;">&bull; Attachments: ${files.length} document(s)</p>
 
-                    <hr>
+                    <br>
                     <p>
                         <a href="${url.origin}/approve?id=${appId}&role=Director&action=Approve" style="background:#10b981;color:#fff;padding:10px 20px;text-decoration:none;border-radius:5px;margin-right:10px;">✓ Approve</a>
                         <a href="${url.origin}/approve?id=${appId}&role=Director&action=Reject" style="background:#ef4444;color:#fff;padding:10px 20px;text-decoration:none;border-radius:5px;">✗ Reject</a>
