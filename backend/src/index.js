@@ -901,30 +901,38 @@ function generateStudentConfirmationHTML(appId, formType, applicantName, email, 
 }
 
 async function sendStudentConfirmationEmail(env, appId, formType, applicantName, email, campus) {
+    console.log(`[STUDENT CONFIRMATION] Starting for appId: ${appId}, email: ${email}`);
+
     // Validate student email exists
     if (!email) {
-        console.log('No student email provided, skipping confirmation');
+        console.log('[STUDENT CONFIRMATION] No student email provided, skipping confirmation');
         return;
     }
 
     try {
+        console.log('[STUDENT CONFIRMATION] Getting OAuth access token...');
         // Get OAuth access token
         const accessToken = await getGoogleAuth(env);
+        console.log('[STUDENT CONFIRMATION] OAuth token obtained successfully');
 
         // Generate email subject and body
         const subject = `Application Received - ${formType} - ${appId}`;
         const htmlBody = generateStudentConfirmationHTML(appId, formType, applicantName, email, campus);
+        console.log('[STUDENT CONFIRMATION] Email content generated');
 
         // Send email
+        console.log(`[STUDENT CONFIRMATION] Sending email to ${email}...`);
         await sendEmail(accessToken, {
             to: email,
             subject: subject,
             htmlBody: htmlBody
         });
 
-        console.log(`Student confirmation email sent successfully to ${email} for app ${appId}`);
+        console.log(`[STUDENT CONFIRMATION] Email sent successfully to ${email} for app ${appId}`);
     } catch (error) {
-        console.error('Error sending student confirmation email:', error);
+        console.error('[STUDENT CONFIRMATION] Error:', error);
+        console.error('[STUDENT CONFIRMATION] Error message:', error.message);
+        console.error('[STUDENT CONFIRMATION] Error stack:', error.stack);
         // Don't throw - we don't want to fail the submission if email fails
     }
 }
