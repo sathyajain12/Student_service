@@ -37,11 +37,26 @@ export default function Portal({ onSelectForm, onTrackStatus }) {
             style={{ width: '100px', height: '100px', objectFit: 'contain' }}
           />
         </div>
-        <h1 className="title-gradient" style={{ fontSize: '3.8rem', marginBottom: '15px' }}>
-          SSSIHL-Examination Services
-        </h1>
-        <p style={{ color: 'var(--primary)', fontSize: '1.6rem', fontWeight: '700', marginBottom: '30px', letterSpacing: '0.01em' }}>
+        <h1 className="title-gradient" style={{ fontSize: '3.8rem', marginBottom: '8px', lineHeight: '1.15' }}>
           Sri Sathya Sai Institute of Higher Learning
+        </h1>
+        <p style={{ color: 'var(--text-muted)', fontSize: '1.1rem', fontWeight: '500', marginBottom: '20px', fontStyle: 'italic' }}>
+          (Deemed to be University)
+        </p>
+        <div style={{
+          display: 'inline-block',
+          padding: '12px 32px',
+          background: 'var(--accent-gradient)',
+          borderRadius: '12px',
+          marginBottom: '10px',
+          boxShadow: '0 8px 16px -4px rgba(37, 99, 235, 0.3)'
+        }}>
+          <p style={{ color: 'white', fontSize: '1.5rem', fontWeight: '700', margin: 0, letterSpacing: '0.02em' }}>
+            Examination Services Portal
+          </p>
+        </div>
+        <p style={{ color: 'var(--text-muted)', fontSize: '0.95rem', fontWeight: '500', marginBottom: '30px' }}>
+          Prasanthi Nilayam, Andhra Pradesh
         </p>
 
         <button
