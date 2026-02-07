@@ -875,7 +875,7 @@ function generateStudentConfirmationHTML(appId, formType, applicantName, email, 
                             <table width="100%" cellpadding="0" cellspacing="0">
                                 <tr>
                                     <td align="center">
-                                        <a href="${'https://sssihl-student-services.pages.dev'}" style="display: inline-block; background: linear-gradient(135deg, #2563eb 0%, #7c3aed 100%); color: #ffffff; text-decoration: none; padding: 14px 32px; border-radius: 10px; font-weight: 600; font-size: 15px;">Track Application Status</a>
+                                        <a href="https://sssihl-student-services.pages.dev/#track" style="display: inline-block; background: linear-gradient(135deg, #2563eb 0%, #7c3aed 100%); color: #ffffff; text-decoration: none; padding: 14px 32px; border-radius: 10px; font-weight: 600; font-size: 15px;">Track Application Status</a>
                                     </td>
                                 </tr>
                             </table>

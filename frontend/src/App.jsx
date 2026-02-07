@@ -21,6 +21,13 @@ function App() {
       return;
     }
 
+    // Check if URL has #track hash (from email link)
+    if (window.location.hash === '#track') {
+      setView('status');
+      setIsLoading(false);
+      return;
+    }
+
     const timer = setTimeout(() => {
       setIsLoading(false);
     }, 2500);
