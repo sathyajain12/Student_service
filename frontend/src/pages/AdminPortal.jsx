@@ -7,7 +7,8 @@ const API_URL = import.meta.env.VITE_BACKEND_URL || 'http://localhost:8787';
 const styles = {
     page: {
         minHeight: '100vh',
-        background: 'linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f0f23 100%)',
+        background: '#f1f5f9',
+        backgroundImage: 'radial-gradient(at 0% 0%, rgba(37, 99, 235, 0.05) 0, transparent 50%), radial-gradient(at 50% 0%, rgba(124, 58, 237, 0.03) 0, transparent 50%), radial-gradient(at 100% 0%, rgba(37, 99, 235, 0.05) 0, transparent 50%)',
         padding: '24px',
         fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen, Ubuntu, sans-serif'
     },
@@ -16,20 +17,22 @@ const styles = {
         margin: '0 auto'
     },
     card: {
-        background: 'rgba(255, 255, 255, 0.08)',
+        background: 'rgba(255, 255, 255, 0.8)',
         backdropFilter: 'blur(20px)',
         borderRadius: '16px',
-        border: '1px solid rgba(255, 255, 255, 0.1)',
-        padding: '24px'
+        border: '1px solid rgba(15, 23, 42, 0.08)',
+        padding: '24px',
+        boxShadow: '0 10px 25px -5px rgba(15, 23, 42, 0.08), 0 8px 10px -6px rgba(15, 23, 42, 0.05)'
     },
     loginCard: {
-        background: 'rgba(255, 255, 255, 0.08)',
+        background: 'rgba(255, 255, 255, 0.8)',
         backdropFilter: 'blur(20px)',
         borderRadius: '16px',
-        border: '1px solid rgba(255, 255, 255, 0.1)',
+        border: '1px solid rgba(15, 23, 42, 0.08)',
         padding: '40px',
         width: '100%',
-        maxWidth: '400px'
+        maxWidth: '400px',
+        boxShadow: '0 10px 25px -5px rgba(15, 23, 42, 0.08), 0 8px 10px -6px rgba(15, 23, 42, 0.05)'
     },
     header: {
         display: 'flex',
@@ -40,7 +43,7 @@ const styles = {
     title: {
         fontSize: '28px',
         fontWeight: 'bold',
-        color: '#ffffff',
+        color: '#0f172a',
         margin: 0
     },
     statsGrid: {
@@ -50,10 +53,10 @@ const styles = {
         marginBottom: '32px'
     },
     statCard: {
-        background: 'rgba(255, 255, 255, 0.05)',
+        background: 'rgba(255, 255, 255, 0.6)',
         backdropFilter: 'blur(10px)',
         borderRadius: '12px',
-        border: '1px solid rgba(255, 255, 255, 0.1)',
+        border: '1px solid rgba(15, 23, 42, 0.08)',
         padding: '20px',
         display: 'flex',
         alignItems: 'center',
@@ -67,12 +70,12 @@ const styles = {
         justifyContent: 'center'
     },
     statLabel: {
-        color: 'rgba(255, 255, 255, 0.6)',
+        color: '#64748b',
         fontSize: '14px',
         margin: 0
     },
     statValue: {
-        color: '#ffffff',
+        color: '#0f172a',
         fontSize: '28px',
         fontWeight: 'bold',
         margin: 0
@@ -83,19 +86,19 @@ const styles = {
     },
     th: {
         textAlign: 'left',
-        color: 'rgba(255, 255, 255, 0.6)',
+        color: '#64748b',
         fontSize: '12px',
         fontWeight: '600',
         padding: '16px',
         textTransform: 'uppercase',
         letterSpacing: '0.5px',
-        borderBottom: '1px solid rgba(255, 255, 255, 0.1)'
+        borderBottom: '1px solid rgba(15, 23, 42, 0.08)'
     },
     td: {
         padding: '16px',
-        color: '#ffffff',
+        color: '#0f172a',
         fontSize: '14px',
-        borderBottom: '1px solid rgba(255, 255, 255, 0.05)'
+        borderBottom: '1px solid rgba(15, 23, 42, 0.05)'
     },
     button: {
         padding: '10px 20px',
@@ -123,16 +126,16 @@ const styles = {
     input: {
         width: '100%',
         padding: '14px 16px',
-        background: 'rgba(255, 255, 255, 0.08)',
-        border: '1px solid rgba(255, 255, 255, 0.15)',
+        background: 'white',
+        border: '1px solid #cbd5e1',
         borderRadius: '10px',
-        color: '#ffffff',
+        color: '#0f172a',
         fontSize: '15px',
         outline: 'none',
         boxSizing: 'border-box'
     },
     label: {
-        color: 'rgba(255, 255, 255, 0.7)',
+        color: '#64748b',
         fontSize: '14px',
         marginBottom: '8px',
         display: 'block'
@@ -148,7 +151,7 @@ const styles = {
         display: 'flex',
         alignItems: 'center',
         gap: '8px',
-        color: 'rgba(255, 255, 255, 0.7)',
+        color: '#64748b',
         background: 'none',
         border: 'none',
         cursor: 'pointer',
@@ -159,7 +162,7 @@ const styles = {
         display: 'flex',
         justifyContent: 'space-between',
         alignItems: 'center',
-        background: 'rgba(255, 255, 255, 0.05)',
+        background: 'rgba(15, 23, 42, 0.03)',
         padding: '16px',
         borderRadius: '10px',
         marginBottom: '8px'
@@ -171,17 +174,17 @@ const styles = {
         marginBottom: '24px'
     },
     detailCard: {
-        background: 'rgba(255, 255, 255, 0.05)',
+        background: 'rgba(15, 23, 42, 0.03)',
         padding: '16px',
         borderRadius: '10px'
     },
     detailLabel: {
-        color: 'rgba(255, 255, 255, 0.5)',
+        color: '#64748b',
         fontSize: '12px',
         marginBottom: '4px'
     },
     detailValue: {
-        color: '#ffffff',
+        color: '#0f172a',
         fontSize: '14px',
         fontWeight: '500'
     }
@@ -527,7 +530,7 @@ export default function AdminPortal() {
                                 <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '16px' }}>
                                     <div>
                                         <h4 style={{ color: '#10b981', margin: 0, marginBottom: '4px' }}>Ready to Complete?</h4>
-                                        <p style={{ color: 'rgba(255,255,255,0.6)', margin: 0, fontSize: '14px' }}>Mark this application as completed and dispatched</p>
+                                        <p style={{ color: '#64748b', margin: 0, fontSize: '14px' }}>Mark this application as completed and dispatched</p>
                                     </div>
                                     <button
                                         onClick={() => markAsCompleted(appDetails.application.id)}
@@ -562,7 +565,7 @@ export default function AdminPortal() {
                             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '16px' }}>
                                 <div>
                                     <h4 style={{ color: '#3b82f6', margin: 0, marginBottom: '4px' }}>Upload Response Document</h4>
-                                    <p style={{ color: 'rgba(255,255,255,0.6)', margin: 0, fontSize: '14px' }}>
+                                    <p style={{ color: '#64748b', margin: 0, fontSize: '14px' }}>
                                         Upload the completed certificate or document for the student
                                     </p>
                                 </div>
@@ -603,14 +606,14 @@ export default function AdminPortal() {
                         {/* Response Documents - Admin Uploaded */}
                         {appDetails.responseDocuments && appDetails.responseDocuments.length > 0 && (
                             <div style={{ marginBottom: '24px' }}>
-                                <h3 style={{ color: '#ffffff', marginBottom: '16px' }}>Response Documents (Uploaded by Admin)</h3>
+                                <h3 style={{ color: '#0f172a', marginBottom: '16px' }}>Response Documents (Uploaded by Admin)</h3>
                                 {appDetails.responseDocuments.map((file) => (
                                     <div key={file.id} style={{ ...styles.fileRow, borderLeft: '4px solid #10b981' }}>
                                         <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
                                             <FileText style={{ color: '#10b981' }} size={20} />
                                             <div>
-                                                <p style={{ color: '#ffffff', margin: 0, fontWeight: '500' }}>{file.file_name}</p>
-                                                <p style={{ color: 'rgba(255,255,255,0.5)', margin: 0, fontSize: '12px' }}>
+                                                <p style={{ color: '#0f172a', margin: 0, fontWeight: '500' }}>{file.file_name}</p>
+                                                <p style={{ color: '#64748b', margin: 0, fontSize: '12px' }}>
                                                     {file.file_type} • {(file.file_size / 1024).toFixed(1)} KB • Uploaded by: {file.uploaded_by || 'Admin'}
                                                 </p>
                                             </div>
@@ -623,7 +626,7 @@ export default function AdminPortal() {
                             </div>
                         )}
 
-                        <h3 style={{ color: '#ffffff', marginBottom: '16px' }}>Attached Files</h3>
+                        <h3 style={{ color: '#0f172a', marginBottom: '16px' }}>Attached Files</h3>
                         {appDetails.files && appDetails.files.length > 0 ? (
                             <div>
                                 {appDetails.files.map((file) => (
@@ -631,8 +634,8 @@ export default function AdminPortal() {
                                         <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
                                             <FileText style={{ color: '#a78bfa' }} size={20} />
                                             <div>
-                                                <p style={{ color: '#ffffff', margin: 0, fontWeight: '500' }}>{file.file_name}</p>
-                                                <p style={{ color: 'rgba(255,255,255,0.5)', margin: 0, fontSize: '12px' }}>
+                                                <p style={{ color: '#0f172a', margin: 0, fontWeight: '500' }}>{file.file_name}</p>
+                                                <p style={{ color: '#64748b', margin: 0, fontSize: '12px' }}>
                                                     {file.file_type} • {(file.file_size / 1024).toFixed(1)} KB
                                                 </p>
                                             </div>
@@ -644,7 +647,7 @@ export default function AdminPortal() {
                                 ))}
                             </div>
                         ) : (
-                            <p style={{ color: 'rgba(255,255,255,0.5)' }}>No files attached</p>
+                            <p style={{ color: '#64748b' }}>No files attached</p>
                         )}
                     </div>
                 </div>
@@ -688,7 +691,7 @@ export default function AdminPortal() {
                             {isRefreshing ? 'Refreshing...' : 'Refresh'}
                         </button>
                         {lastUpdated && (
-                            <span style={{ color: 'rgba(255, 255, 255, 0.5)', fontSize: '12px' }}>
+                            <span style={{ color: '#64748b', fontSize: '12px' }}>
                                 Last updated: {lastUpdated.toLocaleTimeString()}
                             </span>
                         )}
@@ -745,7 +748,7 @@ export default function AdminPortal() {
 
                 {/* Applications Table */}
                 <div style={styles.card}>
-                    <h2 style={{ color: '#ffffff', marginBottom: '20px' }}>Recent Applications</h2>
+                    <h2 style={{ color: '#0f172a', marginBottom: '20px' }}>Recent Applications</h2>
 
                     <div style={{ overflowX: 'auto' }}>
                         <table style={styles.table}>
@@ -782,7 +785,7 @@ export default function AdminPortal() {
                         </table>
 
                         {applications.length === 0 && (
-                            <p style={{ textAlign: 'center', padding: '40px', color: 'rgba(255,255,255,0.5)' }}>
+                            <p style={{ textAlign: 'center', padding: '40px', color: '#64748b' }}>
                                 No applications found
                             </p>
                         )}
