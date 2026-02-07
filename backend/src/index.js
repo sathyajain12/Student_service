@@ -550,7 +550,7 @@ async function sendDirectorNotification(env, request, appId, formType, applicant
 
                     <p>Dear Director,</p>
 
-                    <p>This is to notify you that a new application for a <strong>${formType}</strong> requires your approval.</p>
+                    <p>This is to notify you that a new <strong>${formType}</strong> requires your approval.</p>
 
                     <p><strong>Application Details:</strong></p>
                     <p style="margin: 4px 0;">&bull; Application ID: ${appId}</p>
