@@ -100,6 +100,15 @@ export default function FormBuilder({ config, onSubmit, onCancel, onTrackStatus 
     const handleFileChange = (e, fieldName) => {
         const selectedFile = e.target.files[0];
         if (selectedFile) {
+            // Validate that the file is a PDF
+            const isPDF = selectedFile.type === 'application/pdf' || selectedFile.name.toLowerCase().endsWith('.pdf');
+
+            if (!isPDF) {
+                alert('❌ Invalid file type!\n\nOnly PDF files are allowed. Please select a PDF file and try again.');
+                e.target.value = ''; // Clear the file input
+                return;
+            }
+
             setFiles(prev => ({ ...prev, [fieldName]: selectedFile }));
         }
     };
