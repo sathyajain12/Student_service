@@ -101,15 +101,15 @@ const styles = {
         borderBottom: '1px solid rgba(15, 23, 42, 0.05)'
     },
     button: {
-        padding: '10px 20px',
-        background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-        color: '#ffffff',
-        border: 'none',
+        padding: '8px 16px',
+        background: 'white',
+        color: '#2563eb',
+        border: '1.5px solid #e0e7ff',
         borderRadius: '8px',
         cursor: 'pointer',
-        fontWeight: '600',
-        fontSize: '14px',
-        transition: 'all 0.3s ease'
+        fontWeight: '500',
+        fontSize: '13px',
+        transition: 'all 0.2s ease'
     },
     logoutButton: {
         padding: '10px 20px',
@@ -662,6 +662,24 @@ export default function AdminPortal() {
                 @keyframes spin {
                     from { transform: rotate(0deg); }
                     to { transform: rotate(360deg); }
+                }
+
+                td button:hover:not(:disabled) {
+                    background: #eff6ff !important;
+                    border-color: #2563eb !important;
+                    transform: translateY(-1px);
+                    box-shadow: 0 2px 8px rgba(37, 99, 235, 0.15);
+                }
+
+                td button:active:not(:disabled) {
+                    transform: translateY(0);
+                }
+
+                div[style*="fileRow"] button:hover:not(:disabled) {
+                    background: #eff6ff !important;
+                    border-color: #2563eb !important;
+                    transform: translateY(-1px);
+                    box-shadow: 0 2px 8px rgba(37, 99, 235, 0.15);
                 }
             `}</style>
             <div style={styles.page}>
