@@ -546,19 +546,35 @@ async function sendDirectorNotification(env, request, appId, formType, applicant
                 to: directorEmail,
                 subject: `Approval Required: ${formType} - ${appId}`,
                 htmlBody: `
-                    <h2>Application Requires Your Approval</h2>
-                    <p><strong>Application ID:</strong> ${appId}</p>
-                    <p><strong>Form Type:</strong> ${formType}</p>
-                    <p><strong>Applicant:</strong> ${applicantName}</p>
-                    <p><strong>Email:</strong> ${email}</p>
-                    <p><strong>Campus:</strong> ${campus}</p>
-                    <p><strong>Submitted:</strong> ${new Date().toLocaleString()}</p>
-                    <p><strong>Attachments:</strong> ${files.length} document(s)</p>
+                    <p><strong>Sai Ram !</strong></p>
+
+                    <p>Dear Director,</p>
+
+                    <p>This is to notify you that a new application for a <strong>${formType}</strong> requires your approval.</p>
+
+                    <p><strong>Application Details:</strong></p>
+                    <p style="margin: 4px 0;">&bull; Application ID: ${appId}</p>
+                    <p style="margin: 4px 0;">&bull; Form Type: ${formType}</p>
+                    <p style="margin: 4px 0;">&bull; Applicant Name: ${applicantName}</p>
+                    <p style="margin: 4px 0;">&bull; Applicant Email: ${email}</p>
+                    <p style="margin: 4px 0;">&bull; Campus: ${campus}</p>
+                    <p style="margin: 4px 0;">&bull; Submission Date: ${new Date().toLocaleString()}</p>
+                    <p style="margin: 4px 0;">&bull; Attachments: ${files.length} document(s)</p>
+
                     <hr>
                     <p>
                         <a href="${url.origin}/approve?id=${appId}&role=Director&action=Approve" style="background:#10b981;color:#fff;padding:10px 20px;text-decoration:none;border-radius:5px;margin-right:10px;">✓ Approve</a>
                         <a href="${url.origin}/approve?id=${appId}&role=Director&action=Reject" style="background:#ef4444;color:#fff;padding:10px 20px;text-decoration:none;border-radius:5px;">✗ Reject</a>
                     </p>
+
+                    <br>
+                    <p><strong>Best regards,</strong><br>
+                    Office of the Controller of Examinations,<br>
+                    Sri Sathya Sai Institute of Higher Learning (Deemed to be University),<br>
+                    Prasanthi Nilayam – 515 134, Sri Sathya Sai District,<br>
+                    Andhra Pradesh, India.</p>
+
+                    <p><strong>Phone:</strong> 08555-287191</p>
                 `,
                 attachments: attachments
             });
