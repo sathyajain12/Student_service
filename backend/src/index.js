@@ -754,6 +754,181 @@ async function sendStudentDecisionEmail(env, verification, isApproved, portalUrl
     }
 }
 
+// Student confirmation email (sent when application is first submitted)
+function generateStudentConfirmationHTML(appId, formType, applicantName, email, campus) {
+    const submissionDate = new Date().toLocaleString('en-IN', {
+        dateStyle: 'long',
+        timeStyle: 'short',
+        timeZone: 'Asia/Kolkata'
+    });
+
+    return `
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Application Submitted Successfully</title>
+</head>
+<body style="margin: 0; padding: 0; font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background-color: #f1f5f9;">
+    <table width="100%" cellpadding="0" cellspacing="0" style="background-color: #f1f5f9; padding: 40px 20px;">
+        <tr>
+            <td align="center">
+                <table width="100%" cellpadding="0" cellspacing="0" style="max-width: 600px; background-color: #ffffff; border-radius: 16px; overflow: hidden; box-shadow: 0 10px 25px -5px rgba(15, 23, 42, 0.1);">
+                    <!-- Header -->
+                    <tr>
+                        <td align="center" style="background: linear-gradient(135deg, #2563eb 0%, #7c3aed 100%); padding: 40px 20px;">
+                            <table cellpadding="0" cellspacing="0">
+                                <tr>
+                                    <td align="center">
+                                        <div style="width: 80px; height: 80px; background-color: white; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 16px;">
+                                            <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="#2563eb" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                                                <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
+                                                <polyline points="22 4 12 14.01 9 11.01"></polyline>
+                                            </svg>
+                                        </div>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td align="center" style="color: #ffffff; font-size: 24px; font-weight: 700; padding-top: 10px;">
+                                        SSSIHL
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td align="center" style="color: rgba(255, 255, 255, 0.9); font-size: 14px; padding-top: 4px;">
+                                        Examination Services Portal
+                                    </td>
+                                </tr>
+                            </table>
+                        </td>
+                    </tr>
+
+                    <!-- Success Message -->
+                    <tr>
+                        <td style="padding: 40px 30px 30px 30px; text-align: center;">
+                            <h1 style="margin: 0 0 12px 0; color: #0f172a; font-size: 26px; font-weight: 700;">Application Submitted Successfully!</h1>
+                            <p style="margin: 0; color: #64748b; font-size: 16px; line-height: 1.6;">
+                                <strong>Sai Ram!</strong><br>
+                                Thank you for submitting your application. We have received your request and it is now being processed.
+                            </p>
+                        </td>
+                    </tr>
+
+                    <!-- Application ID Highlight -->
+                    <tr>
+                        <td style="padding: 0 30px 30px 30px;">
+                            <div style="background: linear-gradient(135deg, #eff6ff 0%, #f5f3ff 100%); border: 2px solid #2563eb; border-radius: 12px; padding: 20px; text-align: center;">
+                                <p style="margin: 0 0 8px 0; color: #64748b; font-size: 13px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px;">Your Application ID</p>
+                                <p style="margin: 0; color: #2563eb; font-size: 28px; font-weight: 700; font-family: 'Monaco', 'Courier New', monospace;">${appId}</p>
+                                <p style="margin: 12px 0 0 0; color: #64748b; font-size: 13px;">Please save this ID for tracking your application</p>
+                            </div>
+                        </td>
+                    </tr>
+
+                    <!-- Details Table -->
+                    <tr>
+                        <td style="padding: 0 30px 30px 30px;">
+                            <h2 style="margin: 0 0 16px 0; color: #0f172a; font-size: 18px; font-weight: 600;">Application Details</h2>
+                            <table width="100%" cellpadding="12" cellspacing="0" style="background-color: #f8fafc; border-radius: 12px;">
+                                <tr>
+                                    <td style="border-bottom: 1px solid #e2e8f0; padding: 14px; color: #64748b; font-size: 14px;">Applicant Name</td>
+                                    <td style="border-bottom: 1px solid #e2e8f0; padding: 14px; color: #0f172a; font-size: 14px; font-weight: 600; text-align: right;">${applicantName}</td>
+                                </tr>
+                                <tr>
+                                    <td style="border-bottom: 1px solid #e2e8f0; padding: 14px; color: #64748b; font-size: 14px;">Email</td>
+                                    <td style="border-bottom: 1px solid #e2e8f0; padding: 14px; color: #0f172a; font-size: 14px; font-weight: 600; text-align: right;">${email}</td>
+                                </tr>
+                                <tr>
+                                    <td style="border-bottom: 1px solid #e2e8f0; padding: 14px; color: #64748b; font-size: 14px;">Form Type</td>
+                                    <td style="border-bottom: 1px solid #e2e8f0; padding: 14px; color: #0f172a; font-size: 14px; font-weight: 600; text-align: right;">${formType}</td>
+                                </tr>
+                                <tr>
+                                    <td style="border-bottom: 1px solid #e2e8f0; padding: 14px; color: #64748b; font-size: 14px;">Campus</td>
+                                    <td style="border-bottom: 1px solid #e2e8f0; padding: 14px; color: #0f172a; font-size: 14px; font-weight: 600; text-align: right;">${campus || 'N/A'}</td>
+                                </tr>
+                                <tr>
+                                    <td style="padding: 14px; color: #64748b; font-size: 14px;">Submitted On</td>
+                                    <td style="padding: 14px; color: #0f172a; font-size: 14px; font-weight: 600; text-align: right;">${submissionDate}</td>
+                                </tr>
+                            </table>
+                        </td>
+                    </tr>
+
+                    <!-- Next Steps -->
+                    <tr>
+                        <td style="padding: 0 30px 30px 30px;">
+                            <div style="background-color: #eff6ff; border-left: 4px solid #2563eb; padding: 20px; border-radius: 8px;">
+                                <h3 style="margin: 0 0 12px 0; color: #1e40af; font-size: 16px; font-weight: 600;">What Happens Next?</h3>
+                                <ul style="margin: 0; padding-left: 20px; color: #1e40af; font-size: 14px; line-height: 1.8;">
+                                    <li>Your application will be reviewed by the relevant authorities</li>
+                                    <li>You will receive email notifications at each stage of the approval process</li>
+                                    <li>You can track your application status anytime using your Application ID</li>
+                                    <li>For queries, contact: <a href="mailto:examination@sssihl.edu.in" style="color: #2563eb; text-decoration: none;">examination@sssihl.edu.in</a></li>
+                                </ul>
+                            </div>
+                        </td>
+                    </tr>
+
+                    <!-- CTA Button -->
+                    <tr>
+                        <td style="padding: 0 30px 40px 30px;">
+                            <table width="100%" cellpadding="0" cellspacing="0">
+                                <tr>
+                                    <td align="center">
+                                        <a href="${'https://sssihl-student-services.pages.dev'}" style="display: inline-block; background: linear-gradient(135deg, #2563eb 0%, #7c3aed 100%); color: #ffffff; text-decoration: none; padding: 14px 32px; border-radius: 10px; font-weight: 600; font-size: 15px;">Track Application Status</a>
+                                    </td>
+                                </tr>
+                            </table>
+                        </td>
+                    </tr>
+
+                    <!-- Footer -->
+                    <tr>
+                        <td style="background-color: #f8fafc; padding: 30px; text-align: center; border-top: 1px solid #e2e8f0;">
+                            <p style="margin: 0 0 8px 0; color: #0f172a; font-size: 15px; font-weight: 600;">Sri Sathya Sai Institute of Higher Learning</p>
+                            <p style="margin: 0 0 4px 0; color: #64748b; font-size: 13px;">(Deemed to be University)</p>
+                            <p style="margin: 0 0 4px 0; color: #64748b; font-size: 13px;">Prasanthi Nilayam – 515 134, Andhra Pradesh, India</p>
+                            <p style="margin: 12px 0 0 0; color: #94a3b8; font-size: 12px;">This is an automated notification. Please do not reply to this email.</p>
+                        </td>
+                    </tr>
+                </table>
+            </td>
+        </tr>
+    </table>
+</body>
+</html>
+    `;
+}
+
+async function sendStudentConfirmationEmail(env, appId, formType, applicantName, email, campus) {
+    // Validate student email exists
+    if (!email) {
+        console.log('No student email provided, skipping confirmation');
+        return;
+    }
+
+    try {
+        // Get OAuth access token
+        const accessToken = await getGoogleAuth(env);
+
+        // Generate email subject and body
+        const subject = `Application Received - ${formType} - ${appId}`;
+        const htmlBody = generateStudentConfirmationHTML(appId, formType, applicantName, email, campus);
+
+        // Send email
+        await sendEmail(accessToken, {
+            to: email,
+            subject: subject,
+            htmlBody: htmlBody
+        });
+
+        console.log(`Student confirmation email sent successfully to ${email} for app ${appId}`);
+    } catch (error) {
+        console.error('Error sending student confirmation email:', error);
+        // Don't throw - we don't want to fail the submission if email fails
+    }
+}
+
 
 // ==================== FORM HANDLERS ====================
 
@@ -843,6 +1018,9 @@ async function handleDuplicateGradeCard(formData, request, env, corsHeaders) {
     // 5. Send director notification if required
     await sendDirectorNotification(env, request, appId, formType, applicantName, email, campus);
 
+    // 6. Send student confirmation email
+    await sendStudentConfirmationEmail(env, appId, formType, applicantName, email, campus);
+
     return new Response(JSON.stringify({ success: true, appId }), {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' }
     });
@@ -893,6 +1071,7 @@ async function handleCGPAConversion(formData, request, env, corsHeaders) {
 
     await sendAdminNotification(env, appId, formType, applicantName, email);
     await sendDirectorNotification(env, request, appId, formType, applicantName, email, campus);
+    await sendStudentConfirmationEmail(env, appId, formType, applicantName, email, campus);
 
     return new Response(JSON.stringify({ success: true, appId }), {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' }
@@ -959,6 +1138,7 @@ async function handleSupplementaryExam(formData, request, env, corsHeaders) {
 
     await sendAdminNotification(env, appId, formType, applicantName, email);
     await sendDirectorNotification(env, request, appId, formType, applicantName, email, campus);
+    await sendStudentConfirmationEmail(env, appId, formType, applicantName, email, campus);
 
     return new Response(JSON.stringify({ success: true, appId }), {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' }
@@ -1024,6 +1204,7 @@ async function handleRepeatPaper(formData, request, env, corsHeaders) {
 
     await sendAdminNotification(env, appId, formType, applicantName, email);
     await sendDirectorNotification(env, request, appId, formType, applicantName, email, campus);
+    await sendStudentConfirmationEmail(env, appId, formType, applicantName, email, campus);
 
     return new Response(JSON.stringify({ success: true, appId }), {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' }
@@ -1076,6 +1257,7 @@ async function handleDuplicateDegree(formData, request, env, corsHeaders) {
 
     await sendAdminNotification(env, appId, formType, applicantName, email);
     await sendDirectorNotification(env, request, appId, formType, applicantName, email, campus);
+    await sendStudentConfirmationEmail(env, appId, formType, applicantName, email, campus);
 
     return new Response(JSON.stringify({ success: true, appId }), {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' }
@@ -1127,6 +1309,7 @@ async function handleNameChange(formData, request, env, corsHeaders) {
 
     await sendAdminNotification(env, appId, formType, applicantName, email);
     await sendDirectorNotification(env, request, appId, formType, applicantName, email, campus);
+    await sendStudentConfirmationEmail(env, appId, formType, applicantName, email, campus);
 
     return new Response(JSON.stringify({ success: true, appId }), {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' }
@@ -1182,6 +1365,7 @@ async function handleRetotaling(formData, request, env, corsHeaders) {
     }
 
     await sendAdminNotification(env, appId, formType, applicantName, email);
+    await sendStudentConfirmationEmail(env, appId, formType, applicantName, email, campus);
 
     return new Response(JSON.stringify({ success: true, appId }), {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' }
@@ -1229,6 +1413,7 @@ async function handleOnRequestDegree(formData, request, env, corsHeaders) {
     }
 
     await sendAdminNotification(env, appId, formType, applicantName, email);
+    await sendStudentConfirmationEmail(env, appId, formType, applicantName, email, campus);
 
     return new Response(JSON.stringify({ success: true, appId }), {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' }
@@ -1237,6 +1422,7 @@ async function handleOnRequestDegree(formData, request, env, corsHeaders) {
 
 // Handler for Migration
 async function handleMigration(formData, request, env, corsHeaders) {
+    const email = formData.get('email') || '';
     const applicantName = formData.get('applicantName');
     const campus = formData.get('campus');
     const formType = formData.get('formType');
@@ -1247,7 +1433,7 @@ async function handleMigration(formData, request, env, corsHeaders) {
     await env.DB.prepare(
         `INSERT INTO applications (id, student_email, form_type, applicant_name, reg_no, campus)
          VALUES (?, ?, ?, ?, ?, ?)`
-    ).bind(appId, '', formType, applicantName, '', campus).run();
+    ).bind(appId, email, formType, applicantName, '', campus).run();
 
     await env.DB.prepare(
         `INSERT INTO form_migration_certificate
@@ -1277,7 +1463,8 @@ async function handleMigration(formData, request, env, corsHeaders) {
         }
     }
 
-    await sendAdminNotification(env, appId, formType, applicantName, '');
+    await sendAdminNotification(env, appId, formType, applicantName, email);
+    await sendStudentConfirmationEmail(env, appId, formType, applicantName, email, campus);
 
     return new Response(JSON.stringify({ success: true, appId }), {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' }
