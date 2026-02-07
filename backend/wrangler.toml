@@ -2,6 +2,7 @@ name = "sssihl-student-services-backend"
 main = "src/index.js"
 compatibility_date = "2024-09-23"
 compatibility_flags = ["nodejs_compat"]
+account_id = "ffa4661b29a77f4318b1bb9fe9e95bc0"
 
 [[d1_databases]]
 binding = "DB"

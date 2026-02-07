@@ -30,19 +30,62 @@ export async function getGoogleAuth(env) {
   return data.access_token;
 }
 
-export async function sendEmail(accessToken, { to, subject, htmlBody }) {
+export async function sendEmail(accessToken, { to, subject, htmlBody, attachments = [] }) {
   console.log('Sending email to:', to);
   console.log('Subject:', subject);
+  console.log('Attachments:', attachments.length);
 
-  const message = [
-    'Content-Type: text/html; charset="UTF-8"',
-    'MIME-Version: 1.0',
-    `To: ${to}`,
-    `Subject: ${subject}`,
-    '',
-    htmlBody
-  ].join('\r\n');
+  let message;
 
+  if (attachments.length === 0) {
+    // Simple HTML email (no attachments)
+    message = [
+      'Content-Type: text/html; charset="UTF-8"',
+      'MIME-Version: 1.0',
+      `To: ${to}`,
+      `Subject: ${subject}`,
+      '',
+      htmlBody
+    ].join('\r\n');
+  } else {
+    // Multipart email with attachments
+    const boundary = '----=_Part_' + Math.random().toString(36).substr(2, 9);
+
+    const parts = [];
+
+    // Header
+    parts.push('MIME-Version: 1.0');
+    parts.push(`To: ${to}`);
+    parts.push(`Subject: ${subject}`);
+    parts.push(`Content-Type: multipart/mixed; boundary="${boundary}"`);
+    parts.push('');
+
+    // HTML body part
+    parts.push(`--${boundary}`);
+    parts.push('Content-Type: text/html; charset="UTF-8"');
+    parts.push('Content-Transfer-Encoding: quoted-printable');
+    parts.push('');
+    parts.push(htmlBody);
+    parts.push('');
+
+    // Attachment parts
+    for (const attachment of attachments) {
+      parts.push(`--${boundary}`);
+      parts.push(`Content-Type: ${attachment.mimeType}; name="${attachment.filename}"`);
+      parts.push('Content-Transfer-Encoding: base64');
+      parts.push(`Content-Disposition: attachment; filename="${attachment.filename}"`);
+      parts.push('');
+      parts.push(attachment.data); // Already base64
+      parts.push('');
+    }
+
+    // End boundary
+    parts.push(`--${boundary}--`);
+
+    message = parts.join('\r\n');
+  }
+
+  // Encode message for Gmail API
   const encodedMessage = btoa(unescape(encodeURIComponent(message)))
     .replace(/\+/g, '-')
     .replace(/\//g, '_')
@@ -64,6 +107,6 @@ export async function sendEmail(accessToken, { to, subject, htmlBody }) {
     throw new Error(`Email send failed: ${JSON.stringify(result)}`);
   }
 
-  console.log(`Email sent successfully to ${to}, message ID:`, result.id);
+  console.log(`Email sent successfully to ${to} with ${attachments.length} attachments, message ID:`, result.id);
   return result;
 }

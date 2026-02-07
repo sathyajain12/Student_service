@@ -459,6 +459,22 @@ async function storeFileBlob(env, appId, fieldName, file) {
     }
 }
 
+async function getApplicationFiles(env, appId) {
+    try {
+        const result = await env.DB.prepare(
+            `SELECT id, field_name, file_name, file_type, file_size, file_data
+             FROM file_blobs
+             WHERE application_id = ?
+             ORDER BY created_at ASC`
+        ).bind(appId).all();
+
+        return result.results || [];
+    } catch (error) {
+        console.error(`Failed to fetch files for app ${appId}:`, error);
+        return [];
+    }
+}
+
 async function sendAdminNotification(env, appId, formType, applicantName, email) {
     if (env.GOOGLE_CLIENT_ID && env.GOOGLE_CLIENT_SECRET && env.GOOGLE_REFRESH_TOKEN) {
         try {
@@ -515,6 +531,17 @@ async function sendDirectorNotification(env, request, appId, formType, applicant
             const directorEmail = getDirectorEmail(campus);
             const url = new URL(request.url);
 
+            // Fetch student's uploaded documents
+            const files = await getApplicationFiles(env, appId);
+            console.log(`Found ${files.length} files for application ${appId}`);
+
+            // Convert to attachment format
+            const attachments = files.map(file => ({
+                filename: file.file_name,
+                mimeType: file.file_type,
+                data: file.file_data  // Already base64
+            }));
+
             await sendEmail(accessToken, {
                 to: directorEmail,
                 subject: `Approval Required: ${formType} - ${appId}`,
@@ -526,14 +553,16 @@ async function sendDirectorNotification(env, request, appId, formType, applicant
                     <p><strong>Email:</strong> ${email}</p>
                     <p><strong>Campus:</strong> ${campus}</p>
                     <p><strong>Submitted:</strong> ${new Date().toLocaleString()}</p>
+                    <p><strong>Attachments:</strong> ${files.length} document(s)</p>
                     <hr>
                     <p>
                         <a href="${url.origin}/approve?id=${appId}&role=Director&action=Approve" style="background:#10b981;color:#fff;padding:10px 20px;text-decoration:none;border-radius:5px;margin-right:10px;">✓ Approve</a>
                         <a href="${url.origin}/approve?id=${appId}&role=Director&action=Reject" style="background:#ef4444;color:#fff;padding:10px 20px;text-decoration:none;border-radius:5px;">✗ Reject</a>
                     </p>
-                `
+                `,
+                attachments: attachments
             });
-            console.log(`Director email sent to ${directorEmail} for app ${appId}`);
+            console.log(`Director email sent to ${directorEmail} for app ${appId} with ${attachments.length} attachments`);
         } catch (e) {
             console.error('Failed to send director notification:', e);
         }
