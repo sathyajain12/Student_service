@@ -272,9 +272,11 @@ export default function FormBuilder({ config, onSubmit, onCancel, onTrackStatus 
                             </div>
                         ) : (
                             <>
-                                <label style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                                    <span>{field.label} {field.required && <span style={{ color: 'var(--error)' }}>*</span>}</span>
-                                </label>
+                                {field.type !== 'singleCheckbox' && (
+                                    <label style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                                        <span>{field.label} {field.required && <span style={{ color: 'var(--error)' }}>*</span>}</span>
+                                    </label>
+                                )}
                                 {field.description && (
                                     <p style={{ fontSize: '0.82rem', color: 'var(--text-muted)', marginTop: '-4px', marginBottom: '8px' }}>
                                         {field.description}
