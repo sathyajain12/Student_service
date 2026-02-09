@@ -177,17 +177,6 @@ export const FORM_CONFIGS = {
                 type: 'textarea',
                 description: 'This must be supported by an affidavit–see Instructions',
                 required: true
-            },
-            {
-                type: 'heading',
-                label: 'Declaration by the Applicant',
-                name: 'declarationHeading'
-            },
-            {
-                name: 'declaration',
-                label: 'I undertake that if my Original Degree Certificate, which has been irrecoverably lost, is put to unfair use by any person who may lay hands on it, I shall be liable for all consequences and loss which may accrue from such misuse.',
-                type: 'singleCheckbox',
-                required: true
             }
         ],
         files: [
@@ -217,6 +206,13 @@ export const FORM_CONFIGS = {
                 label: 'SBI Collect Receipt (₹1000)',
                 required: true
             },
+        ],
+        declarations: [
+            {
+                name: 'declaration',
+                label: 'I undertake that if my Original Degree Certificate, which has been irrecoverably lost, is put to unfair use by any person who may lay hands on it, I shall be liable for all consequences and loss which may accrue from such misuse.',
+                required: true
+            }
         ]
     },
     'name-change': {

@@ -707,6 +707,59 @@ export default function FormBuilder({ config, onSubmit, onCancel, onTrackStatus 
                     </div>
                 )}
 
+                {config.declarations && config.declarations.length > 0 && (
+                    <div style={{
+                        padding: '30px',
+                        background: 'rgba(15, 23, 42, 0.02)',
+                        border: '1px solid var(--glass-border)',
+                        borderRadius: '20px',
+                        marginTop: '30px',
+                        marginBottom: '30px'
+                    }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '25px' }}>
+                            <div style={{ width: '4px', height: '24px', background: 'var(--accent-gradient)', borderRadius: '2px' }}></div>
+                            <h4 style={{ fontSize: '1.2rem', color: 'var(--accent)', fontWeight: '700' }}>Declaration by the Applicant</h4>
+                        </div>
+
+                        {config.declarations.map(decl => (
+                            <label key={decl.name} style={{
+                                display: 'flex',
+                                alignItems: 'flex-start',
+                                gap: '14px',
+                                cursor: 'pointer',
+                                padding: '20px',
+                                borderRadius: '14px',
+                                border: formData[decl.name] ? '2px solid var(--accent)' : '2px solid var(--glass-border)',
+                                background: formData[decl.name] ? 'rgba(37, 99, 235, 0.05)' : 'white',
+                                transition: 'all 0.2s ease'
+                            }}>
+                                <input
+                                    type="checkbox"
+                                    name={decl.name}
+                                    checked={formData[decl.name] || false}
+                                    onChange={(e) => setFormData(prev => ({ ...prev, [decl.name]: e.target.checked }))}
+                                    required={decl.required}
+                                    style={{
+                                        width: '22px',
+                                        height: '22px',
+                                        accentColor: 'var(--accent)',
+                                        flexShrink: 0,
+                                        marginTop: '2px'
+                                    }}
+                                />
+                                <span style={{
+                                    fontSize: '0.95rem',
+                                    fontWeight: '500',
+                                    color: formData[decl.name] ? 'var(--accent)' : 'var(--text-main)',
+                                    lineHeight: '1.6'
+                                }}>
+                                    {decl.label} {decl.required && <span style={{ color: 'var(--error)' }}>*</span>}
+                                </span>
+                            </label>
+                        ))}
+                    </div>
+                )}
+
                 {status && (
                     <div style={{
                         padding: '24px',
