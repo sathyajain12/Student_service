@@ -23,7 +23,7 @@ export const FORM_CONFIGS = {
             'Students from 2021 batch onwards can download their Grade Cards directly from DigiLocker.',
             'A fee of ₹500 must be paid via SBI Collect before submission.',
             'You must upload a Police Complaint and a Sworn Affidavit.',
-            'The Sworn Affidavit must be sworn before a Notary / First-Class Magistrate with the following text:\n\n"**Whereas the Sri Sathya Sai Institute of Higher Learning, Prasanthi Nilayam has accorded me the Original Grade Card bearing the Regd. No___ Semester No___ of the Programme that has been lost whilst in my possession, having been so lost, an application to the Institute for the grant of a Duplicate having been made, subject to the condition, that if, the Original Grade Card is recovered by me, I shall surrender it to the Institute."**',
+            '**AFFIDAVIT FOR DUPLICATE GRADE CARD**\\n*To be sworn before a Notary Public / First-Class Magistrate*\\n\\nI, _________________________ (Name), son/daughter of _________________________, Registration Number _________________________, do hereby solemnly affirm and declare that:\\n\\n1. I am a bonafide student/alumnus of Sri Sathya Sai Institute of Higher Learning, Prasanthi Nilayam.\\n2. The Institute had issued me the Original Grade Card for Semester _______ of Programme _________________________, bearing Registration Number _________________________.\\n3. The said Original Grade Card has been lost whilst in my possession despite exercising due care.\\n4. I have applied to the Institute for issuance of a Duplicate Grade Card.\\n5. I hereby undertake that:\\n   - If the Original Grade Card is recovered by me at any time, I shall immediately surrender it to the Institute.\\n   - I shall be solely responsible for any misuse of the lost Original Grade Card.\\n6. The statements made herein are true to the best of my knowledge and belief.\\n\\n\\n**DEPONENT**\\nSignature: _________________________\\nName: _________________________\\nRegistration Number: _________________________\\nDate: _________________________',
             'Keep your SBI Collect receipt ready for upload.',
             'Original Grade Card scan is optional but recommended if available.'
         ],
@@ -503,3 +503,4 @@ export const FORM_CONFIGS = {
         }]
     }
 };
+
