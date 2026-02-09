@@ -48,9 +48,9 @@ export const FORM_CONFIGS = {
         title: 'Application for CGPA to Marks Conversion',
         instructions: [
             'As the Institute follows a grading system, grade cards-which are already issued to the students by the Institute-serve as Statement of Marks. No other mark statements are issued. However, if required, a Statement of CGPA Equivalent Percentage of Marks is issued on application to pursue further studies or to seek a job.',
-            'No Fee is charged for the issue of a Statement of CGPA Equivalent Percentage of Marks.',   
-            
-            
+            'No Fee is charged for the issue of a Statement of CGPA Equivalent Percentage of Marks.',
+
+
         ],
         fields: [...COMMON_ACADEMIC_FIELDS,
         {
@@ -95,8 +95,8 @@ export const FORM_CONFIGS = {
             'This form is for students who need to appear for supplementary examinations.',
             'Ensure you have the correct Paper Code(s) and Paper Title(s).',
             'Select the appropriate semester for which you are applying.',
-            
-            
+
+
         ],
         fields: [
             {
@@ -138,7 +138,7 @@ export const FORM_CONFIGS = {
             'An affidavit, sworn before a Notary Public or a First-Class Magistrate, must be enclosed in accordance with the prescribed format.',
             'The candidate must clearly state the reason for the loss of the Original Degree Certificate.',
             '**FORMAT OF THE NEWSPAPER NOTIFICATION**\n\nNotice is hereby given that the undersigned has lost the Original Degree Certificate pertaining to the _________________________________ Academic Programme, issued by Sri Sathya Sai Institute of Higher Learning. Any person who finds the said certificate is requested to return it to the undersigned without delay. Possession of the certificate despite this public notice shall be deemed unauthorized and unlawful, and the holder shall be liable for any misuse thereof.\n\nName of the Candidate:\nMobile No:\nAddress(with city and state):\n\nDate:',
-            '**FORMAT FOR AFFIDAVIT**\n\nI, _________________________________, daughter/son of\n_________________________________, age ____, resident of _________ do hereby take oath / solemnly affirm and declare as under:\n\n1. That the Original Degree Certificate of _________________________________Academic Programme which was issued to me by the Sri Sathya Sai Institute of Higher Learning, Prasanthi Nilayam, has been irrecoverably lost / destroyed.\n\n2. That I have made a thorough and diligent search of the Original Degree Certificate, but in spite of my best efforts, I have not been able to recover the same.\n\n3. The duplicate copy of ________ Degree Certificate is now required by me, for the purpose of\n___________________________________________________________________________\n(Give reasons stating why the duplicate copy is required and where it is to be submitted or produced).\n\n4. I understand that if my Original Degree Certificate, which has been lost is put to any unfair use by me or by any person in whose hands the Original Degree Certificate might fall, then I shall be liable for all consequences arising therefrom and I agree to indemnify and always keep indemnified and hold harmless the Institute for any such loss or consequences, which the Institute may sustain by reason of any improper or unfair use of the aforesaid Degree Certificate.\n\nDate:\n\nStudent Signature:'
+            '**FORMAT FOR AFFIDAVIT**\n\nI, _________________________________, daughter/son of \n_________________________________, aged ______, residing at  _________ , do hereby solemnly affirm and declare as follows:\n\n1. That the Original Degree Certificate pertaining to the _________________________________ Academic Programme, issued to me by Sri Sathya Sai Institute of Higher Learning, Prasanthi Nilayam, has been irrecoverably lost or destroyed.\n\n2. That I have made a thorough and diligent search for the said Original Degree Certificate, but despite my best efforts, I have been unable to recover it.\n\n3. That a duplicate copy of the ________ Degree Certificate is now required by me, for the purpose of\n___________________________________________________________________________\n(state clearly why the duplicate is required and where it is to be submitted or produced).\n\n4. That I understand and acknowledge that if the lost Original Degree Certificate is misused by me or by any other person into whose possession it may fall, I shall be fully liable for all consequences arising therefrom. I further undertake to indemnify and hold harmless the Institute against any loss or consequences that may arise due to any improper or unfair use of the aforesaid Degree Certificate.\n\nDate:\n\nStudent Signature:\n\n **VERIFICATION**\n\n I, the deponent above named, do hereby solemnly affirm and state that the contents of Paragraphs 1 to 4 of the above affidavit are true and correct to my knowledge, and that no part of it is false and nothing material has been concealed therein.\nSolemnly affirmed/sworn on this ______ day of _________________________________ at _________________________________\n\n **Attested and identified by me** (Signature and Seal of Notary Public / First-Class Magistrate)'
         ],
         titleLink: {
             text: 'Please click here to make the payment of ₹1000 using SBI Collect',
@@ -196,7 +196,7 @@ export const FORM_CONFIGS = {
                 required: true
             },
             {
-                name:'originalDegreeScan',
+                name: 'originalDegreeScan',
                 label: 'Original Degree Certificate (Scanned) (Optional)',
                 required: false
 
