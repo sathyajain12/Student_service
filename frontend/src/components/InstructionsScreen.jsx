@@ -9,8 +9,9 @@ import {
 
 // Helper function to parse **bold** text and signature blocks
 const formatText = (text) => {
-    // Split text into lines first to handle signature blocks
-    const lines = text.split('\n');
+    // First, convert literal \n strings to actual newlines, then split
+    const normalizedText = text.replace(/\\n/g, '\n');
+    const lines = normalizedText.split('\n');
 
     return lines.map((line, lineIndex) => {
         // Check for signature block pattern (Date and Student Signature on same line)
