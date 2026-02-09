@@ -132,12 +132,12 @@ export const FORM_CONFIGS = {
     'duplicate-degree': {
         title: 'Application for Duplicate Degree Certificate',
         instructions: [
-            'Before applying for the Duplicate Degree Certificate, the candidate should have explored all the possibilities of retracing the Original Degree Certificate and, only if she / he is convinced that the Original Degree Certificate has been lost irrecoverably, she / he can apply for the same.',
-            'In the event of loss in transit / misplacement of the Original Degree Certificate, a police complaint has to be lodged and an acknowledgement obtained from the police station. The scanned copy of the complaint and the original acknowledgment must be uploaded in the Google form.',
-            'A press notification as per the format (given below) has to be published in a daily and the scanned copy of the newspaper cutting has to be uploaded in the Google form.',
-            'An affidavit, sworn before a Notary / First-class Magistrate must be enclosed as per the format.',
-            'Clearly state the reason for loss of the original degree certificate.',
-            '**FORMAT OF THE NEWSPAPER NOTIFICATION**\n\nNotice is hereby given that the undersigned has lost her / his original certificate of her / his _________________________________ Academic Programme issued to her / him by Sri Sathya Sai Institute of Higher Learning. Whoever finds it, is hereby requested to return the same to the undersigned immediately. Anyone found in possession in spite of this Notice will be deemed to be in unauthorized and illegal possession of it and shall be liable for any misuse of the same.\n\nName of the Candidate:\nTelephone No:\nAddress:\n\nDate:\n\nStudent Signature:',
+            'Before applying for a Duplicate Degree Certificate, the candidate must make all reasonable efforts to trace the Original Degree Certificate. Only after being fully satisfied that the Original Degree Certificate has been lost beyond recovery may the candidate proceed to apply for a Duplicate Degree Certificate.',
+            'In the event of loss in transit or misplacement of the Original Degree Certificate, the candidate is required to lodge a formal police complaint and obtain an official acknowledgment from the concerned police station. A scanned copy of the complaint, along with the original acknowledgment, must be uploaded through the designated form.',
+            'A press notification, in the prescribed format, must be published in a recognized daily newspaper. A scanned copy of the newspaper cutting shall be uploaded through the designated form.',
+            'An affidavit, sworn before a Notary Public or a First-Class Magistrate, must be enclosed in accordance with the prescribed format.',
+            'The candidate must clearly state the reason for the loss of the Original Degree Certificate.',
+            '**FORMAT OF THE NEWSPAPER NOTIFICATION**\n\nNotice is hereby given that the undersigned has lost the Original Degree Certificate pertaining to the _________________________________ Academic Programme, issued by Sri Sathya Sai Institute of Higher Learning. Any person who finds the said certificate is requested to return it to the undersigned without delay. Possession of the certificate despite this public notice shall be deemed unauthorized and unlawful, and the holder shall be liable for any misuse thereof.\n\nName of the Candidate:\nMobile No:\nAddress(with city and state):\n\nDate:',
             '**FORMAT FOR AFFIDAVIT**\n\nI, _________________________________, daughter/son of\n_________________________________, age ____, resident of _________ do hereby take oath / solemnly affirm and declare as under:\n\n1. That the Original Degree Certificate of _________________________________Academic Programme which was issued to me by the Sri Sathya Sai Institute of Higher Learning, Prasanthi Nilayam, has been irrecoverably lost / destroyed.\n\n2. That I have made a thorough and diligent search of the Original Degree Certificate, but in spite of my best efforts, I have not been able to recover the same.\n\n3. The duplicate copy of ________ Degree Certificate is now required by me, for the purpose of\n___________________________________________________________________________\n(Give reasons stating why the duplicate copy is required and where it is to be submitted or produced).\n\n4. I understand that if my Original Degree Certificate, which has been lost is put to any unfair use by me or by any person in whose hands the Original Degree Certificate might fall, then I shall be liable for all consequences arising therefrom and I agree to indemnify and always keep indemnified and hold harmless the Institute for any such loss or consequences, which the Institute may sustain by reason of any improper or unfair use of the aforesaid Degree Certificate.\n\nDate:\n\nStudent Signature:'
         ],
         titleLink: {
@@ -194,6 +194,12 @@ export const FORM_CONFIGS = {
                 name: 'affidavit',
                 label: 'Sworn Affidavit',
                 required: true
+            },
+            {
+                name:'originalDegreeScan',
+                label: 'Original Degree Certificate (Scanned) (Optional)',
+                required: false
+
             },
             {
                 name: 'sbiReceipt',
