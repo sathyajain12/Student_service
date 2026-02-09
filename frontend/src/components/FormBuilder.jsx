@@ -368,6 +368,39 @@ export default function FormBuilder({ config, onSubmit, onCancel, onTrackStatus 
                                                 </label>
                                             ))}
                                         </div>
+                                    ) : field.type === 'singleCheckbox' ? (
+                                        <label style={{
+                                            display: 'flex',
+                                            alignItems: 'flex-start',
+                                            gap: '14px',
+                                            cursor: 'pointer',
+                                            padding: '20px',
+                                            borderRadius: '14px',
+                                            border: formData[field.name] ? '2px solid var(--accent)' : '2px solid var(--glass-border)',
+                                            background: formData[field.name] ? 'rgba(37, 99, 235, 0.05)' : 'white',
+                                            transition: 'all 0.2s ease'
+                                        }}>
+                                            <input
+                                                type="checkbox"
+                                                name={field.name}
+                                                checked={formData[field.name] || false}
+                                                onChange={(e) => setFormData(prev => ({ ...prev, [field.name]: e.target.checked }))}
+                                                required={field.required}
+                                                style={{
+                                                    width: '22px',
+                                                    height: '22px',
+                                                    accentColor: 'var(--accent)',
+                                                    flexShrink: 0,
+                                                    marginTop: '2px'
+                                                }}
+                                            />
+                                            <span style={{
+                                                fontSize: '0.95rem',
+                                                fontWeight: '500',
+                                                color: formData[field.name] ? 'var(--accent)' : 'var(--text-main)',
+                                                lineHeight: '1.6'
+                                            }}>{field.label}</span>
+                                        </label>
                                     ) : field.type === 'select' ? (
                                         <div style={{ position: 'relative' }}>
                                             <select

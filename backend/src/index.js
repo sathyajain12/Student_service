@@ -608,7 +608,7 @@ function generateStudentEmailHTML(verification, isApproved, portalUrl) {
             dateStyle: 'long',
             timeStyle: 'short',
             timeZone: 'Asia/Kolkata'
-          })
+        })
         : 'N/A';
 
     return `
@@ -688,12 +688,12 @@ function generateStudentEmailHTML(verification, isApproved, portalUrl) {
                                 <h3 style="margin: 0 0 12px 0; color: #1e40af; font-size: 16px; font-weight: 600;">Next Steps</h3>
                                 <ul style="margin: 0; padding-left: 20px; color: #1e40af; font-size: 14px; line-height: 1.8;">
                                     ${isApproved
-                                        ? `<li>Your request is being processed by the Examination Department</li>
+            ? `<li>Your request is being processed by the Examination Department</li>
                                            <li>You will receive further updates via email</li>
                                            <li>Track your application status anytime at: <a href="${portalUrl}" style="color: #2563eb; text-decoration: none; font-weight: 600;">${portalUrl}</a></li>`
-                                        : `<li>For queries or clarifications, please contact: <a href="mailto:examination@sssihl.edu.in" style="color: #2563eb; text-decoration: none;">examination@sssihl.edu.in</a></li>
+            : `<li>For queries or clarifications, please contact: <a href="mailto:examination@sssihl.edu.in" style="color: #2563eb; text-decoration: none;">examination@sssihl.edu.in</a></li>
                                            <li>Track your application status: <a href="${portalUrl}" style="color: #2563eb; text-decoration: none; font-weight: 600;">${portalUrl}</a></li>`
-                                    }
+        }
                                 </ul>
                             </div>
 
@@ -1232,8 +1232,8 @@ async function handleDuplicateDegree(formData, request, env, corsHeaders) {
     await env.DB.prepare(
         `INSERT INTO form_duplicate_degree
          (application_id, student_name, student_email, address_line1, address_line2, country, state_province, city, postal_code, reg_no, Campus,
-          Programme, Period_of_Study, year_of_passing, Reason)
-         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
+          Programme, Period_of_Study, year_of_passing, Reason, declaration)
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
     ).bind(
         appId,
         formData.get('applicantName') || '',
@@ -1249,7 +1249,8 @@ async function handleDuplicateDegree(formData, request, env, corsHeaders) {
         formData.get('program') || '',
         formData.get('periodOfStudy') || '',
         formData.get('yearOforiginalDegree') || '',
-        formData.get('reason') || ''
+        formData.get('reason') || '',
+        formData.get('declaration') === 'true' ? 1 : 0
     ).run();
 
     for (const [key, value] of formData.entries()) {
@@ -1535,7 +1536,7 @@ async function handleApproval(url, env, corsHeaders) {
                 dateStyle: 'long',
                 timeStyle: 'short',
                 timeZone: 'Asia/Kolkata'
-              })
+            })
             : 'N/A';
 
         const decisionDate = new Date().toLocaleString('en-IN', {

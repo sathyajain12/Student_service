@@ -114,6 +114,7 @@ CREATE TABLE form_duplicate_degree (
   Period_of_Study TEXT,
   year_of_passing TEXT,
   Reason TEXT,
+  declaration BOOLEAN DEFAULT FALSE,
   Police_complaint_file TEXT,
   Affidavit_file TEXT,
   Press_notification_file TEXT
