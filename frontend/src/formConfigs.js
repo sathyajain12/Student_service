@@ -116,6 +116,16 @@ export const FORM_CONFIGS = {
 
         ],
         fields: [
+            
+            {
+                type: 'heading',
+                label: 'Candidate Details',
+                name: 'heading1'
+            },
+            { name: 'applicantName', label: 'Candidate Name', type: 'text', required: true },
+            { name: 'regNo', label: 'Registered Number', type: 'number', required: true },
+            { name: 'campus', label: 'Campus', type: 'select', options: ['Prashanti Nilayam Campus', 'Anantapur Campus', 'Brindavan Campus', 'Nandigiri Campus'], required: true },
+            { name: 'program', label: 'Academic Programme', type: 'text', required: true },
             {
                 name: "periodOfStudy",
                 label: "Period of Study",
@@ -123,12 +133,15 @@ export const FORM_CONFIGS = {
                 required: true,
                 placeholder: "Select period of study"
             },
-            {
-                type: 'heading',
-                label: 'Candidate Details',
-                name: 'heading1'
-            },
-            ...COMMON_ACADEMIC_FIELDS,
+            { name: 'mobile', label: 'Mobile Number', type: 'number', required: true },
+            { name: 'email', label: 'Email Address', type: 'email', required: true },
+            { type: 'heading', label: 'Address', name: 'addressHeading' },
+            { name: 'addressLine1', label: 'Address Line 1', type: 'text', required: true },
+            { name: 'addressLine2', label: 'Address Line 2', type: 'text', required: false },
+            { name: 'country', label: 'Country', type: 'countrySelect', required: true },
+            { name: 'stateProvince', label: 'State/Province/Region', type: 'stateSelect', required: true },
+            { name: 'city', label: 'City', type: 'text', required: true },
+            { name: 'postalCode', label: 'Postal Code', type: 'text', required: true },
             {
                 type: 'heading',
                 label: 'Paper Details',
