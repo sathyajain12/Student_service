@@ -57,17 +57,22 @@ export default function InstructionsScreen({ config, onProceed, onCancel }) {
                 </button>
                 <div>
                     <h2 style={{ fontSize: '1.8rem', color: 'var(--text-main)', marginBottom: '8px' }}>{config.title}</h2>
-                    <p style={{ color: 'var(--text-muted)', fontSize: '0.95rem', lineHeight: '1.5' }}>
-                        Please read the following instructions carefully before proceeding.
-                    </p>
+                    {config.description && (
+                        <p style={{ color: 'var(--text-muted)', fontSize: '0.95rem', lineHeight: '1.5', marginBottom: '6px' }}>
+                            {config.description}
+                        </p>
+                    )}
                     {config.descriptionLink && (
-                        <p style={{ color: 'var(--text-muted)', fontSize: '0.95rem', lineHeight: '1.5', marginTop: '6px' }}>
+                        <p style={{ color: 'var(--text-muted)', fontSize: '0.95rem', lineHeight: '1.5', marginBottom: '6px' }}>
                             {config.descriptionLink.text}{' '}
                             <a href={config.descriptionLink.url} target="_blank" rel="noopener noreferrer" style={{ color: 'var(--accent)', textDecoration: 'underline' }}>
                                 {config.descriptionLink.linkText}
                             </a>
                         </p>
                     )}
+                    <p style={{ color: 'var(--text-muted)', fontSize: '0.95rem', lineHeight: '1.5' }}>
+                        Please read the following instructions carefully before proceeding.
+                    </p>
                 </div>
             </div>
 
