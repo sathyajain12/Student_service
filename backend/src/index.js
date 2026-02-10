@@ -1476,8 +1476,8 @@ async function handleRetotaling(formData, request, env, corsHeaders) {
 
     const appId = generateAppId('RT');
 
-    // Combine examMonth and examYear
-    const periodOfExam = `${formData.get('examMonth') || ''} ${formData.get('examYear') || ''}`.trim();
+    // Get combined examMonthYear
+    const periodOfExam = formData.get('examMonthYear') || '';
 
     await env.DB.prepare(
         `INSERT INTO applications (id, student_email, form_type, applicant_name, reg_no, campus)

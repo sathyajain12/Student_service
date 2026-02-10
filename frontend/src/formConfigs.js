@@ -203,7 +203,6 @@ export const FORM_CONFIGS = {
         descriptionLink: { text: 'To download your Duplicate Degree Certificate,', linkText: 'please click here', url: 'https://www.digilocker.gov.in/' },
         instructions: [
             'Before applying for a Duplicate Degree Certificate, the candidate must make all reasonable efforts to trace the Original Degree Certificate. Only after being fully satisfied that the Original Degree Certificate has been lost beyond recovery may the candidate proceed to apply for a Duplicate Degree Certificate.',
-            'A fee of ₹1000 must be paid via SBI Collect before submission. To make the payment: Click on the SBI Collect link provided, which will open the SBI Collect homepage. Select "Educational Institutes" as the Category. Search for "SSSIHL-ADMN" in the search field. Select the appropriate Payment Category. In the payment category dropdown, select the application name for which you are applying (Duplicate Degree Certificate). Complete the payment process and keep your receipt for upload.',
             'In the event of loss in transit or misplacement of the Original Degree Certificate, the candidate is required to lodge a First Information Report(FIR) and obtain an official acknowledgment from the concerned police station. A scanned copy of the FIR, along with the original acknowledgment, must be uploaded through the designated form.',
             'A press notification, in the prescribed format, must be published in a recognized daily newspaper. A scanned copy of the newspaper cutting shall be uploaded through the designated form.',
             'An affidavit, sworn before a Notary Public or a First-Class Magistrate, must be enclosed in accordance with the prescribed format.',
@@ -379,7 +378,7 @@ export const FORM_CONFIGS = {
         ]
     },
     'repeat-paper': {
-        title: 'Application for repeating a paper for supplementary examinations(CIE and ESE)',
+        title: 'Application for repeating a paper for supplementary examinations (CIE and ESE)',
         description: 'FOR THOSE WHO HAVE EXHAUSTED SUPPLEMENTARY EXAMINATION CHANCES',
         instructions: [
             'Ensure you have the correct Paper Code(s) and Paper Title(s).',
@@ -461,23 +460,15 @@ export const FORM_CONFIGS = {
         },
 
         {
-            name: 'examMonth',
-            label: 'Month of Examination',
+            name: 'examMonthYear',
+            label: 'Month & Year of Examination',
             type: 'conditionalSelect',
             required: true,
             dependsOn: 'examType',
             optionsMap: {
-                'End-Semester Examinations': ['April', 'February'],
-                'Supplementary Examinations': ['June', 'December']
+                'End-Semester Examinations': ['April 2024', 'February 2024', 'April 2025', 'February 2025', 'April 2026', 'February 2026'],
+                'Supplementary Examinations': ['June 2024', 'December 2024', 'June 2025', 'December 2025', 'June 2026', 'December 2026']
             }
-        },
-
-        {
-            name: 'examYear',
-            label: 'Year of Examination',
-            type: 'select',
-            required: true,
-            options: ['2024', '2025', '2026']
         },
 
         {
@@ -504,10 +495,9 @@ export const FORM_CONFIGS = {
         title: 'Application for On-Request Degree Certificate',
         instructions: [
             'This service is for early issuance of degree certificate before the convocation.',
-            'A fee must be paid via SBI Collect before submission. To make the payment: Click on the SBI Collect link provided, which will open the SBI Collect homepage. Select "Educational Institutes" as the Category. Search for "SSSIHL-ADMN" in the search field. Select the appropriate Payment Category. In the payment category dropdown, select the application name for which you are applying (On-Request Degree Certificate). Complete the payment process and keep your receipt for upload.',
             'Upload your Qualifying Certificate as proof of completion.',
             'Select the appropriate degree type (Undergraduate/Postgraduate/Professional/PhD).',
-            'Processing may take 7-10 working days after verification.'
+
         ],
         fields: [
             {
