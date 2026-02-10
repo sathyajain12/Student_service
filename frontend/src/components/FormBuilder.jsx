@@ -231,8 +231,14 @@ export default function FormBuilder({ config, onSubmit, onCancel, onTrackStatus 
 
             <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '5px' }}>
                 {config.fields.map(field => (
-                    <div key={field.name} className={field.type === 'heading' || field.type === 'paragraph' ? '' : 'form-group'}>
-                        {field.type === 'heading' ? (
+                    <div key={field.name} className={field.type === 'heading' || field.type === 'paragraph' || field.type === 'separator' ? '' : 'form-group'}>
+                        {field.type === 'separator' ? (
+                            <hr style={{
+                                border: 'none',
+                                borderTop: '1px solid var(--glass-border)',
+                                margin: '10px 0'
+                            }} />
+                        ) : field.type === 'heading' ? (
                             <div style={{
                                 marginTop: '40px',
                                 marginBottom: '20px',

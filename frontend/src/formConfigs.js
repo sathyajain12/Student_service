@@ -32,9 +32,22 @@ export const FORM_CONFIGS = {
             url: 'https://www.onlinesbi.sbi/sbicollect/icollecthome.htm?corpID=350506&categoryName=SSSIHL%20Exams%20App%20Duplicate%20Grade%20Card'
         },
         fields: [
-            ...COMMON_ACADEMIC_FIELDS,
+            { name: 'applicantName', label: 'Candidate Name', type: 'text', required: true },
+            { name: 'regNo', label: 'Registered Number', type: 'number', required: true },
+            { name: 'campus', label: 'Campus', type: 'select', options: ['Prashanti Nilayam Campus', 'Anantapur Campus', 'Brindavan Campus', 'Nandigiri Campus'], required: true },
+            { name: 'program', label: 'Academic Programme', type: 'text', required: true },
             { name: 'periodOfStudy', label: 'Period of Study', type: 'daterange', required: true, placeholder: 'e.g., June 2019 - March 2022' },
             { name: 'semester', label: 'Semester', type: 'select', options: ['I', 'II', 'III', 'IV', 'V', 'VI', 'VII', 'VIII'], required: true },
+            { name: 'mobile', label: 'Mobile Number', type: 'number', required: true },
+            { name: 'email', label: 'Email Address', type: 'email', required: true },
+            { type: 'heading', label: 'Permanent Address', name: 'addressHeading' },
+            { name: 'addressLine1', label: 'Address Line 1', type: 'text', required: true },
+            { name: 'addressLine2', label: 'Address Line 2', type: 'text', required: false },
+            { name: 'country', label: 'Country', type: 'countrySelect', required: true },
+            { name: 'stateProvince', label: 'State/Province/Region', type: 'stateSelect', required: true },
+            { name: 'city', label: 'City', type: 'text', required: true },
+            { name: 'postalCode', label: 'Postal Code', type: 'text', required: true },
+            { name: 'separator1', label: '', type: 'separator' },
             { name: 'reason', label: 'Reason for Loss', type: 'textarea', required: true },
         ],
         files: [
