@@ -139,7 +139,7 @@ export const FORM_CONFIGS = {
         ]
     },
     'supplementary-exam': {
-        title: 'Application for End-Semester Supplementary Examinations',
+        title: 'Application for End-Semester Supplementary Examinations Registration',
         instructions: [
             'This form is for students who need to appear for supplementary examinations.',
             'Ensure you have the correct Paper Code(s) and Paper Title(s).',
