@@ -135,7 +135,8 @@ export default function InstructionsScreen({ config, onProceed, onCancel }) {
                                 fontWeight: '500',
                                 lineHeight: '1.6',
                                 margin: 0,
-                                whiteSpace: 'pre-wrap'
+                                whiteSpace: 'pre-wrap',
+                                textAlign: 'justify'
                             }}>
                                 {formatText(instruction)}
                             </p>
