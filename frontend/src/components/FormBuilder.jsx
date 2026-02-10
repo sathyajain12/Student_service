@@ -224,7 +224,8 @@ export default function FormBuilder({ config, onSubmit, onCancel, onTrackStatus 
                                 <li>Click on the link — it will open SBI Collect homepage</li>
                                 <li>Select <strong>"Educational Institutes"</strong> as Category</li>
                                 <li>Search <strong>"SSSIHL-ADMN"</strong></li>
-                                <li>Select payment Category</li>
+                                <li>Select payment Category(Application name will be there in the dropdown)</li>
+                                <li>Complete the payment process and keep your receipt for upload.</li>
                             </ol>
                         </div>
                     )}
