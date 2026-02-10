@@ -354,8 +354,6 @@ export const FORM_CONFIGS = {
         title: 'Application for repeating a paper for supplementary examinations(CIE and ESE)',
         description: 'FOR THOSE WHO HAVE EXHAUSTED SUPPLEMENTARY EXAMINATION CHANCES',
         instructions: [
-            'This form is only for students who have exhausted their supplementary examination chances.',
-            'You will need to repeat both CIE (Continuous Internal Evaluation) and ESE (End Semester Examination).',
             'Ensure you have the correct Paper Code(s) and Paper Title(s).',
             'If unable to repeat on medical grounds, inform the Director and Controller of Examinations in advance.',
             'Failure to inform in advance may result in forfeiture of candidature for the next examination.'
