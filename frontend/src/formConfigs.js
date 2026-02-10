@@ -537,12 +537,16 @@ export const FORM_CONFIGS = {
     'migration': {
         title: 'Application for Migration Certificate',
         instructions: [
+            'No Fees is charged for migration certificate.',
             'This certificate is required for joining another University/Institute.',
             'Upload your Consolidated Grade Card as proof.',
             'Provide complete postal address details.',
             'Mention the University/Institute you propose to join.',
             'Indicate whether you have received your Degree Certificate.',
-            'The Migration Certificate will be posted to the address provided.'
+            'Applicants are required to send a self-addressed envelope along with the application.The Institute requires this in order to send the Migration Certificate back to the applicant by post',
+            'The name of the applicant, along with the full, complete postal address, including the town/city, PIN code, district and state must be clearly written or typed on the envelope.',
+            'Stamps totalling ₹65 must be affixed on the top right-hand corner of the envelope. This will ensure safe delivery of the document by India Post, via Registered Post with Acknowledgement Due.Students of foreign nationality may affix appropriate postage for an envelope weighing 100-120 g.'
+
         ],
         fields: [
             {
