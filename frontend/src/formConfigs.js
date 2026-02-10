@@ -244,7 +244,7 @@ export const FORM_CONFIGS = {
             },
             {
                 name: 'originalDegreeScan',
-                label: 'Original Degree Certificate (Scanned) (Optional)',
+                label: 'Original Degree Certificate (Optional)',
                 required: false
 
             },
