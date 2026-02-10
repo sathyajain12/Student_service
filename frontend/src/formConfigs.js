@@ -69,8 +69,10 @@ export const FORM_CONFIGS = {
         instructions: [
             'As the Institute follows a grading system, grade cards-which are already issued to the students by the Institute-serve as Statement of Marks. No other mark statements are issued. However, if required, a Statement of CGPA Equivalent Percentage of Marks is issued on application to pursue further studies or to seek a job.',
             'No Fee is charged for the issue of a Statement of CGPA Equivalent Percentage of Marks.',
-
-
+            'Applicants are required to send a self-addressed, envelope along with the application. The Institute requires this in order to send it back to the applicant by post.',
+            'The name of the applicant, along with the full, complete postal address, including the town/city, PIN code, district and state must be clearly written or typed on the envelope.',
+            'Stamps totalling ₹95 must be affixed on the top right-hand corner of the envelope. This will ensure safe delivery of the document by India Post, via Registered Post with Acknowledgement Due. This is especially important since the Statement of CGPA Equivalent Percentage of Marks is an original document (like a Grade Card or the Degree Certificate).',
+            'Students of foreign nationality may affix appropriate postage for an envelope weighing 100-120 g.',
         ],
         fields: [...COMMON_ACADEMIC_FIELDS,
         {
