@@ -17,8 +17,7 @@ const COMMON_ACADEMIC_FIELDS = [
 export const FORM_CONFIGS = {
     'duplicate-grade-card': {
         title: 'Application for Duplicate Grade Card',
-        description: 'Note: This form is applicable only for students from batches before 2021. Students from 2021 batch onwards can download their Grade Cards directly from DigiLocker.',
-        descriptionLink: { text: 'To download your Grade Card,', linkText: 'please click here', url: 'https://www.digilocker.gov.in/' },
+        
         instructions: [
             'This form is applicable only for students from batches before 2021.',
             'Students from 2021 batch onwards can download their Grade Cards directly from DigiLocker.',
@@ -44,10 +43,10 @@ export const FORM_CONFIGS = {
             { type: 'heading', label: 'Permanent Address', name: 'addressHeading' },
             { name: 'addressLine1', label: 'Address Line 1', type: 'text', required: true },
             { name: 'addressLine2', label: 'Address Line 2', type: 'text', required: false },
-            { name: 'country', label: 'Country', type: 'countrySelect', required: true },
-            { name: 'stateProvince', label: 'State/Province/Region', type: 'stateSelect', required: true },
             { name: 'city', label: 'City', type: 'text', required: true },
+            { name: 'stateProvince', label: 'State/Province/Region', type: 'stateSelect', required: true },
             { name: 'postalCode', label: 'Postal Code', type: 'text', required: true },
+            { name: 'country', label: 'Country', type: 'countrySelect', required: true },
             { name: 'separator1', label: '', type: 'separator' },
             { name: 'reason', label: 'Reason for Loss', type: 'textarea', required: true },
         ],
