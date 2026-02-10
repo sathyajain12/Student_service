@@ -60,6 +60,14 @@ export default function InstructionsScreen({ config, onProceed, onCancel }) {
                     <p style={{ color: 'var(--text-muted)', fontSize: '0.95rem', lineHeight: '1.5' }}>
                         Please read the following instructions carefully before proceeding.
                     </p>
+                    {config.descriptionLink && (
+                        <p style={{ color: 'var(--text-muted)', fontSize: '0.95rem', lineHeight: '1.5', marginTop: '6px' }}>
+                            {config.descriptionLink.text}{' '}
+                            <a href={config.descriptionLink.url} target="_blank" rel="noopener noreferrer" style={{ color: 'var(--accent)', textDecoration: 'underline' }}>
+                                {config.descriptionLink.linkText}
+                            </a>
+                        </p>
+                    )}
                 </div>
             </div>
 
