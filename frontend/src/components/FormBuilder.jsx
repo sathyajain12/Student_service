@@ -226,6 +226,14 @@ export default function FormBuilder({ config, onSubmit, onCancel, onTrackStatus 
                     <p style={{ color: 'var(--text-muted)', fontSize: '0.95rem', lineHeight: '1.5' }}>
                         {config.description || "Please fill in all required fields accurately to ensure smooth processing of your application."}
                     </p>
+                    {config.descriptionLink && (
+                        <p style={{ color: 'var(--text-muted)', fontSize: '0.95rem', lineHeight: '1.5', marginTop: '6px' }}>
+                            {config.descriptionLink.text}{' '}
+                            <a href={config.descriptionLink.url} target="_blank" rel="noopener noreferrer" style={{ color: 'var(--accent)', textDecoration: 'underline' }}>
+                                {config.descriptionLink.linkText}
+                            </a>
+                        </p>
+                    )}
                 </div>
             </div>
 
