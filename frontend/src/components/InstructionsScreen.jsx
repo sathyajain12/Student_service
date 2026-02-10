@@ -70,7 +70,9 @@ export default function InstructionsScreen({ config, onProceed, onCancel }) {
                                 <div style={{ display: 'flex', alignItems: 'flex-start', gap: '10px', marginBottom: config.descriptionLink ? '8px' : '0' }}>
                                     <span style={{ color: 'var(--accent)', fontSize: '1rem', marginTop: '1px', flexShrink: 0 }}>•</span>
                                     <p style={{ color: 'var(--text-muted)', fontSize: '0.95rem', lineHeight: '1.5', margin: 0 }}>
-                                        {config.description}
+                                        {config.description.startsWith('Note:') ? (
+                                            <><span style={{ color: 'var(--accent)', fontWeight: '700' }}>Note:</span>{config.description.slice(5)}</>
+                                        ) : config.description}
                                     </p>
                                 </div>
                             )}
