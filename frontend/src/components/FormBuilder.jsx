@@ -221,10 +221,10 @@ export default function FormBuilder({ config, onSubmit, onCancel, onTrackStatus 
                                 {config.titleLink.text} <ArrowLeft size={14} style={{ transform: 'rotate(180deg)' }} />
                             </a>
                             <ol style={{ margin: '8px 0 0 0', paddingLeft: '20px', color: 'var(--text-muted)', fontSize: '0.85rem', lineHeight: '1.8' }}>
-                                <li>Click on the link — it will open SBI Collect homepage</li>
-                                <li>Select <strong>"Educational Institutes"</strong> as Category</li>
-                                <li>Search <strong>"SSSIHL-ADMN"</strong></li>
-                                <li>Select payment Category(Application name will be there in the dropdown)</li>
+                                <li>Click on the link — it will open SBI Collect homepage.</li>
+                                <li>Select <strong>"Educational Institutes"</strong> as Category.</li>
+                                <li>Search <strong>"SSSIHL-ADMN".</strong></li>
+                                <li>Select payment Category (Application name will be there in the dropdown).</li>
                                 <li>Complete the payment process and keep your receipt for upload.</li>
                             </ol>
                         </div>
