@@ -453,7 +453,7 @@ export const FORM_CONFIGS = {
             'A fee must be paid via SBI Collect before submission. To make the payment: Click on the SBI Collect link provided, which will open the SBI Collect homepage. Select "Educational Institutes" as the Category. Search for "SSSIHL-ADMN" in the search field. Select the appropriate Payment Category. In the payment category dropdown, select the application name for which you are applying (Re-Totalling of Marks). Complete the payment process and keep your receipt for upload.',
             'Provide the correct Subject Code for which re-totaling is requested.',
             'Grade Card upload is optional but recommended.',
-            'Each application must be enclosed in a self-addressed envelope affixing a postal stamp for ₹95. This enables the office of the Controller of Examinations to send the communication directly to the candidate.'
+            'Each application must be enclosed in a self-addressed envelope affixing a postal stamp for ₹95.'
         ],
         fields: [...COMMON_ACADEMIC_FIELDS,
         {
