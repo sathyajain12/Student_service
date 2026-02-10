@@ -406,7 +406,8 @@ export default function FormBuilder({ config, onSubmit, onCancel, onTrackStatus 
                                                 fontSize: '0.95rem',
                                                 fontWeight: '500',
                                                 color: formData[field.name] ? 'var(--accent)' : 'var(--text-main)',
-                                                lineHeight: '1.6'
+                                                lineHeight: '1.6',
+                                                whiteSpace: 'pre-wrap'
                                             }}>{field.label}</span>
                                         </label>
                                     ) : field.type === 'select' ? (

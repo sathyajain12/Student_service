@@ -140,7 +140,13 @@ export const FORM_CONFIGS = {
                 name: 'paperDetails',
                 required: true
             },
-
+            { name: 'separator2', label: '', type: 'separator' },
+            {
+                type: 'singleCheckbox',
+                name: 'declaration',
+                label: 'I request that my name may kindly be registered for the above Supplementary Examination.\n\nIf I, on medical grounds, find it difficult to take the examination, I will duly inform the Director of the Campus and the Controller of Examinations in advance, so that my candidature for the next examination may not stand forfeited.',
+                required: true
+            },
         ],
         files: [
 
