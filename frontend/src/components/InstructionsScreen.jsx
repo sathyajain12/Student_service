@@ -47,7 +47,7 @@ export default function InstructionsScreen({ config, onProceed, onCancel }) {
 
     return (
         <div className="animate-fade-in">
-            <div style={{ display: 'flex', alignItems: 'flex-start', gap: '15px', marginBottom: '40px' }}>
+            <div style={{ display: 'flex', alignItems: 'flex-start', gap: '15px', marginBottom: '20px' }}>
                 <button
                     onClick={onCancel}
                     className="btn-secondary"
@@ -57,43 +57,43 @@ export default function InstructionsScreen({ config, onProceed, onCancel }) {
                 </button>
                 <div>
                     <h2 style={{ fontSize: '1.8rem', color: 'var(--text-main)', marginBottom: '8px' }}>{config.title}</h2>
-                    {(config.description || config.descriptionLink) && (
-                        <div style={{
-                            marginTop: '10px',
-                            marginBottom: '10px',
-                            padding: '14px 18px',
-                            background: 'rgba(245, 158, 11, 0.08)',
-                            border: '1px solid rgba(245, 158, 11, 0.25)',
-                            borderRadius: '12px',
-                        }}>
-                            {config.description && (
-                                <div style={{ display: 'flex', alignItems: 'flex-start', gap: '10px', marginBottom: config.descriptionLink ? '8px' : '0' }}>
-                                    <span style={{ color: '#d97706', fontSize: '1rem', marginTop: '1px', flexShrink: 0 }}>•</span>
-                                    <p style={{ color: '#92400e', fontSize: '0.95rem', lineHeight: '1.5', margin: 0, fontWeight: '500' }}>
-                                        {config.description.startsWith('Note:') ? (
-                                            <><span style={{ fontWeight: '700' }}>Note:</span>{config.description.slice(5)}</>
-                                        ) : config.description}
-                                    </p>
-                                </div>
-                            )}
-                            {config.descriptionLink && (
-                                <div style={{ display: 'flex', alignItems: 'flex-start', gap: '10px' }}>
-                                    <span style={{ color: '#d97706', fontSize: '1rem', marginTop: '1px', flexShrink: 0 }}>•</span>
-                                    <p style={{ color: '#92400e', fontSize: '0.95rem', lineHeight: '1.5', margin: 0, fontWeight: '500' }}>
-                                        {config.descriptionLink.text}{' '}
-                                        <a href={config.descriptionLink.url} target="_blank" rel="noopener noreferrer" style={{ color: '#1d4ed8', fontWeight: '600', textDecoration: 'underline' }}>
-                                            {config.descriptionLink.linkText}
-                                        </a>
-                                    </p>
-                                </div>
-                            )}
-                        </div>
-                    )}
                     <p style={{ color: 'var(--text-muted)', fontSize: '0.95rem', lineHeight: '1.5' }}>
                         Please read the following instructions carefully before proceeding.
                     </p>
                 </div>
             </div>
+
+            {(config.description || config.descriptionLink) && (
+                <div style={{
+                    marginBottom: '20px',
+                    padding: '14px 18px',
+                    background: 'rgba(245, 158, 11, 0.08)',
+                    border: '1px solid rgba(245, 158, 11, 0.25)',
+                    borderRadius: '12px',
+                }}>
+                    {config.description && (
+                        <div style={{ display: 'flex', alignItems: 'flex-start', gap: '10px', marginBottom: config.descriptionLink ? '8px' : '0' }}>
+                            <span style={{ color: '#d97706', fontSize: '1rem', marginTop: '1px', flexShrink: 0 }}>•</span>
+                            <p style={{ color: '#92400e', fontSize: '0.95rem', lineHeight: '1.5', margin: 0, fontWeight: '500' }}>
+                                {config.description.startsWith('Note:') ? (
+                                    <><span style={{ fontWeight: '700' }}>Note:</span>{config.description.slice(5)}</>
+                                ) : config.description}
+                            </p>
+                        </div>
+                    )}
+                    {config.descriptionLink && (
+                        <div style={{ display: 'flex', alignItems: 'flex-start', gap: '10px' }}>
+                            <span style={{ color: '#d97706', fontSize: '1rem', marginTop: '1px', flexShrink: 0 }}>•</span>
+                            <p style={{ color: '#92400e', fontSize: '0.95rem', lineHeight: '1.5', margin: 0, fontWeight: '500' }}>
+                                {config.descriptionLink.text}{' '}
+                                <a href={config.descriptionLink.url} target="_blank" rel="noopener noreferrer" style={{ color: '#1d4ed8', fontWeight: '600', textDecoration: 'underline' }}>
+                                    {config.descriptionLink.linkText}
+                                </a>
+                            </p>
+                        </div>
+                    )}
+                </div>
+            )}
 
             <div style={{
                 padding: '30px',
