@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { LogOut, FileText, Download, Users, Clock, CheckCircle, XCircle, ArrowLeft, RefreshCw, Upload } from 'lucide-react';
+import { LogOut, FileText, Download, Users, Clock, CheckCircle, XCircle, ArrowLeft, RefreshCw, Upload, Trash2 } from 'lucide-react';
 
 const API_URL = import.meta.env.VITE_BACKEND_URL || 'http://localhost:8787';
 
@@ -386,6 +386,35 @@ export default function AdminPortal() {
         }
     };
 
+    const deleteApplication = async (applicationId) => {
+        if (!confirm(`Are you sure you want to delete application ${applicationId}? This action cannot be undone.`)) {
+            return;
+        }
+
+        try {
+            const response = await fetch(`${API_URL}/admin/application/${applicationId}`, {
+                method: 'DELETE',
+                headers: {
+                    'Authorization': `Bearer ${token}`
+                }
+            });
+
+            const data = await response.json();
+
+            if (response.ok) {
+                alert('Application deleted successfully!');
+                setAppDetails(null);
+                fetchStats();
+                fetchApplications();
+            } else {
+                alert('Error: ' + (data.error || 'Failed to delete application'));
+            }
+        } catch (err) {
+            console.error('Failed to delete application:', err);
+            alert('Failed to delete application. Please try again.');
+        }
+    };
+
     const uploadResponseDocument = async (applicationId, file) => {
         setUploading(true);
         setUploadError(null);
@@ -553,6 +582,34 @@ export default function AdminPortal() {
                                 </div>
                             </div>
                         )}
+
+                        {/* Delete Application Button */}
+                        <div style={{ marginBottom: '24px', padding: '20px', background: 'rgba(239, 68, 68, 0.08)', borderRadius: '12px', border: '1px solid rgba(239, 68, 68, 0.25)' }}>
+                            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '16px' }}>
+                                <div>
+                                    <h4 style={{ color: '#dc2626', margin: 0, marginBottom: '4px' }}>Delete Application</h4>
+                                    <p style={{ color: '#64748b', margin: 0, fontSize: '14px' }}>Permanently delete this application and all associated files</p>
+                                </div>
+                                <button
+                                    onClick={() => deleteApplication(appDetails.application.id)}
+                                    style={{
+                                        padding: '12px 24px',
+                                        background: 'linear-gradient(135deg, #ef4444 0%, #dc2626 100%)',
+                                        color: '#ffffff',
+                                        border: 'none',
+                                        borderRadius: '8px',
+                                        cursor: 'pointer',
+                                        fontWeight: '600',
+                                        fontSize: '14px',
+                                        display: 'flex',
+                                        alignItems: 'center',
+                                        gap: '8px'
+                                    }}
+                                >
+                                    <Trash2 size={18} /> Delete Application
+                                </button>
+                            </div>
+                        </div>
 
                         {/* Upload Response Document Section */}
                         <div style={{

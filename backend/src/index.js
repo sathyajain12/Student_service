@@ -86,6 +86,11 @@ export default {
                 return await handleUploadResponse(request, env, corsHeaders);
             }
 
+            if (url.pathname.startsWith('/admin/application/') && request.method === 'DELETE') {
+                const id = url.pathname.split('/').pop();
+                return await handleDeleteApplication(id, request, env, corsHeaders);
+            }
+
             return new Response('Not Found', { status: 404, headers: corsHeaders });
         } catch (error) {
             console.error(error);
@@ -389,6 +394,68 @@ async function handleUploadResponse(request, env, corsHeaders) {
             });
         }
         console.error('Error uploading response document:', error);
+        return new Response(JSON.stringify({ error: error.message }), {
+            status: 500,
+            headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+        });
+    }
+}
+
+// Handler for deleting an application and all related data
+async function handleDeleteApplication(id, request, env, corsHeaders) {
+    const admin = await verifyAdminToken(request, env);
+    if (!admin) {
+        return new Response(JSON.stringify({ error: 'Unauthorized' }), {
+            status: 401,
+            headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+        });
+    }
+
+    try {
+        // Get the application to find its form_type
+        const application = await env.DB.prepare(
+            'SELECT id, form_type FROM applications WHERE id = ?'
+        ).bind(id).first();
+
+        if (!application) {
+            return new Response(JSON.stringify({ error: 'Application not found' }), {
+                status: 404,
+                headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+            });
+        }
+
+        // Map form_type to table name
+        const formTableMap = {
+            'Application for Duplicate Grade Card': 'form_duplicate_grade_card',
+            'Application for CGPA to Marks Conversion': 'form_cgpa_conversion',
+            'Application for End-Semester Supplementary Examinations': 'form_supplementary_exam',
+            'Application for Duplicate Degree Certificate': 'form_duplicate_degree',
+            'Application for Registration of Student Name change in the Institute Records': 'form_name_change',
+            'Application for repeating a paper for supplementary examinations(CIE and ESE)': 'form_repeat_paper',
+            'Application for Re-Totalling of Marks': 'form_retotaling',
+            'Application for On-Request Degree Certificate': 'form_on_request_degree',
+            'Application for Migration Certificate': 'form_migration_certificate',
+        };
+
+        // Delete from form-specific table first (FK constraint)
+        const formTable = formTableMap[application.form_type];
+        if (formTable) {
+            await env.DB.prepare(`DELETE FROM ${formTable} WHERE Application_id = ?`).bind(id).run();
+        }
+
+        // Delete all file blobs for this application
+        await env.DB.prepare('DELETE FROM file_blobs WHERE application_id = ?').bind(id).run();
+
+        // Delete the application record
+        await env.DB.prepare('DELETE FROM applications WHERE id = ?').bind(id).run();
+
+        console.log(`Application ${id} deleted by admin ${admin.username}`);
+
+        return new Response(JSON.stringify({ success: true, message: `Application ${id} deleted successfully` }), {
+            headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+        });
+    } catch (error) {
+        console.error('Error deleting application:', error);
         return new Response(JSON.stringify({ error: error.message }), {
             status: 500,
             headers: { ...corsHeaders, 'Content-Type': 'application/json' }
