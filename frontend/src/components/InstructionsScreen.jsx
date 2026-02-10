@@ -57,18 +57,35 @@ export default function InstructionsScreen({ config, onProceed, onCancel }) {
                 </button>
                 <div>
                     <h2 style={{ fontSize: '1.8rem', color: 'var(--text-main)', marginBottom: '8px' }}>{config.title}</h2>
-                    {config.description && (
-                        <p style={{ color: 'var(--text-muted)', fontSize: '0.95rem', lineHeight: '1.5', marginBottom: '6px' }}>
-                            {config.description}
-                        </p>
-                    )}
-                    {config.descriptionLink && (
-                        <p style={{ color: 'var(--text-muted)', fontSize: '0.95rem', lineHeight: '1.5', marginBottom: '6px' }}>
-                            {config.descriptionLink.text}{' '}
-                            <a href={config.descriptionLink.url} target="_blank" rel="noopener noreferrer" style={{ color: 'var(--accent)', textDecoration: 'underline' }}>
-                                {config.descriptionLink.linkText}
-                            </a>
-                        </p>
+                    {(config.description || config.descriptionLink) && (
+                        <div style={{
+                            marginTop: '10px',
+                            marginBottom: '10px',
+                            padding: '14px 18px',
+                            background: 'rgba(37, 99, 235, 0.05)',
+                            border: '1px solid rgba(37, 99, 235, 0.15)',
+                            borderRadius: '12px',
+                        }}>
+                            {config.description && (
+                                <div style={{ display: 'flex', alignItems: 'flex-start', gap: '10px', marginBottom: config.descriptionLink ? '8px' : '0' }}>
+                                    <span style={{ color: 'var(--accent)', fontSize: '1rem', marginTop: '1px', flexShrink: 0 }}>•</span>
+                                    <p style={{ color: 'var(--text-muted)', fontSize: '0.95rem', lineHeight: '1.5', margin: 0 }}>
+                                        {config.description}
+                                    </p>
+                                </div>
+                            )}
+                            {config.descriptionLink && (
+                                <div style={{ display: 'flex', alignItems: 'flex-start', gap: '10px' }}>
+                                    <span style={{ color: 'var(--accent)', fontSize: '1rem', marginTop: '1px', flexShrink: 0 }}>•</span>
+                                    <p style={{ color: 'var(--text-muted)', fontSize: '0.95rem', lineHeight: '1.5', margin: 0 }}>
+                                        {config.descriptionLink.text}{' '}
+                                        <a href={config.descriptionLink.url} target="_blank" rel="noopener noreferrer" style={{ color: 'var(--accent)', textDecoration: 'underline' }}>
+                                            {config.descriptionLink.linkText}
+                                        </a>
+                                    </p>
+                                </div>
+                            )}
+                        </div>
                     )}
                     <p style={{ color: 'var(--text-muted)', fontSize: '0.95rem', lineHeight: '1.5' }}>
                         Please read the following instructions carefully before proceeding.
