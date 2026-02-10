@@ -8,10 +8,13 @@ const COMMON_ACADEMIC_FIELDS = [
     { type: 'heading', label: 'Address', name: 'addressHeading' },
     { name: 'addressLine1', label: 'Address Line 1', type: 'text', required: true },
     { name: 'addressLine2', label: 'Address Line 2', type: 'text', required: false },
-    { name: 'country', label: 'Country', type: 'countrySelect', required: true },
-    { name: 'stateProvince', label: 'State/Province/Region', type: 'stateSelect', required: true },
     { name: 'city', label: 'City', type: 'text', required: true },
+    { name: 'stateProvince', label: 'State/Province/Region', type: 'stateSelect', required: true },
     { name: 'postalCode', label: 'Postal Code', type: 'text', required: true },
+    { name: 'country', label: 'Country', type: 'countrySelect', required: true },
+    
+    
+    
 ];
 
 export const FORM_CONFIGS = {
@@ -175,6 +178,10 @@ export const FORM_CONFIGS = {
             'A press notification, in the prescribed format, must be published in a recognized daily newspaper. A scanned copy of the newspaper cutting shall be uploaded through the designated form.',
             'An affidavit, sworn before a Notary Public or a First-Class Magistrate, must be enclosed in accordance with the prescribed format.',
             'The candidate must clearly state the reason for the loss of the Original Degree Certificate.',
+            'Applicants are required to send a self-addressed, cloth-lined envelope – 16x12 inches in size along with the application. The Institute requires this in order to send the Duplicate Degree Certificate back to the applicant by post.',
+            'The name of the applicant, along with the full, complete postal address, including the town/city, PIN code, district and state must be clearly written or typed on the envelope.',
+            'Stamps totalling ₹95 must be affixed on the top right-hand corner of the envelope. This will ensure safe delivery of the document by India Post, via Registered Post with Acknowledgement Due.',
+            'Students of foreign nationality may affix appropriate postage for an envelope weighing 100-120 g.',
             '**FORMAT OF THE NEWSPAPER NOTIFICATION**\n\nNotice is hereby given that the undersigned has lost the Original Degree Certificate pertaining to the _________________________________ Academic Programme, issued by Sri Sathya Sai Institute of Higher Learning. Any person who finds the said certificate is requested to return it to the undersigned without delay. Possession of the certificate despite this public notice shall be deemed unauthorized and unlawful, and the holder shall be liable for any misuse thereof.\n\nName of the Candidate:\nMobile No:\nAddress(with city and state):\n\nDate:',
             '**FORMAT FOR AFFIDAVIT**\n\nI, _________________________________, daughter/son of \n_________________________________, aged ______, residing at  _________ , do hereby solemnly affirm and declare as follows:\n\n1. That the Original Degree Certificate pertaining to the _________________________________ Academic Programme, issued to me by Sri Sathya Sai Institute of Higher Learning, Prasanthi Nilayam, has been irrecoverably lost or destroyed.\n\n2. That I have made a thorough and diligent search for the said Original Degree Certificate, but despite my best efforts, I have been unable to recover it.\n\n3. That a duplicate copy of the ________ Degree Certificate is now required by me, for the purpose of\n___________________________________________________________________________\n(state clearly why the duplicate is required and where it is to be submitted or produced).\n\n4. That I understand and acknowledge that if the lost Original Degree Certificate is misused by me or by any other person into whose possession it may fall, I shall be fully liable for all consequences arising therefrom. I further undertake to indemnify and hold harmless the Institute against any loss or consequences that may arise due to any improper or unfair use of the aforesaid Degree Certificate.\n\nDate:\n\nStudent Signature:\n\n **VERIFICATION**\n\n I, the deponent above named, do hereby solemnly affirm and state that the contents of Paragraphs 1 to 4 of the above affidavit are true and correct to my knowledge, and that no part of it is false and nothing material has been concealed therein.\nSolemnly affirmed/sworn on this ______ day of _________________________________ at _________________________________\n\n **Attested and identified by me** (Signature and Seal of Notary Public / First-Class Magistrate)'
         ],
@@ -299,6 +306,15 @@ export const FORM_CONFIGS = {
                 type: 'text',
                 required: true
             },
+
+             {
+                name: "periodOfStudy",
+                label: "Period of Study",
+                type: "daterange",
+                required: true,
+                placeholder: "Select period of study"
+            },
+
             {
                 name: 'mobile',
                 label: 'Mobile Number',
@@ -311,13 +327,7 @@ export const FORM_CONFIGS = {
                 type: 'email',
                 required: true
             },
-            {
-                name: "periodOfStudy",
-                label: "Period of Study",
-                type: "daterange",
-                required: true,
-                placeholder: "Select period of study"
-            },
+           
             { type: 'heading', label: 'Address', name: 'addressHeading' },
             { name: 'addressLine1', label: 'Address Line 1', type: 'text', required: true },
             { name: 'addressLine2', label: 'Address Line 2', type: 'text', required: false },
@@ -349,6 +359,16 @@ export const FORM_CONFIGS = {
             'Failure to inform in advance may result in forfeiture of candidature for the next examination.'
         ],
         fields: [
+            
+            {
+                type: 'heading',
+                label: 'Student Details',
+                name: 'heading1'
+            },
+            { name: 'applicantName', label: 'Candidate Name', type: 'text', required: true },
+            { name: 'regNo', label: 'Registered Number', type: 'number', required: true },
+            { name: 'campus', label: 'Campus', type: 'select', options: ['Prashanti Nilayam Campus', 'Anantapur Campus', 'Brindavan Campus', 'Nandigiri Campus'], required: true },
+            { name: 'program', label: 'Academic Programme', type: 'text', required: true },
             {
                 name: "periodOfStudy",
                 label: "Period of Study",
@@ -356,12 +376,16 @@ export const FORM_CONFIGS = {
                 required: true,
                 placeholder: "Select period of study"
             },
-            {
-                type: 'heading',
-                label: 'Student Details',
-                name: 'heading1'
-            },
-            ...COMMON_ACADEMIC_FIELDS,
+            { name: 'mobile', label: 'Mobile Number', type: 'number', required: true },
+            { name: 'email', label: 'Email Address', type: 'email', required: true },
+            { type: 'heading', label: 'Address', name: 'addressHeading' },
+            { name: 'addressLine1', label: 'Address Line 1', type: 'text', required: true },
+            { name: 'addressLine2', label: 'Address Line 2', type: 'text', required: false },
+            { name: 'city', label: 'City', type: 'text', required: true },
+            { name: 'stateProvince', label: 'State/Province/Region', type: 'stateSelect', required: true },
+            { name: 'postalCode', label: 'Postal Code', type: 'text', required: true },
+            { name: 'country', label: 'Country', type: 'countrySelect', required: true },
+            
             {
                 type: 'heading',
                 label: 'List of Paper(s) for which Candidate intends to repeat the paper.',
@@ -373,10 +397,12 @@ export const FORM_CONFIGS = {
                 name: 'paperDetails',
                 required: true
             },
+            { name: 'separatorDeclaration', label: '', type: 'separator' },
             {
-                type: 'paragraph',
+                type: 'singleCheckbox',
                 name: 'declaration',
-                content: 'I request that my name may kindly be registered for repeating the above paper(s).\n\nIf I, on medical grounds, find it difficult to repeat the paper(s), I will duly inform the Director of the Campus and the Controller of Examinations in advance, so that my candidature for the next examination may not stand forfeited.'
+                label: 'I request that my name may kindly be registered for repeating the above paper(s).\n\nIf I, on medical grounds, find it difficult to repeat the paper(s), I will duly inform the Director of the Campus and the Controller of Examinations in advance, so that my candidature for the next examination may not stand forfeited.',
+                required: true
             }
         ],
         files: []
@@ -390,7 +416,7 @@ export const FORM_CONFIGS = {
             'A fee must be paid via SBI Collect before submission.',
             'Provide the correct Subject Code for which re-totaling is requested.',
             'Grade Card upload is optional but recommended.',
-            'Results will be communicated within 15 working days.'
+            'Each application must be enclosed in a self-addressed envelope affixing a postal stamp for ₹95. This enables the office of the Controller of Examinations to send the communication directly to the candidate.'
         ],
         fields: [...COMMON_ACADEMIC_FIELDS,
         {
@@ -536,7 +562,7 @@ export const FORM_CONFIGS = {
         ],
         files: [{
             name: 'gradeCard',
-            label: 'Consolidated Grade Card',
+            label: 'Grade Card',
             required: true
         }]
     }
