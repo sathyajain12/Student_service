@@ -447,6 +447,7 @@ export const FORM_CONFIGS = {
 
     'retotaling': {
         title: 'Application for Re-Totalling of Marks',
+        description: 'Note: The application will be considered only within 10 days from the date of receipt of the respective Semester Grade Cards by the Campus Office',
         instructions: [
             'This service is for verification of marks totaling in your answer script.',
             'Select whether it is for End-Semester or Supplementary Examinations.',
@@ -455,6 +456,11 @@ export const FORM_CONFIGS = {
             'Grade Card upload is optional but recommended.',
             'Each application must be enclosed in a self-addressed envelope affixing a postal stamp for ₹95.'
         ],
+
+        titleLink: {
+            text: 'Please click here to make the payment of ₹100 using SBI Collect',
+            url: 'https://www.onlinesbi.sbi/sbicollect/icollecthome.htm?corpID=350506&categoryName=SSSIHL%20Exam%20App%20%20Re-Totaling%20of%20Marks'
+        },
         fields: [...COMMON_ACADEMIC_FIELDS,
         {
             name: 'examType',
