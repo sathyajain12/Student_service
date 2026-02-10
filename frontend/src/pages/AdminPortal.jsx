@@ -615,6 +615,7 @@ export default function AdminPortal() {
                     </p>
                     <div style={{ display: 'flex', gap: '12px', justifyContent: 'flex-end' }}>
                         <button
+                            className="btn-modal-cancel"
                             onClick={() => setConfirmModal(null)}
                             style={{
                                 padding: '10px 24px',
@@ -630,6 +631,7 @@ export default function AdminPortal() {
                             Cancel
                         </button>
                         <button
+                            className="btn-modal-confirm"
                             onClick={confirmModal.onConfirm}
                             style={{
                                 padding: '10px 24px',
@@ -717,12 +719,50 @@ export default function AdminPortal() {
                         from { transform: scale(0.95); opacity: 0; }
                         to { transform: scale(1); opacity: 1; }
                     }
+
+                    .btn-complete:hover {
+                        filter: brightness(1.1);
+                        transform: translateY(-2px);
+                        box-shadow: 0 4px 12px rgba(16, 185, 129, 0.35);
+                    }
+
+                    .btn-upload:hover {
+                        filter: brightness(1.1);
+                        transform: translateY(-2px);
+                        box-shadow: 0 4px 12px rgba(59, 130, 246, 0.35);
+                    }
+
+                    .btn-delete:hover {
+                        background: rgba(239, 68, 68, 0.1) !important;
+                        border-color: #ef4444 !important;
+                        transform: translateY(-2px);
+                        box-shadow: 0 4px 12px rgba(239, 68, 68, 0.2);
+                    }
+
+                    .btn-download:hover {
+                        background: #eff6ff !important;
+                        border-color: #2563eb !important;
+                        transform: translateY(-1px);
+                        box-shadow: 0 2px 8px rgba(37, 99, 235, 0.15);
+                    }
+
+                    .btn-back:hover {
+                        color: #2563eb !important;
+                    }
+
+                    .btn-complete, .btn-upload, .btn-delete, .btn-download, .btn-back {
+                        transition: all 0.2s ease;
+                    }
+
+                    .btn-complete:active, .btn-upload:active, .btn-delete:active, .btn-download:active {
+                        transform: translateY(0);
+                    }
                 `}</style>
                 <ToastNotification />
                 <ConfirmationModal />
                 <div style={styles.page}>
                     <div style={styles.container}>
-                        <button onClick={() => { setSelectedApp(null); setAppDetails(null); }} style={styles.backButton}>
+                        <button className="btn-back" onClick={() => { setSelectedApp(null); setAppDetails(null); }} style={styles.backButton}>
                             <ArrowLeft size={18} /> Back to Applications
                         </button>
 
@@ -802,6 +842,7 @@ export default function AdminPortal() {
                                             <p style={{ color: '#64748b', margin: 0, fontSize: '13px' }}>Mark this application as completed and dispatched</p>
                                         </div>
                                         <button
+                                            className="btn-complete"
                                             onClick={() => markAsCompleted(app.id)}
                                             style={{
                                                 padding: '10px 20px',
@@ -830,7 +871,7 @@ export default function AdminPortal() {
                                         <h4 style={{ color: '#3b82f6', margin: 0, marginBottom: '4px', fontSize: '14px', fontWeight: '700' }}>Upload Response Document</h4>
                                         <p style={{ color: '#64748b', margin: 0, fontSize: '13px' }}>Upload the completed certificate or document</p>
                                     </div>
-                                    <label style={{
+                                    <label className="btn-upload" style={{
                                         padding: '10px 20px',
                                         background: 'linear-gradient(135deg, #3b82f6 0%, #2563eb 100%)',
                                         color: '#ffffff',
@@ -871,6 +912,7 @@ export default function AdminPortal() {
                                         <p style={{ color: '#64748b', margin: 0, fontSize: '13px' }}>Permanently delete this application and all files</p>
                                     </div>
                                     <button
+                                        className="btn-delete"
                                         onClick={() => deleteApplication(app.id)}
                                         style={{
                                             padding: '10px 20px',
@@ -916,7 +958,7 @@ export default function AdminPortal() {
                                                     </p>
                                                 </div>
                                             </div>
-                                            <button onClick={() => downloadFile(file.id, file.file_name)} style={styles.button}>
+                                            <button className="btn-download" onClick={() => downloadFile(file.id, file.file_name)} style={styles.button}>
                                                 <Download size={16} style={{ marginRight: '6px' }} /> Download
                                             </button>
                                         </div>
@@ -941,7 +983,7 @@ export default function AdminPortal() {
                                                     </p>
                                                 </div>
                                             </div>
-                                            <button onClick={() => downloadFile(file.id, file.file_name)} style={styles.button}>
+                                            <button className="btn-download" onClick={() => downloadFile(file.id, file.file_name)} style={styles.button}>
                                                 <Download size={16} style={{ marginRight: '6px' }} /> Download
                                             </button>
                                         </div>
@@ -983,6 +1025,10 @@ export default function AdminPortal() {
                     to { transform: scale(1); opacity: 1; }
                 }
 
+                td button {
+                    transition: all 0.2s ease;
+                }
+
                 td button:hover:not(:disabled) {
                     background: #eff6ff !important;
                     border-color: #2563eb !important;
@@ -994,11 +1040,52 @@ export default function AdminPortal() {
                     transform: translateY(0);
                 }
 
-                div[style*="fileRow"] button:hover:not(:disabled) {
-                    background: #eff6ff !important;
-                    border-color: #2563eb !important;
+                .btn-refresh {
+                    transition: all 0.2s ease;
+                }
+
+                .btn-refresh:hover:not(:disabled) {
+                    background: rgba(59, 130, 246, 0.3) !important;
                     transform: translateY(-1px);
-                    box-shadow: 0 2px 8px rgba(37, 99, 235, 0.15);
+                }
+
+                .btn-refresh:active:not(:disabled) {
+                    transform: translateY(0);
+                }
+
+                .btn-logout {
+                    transition: all 0.2s ease;
+                }
+
+                .btn-logout:hover {
+                    background: rgba(239, 68, 68, 0.3) !important;
+                    transform: translateY(-1px);
+                }
+
+                .btn-logout:active {
+                    transform: translateY(0);
+                }
+
+                .btn-modal-cancel {
+                    transition: all 0.15s ease;
+                }
+
+                .btn-modal-cancel:hover {
+                    background: #e2e8f0 !important;
+                }
+
+                .btn-modal-confirm {
+                    transition: all 0.15s ease;
+                }
+
+                .btn-modal-confirm:hover {
+                    filter: brightness(1.1);
+                    transform: translateY(-1px);
+                    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+                }
+
+                .btn-modal-confirm:active {
+                    transform: translateY(0);
                 }
             `}</style>
             <div style={styles.page}>
@@ -1008,6 +1095,7 @@ export default function AdminPortal() {
                     <h1 style={styles.title}>Admin Dashboard</h1>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
                         <button
+                            className="btn-refresh"
                             onClick={handleManualRefresh}
                             disabled={isRefreshing}
                             style={{
@@ -1032,7 +1120,7 @@ export default function AdminPortal() {
                                 Last updated: {lastUpdated.toLocaleTimeString()}
                             </span>
                         )}
-                        <button onClick={handleLogout} style={styles.logoutButton}>
+                        <button className="btn-logout" onClick={handleLogout} style={styles.logoutButton}>
                             <LogOut size={18} /> Logout
                         </button>
                     </div>
