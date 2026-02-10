@@ -33,7 +33,8 @@ export const FORM_CONFIGS = {
             'The name of the applicant, along with the full, complete postal address, including the town/city, PIN code, district and state must be clearly written or typed on the envelope.',
             'Stamps totalling ₹95 must be affixed on the top right-hand corner of the envelope. This will ensure safe delivery of the document by India Post, via Registered Post with Acknowledgement Due. Students of foreign nationality may affix appropriate postage for an envelope weighing 100-120 g.',
             'Keep your SBI Collect receipt ready for upload.',
-            'Original Grade Card scan is optional but recommended if available.'
+            'Original Grade Card scan is optional but recommended if available.',
+            'In the event of loss in transit or misplacement of the Original Grade card, the candidate is required to lodge a formal police complaint and obtain an official acknowledgment from the concerned police station. A scanned copy of the complaint, along with the original acknowledgment, must be uploaded through the designated form.'
         ],
         titleLink: {
             text: 'Please click here to make the payment of ₹500 using SBI Collect',
