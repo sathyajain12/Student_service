@@ -16,7 +16,7 @@ import {
 
 const FORMS = [
   { id: 'duplicate-grade-card', title: 'Application for Duplicate Grade Card', Icon: FileText, category: 'Academic', desc: 'Apply for loss or damage of grade cards.' },
-  { id: 'cgpa-conversion', title: 'Application for CGPA to Marks Conversion', Icon: BarChart3, category: 'Academic', desc: 'Convert CGPA to percentage marks.' },
+  { id: 'cgpa-conversion', title: 'Application for CGPA to Percentage Conversion', Icon: BarChart3, category: 'Academic', desc: 'Convert CGPA to percentage marks.' },
   { id: 'supplementary-exam', title: 'Application for End-Semester Supplementary Examinations', Icon: PenTool, category: 'Exam', desc: 'Register for backlog papers.' },
   { id: 'duplicate-degree', title: 'Application for Duplicate Degree Certificate', Icon: GraduationCap, category: 'Degree', desc: 'Replace lost degree certificates.' },
   { id: 'name-change', title: 'Application for Registration of Student Name change in the Institute Records', Icon: UserCircle, category: 'Records', desc: 'Update your official name.' },
@@ -55,7 +55,7 @@ export default function Portal({ onSelectForm, onTrackStatus }) {
             Examination Services Portal
           </p>
         </div>
-       
+
 
         <button
           onClick={onTrackStatus}
