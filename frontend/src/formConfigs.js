@@ -12,10 +12,10 @@ const COMMON_ACADEMIC_FIELDS = [
     { name: 'stateProvince', label: 'State/Province/Region', type: 'stateSelect', required: true },
     { name: 'city', label: 'City', type: 'text', required: true },
     { name: 'postalCode', label: 'Postal Code', type: 'text', required: true },
-    
-    
-    
-    
+
+
+
+
 ];
 
 export const FORM_CONFIGS = {
@@ -67,7 +67,7 @@ export const FORM_CONFIGS = {
         ]
     },
     'cgpa-conversion': {
-        title: 'Application for CGPA to Marks Conversion',
+        title: 'Application for CGPA to Percentage Conversion',
         instructions: [
             'As the Institute follows a grading system, grade cards-which are already issued to the students by the Institute-serve as Statement of Marks. No other mark statements are issued. However, if required, a Statement of CGPA Equivalent Percentage of Marks is issued on application to pursue further studies or to seek a job.',
             'No Fee is charged for the issue of a Statement of CGPA Equivalent Percentage of Marks.',
@@ -76,44 +76,10 @@ export const FORM_CONFIGS = {
             'Stamps totalling ₹95 must be affixed on the top right-hand corner of the envelope. This will ensure safe delivery of the document by India Post, via Registered Post with Acknowledgement Due. This is especially important since the Statement of CGPA Equivalent Percentage of Marks is an original document (like a Grade Card or the Degree Certificate).',
             'Students of foreign nationality may affix appropriate postage for an envelope weighing 100-120 g.',
         ],
-        fields: [  { name: 'applicantName', label: 'Candidate Name', type: 'text', required: true },
-                    { name: 'regNo', label: 'Registered Number', type: 'number', required: true },
-                    { name: 'campus', label: 'Campus', type: 'select', options: ['Prashanti Nilayam Campus', 'Anantapur Campus', 'Brindavan Campus', 'Nandigiri Campus'], required: true },
-                    { name: 'program', label: 'Academic Programme', type: 'text', required: true },
-                    {
-                        name: "periodOfStudy",
-                        label: "Period of Study",
-                        type: "daterange",
-                        required: true,
-                        placeholder: "Select period of study"
-                    },
-                    {
-                        name: "monthOfPassing",
-                        label: "Month and Year of Passing",
-                        type: "daterange",
-                        required: true,
-                        placeholder: "Select month and year"
-                    },
-                    {
-                        name: 'cgpa',
-                        label: 'CGPA',
-                        type: 'number',
-                        required: true,
-                        placeholder: 'Enter your CGPA',
-                        step: '0.01',
-                        min: '0',
-                        max: '10'
-                    },
-                    { name: 'mobile', label: 'Mobile Number', type: 'number', required: true },
-                    { name: 'email', label: 'Email Address', type: 'email', required: true },
-                    { type: 'heading', label: 'Permanent Address', name: 'addressHeading' },
-                    { name: 'addressLine1', label: 'Address Line 1', type: 'text', required: true },
-                    { name: 'addressLine2', label: 'Address Line 2', type: 'text', required: false },
-                    { name: 'country', label: 'Country', type: 'countrySelect', required: true },
-                    { name: 'stateProvince', label: 'State/Province/Region', type: 'stateSelect', required: true },
-                    { name: 'city', label: 'City', type: 'text', required: true },
-                    { name: 'postalCode', label: 'Postal Code', type: 'text', required: true },
-                    
+        fields: [{ name: 'applicantName', label: 'Candidate Name', type: 'text', required: true },
+        { name: 'regNo', label: 'Registered Number', type: 'number', required: true },
+        { name: 'campus', label: 'Campus', type: 'select', options: ['Prashanti Nilayam Campus', 'Anantapur Campus', 'Brindavan Campus', 'Nandigiri Campus'], required: true },
+        { name: 'program', label: 'Academic Programme', type: 'text', required: true },
         {
             name: "periodOfStudy",
             label: "Period of Study",
@@ -128,6 +94,28 @@ export const FORM_CONFIGS = {
             required: true,
             placeholder: "Select month and year"
         },
+        { name: 'separator2', label: '', type: 'separator' },
+        {
+            name: 'cgpa',
+            label: 'CGPA',
+            type: 'number',
+            required: true,
+            placeholder: 'Enter your CGPA',
+            step: '0.01',
+            min: '0',
+            max: '10'
+        },
+        { name: 'mobile', label: 'Mobile Number', type: 'number', required: true },
+        { name: 'email', label: 'Email Address', type: 'email', required: true },
+        { type: 'heading', label: 'Permanent Address', name: 'addressHeading' },
+        { name: 'addressLine1', label: 'Address Line 1', type: 'text', required: true },
+        { name: 'addressLine2', label: 'Address Line 2', type: 'text', required: false },
+        { name: 'country', label: 'Country', type: 'countrySelect', required: true },
+        { name: 'stateProvince', label: 'State/Province/Region', type: 'stateSelect', required: true },
+        { name: 'city', label: 'City', type: 'text', required: true },
+        { name: 'postalCode', label: 'Postal Code', type: 'text', required: true },
+
+
         {
             name: 'cgpa',
             label: 'CGPA',
@@ -160,7 +148,7 @@ export const FORM_CONFIGS = {
 
         ],
         fields: [
-            
+
             {
                 type: 'heading',
                 label: 'Candidate Details',
@@ -349,7 +337,7 @@ export const FORM_CONFIGS = {
                 required: true
             },
 
-             {
+            {
                 name: "periodOfStudy",
                 label: "Period of Study",
                 type: "daterange",
@@ -369,7 +357,7 @@ export const FORM_CONFIGS = {
                 type: 'email',
                 required: true
             },
-           
+
             { type: 'heading', label: 'Permanent Address', name: 'addressHeading' },
             { name: 'addressLine1', label: 'Address Line 1', type: 'text', required: true },
             { name: 'addressLine2', label: 'Address Line 2', type: 'text', required: false },
@@ -399,7 +387,7 @@ export const FORM_CONFIGS = {
             'Failure to inform in advance may result in forfeiture of candidature for the next examination.'
         ],
         fields: [
-            
+
             {
                 type: 'heading',
                 label: 'Student Details',
@@ -425,8 +413,8 @@ export const FORM_CONFIGS = {
             { name: 'stateProvince', label: 'State/Province/Region', type: 'stateSelect', required: true },
             { name: 'city', label: 'City', type: 'text', required: true },
             { name: 'postalCode', label: 'Postal Code', type: 'text', required: true },
-            
-            
+
+
             {
                 type: 'heading',
                 label: 'List of Paper(s) for which Candidate intends to repeat the paper.',
