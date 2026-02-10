@@ -2,6 +2,14 @@ import { getGoogleAuth, sendEmail } from './google-api';
 
 const ADMIN_EMAIL = 'saisathyajain@sssihl.edu.in';
 
+// Custom error class for file validation failures (returns 400 instead of 500)
+class FileValidationError extends Error {
+    constructor(message) {
+        super(message);
+        this.name = 'FileValidationError';
+    }
+}
+
 // Application ID generation with form-specific prefixes
 function generateAppId(prefix) {
     const now = new Date();
@@ -81,8 +89,9 @@ export default {
             return new Response('Not Found', { status: 404, headers: corsHeaders });
         } catch (error) {
             console.error(error);
+            const status = error instanceof FileValidationError ? 400 : 500;
             return new Response(JSON.stringify({ error: error.message }), {
-                status: 500,
+                status: status,
                 headers: { ...corsHeaders, 'Content-Type': 'application/json' }
             });
         }
@@ -344,8 +353,8 @@ async function handleUploadResponse(request, env, corsHeaders) {
             });
         }
 
-        // Store the response document
-        const arrayBuffer = await file.arrayBuffer();
+        // Validate file through all 4 security layers (returns ArrayBuffer)
+        const arrayBuffer = await validateFile(file);
         const uint8Array = new Uint8Array(arrayBuffer);
         let binary = '';
         for (let i = 0; i < uint8Array.length; i++) {
@@ -373,6 +382,12 @@ async function handleUploadResponse(request, env, corsHeaders) {
             headers: { ...corsHeaders, 'Content-Type': 'application/json' }
         });
     } catch (error) {
+        if (error instanceof FileValidationError) {
+            return new Response(JSON.stringify({ error: error.message }), {
+                status: 400,
+                headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+            });
+        }
         console.error('Error uploading response document:', error);
         return new Response(JSON.stringify({ error: error.message }), {
             status: 500,
@@ -422,9 +437,73 @@ async function handlePublicDownload(fileId, url, env, corsHeaders) {
 
 // ==================== HELPER FUNCTIONS ====================
 
+// Validates uploaded files through 4 security layers. Returns ArrayBuffer on success.
+async function validateFile(file) {
+    // Layer 1: MIME Type Validation
+    if (file.type !== 'application/pdf') {
+        throw new FileValidationError(
+            `Invalid file type "${file.type}" for file "${file.name}". Only PDF files are allowed.`
+        );
+    }
+
+    // Layer 2: File Size Limit (10MB max, reject empty files)
+    if (!file.size || file.size === 0) {
+        throw new FileValidationError(
+            `File "${file.name}" is empty. Please upload a valid PDF document.`
+        );
+    }
+    const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10 MB
+    if (file.size > MAX_FILE_SIZE) {
+        const sizeMB = (file.size / (1024 * 1024)).toFixed(2);
+        throw new FileValidationError(
+            `File "${file.name}" is ${sizeMB} MB, which exceeds the 10 MB limit. Please compress or reduce the file size.`
+        );
+    }
+
+    // Layer 3: Magic Bytes Check (PDF signature: %PDF-)
+    const arrayBuffer = await file.arrayBuffer();
+    const header = new Uint8Array(arrayBuffer, 0, Math.min(5, arrayBuffer.byteLength));
+    const pdfSignature = [0x25, 0x50, 0x44, 0x46, 0x2D]; // %PDF-
+    const isPdfSignature = pdfSignature.every((byte, index) => header[index] === byte);
+    if (!isPdfSignature) {
+        throw new FileValidationError(
+            `File "${file.name}" does not appear to be a valid PDF document. The file header does not match the PDF format.`
+        );
+    }
+
+    // Layer 4: PDF Content Security Scan
+    const uint8Array = new Uint8Array(arrayBuffer);
+    let contentStr = '';
+    for (let i = 0; i < uint8Array.length; i++) {
+        contentStr += String.fromCharCode(uint8Array[i]);
+    }
+
+    const dangerousPatterns = [
+        { pattern: /\/JS\s/i, description: 'embedded JavaScript (JS)' },
+        { pattern: /\/JavaScript\s/i, description: 'embedded JavaScript' },
+        { pattern: /\/Launch\s/i, description: 'launch action (can execute programs)' },
+        { pattern: /\/EmbeddedFile\s/i, description: 'embedded executable file' },
+        { pattern: /\/OpenAction\s*<<[^>]*\/JS/i, description: 'auto-execute JavaScript on open' },
+        { pattern: /\/AA\s*<</i, description: 'additional actions (auto-execute triggers)' },
+        { pattern: /\/RichMedia\s/i, description: 'embedded rich media (Flash/multimedia)' },
+        { pattern: /\/XFA\s/i, description: 'XFA form (potential script execution)' },
+    ];
+
+    for (const { pattern, description } of dangerousPatterns) {
+        if (pattern.test(contentStr)) {
+            throw new FileValidationError(
+                `File "${file.name}" was rejected because it contains potentially dangerous content: ${description}. Please upload a clean PDF document.`
+            );
+        }
+    }
+
+    return arrayBuffer;
+}
+
 async function storeFileBlob(env, appId, fieldName, file) {
     try {
-        const arrayBuffer = await file.arrayBuffer();
+        // Validate file through all 4 security layers (returns ArrayBuffer)
+        const arrayBuffer = await validateFile(file);
         const uint8Array = new Uint8Array(arrayBuffer);
 
         // Convert to base64 properly - use a single encoding for the entire file
