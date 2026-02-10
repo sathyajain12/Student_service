@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { LogOut, FileText, Download, Users, Clock, CheckCircle, XCircle, ArrowLeft, RefreshCw, Upload, Trash2, X, AlertTriangle, Info } from 'lucide-react';
+import { LogOut, FileText, Download, Users, Clock, CheckCircle, XCircle, ArrowLeft, RefreshCw, Upload, Trash2, X, AlertTriangle, Info, Search } from 'lucide-react';
 
 const API_URL = import.meta.env.VITE_BACKEND_URL || 'http://localhost:8787';
 
@@ -223,6 +223,7 @@ export default function AdminPortal() {
     const [uploadSuccess, setUploadSuccess] = useState(false);
     const [toast, setToast] = useState(null);
     const [confirmModal, setConfirmModal] = useState(null);
+    const [searchQuery, setSearchQuery] = useState('');
 
     const showToast = (message, type = 'success') => {
         setToast({ message, type });
@@ -1173,48 +1174,110 @@ export default function AdminPortal() {
 
                 {/* Applications Table */}
                 <div style={styles.card}>
-                    <h2 style={{ color: '#0f172a', marginBottom: '20px' }}>Recent Applications</h2>
-
-                    <div style={{ overflowX: 'auto' }}>
-                        <table style={styles.table}>
-                            <thead>
-                                <tr>
-                                    <th style={styles.th}>ID</th>
-                                    <th style={styles.th}>Form Type</th>
-                                    <th style={styles.th}>Applicant</th>
-                                    <th style={styles.th}>Campus</th>
-                                    <th style={styles.th}>Status</th>
-                                    <th style={styles.th}>Date</th>
-                                    <th style={styles.th}>Action</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                {applications.map((app) => (
-                                    <tr key={app.id} style={{ cursor: 'pointer' }}>
-                                        <td style={{ ...styles.td, fontFamily: 'monospace', fontSize: '12px' }}>{app.id}</td>
-                                        <td style={{ ...styles.td, maxWidth: '200px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{app.form_type}</td>
-                                        <td style={styles.td}>{app.applicant_name}</td>
-                                        <td style={styles.td}>{app.campus}</td>
-                                        <td style={styles.td}>
-                                            <span style={getStatusStyle(app.status)}>{app.status}</span>
-                                        </td>
-                                        <td style={styles.td}>{new Date(app.created_at).toLocaleDateString()}</td>
-                                        <td style={styles.td}>
-                                            <button onClick={() => fetchAppDetails(app.id)} style={styles.button}>
-                                                View
-                                            </button>
-                                        </td>
-                                    </tr>
-                                ))}
-                            </tbody>
-                        </table>
-
-                        {applications.length === 0 && (
-                            <p style={{ textAlign: 'center', padding: '40px', color: '#64748b' }}>
-                                No applications found
-                            </p>
-                        )}
+                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '20px', flexWrap: 'wrap', gap: '12px' }}>
+                        <h2 style={{ color: '#0f172a', margin: 0 }}>Recent Applications</h2>
+                        <div style={{ position: 'relative', minWidth: '280px', flex: '0 1 360px' }}>
+                            <Search size={16} style={{ position: 'absolute', left: '14px', top: '50%', transform: 'translateY(-50%)', color: '#94a3b8' }} />
+                            <input
+                                type="text"
+                                value={searchQuery}
+                                onChange={(e) => setSearchQuery(e.target.value)}
+                                placeholder="Search by name, ID, form type, campus..."
+                                style={{
+                                    ...styles.input,
+                                    paddingLeft: '40px',
+                                    paddingRight: searchQuery ? '36px' : '16px',
+                                    fontSize: '13px',
+                                    padding: '10px 16px 10px 40px',
+                                    borderRadius: '10px'
+                                }}
+                            />
+                            {searchQuery && (
+                                <button
+                                    onClick={() => setSearchQuery('')}
+                                    style={{
+                                        position: 'absolute',
+                                        right: '10px',
+                                        top: '50%',
+                                        transform: 'translateY(-50%)',
+                                        background: 'none',
+                                        border: 'none',
+                                        cursor: 'pointer',
+                                        padding: '2px',
+                                        color: '#94a3b8',
+                                        display: 'flex',
+                                        alignItems: 'center'
+                                    }}
+                                >
+                                    <X size={14} />
+                                </button>
+                            )}
+                        </div>
                     </div>
+
+                    {(() => {
+                        const filteredApplications = applications.filter(app => {
+                            if (!searchQuery.trim()) return true;
+                            const query = searchQuery.toLowerCase();
+                            return (
+                                app.id?.toLowerCase().includes(query) ||
+                                app.applicant_name?.toLowerCase().includes(query) ||
+                                app.form_type?.toLowerCase().includes(query) ||
+                                app.campus?.toLowerCase().includes(query) ||
+                                app.student_email?.toLowerCase().includes(query) ||
+                                app.status?.toLowerCase().includes(query)
+                            );
+                        });
+
+                        return (
+                            <div style={{ overflowX: 'auto' }}>
+                                <table style={styles.table}>
+                                    <thead>
+                                        <tr>
+                                            <th style={styles.th}>ID</th>
+                                            <th style={styles.th}>Form Type</th>
+                                            <th style={styles.th}>Applicant</th>
+                                            <th style={styles.th}>Campus</th>
+                                            <th style={styles.th}>Status</th>
+                                            <th style={styles.th}>Date</th>
+                                            <th style={styles.th}>Action</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {filteredApplications.map((app) => (
+                                            <tr key={app.id} style={{ cursor: 'pointer' }}>
+                                                <td style={{ ...styles.td, fontFamily: 'monospace', fontSize: '12px' }}>{app.id}</td>
+                                                <td style={{ ...styles.td, maxWidth: '200px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{app.form_type}</td>
+                                                <td style={styles.td}>{app.applicant_name}</td>
+                                                <td style={styles.td}>{app.campus}</td>
+                                                <td style={styles.td}>
+                                                    <span style={getStatusStyle(app.status)}>{app.status}</span>
+                                                </td>
+                                                <td style={styles.td}>{new Date(app.created_at).toLocaleDateString()}</td>
+                                                <td style={styles.td}>
+                                                    <button onClick={() => fetchAppDetails(app.id)} style={styles.button}>
+                                                        View
+                                                    </button>
+                                                </td>
+                                            </tr>
+                                        ))}
+                                    </tbody>
+                                </table>
+
+                                {applications.length === 0 && (
+                                    <p style={{ textAlign: 'center', padding: '40px', color: '#64748b' }}>
+                                        No applications found
+                                    </p>
+                                )}
+
+                                {applications.length > 0 && filteredApplications.length === 0 && (
+                                    <p style={{ textAlign: 'center', padding: '40px', color: '#64748b' }}>
+                                        No applications match "{searchQuery}"
+                                    </p>
+                                )}
+                            </div>
+                        );
+                    })()}
                 </div>
             </div>
         </div>
