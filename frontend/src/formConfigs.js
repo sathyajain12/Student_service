@@ -9,8 +9,8 @@ const COMMON_ACADEMIC_FIELDS = [
     { name: 'addressLine1', label: 'Address Line 1', type: 'text', required: true },
     { name: 'addressLine2', label: 'Address Line 2', type: 'text', required: false },
     { name: 'country', label: 'Country', type: 'countrySelect', required: true },
-    { name: 'city', label: 'City', type: 'text', required: true },
     { name: 'stateProvince', label: 'State/Province/Region', type: 'stateSelect', required: true },
+    { name: 'city', label: 'City', type: 'text', required: true },
     { name: 'postalCode', label: 'Postal Code', type: 'text', required: true },
     
     
@@ -52,8 +52,8 @@ export const FORM_CONFIGS = {
             { name: 'addressLine1', label: 'Address Line 1', type: 'text', required: true },
             { name: 'addressLine2', label: 'Address Line 2', type: 'text', required: false },
             { name: 'country', label: 'Country', type: 'countrySelect', required: true },
-            { name: 'city', label: 'City', type: 'text', required: true },
             { name: 'stateProvince', label: 'State/Province/Region', type: 'stateSelect', required: true },
+            { name: 'city', label: 'City', type: 'text', required: true },
             { name: 'postalCode', label: 'Postal Code', type: 'text', required: true },
             { name: 'separator1', label: '', type: 'separator' },
             { name: 'reason', label: 'Reason for Loss', type: 'textarea', required: true },
@@ -421,8 +421,8 @@ export const FORM_CONFIGS = {
             { name: 'addressLine1', label: 'Address Line 1', type: 'text', required: true },
             { name: 'addressLine2', label: 'Address Line 2', type: 'text', required: false },
             { name: 'country', label: 'Country', type: 'countrySelect', required: true },
-            { name: 'city', label: 'City', type: 'text', required: true },
             { name: 'stateProvince', label: 'State/Province/Region', type: 'stateSelect', required: true },
+            { name: 'city', label: 'City', type: 'text', required: true },
             { name: 'postalCode', label: 'Postal Code', type: 'text', required: true },
             
             
