@@ -25,7 +25,7 @@ export const FORM_CONFIGS = {
         instructions: [
             'This form is applicable only for students from batches before 2021.',
             'Students from 2021 batch onwards can download their Grade Cards directly from DigiLocker.',
-            'A fee of ₹500 must be paid via SBI Collect before submission.',
+            'A fee of ₹500 must be paid via SBI Collect before submission. To make the payment: Click on the SBI Collect link provided, which will open the SBI Collect homepage. Select "Educational Institutes" as the Category. Search for "SSSIHL-ADMN" in the search field. Select the appropriate Payment Category. In the payment category dropdown, select the application name for which you are applying (Duplicate Grade Card). Complete the payment process and keep your receipt for upload.',
             'You must upload a Police Complaint and a Sworn Affidavit.',
             '**AFFIDAVIT FOR DUPLICATE GRADE CARD**\\n*To be sworn before a Notary Public / First-Class Magistrate*\\n\\nI, _________________________ (Name), son/daughter of _________________________, Registration Number _________________________, do hereby solemnly affirm and declare that:\\n\\n1. I am a bonafide student/alumnus of Sri Sathya Sai Institute of Higher Learning, Prasanthi Nilayam.\\n2. The Institute had issued me the Original Grade Card for Semester _______ of Programme _________________________, bearing Registration Number _________________________.\\n3. The said Original Grade Card has been lost whilst in my possession despite exercising due care.\\n4. I have applied to the Institute for issuance of a Duplicate Grade Card.\\n5. I hereby undertake that:\\n   - If the Original Grade Card is recovered by me at any time, I shall immediately surrender it to the Institute.\\n   - I shall be solely responsible for any misuse of the lost Original Grade Card.\\n6. The statements made herein are true to the best of my knowledge and belief.\\n\\n\\n**DEPONENT**\\nSignature: _________________________\\nName: _________________________\\nRegistration Number: _________________________\\nDate: _________________________',
             'Applicants are required to send a self-addressed, cloth-lined envelope – 16x12 inches in size along with the application.The Institute requires this in order to send the Duplicate Grade Card back to the applicant by post.',
@@ -212,6 +212,7 @@ export const FORM_CONFIGS = {
         descriptionLink: { text: 'To download your Duplicate Degree Certificate,', linkText: 'please click here', url: 'https://www.digilocker.gov.in/' },
         instructions: [
             'Before applying for a Duplicate Degree Certificate, the candidate must make all reasonable efforts to trace the Original Degree Certificate. Only after being fully satisfied that the Original Degree Certificate has been lost beyond recovery may the candidate proceed to apply for a Duplicate Degree Certificate.',
+            'A fee of ₹1000 must be paid via SBI Collect before submission. To make the payment: Click on the SBI Collect link provided, which will open the SBI Collect homepage. Select "Educational Institutes" as the Category. Search for "SSSIHL-ADMN" in the search field. Select the appropriate Payment Category. In the payment category dropdown, select the application name for which you are applying (Duplicate Degree Certificate). Complete the payment process and keep your receipt for upload.',
             'In the event of loss in transit or misplacement of the Original Degree Certificate, the candidate is required to lodge a formal police complaint and obtain an official acknowledgment from the concerned police station. A scanned copy of the complaint, along with the original acknowledgment, must be uploaded through the designated form.',
             'A press notification, in the prescribed format, must be published in a recognized daily newspaper. A scanned copy of the newspaper cutting shall be uploaded through the designated form.',
             'An affidavit, sworn before a Notary Public or a First-Class Magistrate, must be enclosed in accordance with the prescribed format.',
@@ -301,7 +302,7 @@ export const FORM_CONFIGS = {
     'name-change': {
         title: 'Application for Registration of Student Name change in the Institute Records',
         instructions: [
-            'A fee of ₹500 must be paid via SBI Collect before submission.',
+            'A fee of ₹500 must be paid via SBI Collect before submission. To make the payment: Click on the SBI Collect link provided, which will open the SBI Collect homepage. Select "Educational Institutes" as the Category. Search for "SSSIHL-ADMN" in the search field. Select the appropriate Payment Category. In the payment category dropdown, select the application name for which you are applying (Change of Name). Complete the payment process and keep your receipt for upload.',
             'You must have a valid Gazette Notification for the name change.',
             'Upload your Previous Qualification Certificate as proof.',
             'The new name should exactly match the Gazette notification.',
@@ -449,7 +450,7 @@ export const FORM_CONFIGS = {
         instructions: [
             'This service is for verification of marks totaling in your answer script.',
             'Select whether it is for End-Semester or Supplementary Examinations.',
-            'A fee must be paid via SBI Collect before submission.',
+            'A fee must be paid via SBI Collect before submission. To make the payment: Click on the SBI Collect link provided, which will open the SBI Collect homepage. Select "Educational Institutes" as the Category. Search for "SSSIHL-ADMN" in the search field. Select the appropriate Payment Category. In the payment category dropdown, select the application name for which you are applying (Re-Totalling of Marks). Complete the payment process and keep your receipt for upload.',
             'Provide the correct Subject Code for which re-totaling is requested.',
             'Grade Card upload is optional but recommended.',
             'Each application must be enclosed in a self-addressed envelope affixing a postal stamp for ₹95. This enables the office of the Controller of Examinations to send the communication directly to the candidate.'
@@ -507,7 +508,7 @@ export const FORM_CONFIGS = {
         title: 'Application for On-Request Degree Certificate',
         instructions: [
             'This service is for early issuance of degree certificate before the convocation.',
-            'A fee must be paid via SBI Collect before submission.',
+            'A fee must be paid via SBI Collect before submission. To make the payment: Click on the SBI Collect link provided, which will open the SBI Collect homepage. Select "Educational Institutes" as the Category. Search for "SSSIHL-ADMN" in the search field. Select the appropriate Payment Category. In the payment category dropdown, select the application name for which you are applying (On-Request Degree Certificate). Complete the payment process and keep your receipt for upload.',
             'Upload your Qualifying Certificate as proof of completion.',
             'Select the appropriate degree type (Undergraduate/Postgraduate/Professional/PhD).',
             'Processing may take 7-10 working days after verification.'
