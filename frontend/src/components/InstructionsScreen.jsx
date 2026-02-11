@@ -112,36 +112,60 @@ export default function InstructionsScreen({ config, onProceed, onCancel }) {
                 </div>
 
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-                    {instructions.map((instruction, index) => (
-                        <div key={index} style={{ display: 'flex', alignItems: 'flex-start', gap: '14px' }}>
-                            <div style={{
-                                minWidth: '28px',
-                                height: '28px',
-                                borderRadius: '50%',
-                                background: 'var(--accent)',
-                                color: 'white',
-                                display: 'flex',
-                                alignItems: 'center',
-                                justifyContent: 'center',
-                                fontSize: '0.85rem',
-                                fontWeight: '700',
-                                marginTop: '2px'
-                            }}>
-                                {index + 1}
+                    {instructions.map((instruction, index) => {
+                        const isFormat = typeof instruction === 'object' && instruction.type === 'format';
+                        const text = isFormat ? instruction.text : instruction;
+
+                        return (
+                            <div key={index} style={{ display: 'flex', alignItems: 'flex-start', gap: '14px' }}>
+                                <div style={{
+                                    minWidth: '28px',
+                                    height: '28px',
+                                    borderRadius: '50%',
+                                    background: 'var(--accent)',
+                                    color: 'white',
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    justifyContent: 'center',
+                                    fontSize: '0.85rem',
+                                    fontWeight: '700',
+                                    marginTop: '2px',
+                                    flexShrink: 0
+                                }}>
+                                    {index + 1}
+                                </div>
+                                {isFormat ? (
+                                    <div style={{
+                                        flex: 1,
+                                        background: 'rgba(37, 99, 235, 0.06)',
+                                        border: '2px solid rgba(37, 99, 235, 0.35)',
+                                        borderRadius: '10px',
+                                        padding: '16px 20px',
+                                        fontFamily: 'monospace',
+                                        fontSize: '0.875rem',
+                                        fontWeight: '500',
+                                        lineHeight: '1.7',
+                                        color: 'var(--text-main)',
+                                        whiteSpace: 'pre-wrap'
+                                    }}>
+                                        {formatText(text)}
+                                    </div>
+                                ) : (
+                                    <p style={{
+                                        color: 'var(--text-main)',
+                                        fontSize: '0.95rem',
+                                        fontWeight: '500',
+                                        lineHeight: '1.6',
+                                        margin: 0,
+                                        whiteSpace: 'pre-wrap',
+                                        textAlign: 'justify'
+                                    }}>
+                                        {formatText(text)}
+                                    </p>
+                                )}
                             </div>
-                            <p style={{
-                                color: 'var(--text-main)',
-                                fontSize: '0.95rem',
-                                fontWeight: '500',
-                                lineHeight: '1.6',
-                                margin: 0,
-                                whiteSpace: 'pre-wrap',
-                                textAlign: 'justify'
-                            }}>
-                                {formatText(instruction)}
-                            </p>
-                        </div>
-                    ))}
+                        );
+                    })}
                 </div>
             </div>
 
