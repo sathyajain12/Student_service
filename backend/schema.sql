@@ -137,6 +137,7 @@ CREATE TABLE form_name_change (
   changed_name TEXT,
   gazzete_notification_file TEXT,
   identity_proof_file TEXT,
+  affidavit_file TEXT,
   SBI_receipt_file TEXT,
   Director_notified_date DATETIME,
   controller_notified_date DATETIME
