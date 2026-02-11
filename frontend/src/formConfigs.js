@@ -296,8 +296,7 @@ export const FORM_CONFIGS = {
             'You must have a valid Gazette Notification for the name change. The Gazette Notification must be from the Government of India (Gazette of India).',
             'Upload your Previous Qualification Certificate as proof.',
             'The new name should exactly match the Gazette notification.',
-            'Complete address details are required.',
-            { type: 'format', text: 'The Gazette Notification should be in the following format:\n\n**CHANGE OF NAME NOTIFICATION**\n\nI, [Old Name], son/daughter of [Father\'s Name], residing at [Complete Residential Address], student of Sri Sathya Sai Institute of Higher Learning, do hereby declare and affirm that:\n\n1. I was hitherto known as [Old Name].\n2. I have changed my name from [Old Name] to [New Name].\n3. I shall hereafter be known as [New Name] for all purposes.\n4. I have complied with all legal requirements and formalities in connection with this change of name.\n\nSignature of Declarant\n(Sign in Old Name)\n[Old Name]\nDate: _______________\nPlace: _______________\n\n**WITNESSES:**\nWitness 1:\nFull Name: _________________________________\nSignature: _________________________________\nAddress: __________________________________\nMobile No.: ________________________________\n\nWitness 2:\nFull Name: _________________________________\nSignature: _________________________________\nAddress: __________________________________\nMobile No.: ________________________________' }
+            'Complete address details are required.'
         ],
         titleLink: {
             text: 'Please click here to make the payment of ₹500 using SBI Collect',
