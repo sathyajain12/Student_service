@@ -500,7 +500,8 @@ export const FORM_CONFIGS = {
             'This service is for early issuance of degree certificate before the convocation.',
             'Upload your Qualifying Certificate as proof of completion.',
             'Select the appropriate degree type (Undergraduate/Postgraduate/Professional/PhD).',
-
+            'A fee must be paid via SBI Collect before submission. To make the payment: Click on the SBI Collect link provided, which will open the SBI Collect homepage. Select "Educational Institutes" as the Category. Search for "SSSIHL-ADMN" in the search field. Select the appropriate Payment Category. In the payment category dropdown, select the application name for which you are applying (On-Request Degree Certificate). Complete the payment process and keep your receipt for upload.',
+            'Keep your SBI Collect receipt ready for upload.',
         ],
         fields: [
             {
