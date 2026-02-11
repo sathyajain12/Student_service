@@ -310,6 +310,12 @@ export const FORM_CONFIGS = {
                 required: true
             },
             {
+                name: 'newName',
+                label: 'Changed Name as per the Gazette notification',
+                type: 'text',
+                required: true
+            },
+            {
                 name: 'fatherName',
                 label: 'Father\'s Name',
                 type: 'text',
@@ -363,13 +369,8 @@ export const FORM_CONFIGS = {
             { name: 'stateProvince', label: 'State/Province/Region', type: 'stateSelect', required: true },
             { name: 'city', label: 'City', type: 'text', required: true },
             { name: 'postalCode', label: 'Postal Code', type: 'text', required: true },
-            { name: 'separator1', label: '', type: 'separator' },
-            {
-                name: 'newName',
-                label: 'Changed Name as per the Gazette notification',
-                type: 'text',
-                required: true
-            },
+            
+            
         ],
         files: [
             { name: 'gazetteNotification', label: 'Gazette Notification', required: true },
