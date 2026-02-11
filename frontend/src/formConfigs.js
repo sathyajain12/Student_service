@@ -496,11 +496,14 @@ export const FORM_CONFIGS = {
     },
     'on-request-degree': {
         title: 'Application for On-Request Degree Certificate',
+        titleLink: {
+            text: 'Please click here to make the payment of ₹3000 using SBI Collect',
+            url: 'https://www.onlinesbi.sbi/sbicollect/icollecthome.htm?corpID=350506&categoryName=SSSIHL%20Exam%20App%20%20Re-Totaling%20of%20Marks'
+        },        
         instructions: [
             'This service is for early issuance of degree certificate before the convocation.',
             'Upload your Qualifying Certificate as proof of completion.',
             'Select the appropriate degree type (Undergraduate/Postgraduate/Professional/PhD).',
-            'A fee must be paid via SBI Collect before submission. To make the payment: Click on the SBI Collect link provided, which will open the SBI Collect homepage. Select "Educational Institutes" as the Category. Search for "SSSIHL-ADMN" in the search field. Select the appropriate Payment Category. In the payment category dropdown, select the application name for which you are applying (On-Request Degree Certificate). Complete the payment process and keep your receipt for upload.',
             'Keep your SBI Collect receipt ready for upload.',
         ],
         fields: [
