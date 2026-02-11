@@ -212,8 +212,34 @@ async function handleGetApplication(id, request, env, corsHeaders) {
          WHERE application_id = ? AND is_response = TRUE`
     ).bind(id).all();
 
+    // Map form_type to the corresponding form table
+    const formTableMap = {
+        'Application for Duplicate Grade Card': 'form_duplicate_grade_card',
+        'Application for CGPA to Percentage Conversion': 'form_cgpa_conversion',
+        'Application for End-Semester Supplementary Examinations Registration': 'form_supplementary_exam',
+        'Application for Duplicate Degree Certificate': 'form_duplicate_degree',
+        'Application for Registration of Student Name change in the Institute Records': 'form_name_change',
+        'Application for repeating a paper for supplementary examinations (CIE and ESE)': 'form_repeat_paper',
+        'Application for Re-Totalling of Marks': 'form_retotaling',
+        'Application for On-Request Degree Certificate': 'form_on_request_degree',
+        'Application for Migration Certificate': 'form_migration_certificate',
+    };
+
+    let formData = null;
+    const formTable = formTableMap[application.form_type];
+    if (formTable) {
+        try {
+            formData = await env.DB.prepare(
+                `SELECT * FROM ${formTable} WHERE application_id = ?`
+            ).bind(id).first();
+        } catch (e) {
+            formData = null;
+        }
+    }
+
     return new Response(JSON.stringify({
         application,
+        formData,
         files: studentFiles.results,
         responseDocuments: responseFiles.results
     }), {

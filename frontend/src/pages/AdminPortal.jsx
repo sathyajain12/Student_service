@@ -350,16 +350,139 @@ export default function AdminPortal() {
 
     const generatePDF = (appData, details) => {
         const app = appData;
+        const fd = details.formData || {};
         const files = details.files || [];
         const responseDocuments = details.responseDocuments || [];
 
-        const statusColors = {
-            APPROVED: '#10b981',
-            COMPLETED: '#059669',
-            REJECTED: '#ef4444',
-            PENDING: '#f59e0b'
+        // Human-readable labels for each form table's columns
+        const FORM_FIELD_LABELS = {
+            'Application for Duplicate Grade Card': [
+                ['Programme', 'Academic Programme'],
+                ['Period_of_Study', 'Period of Study'],
+                ['Semester', 'Semester'],
+                ['Mobile_Number', 'Mobile Number'],
+                ['address_line1', 'Address Line 1'],
+                ['address_line2', 'Address Line 2'],
+                ['country', 'Country'],
+                ['state_province', 'State/Province/Region'],
+                ['city', 'City'],
+                ['postal_code', 'Postal Code'],
+                ['Reason', 'Reason for Loss'],
+            ],
+            'Application for CGPA to Percentage Conversion': [
+                ['Registration_Number', 'Registration Number'],
+                ['Programme', 'Academic Programme'],
+                ['Period_of_Study', 'Period of Study'],
+                ['graduation_year', 'Month & Year of Passing'],
+                ['CGPA', 'CGPA'],
+                ['Mobile_Number', 'Mobile Number'],
+                ['address_line1', 'Address Line 1'],
+                ['address_line2', 'Address Line 2'],
+                ['country', 'Country'],
+                ['state_province', 'State/Province/Region'],
+                ['city', 'City'],
+                ['postal_code', 'Postal Code'],
+            ],
+            'Application for End-Semester Supplementary Examinations Registration': [
+                ['Programme', 'Academic Programme'],
+                ['Period_of_Study', 'Period of Study'],
+                ['Semester', 'Semester'],
+                ['Mobile_Number', 'Mobile Number'],
+                ['address_line1', 'Address Line 1'],
+                ['address_line2', 'Address Line 2'],
+                ['country', 'Country'],
+                ['state_province', 'State/Province/Region'],
+                ['city', 'City'],
+                ['postal_code', 'Postal Code'],
+                ['paper_codes', 'Paper Code(s)'],
+                ['paper_titles', 'Paper Title(s)'],
+            ],
+            'Application for Duplicate Degree Certificate': [
+                ['Programme', 'Academic Programme'],
+                ['Period_of_Study', 'Period of Study'],
+                ['year_of_passing', 'Year of Original Degree Issue'],
+                ['address_line1', 'Address Line 1'],
+                ['address_line2', 'Address Line 2'],
+                ['country', 'Country'],
+                ['state_province', 'State/Province/Region'],
+                ['city', 'City'],
+                ['postal_code', 'Postal Code'],
+                ['Reason', 'Reason for Loss'],
+            ],
+            'Application for Registration of Student Name change in the Institute Records': [
+                ['existing_name', 'Current Name'],
+                ['Father_name', "Father's Name"],
+                ['changed_name', 'Changed Name (as per Gazette)'],
+                ['Mobile_Number', 'Mobile Number'],
+                ['Period_of_Study', 'Period of Study'],
+                ['address_line1', 'Address Line 1'],
+                ['address_line2', 'Address Line 2'],
+                ['country', 'Country'],
+                ['state_province', 'State/Province/Region'],
+                ['city', 'City'],
+                ['postal_code', 'Postal Code'],
+            ],
+            'Application for repeating a paper for supplementary examinations (CIE and ESE)': [
+                ['Programme', 'Academic Programme'],
+                ['Period_of_Study', 'Period of Study'],
+                ['Semester', 'Semester'],
+                ['Mobile_Number', 'Mobile Number'],
+                ['address_line1', 'Address Line 1'],
+                ['address_line2', 'Address Line 2'],
+                ['country', 'Country'],
+                ['state_province', 'State/Province/Region'],
+                ['city', 'City'],
+                ['postal_code', 'Postal Code'],
+                ['paper_codes', 'Paper Code(s)'],
+                ['paper_titles', 'Paper Title(s)'],
+            ],
+            'Application for Re-Totalling of Marks': [
+                ['Programme', 'Academic Programme'],
+                ['exam_type', 'Examination Type'],
+                ['period_of_examination', 'Examination Month & Year'],
+                ['paper_codes_titles_for_retotaling', 'Subject Code'],
+                ['Mobile_Number', 'Mobile Number'],
+                ['address_line1', 'Address Line 1'],
+                ['address_line2', 'Address Line 2'],
+                ['country', 'Country'],
+                ['state_province', 'State/Province/Region'],
+                ['city', 'City'],
+                ['postal_code', 'Postal Code'],
+            ],
+            'Application for On-Request Degree Certificate': [
+                ['Degree_applied_for', 'Degree Applied For'],
+                ['Mobile_Number', 'Mobile Number'],
+                ['address_line1', 'Address Line 1'],
+                ['address_line2', 'Address Line 2'],
+                ['country', 'Country'],
+                ['state_province', 'State/Province/Region'],
+                ['city', 'City'],
+                ['postal_code', 'Postal Code'],
+            ],
+            'Application for Migration Certificate': [
+                ['admission_year', 'Year of Admission'],
+                ['Campus_of_admission', 'Campus of Admission'],
+                ['last_examination_passed', 'Last Examination Details'],
+                ['degree_recieved', 'Degree Certificate Received'],
+                ['university_to_migrate', 'University/Institute to Join'],
+                ['Mobile_Number', 'Mobile Number'],
+                ['address_line1', 'Address Line 1'],
+                ['address_line2', 'Address Line 2'],
+                ['country', 'Country'],
+                ['state_province', 'State/Province/Region'],
+                ['city', 'City'],
+                ['postal_code', 'Postal Code'],
+            ],
         };
+
+        const statusColors = { APPROVED: '#10b981', COMPLETED: '#059669', REJECTED: '#ef4444', PENDING: '#f59e0b' };
         const statusColor = statusColors[app.status] || '#64748b';
+
+        const fieldDefs = FORM_FIELD_LABELS[app.form_type] || [];
+        const formFieldRows = fieldDefs
+            .filter(([key]) => fd[key] !== null && fd[key] !== undefined && fd[key] !== '')
+            .map(([key, label]) => `<tr><td style="font-weight:600;width:40%">${label}</td><td>${fd[key]}</td></tr>`)
+            .join('');
 
         const fileListRows = files.map(f =>
             `<tr><td>${f.file_name}</td><td>${f.file_type}</td><td>${(f.file_size / 1024).toFixed(1)} KB</td></tr>`
@@ -381,7 +504,7 @@ export default function AdminPortal() {
     .institute { font-size: 18px; font-weight: bold; color: #1e3a5f; }
     .sub-institute { font-size: 12px; color: #64748b; margin-top: 2px; }
     .app-id { font-size: 11px; font-family: monospace; color: #64748b; text-align: right; }
-    .form-title { font-size: 15px; font-weight: bold; color: #1e3a5f; text-align: right; max-width: 260px; }
+    .form-title { font-size: 15px; font-weight: bold; color: #1e3a5f; text-align: right; max-width: 280px; }
     .status-badge { display: inline-block; padding: 4px 12px; border-radius: 20px; font-size: 11px; font-weight: bold; color: white; background: ${statusColor}; margin-top: 6px; }
     .section { margin-bottom: 22px; }
     .section-title { font-size: 12px; font-weight: bold; text-transform: uppercase; letter-spacing: 0.5px; color: #2563eb; border-bottom: 1px solid #e2e8f0; padding-bottom: 6px; margin-bottom: 12px; }
@@ -390,7 +513,7 @@ export default function AdminPortal() {
     .info-item span { font-size: 13px; font-weight: 600; color: #0f172a; }
     table { width: 100%; border-collapse: collapse; font-size: 12px; }
     th { background: #f1f5f9; padding: 8px 10px; text-align: left; font-weight: 700; color: #475569; border: 1px solid #e2e8f0; }
-    td { padding: 7px 10px; border: 1px solid #e2e8f0; color: #0f172a; }
+    td { padding: 7px 10px; border: 1px solid #e2e8f0; color: #0f172a; vertical-align: top; }
     tr:nth-child(even) td { background: #f8fafc; }
     .footer { border-top: 1px solid #e2e8f0; padding-top: 12px; margin-top: 32px; font-size: 11px; color: #94a3b8; display: flex; justify-content: space-between; }
     @media print { body { padding: 20px; } }
@@ -419,6 +542,14 @@ export default function AdminPortal() {
       <div class="info-item"><label>Date of Submission</label><span>${new Date(app.created_at).toLocaleString()}</span></div>
     </div>
   </div>
+
+  ${formFieldRows ? `
+  <div class="section">
+    <div class="section-title">Form Details</div>
+    <table>
+      <tbody>${formFieldRows}</tbody>
+    </table>
+  </div>` : ''}
 
   ${files.length > 0 ? `
   <div class="section">
