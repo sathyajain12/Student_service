@@ -348,6 +348,109 @@ export default function AdminPortal() {
         }
     };
 
+    const generatePDF = (appData, details) => {
+        const app = appData;
+        const files = details.files || [];
+        const responseDocuments = details.responseDocuments || [];
+
+        const statusColors = {
+            APPROVED: '#10b981',
+            COMPLETED: '#059669',
+            REJECTED: '#ef4444',
+            PENDING: '#f59e0b'
+        };
+        const statusColor = statusColors[app.status] || '#64748b';
+
+        const fileListRows = files.map(f =>
+            `<tr><td>${f.file_name}</td><td>${f.file_type}</td><td>${(f.file_size / 1024).toFixed(1)} KB</td></tr>`
+        ).join('');
+
+        const responseListRows = responseDocuments.map(f =>
+            `<tr><td>${f.file_name}</td><td>${f.file_type}</td><td>${(f.file_size / 1024).toFixed(1)} KB</td><td>${f.uploaded_by || 'Admin'}</td></tr>`
+        ).join('');
+
+        const html = `<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>Application – ${app.id}</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: Arial, sans-serif; font-size: 13px; color: #0f172a; padding: 32px; }
+    .header { border-bottom: 3px solid #1e3a5f; padding-bottom: 16px; margin-bottom: 24px; display: flex; justify-content: space-between; align-items: flex-end; }
+    .institute { font-size: 18px; font-weight: bold; color: #1e3a5f; }
+    .sub-institute { font-size: 12px; color: #64748b; margin-top: 2px; }
+    .app-id { font-size: 11px; font-family: monospace; color: #64748b; text-align: right; }
+    .form-title { font-size: 15px; font-weight: bold; color: #1e3a5f; text-align: right; max-width: 260px; }
+    .status-badge { display: inline-block; padding: 4px 12px; border-radius: 20px; font-size: 11px; font-weight: bold; color: white; background: ${statusColor}; margin-top: 6px; }
+    .section { margin-bottom: 22px; }
+    .section-title { font-size: 12px; font-weight: bold; text-transform: uppercase; letter-spacing: 0.5px; color: #2563eb; border-bottom: 1px solid #e2e8f0; padding-bottom: 6px; margin-bottom: 12px; }
+    .info-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+    .info-item label { font-size: 11px; color: #64748b; display: block; margin-bottom: 2px; }
+    .info-item span { font-size: 13px; font-weight: 600; color: #0f172a; }
+    table { width: 100%; border-collapse: collapse; font-size: 12px; }
+    th { background: #f1f5f9; padding: 8px 10px; text-align: left; font-weight: 700; color: #475569; border: 1px solid #e2e8f0; }
+    td { padding: 7px 10px; border: 1px solid #e2e8f0; color: #0f172a; }
+    tr:nth-child(even) td { background: #f8fafc; }
+    .footer { border-top: 1px solid #e2e8f0; padding-top: 12px; margin-top: 32px; font-size: 11px; color: #94a3b8; display: flex; justify-content: space-between; }
+    @media print { body { padding: 20px; } }
+  </style>
+</head>
+<body>
+  <div class="header">
+    <div>
+      <div class="institute">Sri Sathya Sai Institute of Higher Learning</div>
+      <div class="sub-institute">Office of the Controller of Examinations</div>
+    </div>
+    <div style="text-align:right">
+      <div class="form-title">${app.form_type}</div>
+      <div class="app-id">App ID: ${app.id}</div>
+      <span class="status-badge">${app.status}</span>
+    </div>
+  </div>
+
+  <div class="section">
+    <div class="section-title">Applicant Information</div>
+    <div class="info-grid">
+      <div class="info-item"><label>Full Name</label><span>${app.applicant_name || 'N/A'}</span></div>
+      <div class="info-item"><label>Registration Number</label><span>${app.reg_no || 'N/A'}</span></div>
+      <div class="info-item"><label>Campus</label><span>${app.campus || 'N/A'}</span></div>
+      <div class="info-item"><label>Email Address</label><span>${app.student_email || 'N/A'}</span></div>
+      <div class="info-item"><label>Date of Submission</label><span>${new Date(app.created_at).toLocaleString()}</span></div>
+    </div>
+  </div>
+
+  ${files.length > 0 ? `
+  <div class="section">
+    <div class="section-title">Student Submitted Documents</div>
+    <table>
+      <thead><tr><th>File Name</th><th>Type</th><th>Size</th></tr></thead>
+      <tbody>${fileListRows}</tbody>
+    </table>
+  </div>` : ''}
+
+  ${responseDocuments.length > 0 ? `
+  <div class="section">
+    <div class="section-title">Response Documents (Uploaded by Admin)</div>
+    <table>
+      <thead><tr><th>File Name</th><th>Type</th><th>Size</th><th>Uploaded By</th></tr></thead>
+      <tbody>${responseListRows}</tbody>
+    </table>
+  </div>` : ''}
+
+  <div class="footer">
+    <span>Generated on ${new Date().toLocaleString()}</span>
+    <span>SSSIHL — Student Services Portal</span>
+  </div>
+</body>
+</html>`;
+
+        const printWindow = window.open('', '_blank', 'width=800,height=900');
+        printWindow.document.documentElement.innerHTML = html;
+        printWindow.focus();
+        setTimeout(() => { printWindow.print(); }, 400);
+    };
+
     const downloadFile = (fileId, fileName) => {
         fetch(`${API_URL}/admin/file/${fileId}`, {
             headers: { 'Authorization': `Bearer ${token}` }
@@ -785,16 +888,36 @@ export default function AdminPortal() {
                                     ID: {app.id}
                                 </p>
                             </div>
-                            <span style={{
-                                ...getStatusStyle(app.status),
-                                padding: '8px 16px',
-                                fontSize: '13px',
-                                display: 'flex',
-                                alignItems: 'center',
-                                gap: '6px'
-                            }}>
-                                {statusIcon} {app.status}
-                            </span>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                                <button
+                                    onClick={() => generatePDF(app, appDetails)}
+                                    style={{
+                                        padding: '8px 16px',
+                                        background: 'linear-gradient(135deg, #1e3a5f 0%, #2563eb 100%)',
+                                        color: '#ffffff',
+                                        border: 'none',
+                                        borderRadius: '8px',
+                                        cursor: 'pointer',
+                                        fontWeight: '600',
+                                        fontSize: '13px',
+                                        display: 'flex',
+                                        alignItems: 'center',
+                                        gap: '6px'
+                                    }}
+                                >
+                                    <Download size={15} /> Download PDF
+                                </button>
+                                <span style={{
+                                    ...getStatusStyle(app.status),
+                                    padding: '8px 16px',
+                                    fontSize: '13px',
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    gap: '6px'
+                                }}>
+                                    {statusIcon} {app.status}
+                                </span>
+                            </div>
                         </div>
 
                         {/* Applicant Information */}
