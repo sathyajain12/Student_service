@@ -363,6 +363,7 @@ export const FORM_CONFIGS = {
             { name: 'stateProvince', label: 'State/Province/Region', type: 'stateSelect', required: true },
             { name: 'city', label: 'City', type: 'text', required: true },
             { name: 'postalCode', label: 'Postal Code', type: 'text', required: true },
+            { name: 'separator1', label: '', type: 'separator' },
             {
                 name: 'newName',
                 label: 'Changed Name as per the Gazette notification',
