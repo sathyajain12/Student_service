@@ -77,7 +77,7 @@ function App() {
           )}
 
           {view === 'instructions' && (
-            <div className="container" style={{ maxWidth: '900px' }}>
+            <div className="container" style={{ maxWidth: '1050px' }}>
               <div className="glass-card" style={{ padding: '40px' }}>
                 {selectedConfig ? (
                   <InstructionsScreen
@@ -96,7 +96,7 @@ function App() {
           )}
 
           {view === 'form' && (
-            <div className="container" style={{ maxWidth: '900px' }}>
+            <div className="container" style={{ maxWidth: '1050px' }}>
               <div className="glass-card" style={{ padding: '40px' }}>
                 {selectedConfig ? (
                   <FormBuilder
@@ -115,7 +115,7 @@ function App() {
           )}
 
           {view === 'status' && (
-            <div className="container" style={{ maxWidth: '900px' }}>
+            <div className="container" style={{ maxWidth: '1050px' }}>
               <StatusTracker onBack={handleBackToPortal} />
             </div>
           )}
