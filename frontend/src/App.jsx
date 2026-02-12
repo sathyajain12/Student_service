@@ -34,6 +34,10 @@ function App() {
     return () => clearTimeout(timer);
   }, []);
 
+  useEffect(() => {
+    window.scrollTo(0, 0);
+  }, [view]);
+
   const selectedConfig = FORM_CONFIGS[currentFormId];
 
   const handleSelectForm = (id) => {

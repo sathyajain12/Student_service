@@ -231,7 +231,7 @@ export const FORM_CONFIGS = {
             },
             {
                 name: 'yearOforiginalDegree',
-                label: 'Year of Original Degree Issue',
+                label: 'Year of Original Degree Certificate Issue',
                 type: 'date',
                 required: true
             },
