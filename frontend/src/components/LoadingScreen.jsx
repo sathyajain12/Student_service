@@ -2,7 +2,7 @@ import React from 'react';
 import { Loader2, Sparkles } from 'lucide-react';
 
 export default function LoadingScreen() {
-    const logoUrl = "/Examinations_Service.png";
+    const logoUrl = "/logo.png";
 
     return (
         <div className="loading-overlay">
@@ -65,7 +65,7 @@ export default function LoadingScreen() {
                         WebkitTextFillColor: 'transparent',
                         fontWeight: '800'
                     }}>
-                        Examination Services
+                        SSSIHL-Examination Services
                     </h2>
                     <p style={{
                         color: 'var(--text-muted)',
