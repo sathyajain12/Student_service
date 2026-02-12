@@ -75,9 +75,22 @@ export default function InstructionsScreen({ config, onProceed, onCancel }) {
                         <div style={{ display: 'flex', alignItems: 'flex-start', gap: '10px', marginBottom: config.descriptionLink ? '8px' : '0' }}>
                             <span style={{ color: '#d97706', fontSize: '1rem', marginTop: '1px', flexShrink: 0 }}>•</span>
                             <p style={{ color: '#92400e', fontSize: '0.95rem', lineHeight: '1.5', margin: 0, fontWeight: '500' }}>
-                                {config.description.startsWith('Note:') ? (
-                                    <><span style={{ fontWeight: '700' }}>Note:</span>{config.description.slice(5)}</>
-                                ) : config.description}
+                                {(() => {
+                                    let text = config.description;
+                                    const isNote = text.startsWith('Note:');
+                                    const notePrefix = isNote ? <span style={{ fontWeight: '700' }}>Note:</span> : null;
+                                    if (isNote) text = text.slice(5);
+
+                                    const parts = text.split(/(\[.*?\]\(.*?\))/g);
+                                    const rendered = parts.map((part, i) => {
+                                        const linkMatch = part.match(/^\[(.*?)\]\((.*?)\)$/);
+                                        if (linkMatch) {
+                                            return <a key={i} href={linkMatch[2]} target="_blank" rel="noopener noreferrer" style={{ color: '#1d4ed8', fontWeight: '600', textDecoration: 'underline' }}>{linkMatch[1]}</a>;
+                                        }
+                                        return part;
+                                    });
+                                    return <>{notePrefix}{rendered}</>;
+                                })()}
                             </p>
                         </div>
                     )}
