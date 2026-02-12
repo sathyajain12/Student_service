@@ -202,9 +202,9 @@ export const FORM_CONFIGS = {
         description: 'This form is applicable only to students belonging to batches up to and including 2020. Students from 2021 batch onwards can download their Duplicate Degree Certificate from [DigiLocker](https://accounts.digilocker.gov.in/v3/7b9f84c86732efd21cd8076ff06f3fd60b1fbe146732fa57444b03b35f3740a4--en).',
         instructions: [
             'Before applying for a Duplicate Degree Certificate, the candidate must make all reasonable efforts to trace the Original Degree Certificate. Only after being fully satisfied that the Original Degree Certificate has been lost beyond recovery may the candidate proceed to apply for a Duplicate Degree Certificate.',
-            'In the event of loss in transit or misplacement of the Original Degree Certificate, the candidate is required to lodge a First Information Report (FIR) and obtain an official acknowledgment from the concerned police station. A scanned copy of the FIR, along with the original acknowledgment, must be uploaded through the designated form.',
-            'A press notification, in the prescribed format, must be published in a recognized daily newspaper. A scanned copy of the newspaper cutting must be uploaded',
-            'An affidavit, Sworn before a Notary Public or a First-Class Magistrate, must be enclosed in accordance with the prescribed format.',
+            'In the event of loss in transit or misplacement of the Original Degree Certificate, the candidate is required to lodge a First Information Report (FIR) and obtain an official acknowledgment from the concerned police station. A scanned copy of the FIR, along with the original acknowledgment, must be uploaded.',
+            'A press notification, in the prescribed format, must be published in a recognized daily newspaper. A scanned copy of the newspaper cutting must be uploaded.',
+            'An affidavit, sworn before a Notary Public or a First-Class Magistrate, must be enclosed in accordance with the prescribed format.',
             'The candidate must clearly state the reason for the loss of the Original Degree Certificate.',
             'Applicants are required to send a self-addressed, cloth-lined envelope – 16x12 inches in size. The Institute requires this in order to send the Duplicate Degree Certificate back to the applicant by post.',
             'The name of the applicant, along with the complete postal address, including the town/city, PIN code, district and state must be clearly written or typed on the envelope.',

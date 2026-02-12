@@ -80,8 +80,7 @@ export default function InstructionsScreen({ config, onProceed, onCancel }) {
                     borderRadius: '12px',
                 }}>
                     {config.description && (
-                        <div style={{ display: 'flex', alignItems: 'flex-start', gap: '10px', marginBottom: config.descriptionLink ? '8px' : '0' }}>
-                            <span style={{ color: '#d97706', fontSize: '1rem', marginTop: '1px', flexShrink: 0 }}>•</span>
+                        <div style={{ marginBottom: config.descriptionLink ? '8px' : '0' }}>
                             <p style={{ color: '#92400e', fontSize: '0.95rem', lineHeight: '1.5', margin: 0, fontWeight: '500' }}>
                                 {(() => {
                                     let text = config.description;
@@ -103,8 +102,7 @@ export default function InstructionsScreen({ config, onProceed, onCancel }) {
                         </div>
                     )}
                     {config.descriptionLink && (
-                        <div style={{ display: 'flex', alignItems: 'flex-start', gap: '10px' }}>
-                            <span style={{ color: '#d97706', fontSize: '1rem', marginTop: '1px', flexShrink: 0 }}>•</span>
+                        <div>
                             <p style={{ color: '#92400e', fontSize: '0.95rem', lineHeight: '1.5', margin: 0, fontWeight: '500' }}>
                                 {config.descriptionLink.text}{' '}
                                 <a href={config.descriptionLink.url} target="_blank" rel="noopener noreferrer" style={{ color: '#1d4ed8', fontWeight: '600', textDecoration: 'underline' }}>
