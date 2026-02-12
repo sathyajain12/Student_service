@@ -14,15 +14,23 @@ const formatText = (text) => {
     const lines = normalizedText.split('\n');
 
     return lines.map((line, lineIndex) => {
-        // Check for signature block pattern (Date and Student Signature on same line)
-        if (line.match(/^Date\s+Student Signature$/) || line.match(/^Date\t+Student Signature$/)) {
-            return (
-                <span key={lineIndex} style={{ display: 'flex', justifyContent: 'space-between', width: '100%' }}>
-                    <span>Date</span>
-                    <span>Student Signature</span>
-                    {lineIndex < lines.length - 1 && '\n'}
-                </span>
-            );
+        // Check for side-by-side patterns separated by tab(s) — render as flex space-between
+        if (line.includes('\t')) {
+            const sides = line.split(/\t+/).map(s => s.trim()).filter(Boolean);
+            if (sides.length === 2) {
+                const parseBold = (str) => {
+                    const parts = str.split(/(\*\*.*?\*\*)/g);
+                    return parts.map((p, i) => p.startsWith('**') && p.endsWith('**')
+                        ? <strong key={i}>{p.slice(2, -2)}</strong> : p);
+                };
+                return (
+                    <span key={lineIndex} style={{ display: 'flex', justifyContent: 'space-between', width: '100%' }}>
+                        <span>{parseBold(sides[0])}</span>
+                        <span>{parseBold(sides[1])}</span>
+                        {lineIndex < lines.length - 1 && '\n'}
+                    </span>
+                );
+            }
         }
 
         // Parse bold text within the line
