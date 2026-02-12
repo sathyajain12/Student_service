@@ -37,7 +37,7 @@ export const FORM_CONFIGS = {
             'In the event of loss in transit or misplacement of the Original Grade card, the candidate is required to lodge a First Information Report(FIR) and obtain an official acknowledgment from the concerned police station. A scanned copy of the FIR, along with the original acknowledgment, must be uploaded through the designated form.'
         ],
         titleLink: {
-            text: 'Please click here to make the payment of ₹500 using SBI Collect',
+            text: 'Please click here to make the payment of ₹500 for each Duplicate Grade Card using SBI Collect',
             url: 'https://www.onlinesbi.sbi/sbicollect/icollecthome.htm?corpID=350506&categoryName=SSSIHL%20Exams%20App%20Duplicate%20Grade%20Card'
         },
         fields: [
@@ -199,22 +199,22 @@ export const FORM_CONFIGS = {
     },
     'duplicate-degree': {
         title: 'Application for Duplicate Degree Certificate',
-        description: 'Note: This form is applicable only for students from batches before 2021. Students from 2021 batch onwards can download their duplicate degree certificate directly from [DigiLocker](https://accounts.digilocker.gov.in/v3/7b9f84c86732efd21cd8076ff06f3fd60b1fbe146732fa57444b03b35f3740a4--en).',
+        description: 'Note: This form is applicable only for students from batches before 2021. Students from 2021 batch onwards can download their Duplicate Degree Certificate from [DigiLocker](https://accounts.digilocker.gov.in/v3/7b9f84c86732efd21cd8076ff06f3fd60b1fbe146732fa57444b03b35f3740a4--en).',
         instructions: [
             'Before applying for a Duplicate Degree Certificate, the candidate must make all reasonable efforts to trace the Original Degree Certificate. Only after being fully satisfied that the Original Degree Certificate has been lost beyond recovery may the candidate proceed to apply for a Duplicate Degree Certificate.',
             'In the event of loss in transit or misplacement of the Original Degree Certificate, the candidate is required to lodge a First Information Report(FIR) and obtain an official acknowledgment from the concerned police station. A scanned copy of the FIR, along with the original acknowledgment, must be uploaded through the designated form.',
-            'A press notification, in the prescribed format, must be published in a recognized daily newspaper. A scanned copy of the newspaper cutting shall be uploaded through the designated form.',
-            'An affidavit, sworn before a Notary Public or a First-Class Magistrate, must be enclosed in accordance with the prescribed format.',
+            'A press notification, in the prescribed format, must be published in a recognized daily newspaper. A scanned copy of the newspaper cutting must be uploaded',
+            'An affidavit, Sworn before a Notary Public or a First-Class Magistrate, must be enclosed in accordance with the prescribed format.',
             'The candidate must clearly state the reason for the loss of the Original Degree Certificate.',
-            'Applicants are required to send a self-addressed, cloth-lined envelope – 16x12 inches in size along with the application. The Institute requires this in order to send the Duplicate Degree Certificate back to the applicant by post.',
-            'The name of the applicant, along with the full, complete postal address, including the town/city, PIN code, district and state must be clearly written or typed on the envelope.',
-            'Stamps totalling ₹95 must be affixed on the top right-hand corner of the envelope. This will ensure safe delivery of the document by India Post, via Registered Post with Acknowledgement Due.',
+            'Applicants are required to send a self-addressed, cloth-lined envelope – 16x12 inches in size . The Institute requires this in order to send the Duplicate Degree Certificate back to the applicant by post.',
+            'The name of the applicant, along with the full postal address, including the town/city, PIN code, district and state must be clearly written or typed on the envelope.',
+            'Stamps totalling ₹95 must be affixed to the envelope. This will ensure safe delivery of the document by India Post or Speed Post.',
             'Students of foreign nationality may affix appropriate postage for an envelope weighing 100-120 g.',
             { type: 'format', text: '**FORMAT OF THE NEWSPAPER NOTIFICATION**\n\nNotice is hereby given that the undersigned has lost the Original Degree Certificate pertaining to the _________________________________ Academic Programme, issued by Sri Sathya Sai Institute of Higher Learning. Any person who finds the said certificate is requested to return it to the undersigned without delay. Possession of the certificate despite this public notice shall be deemed unauthorized and unlawful, and the holder shall be liable for any misuse thereof.\n\nName of the Candidate:\nMobile No:\nAddress(with city and state):\n\nDate:' },
-            { type: 'format', text: '**FORMAT FOR AFFIDAVIT**\n\nI, _________________________________, daughter/son of \n_________________________________, aged ______, residing at  _________ , do hereby solemnly affirm and declare as follows:\n\n1. That the Original Degree Certificate pertaining to the _________________________________ Academic Programme, issued to me by Sri Sathya Sai Institute of Higher Learning, Prasanthi Nilayam, has been irrecoverably lost or destroyed.\n\n2. That I have made a thorough and diligent search for the said Original Degree Certificate, but despite my best efforts, I have been unable to recover it.\n\n3. That a duplicate copy of the ________ Degree Certificate is now required by me, for the purpose of\n___________________________________________________________________________\n(state clearly why the duplicate is required and where it is to be submitted or produced).\n\n4. That I understand and acknowledge that if the lost Original Degree Certificate is misused by me or by any other person into whose possession it may fall, I shall be fully liable for all consequences arising therefrom. I further undertake to indemnify and hold harmless the Institute against any loss or consequences that may arise due to any improper or unfair use of the aforesaid Degree Certificate.\n\nDate:\n\nStudent Signature:\n\n **VERIFICATION**\n\n I, the deponent above named, do hereby solemnly affirm and state that the contents of Paragraphs 1 to 4 of the above affidavit are true and correct to my knowledge, and that no part of it is false and nothing material has been concealed therein.\nSolemnly affirmed/sworn on this ______ day of _________________________________ at _________________________________\n\n **Attested and identified by me** \n\n(Signature and Seal of Notary Public / First-Class Magistrate)' }
+            { type: 'format', text: '**FORMAT FOR AFFIDAVIT**\n\nI, _________________________________, daughter / son of \n_________________________________, aged ______, residing at  _________ , do hereby solemnly affirm and declare as follows:\n\n1. That the Original Degree Certificate pertaining to the _________________________________ Academic Programme, issued to me by Sri Sathya Sai Institute of Higher Learning, Prasanthi Nilayam, has been irrecoverably lost or destroyed.\n\n2. That I have made a thorough and diligent search for the said Original Degree Certificate, but despite my best efforts, I have been unable to recover it.\n\n3. That a duplicate copy of the ________ Degree Certificate is now required by me, for the purpose of\n___________________________________________________________________________\n(state clearly why the duplicate is required and where it is to be submitted or produced).\n\n4. That I understand and acknowledge that if the lost Original Degree Certificate is misused by me or by any other person into whose possession it may fall, I shall be fully liable for all consequences arising therefrom. I further undertake to indemnify and hold harmless the Institute against any loss or consequences that may arise due to any improper or unfair use of the aforesaid Degree Certificate.\n\nDate:\n\nStudent Signature:\n\n **VERIFICATION**\n\n I, the deponent above named, do hereby solemnly affirm and state that the contents of Paragraphs 1 to 4 of the above affidavit are true and correct to my knowledge, and that no part of it is false and nothing  has been concealed therein.\nSolemnly affirmed / Sworn on this ______ day of _________________________________ at _________________________________\n\n **Attested and identified by me**                                                       **Signature of Deponent**\n\n(Signature and Seal of Notary Public / First-Class Magistrate)' }
         ],
         titleLink: {
-            text: 'Please click here to make the payment of ₹1000 using SBI Collect',
+            text: 'Please click here to make the payment of ₹1000 for each Duplicate Degree Certificate using SBI Collect',
             url: 'https://www.onlinesbi.sbi/sbicollect/icollecthome.htm?corpID=350506&categoryName=SSSIHL%20Exams%20App%20Duplicate%20Grade%20Cardhttps://onlinesbi.sbi.bank.in/sbicollect/icollecthome.htm'
         },
         fields: [
@@ -248,7 +248,6 @@ export const FORM_CONFIGS = {
                 name: 'reason',
                 label: 'State clearly the reason for the loss of the Original Degree Certificate.',
                 type: 'textarea',
-                description: 'This must be supported by an affidavit–see Instructions',
                 required: true
             }
         ],
@@ -270,7 +269,7 @@ export const FORM_CONFIGS = {
             },
             {
                 name: 'originalDegreeScan',
-                label: 'Original Degree Certificate (Optional)',
+                label: 'Original Degree Certificate (Scanned)',
                 required: false
 
             },
@@ -449,7 +448,7 @@ export const FORM_CONFIGS = {
         ],
 
         titleLink: {
-            text: 'Please click here to make the payment of ₹100 using SBI Collect',
+            text: 'Please click here to make the payment of ₹100 for each Re-Totalling Application using SBI Collect',
             url: 'https://www.onlinesbi.sbi/sbicollect/icollecthome.htm?corpID=350506&categoryName=SSSIHL%20Exam%20App%20%20Re-Totaling%20of%20Marks'
         },
         fields: [...COMMON_ACADEMIC_FIELDS,

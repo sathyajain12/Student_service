@@ -222,9 +222,8 @@ export default function FormBuilder({ config, onSubmit, onCancel, onTrackStatus 
                             </a>
                             <ol style={{ margin: '8px 0 0 0', paddingLeft: '20px', color: 'var(--text-muted)', fontSize: '0.85rem', lineHeight: '1.8' }}>
                                 <li>Click on the link — it will open SBI Collect homepage.</li>
-                                <li>Select <strong>"Educational Institutes"</strong> as Category.</li>
-                                <li>Search <strong>"SSSIHL-ADMN".</strong></li>
-                                <li>Select payment Category (Application name will be there in the dropdown).</li>
+                                <li>Search <strong>"SSSIHL-ADMN" it will redirect to payment page.</strong></li>
+                                <li>Select payment Category (Application name will be seen in the dropdown).</li>
                                 <li>Complete the payment process and keep your receipt for upload.</li>
                             </ol>
                         </div>
@@ -232,6 +231,9 @@ export default function FormBuilder({ config, onSubmit, onCancel, onTrackStatus 
 
                     <p style={{ color: 'var(--text-muted)', fontSize: '0.95rem', lineHeight: '1.5' }}>
                         {"Please fill in all required fields accurately to ensure smooth processing of your application."}
+                    </p>
+                    <p style={{ color: 'var(--text-muted)', fontSize: '0.85rem', marginTop: '8px' }}>
+                        Fields marked with <span style={{ color: '#ef4444', fontWeight: '700' }}>*</span> are mandatory.
                     </p>
                 </div>
             </div>
