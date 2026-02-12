@@ -11,9 +11,7 @@ import {
   Send,
   CheckCircle2,
   Info,
-  Search,
-  MapPin,
-  Phone
+  Search
 } from 'lucide-react';
 
 const FORMS = [
@@ -173,10 +171,7 @@ export default function Portal({ onSelectForm, onTrackStatus }) {
         flexWrap: 'wrap'
       }}>
         <div>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '14px' }}>
-            <MapPin size={20} />
-            <h4 style={{ fontSize: '1.05rem', fontWeight: '700', margin: 0 }}>Address</h4>
-          </div>
+          <h4 style={{ fontSize: '1.05rem', fontWeight: '700', margin: 0, marginBottom: '14px' }}>Address</h4>
           <div style={{ fontSize: '0.9rem', lineHeight: '1.7', opacity: 0.9 }}>
             <p style={{ margin: 0 }}>The Controller of Examinations</p>
             <p style={{ margin: 0 }}>Administrative Office</p>
@@ -186,10 +181,7 @@ export default function Portal({ onSelectForm, onTrackStatus }) {
           </div>
         </div>
         <div>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '14px' }}>
-            <Phone size={20} />
-            <h4 style={{ fontSize: '1.05rem', fontWeight: '700', margin: 0 }}>Contact Details</h4>
-          </div>
+          <h4 style={{ fontSize: '1.05rem', fontWeight: '700', margin: 0, marginBottom: '14px' }}>Contact Details</h4>
           <div style={{ fontSize: '0.9rem', lineHeight: '1.7', opacity: 0.9 }}>
             <p style={{ margin: 0 }}>Tel: +91 8555 287 191</p>
             <p style={{ margin: 0 }}>Email: <a href="mailto:controller@sssihl.edu.in" style={{ color: 'white', textDecoration: 'underline' }}>controller@sssihl.edu.in</a></p>
