@@ -32,28 +32,10 @@ export default function Portal({ onSelectForm, onTrackStatus }) {
       <header style={{ textAlign: 'center', marginBottom: '80px', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
         <div style={{ marginBottom: '25px', display: 'flex', justifyContent: 'center' }}>
           <img
-            src="/logo.png"
-            alt="SSSIHL Logo"
-            style={{ width: '100px', height: '100px', objectFit: 'contain' }}
+            src="/Examinations_Service.png"
+            alt="SSSIHL Examination Services"
+            style={{ maxWidth: '100%', height: 'auto', objectFit: 'contain' }}
           />
-        </div>
-        <h1 className="title-gradient" style={{ fontSize: '3.8rem', marginBottom: '8px', lineHeight: '1.15' }}>
-          Sri Sathya Sai Institute of Higher Learning
-        </h1>
-        <p style={{ color: 'var(--text-muted)', fontSize: '1.1rem', fontWeight: '500', marginBottom: '20px', fontStyle: 'italic' }}>
-          (Deemed to be University)
-        </p>
-        <div style={{
-          display: 'inline-block',
-          padding: '12px 32px',
-          background: 'var(--accent-gradient)',
-          borderRadius: '12px',
-          marginBottom: '10px',
-          boxShadow: '0 8px 16px -4px rgba(37, 99, 235, 0.3)'
-        }}>
-          <p style={{ color: 'white', fontSize: '1.5rem', fontWeight: '700', margin: 0, letterSpacing: '0.02em' }}>
-            Examination Services Portal
-          </p>
         </div>
 
 
