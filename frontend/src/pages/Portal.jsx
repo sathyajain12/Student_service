@@ -87,37 +87,6 @@ export default function Portal({ onSelectForm, onTrackStatus }) {
         </div>
       </div>
 
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '30px', marginBottom: '60px' }}>
-        <div className="glass-card" style={{ padding: '30px', position: 'relative', overflow: 'hidden' }}>
-          <div style={{ position: 'absolute', top: 0, left: 0, width: '4px', height: '100%', background: 'var(--accent-gradient)' }}></div>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '20px' }}>
-            <MapPin size={22} color="var(--accent)" />
-            <h3 style={{ fontSize: '1.2rem', color: 'var(--accent)' }}>Address</h3>
-          </div>
-          <div style={{ color: 'var(--text-main)', fontSize: '0.95rem', fontWeight: '500', lineHeight: '1.8' }}>
-            <p style={{ margin: 0 }}>The Controller of Examinations</p>
-            <p style={{ margin: 0 }}>Administrative Office</p>
-            <p style={{ margin: 0 }}>Sri Sathya Sai Institute of Higher Learning</p>
-            <p style={{ margin: 0 }}>Prasanthi Nilayam – 515134</p>
-            <p style={{ margin: 0 }}>Sri Sathya Sai District</p>
-            <p style={{ margin: 0 }}>Andhra Pradesh</p>
-          </div>
-        </div>
-
-        <div className="glass-card" style={{ padding: '30px', position: 'relative', overflow: 'hidden' }}>
-          <div style={{ position: 'absolute', top: 0, left: 0, width: '4px', height: '100%', background: 'var(--accent-gradient)' }}></div>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '20px' }}>
-            <Phone size={22} color="var(--accent)" />
-            <h3 style={{ fontSize: '1.2rem', color: 'var(--accent)' }}>Contact Details</h3>
-          </div>
-          <div style={{ color: 'var(--text-main)', fontSize: '0.95rem', fontWeight: '500', lineHeight: '1.8' }}>
-            <p style={{ margin: 0 }}>Tel: +91 8555 287 191</p>
-            <p style={{ margin: 0 }}>Email: <a href="mailto:controller@sssihl.edu.in" style={{ color: 'var(--accent)', textDecoration: 'underline' }}>controller@sssihl.edu.in</a></p>
-            <p style={{ margin: 0 }}>Web: <a href="https://sssihl.edu.in" target="_blank" rel="noopener noreferrer" style={{ color: 'var(--accent)', textDecoration: 'underline' }}>sssihl.edu.in</a></p>
-          </div>
-        </div>
-      </div>
-
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(340px, 1fr))', gap: '30px' }}>
         {FORMS.map((form) => {
           const Icon = form.Icon;
@@ -190,6 +159,44 @@ export default function Portal({ onSelectForm, onTrackStatus }) {
           );
         })}
       </div>
+
+      <footer style={{
+        marginTop: '80px',
+        padding: '35px 40px',
+        background: 'var(--accent-gradient)',
+        borderRadius: '20px',
+        color: 'white',
+        display: 'flex',
+        justifyContent: 'space-between',
+        alignItems: 'flex-start',
+        gap: '40px',
+        flexWrap: 'wrap'
+      }}>
+        <div>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '14px' }}>
+            <MapPin size={20} />
+            <h4 style={{ fontSize: '1.05rem', fontWeight: '700', margin: 0 }}>Address</h4>
+          </div>
+          <div style={{ fontSize: '0.9rem', lineHeight: '1.7', opacity: 0.9 }}>
+            <p style={{ margin: 0 }}>The Controller of Examinations</p>
+            <p style={{ margin: 0 }}>Administrative Office</p>
+            <p style={{ margin: 0 }}>Sri Sathya Sai Institute of Higher Learning</p>
+            <p style={{ margin: 0 }}>Prasanthi Nilayam – 515134</p>
+            <p style={{ margin: 0 }}>Sri Sathya Sai District, Andhra Pradesh</p>
+          </div>
+        </div>
+        <div>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '14px' }}>
+            <Phone size={20} />
+            <h4 style={{ fontSize: '1.05rem', fontWeight: '700', margin: 0 }}>Contact Details</h4>
+          </div>
+          <div style={{ fontSize: '0.9rem', lineHeight: '1.7', opacity: 0.9 }}>
+            <p style={{ margin: 0 }}>Tel: +91 8555 287 191</p>
+            <p style={{ margin: 0 }}>Email: <a href="mailto:controller@sssihl.edu.in" style={{ color: 'white', textDecoration: 'underline' }}>controller@sssihl.edu.in</a></p>
+            <p style={{ margin: 0 }}>Web: <a href="https://sssihl.edu.in" target="_blank" rel="noopener noreferrer" style={{ color: 'white', textDecoration: 'underline' }}>sssihl.edu.in</a></p>
+          </div>
+        </div>
+      </footer>
     </div >
   );
 }
