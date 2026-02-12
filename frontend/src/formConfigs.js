@@ -199,8 +199,7 @@ export const FORM_CONFIGS = {
     },
     'duplicate-degree': {
         title: 'Application for Duplicate Degree Certificate',
-        description: 'Note: This form is applicable only for students from batches before 2021. Students from 2021 batch onwards can download their duplicate degree certificate directly from DigiLocker.',
-        descriptionLink: { text: 'To download your Duplicate Degree Certificate,', linkText: 'please click here', url: 'https://accounts.digilocker.gov.in/v3/7b9f84c86732efd21cd8076ff06f3fd60b1fbe146732fa57444b03b35f3740a4--en' },
+        description: 'This form is applicable only for students from batches before 2021. Students from 2021 batch onwards can download their duplicate degree certificate from ',linkText: 'DigiLocker.',url:'https://accounts.digilocker.gov.in/v3/7b9f84c86732efd21cd8076ff06f3fd60b1fbe146732fa57444b03b35f3740a4--en',
         instructions: [
             'Before applying for a Duplicate Degree Certificate, the candidate must make all reasonable efforts to trace the Original Degree Certificate. Only after being fully satisfied that the Original Degree Certificate has been lost beyond recovery may the candidate proceed to apply for a Duplicate Degree Certificate.',
             'In the event of loss in transit or misplacement of the Original Degree Certificate, the candidate is required to lodge a First Information Report(FIR) and obtain an official acknowledgment from the concerned police station. A scanned copy of the FIR, along with the original acknowledgment, must be uploaded through the designated form.',
