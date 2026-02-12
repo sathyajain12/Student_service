@@ -54,6 +54,10 @@ function App() {
     setView('portal');
   };
 
+  const handleBackToInstructions = () => {
+    setView('instructions');
+  };
+
   // Admin portal (no loading screen)
   if (view === 'admin') {
     return <AdminPortal />;
@@ -97,7 +101,7 @@ function App() {
                 {selectedConfig ? (
                   <FormBuilder
                     config={selectedConfig}
-                    onCancel={handleBackToPortal}
+                    onCancel={handleBackToInstructions}
                     onTrackStatus={() => setView('status')}
                   />
                 ) : (
