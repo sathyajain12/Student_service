@@ -206,7 +206,7 @@ export const FORM_CONFIGS = {
             'A press notification, in the prescribed format, must be published in a recognized daily newspaper. A scanned copy of the newspaper cutting must be uploaded',
             'An affidavit, Sworn before a Notary Public or a First-Class Magistrate, must be enclosed in accordance with the prescribed format.',
             'The candidate must clearly state the reason for the loss of the Original Degree Certificate.',
-            'Applicants are required to send a self-addressed, cloth-lined envelope – 16x12 inches in size . The Institute requires this in order to send the Duplicate Degree Certificate back to the applicant by post.',
+            'Applicants are required to send a self-addressed, cloth-lined envelope – 16x12 inches in size. The Institute requires this in order to send the Duplicate Degree Certificate back to the applicant by post.',
             'The name of the applicant, along with the full postal address, including the town/city, PIN code, district and state must be clearly written or typed on the envelope.',
             'Stamps totalling ₹95 must be affixed to the envelope. This will ensure safe delivery of the document by India Post or Speed Post.',
             'Students of foreign nationality may affix appropriate postage for an envelope weighing 100-120 g.',
@@ -259,7 +259,7 @@ export const FORM_CONFIGS = {
             },
             {
                 name: 'pressNotification',
-                label: 'Press Notification/Advertisement',
+                label: 'Press Notification / Advertisement',
                 required: true
             },
             {

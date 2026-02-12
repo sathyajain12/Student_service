@@ -233,7 +233,7 @@ export default function FormBuilder({ config, onSubmit, onCancel, onTrackStatus 
                         {"Please fill in all required fields accurately to ensure smooth processing of your application."}
                     </p>
                     <p style={{ color: 'var(--text-muted)', fontSize: '0.85rem', marginTop: '8px' }}>
-                        Fields marked with <span style={{ color: '#ef4444', fontWeight: '700' }}>*</span> are mandatory.
+                        <strong>Fields marked with <span style={{ color: '#ef4444', fontWeight: '700' }}>*</span> are mandatory.</strong>
                     </p>
                 </div>
             </div>
