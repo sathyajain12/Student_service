@@ -2101,6 +2101,7 @@ async function handleStatusRequest(url, env, corsHeaders) {
 
         return new Response(JSON.stringify({
             ...app,
+            needs_director_approval: shouldNotifyDirector(app.form_type),
             responseDocuments: responseFiles.results || []
         }), {
             headers: { ...corsHeaders, 'Content-Type': 'application/json' }

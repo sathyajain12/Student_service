@@ -27,12 +27,12 @@ export const FORM_CONFIGS = {
             'Before applying for a Duplicate Grade Card, the applicant must make all reasonable efforts to trace the Original Grade Card. Only after being fully satisfied that the Original Grade Card has been lost beyond recovery may the candidate proceed to apply for a Duplicate Grade Card.',
             'In the event of loss in transit or misplacement of the Original Grade Card, the candidate is required to lodge a police complaint and obtain an official acknowledgment from the concerned police station. A scanned copy of the police complaint, along with the original acknowledgment, must be uploaded.',
             'An affidavit, sworn before a Notary Public or a First-Class Magistrate, in accordance with the prescribed format, must be uploaded.',
-            { type: 'format', text: '**AFFIDAVIT FOR DUPLICATE GRADE CARD**\\n**To be sworn before a Notary Public / First-Class Magistrate**\\n\\nI, _________________________ (Name), son/daughter of _________________________, Registration Number _________________________, do hereby solemnly affirm and declare that:\\n\\n1. I am a bonafide student/alumnus of Sri Sathya Sai Institute of Higher Learning, Prasanthi Nilayam.\\n2. The Institute had issued me the Original Grade Card for Semester _______ of Programme _________________________, bearing Registration Number _________________________.\\n3. The said Original Grade Card has been lost whilst in my possession despite exercising due care.\\n4. I have applied to the Institute for issuance of a Duplicate Grade Card.\\n5. I hereby undertake that:\\n   - If the Original Grade Card is recovered by me at any time, I shall immediately surrender it to the Institute.\\n   - I shall be solely responsible for any misuse of the lost Original Grade Card.\\n6. The statements made herein are true to the best of my knowledge and belief.\n\nDate:\n\nStudent Signature:\n\n**VERIFICATION**\n\nI, the deponent above named, do hereby solemnly affirm and state that the contents of the above affidavit are true and correct to my knowledge, and that no part of it is false and nothing  has been concealed therein.\nSolemnly affirmed / Sworn on this ______ day of _________________________________ at _________________________________\n\n **Attested and identified by me**\t**Signature of Deponent**\n\n(Signature and Seal of Notary Public / First-Class Magistrate)' },
-            'Applicants are required to send a self-addressed, cloth-lined envelope  – 16x12 inches in size. The Institute requires this in order to send the Duplicate Grade Card back to the applicant by Speed Post service of India Post.',
+            { type: 'format', text: '**AFFIDAVIT FOR DUPLICATE GRADE CARD**\\n**To be sworn before a Notary Public / First-Class Magistrate**\\n\\nI, _________________________ (Name), son/daughter of _________________________, Registered Number _________________________, do hereby solemnly affirm and declare that:\\n\\n1. I am a bonafide student/alumnus of Sri Sathya Sai Institute of Higher Learning, Prasanthi Nilayam.\\n2. The Institute had issued me the Original Grade Card for Semester _______ of Programme _________________________, bearing Registration Number _________________________.\\n3. The said Original Grade Card has been lost whilst in my possession despite exercising due care.\\n4. I have applied to the Institute for issuance of a Duplicate Grade Card.\\n5. I hereby undertake that:\\n   - If the Original Grade Card is recovered by me at any time, I shall immediately surrender it to the Institute.\\n   - I shall be solely responsible for any misuse of the lost Original Grade Card.\\n6. The statements made herein are true to the best of my knowledge and belief.\n\nDate:\n\nStudent Signature:\n\n**VERIFICATION**\n\nI, the deponent above named, do hereby solemnly affirm and state that the contents of the above affidavit are true and correct to my knowledge and belief, and that no part of it is false and nothing  has been concealed therein.\nSolemnly affirmed / Sworn on this ______ day of _________________________________ at _________________________________\n\n **Attested and identified by me**\t**Signature of Deponent**\n\n(Signature and Seal of Notary Public / First-Class Magistrate)' },
+            'Applicants are required to send a self-addressed, cloth-lined envelope – 16x12 inches in size to the following address. The Institute requires this in order to send the Duplicate Grade Card to the applicant by Speed Post service of India Post.\n\n**The Controller of Examinations**\n**Administrative Office**\n**Sri Sathya Sai Institute of Higher Learning**\n**Prasanthi Nilayam – 515134**\n**Sri Sathya Sai District, Andhra Pradesh**',
             'The name of the applicant, along with the complete postal address, including the town / city, PIN code, district and state must be clearly written or typed on the envelope.',
             'Stamps totalling ₹95 must be affixed to the envelope. This will ensure safe delivery of the document by Speed Post service of India Post.',
             'Students of foreign nationality may affix appropriate postage for an envelope weighing 100-120 g.',
-            
+            'Once the application is submitted, the applicant must wait for the Director\'s approval. Only after the Director approves the application will the Examination Section process it further. The applicant can track the status of the application using the Application ID provided at the time of submission.',
         ],
         titleLink: {
             text: 'Please click here to make the payment of ₹500 for each Duplicate Grade Card using SBI Collect',
@@ -60,7 +60,7 @@ export const FORM_CONFIGS = {
         files: [
             { name: 'policeComplaint', label: 'Police Complaint', required: true },
             { name: 'affidavit', label: 'Sworn Affidavit', required: true },
-            { name: 'sbiReceipt', label: 'SBI Collect Receipt (₹500) for each duplicate grade card', required: true },
+            { name: 'sbiReceipt', label: 'SBI Collect Receipt (₹500)', required: true },
             { name: 'gradeCard', label: 'Original Grade Card  (SCAN COPY IF AVAILABLE)', required: false }
             
         ]
@@ -205,7 +205,7 @@ export const FORM_CONFIGS = {
             'A press notification, in the prescribed format, must be published in a recognized daily newspaper. A scanned copy of the newspaper cutting must be uploaded.',
             'An affidavit, sworn before a Notary Public or a First-Class Magistrate, in accordance with the prescribed format, must be uploaded.',
             'The applicant must clearly state the reason for the loss of the Original Degree Certificate.',
-            'Applicants are required to send a self-addressed, cloth-lined envelope – 16x12 inches in size. The Institute requires this in order to send the Duplicate Degree Certificate to the applicant by post.',
+            'Applicants are required to send a self-addressed, cloth-lined envelope – 16x12 inches in size to the following address. The Institute requires this in order to send the Duplicate Degree Certificate to the applicant by post.\n\n**The Controller of Examinations**\n**Administrative Office**\n**Sri Sathya Sai Institute of Higher Learning**\n**Prasanthi Nilayam – 515134**\n**Sri Sathya Sai District, Andhra Pradesh**',
             'The name of the applicant, along with the complete postal address, including the town / city, PIN code, district and state must be clearly written or typed on the envelope.',
             'Stamps totalling ₹95 must be affixed to the envelope. This will ensure safe delivery of the document by Speed Post service of India Post.  ',
             'Students of foreign nationality may affix appropriate postage for an envelope weighing 100-120 g.',
@@ -274,7 +274,7 @@ export const FORM_CONFIGS = {
             },
             {
                 name: 'sbiReceipt',
-                label: 'SBI Collect Receipt (₹1000)  FOR EACH DUPLICATE DEGREE CERTIFICATE',
+                label: 'SBI Collect Receipt (₹1000)',
                 required: true
             },
         ],
