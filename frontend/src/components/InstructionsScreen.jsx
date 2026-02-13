@@ -13,6 +13,7 @@ import {
 
 // Helper function to parse **bold** text and signature blocks
 const formatText = (text) => {
+    if (!text || typeof text !== 'string') return text;
     // First, convert literal \n strings to actual newlines, then split
     const normalizedText = text.replace(/\\n/g, '\n');
     const lines = normalizedText.split('\n');
@@ -136,9 +137,11 @@ export default function InstructionsScreen({ config, onProceed, onCancel }) {
 
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
                     {instructions.map((instruction, index) => {
-                        const isFormat = typeof instruction === 'object' && instruction.type === 'format';
-                        const isTextWithFormat = typeof instruction === 'object' && instruction.type === 'textWithFormat';
-                        const text = isFormat ? instruction.text : (isTextWithFormat ? instruction.text : instruction);
+                        const isObject = typeof instruction === 'object' && instruction !== null;
+                        const isFormat = isObject && instruction.type === 'format';
+                        const isTextWithFormat = isObject && instruction.type === 'textWithFormat';
+                        const isAddress = isObject && instruction.type === 'address';
+                        const text = isObject ? instruction.text : instruction;
 
                         return (
                             <div key={index} style={{ display: 'flex', alignItems: 'flex-start', gap: '14px' }}>
@@ -202,7 +205,7 @@ export default function InstructionsScreen({ config, onProceed, onCancel }) {
                                             {formatText(instruction.format)}
                                         </div>
                                     </div>
-                                ) : (typeof instruction === 'object' && instruction.type === 'address') ? (
+                                ) : isAddress ? (
                                     <div style={{ flex: 1 }}>
                                         <p style={{
                                             color: 'var(--text-main)',
