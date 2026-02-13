@@ -189,6 +189,38 @@ export default function FormBuilder({ config, onSubmit, onCancel, onTrackStatus 
         }
     };
 
+    const handleSeekDirectorApproval = async (e) => {
+        e.preventDefault();
+        setLoading(true);
+        setStatus({ type: 'info', message: 'Sending your application to the Director for approval...' });
+
+        const bundle = new FormData();
+        bundle.append('formId', config.id);
+        bundle.append('formType', config.title);
+        bundle.append('submissionType', 'seek-director-approval');
+        Object.entries(formData).forEach(([k, v]) => bundle.append(k, v));
+        Object.entries(files).forEach(([k, v]) => bundle.append(k, v));
+
+        try {
+            const backendUrl = import.meta.env.VITE_BACKEND_URL || 'http://localhost:8787';
+            const response = await fetch(`${backendUrl}/submit`, {
+                method: 'POST',
+                body: bundle
+            });
+            const result = await response.json();
+
+            if (result.success) {
+                setStatus({ type: 'success', message: `Application sent to Director for approval! Your Application ID: ${result.appId}. You will receive an email once the Director responds. After approval, return to the Status Tracker to submit your application to COE.` });
+            } else {
+                throw new Error(result.error || 'Submission failed');
+            }
+        } catch (err) {
+            setStatus({ type: 'error', message: err.message });
+        } finally {
+            setLoading(false);
+        }
+    };
+
     return (
         <div className="animate-fade-in">
             <div style={{ display: 'flex', alignItems: 'flex-start', gap: '15px', marginBottom: '40px' }}>
@@ -238,7 +270,7 @@ export default function FormBuilder({ config, onSubmit, onCancel, onTrackStatus 
                 </div>
             </div>
 
-            <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '5px' }}>
+            <form onSubmit={config.needsDirectorApproval ? handleSeekDirectorApproval : handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '5px' }}>
                 {config.fields.map(field => (
                     <div key={field.name} className={field.type === 'heading' || field.type === 'paragraph' || field.type === 'separator' ? '' : 'form-group'}>
                         {field.type === 'separator' ? (
@@ -804,7 +836,7 @@ export default function FormBuilder({ config, onSubmit, onCancel, onTrackStatus 
                                     className="btn-primary"
                                     style={{ padding: '10px 20px', fontSize: '0.9rem' }}
                                 >
-                                    Track Status Now
+                                    {config.needsDirectorApproval ? 'Go to Status Tracker' : 'Track Status Now'}
                                 </button>
                                 <button
                                     type="button"
@@ -819,11 +851,29 @@ export default function FormBuilder({ config, onSubmit, onCancel, onTrackStatus 
                     </div>
                 )}
 
-                <div style={{ display: 'flex', gap: '15px', marginTop: '10px' }}>
-                    <button type="submit" className="btn-primary" disabled={loading} style={{ flexGrow: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '10px' }}>
-                        {loading && <Loader2 size={18} className="animate-spin" />}
-                        {loading ? 'Processing...' : 'Submit Application'}
-                    </button>
+                <div style={{ display: 'flex', gap: '15px', marginTop: '10px', flexWrap: 'wrap' }}>
+                    {config.needsDirectorApproval ? (
+                        <>
+                            <button type="submit" className="btn-primary" disabled={loading} style={{ flexGrow: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '10px' }}>
+                                {loading && <Loader2 size={18} className="animate-spin" />}
+                                {loading ? 'Sending to Director...' : "Seek Director's Approval"}
+                            </button>
+                            <button
+                                type="button"
+                                className="btn-secondary"
+                                disabled={true}
+                                title="Submit to COE will be available after Director's approval. Use the Status Tracker."
+                                style={{ flexGrow: 1, opacity: 0.5, cursor: 'not-allowed' }}
+                            >
+                                Submit to COE (After Director Approval)
+                            </button>
+                        </>
+                    ) : (
+                        <button type="submit" className="btn-primary" disabled={loading} style={{ flexGrow: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '10px' }}>
+                            {loading && <Loader2 size={18} className="animate-spin" />}
+                            {loading ? 'Processing...' : 'Submit Application'}
+                        </button>
+                    )}
                     <button type="button" onClick={onCancel} className="btn-secondary">
                         Cancel
                     </button>

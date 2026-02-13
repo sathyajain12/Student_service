@@ -20,6 +20,7 @@ const COMMON_ACADEMIC_FIELDS = [
 
 export const FORM_CONFIGS = {
     'duplicate-grade-card': {
+        needsDirectorApproval: true,
         title: 'Application for Duplicate Grade Card',
         description: 'This form is applicable only to students belonging to batches up to and including 2020. Students from 2021 batch onwards can download their Duplicate Grade Cards from [DigiLocker](https://accounts.digilocker.gov.in/v3/7b9f84c86732efd21cd8076ff06f3fd60b1fbe146732fa57444b03b35f3740a4--en).',
         
@@ -139,6 +140,7 @@ export const FORM_CONFIGS = {
         ]
     },
     'supplementary-exam': {
+        needsDirectorApproval: true,
         title: 'Application for End-Semester Supplementary Examinations Registration',
         instructions: [
             'This form is for students who need to appear for supplementary examinations.',
@@ -288,6 +290,7 @@ export const FORM_CONFIGS = {
         ]
     },
     'name-change': {
+        needsDirectorApproval: true,
         title: 'Application for Registration of Student Name change in the Institute Records',
         instructions: [
             'A fee of ₹500 must be paid via SBI Collect before submission. To make the payment: Click on the SBI Collect link provided, which will open the SBI Collect homepage. Select "Educational Institutes" as the Category. Search for "SSSIHL-ADMN" in the search field. Select the appropriate Payment Category. In the payment category dropdown, select the application name for which you are applying (Change of Name). Complete the payment process and keep your receipt for upload.',
@@ -379,6 +382,7 @@ export const FORM_CONFIGS = {
         ]
     },
     'repeat-paper': {
+        needsDirectorApproval: true,
         title: 'Application for repeating a paper for supplementary examinations (CIE and ESE)',
         description: 'FOR THOSE WHO HAVE EXHAUSTED SUPPLEMENTARY EXAMINATION CHANCES',
         instructions: [

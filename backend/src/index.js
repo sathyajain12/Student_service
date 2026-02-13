@@ -45,6 +45,10 @@ export default {
                 return await handleApproval(url, env, corsHeaders);
             }
 
+            if (url.pathname === '/submit-to-coe' && request.method === 'POST') {
+                return await handleSubmitToCOE(request, env, corsHeaders);
+            }
+
             if (url.pathname === '/status' && request.method === 'GET') {
                 return await handleStatusRequest(url, env, corsHeaders);
             }
@@ -454,10 +458,10 @@ async function handleDeleteApplication(id, request, env, corsHeaders) {
         const formTableMap = {
             'Application for Duplicate Grade Card': 'form_duplicate_grade_card',
             'Application for CGPA to Marks Conversion': 'form_cgpa_conversion',
-            'Application for End-Semester Supplementary Examinations': 'form_supplementary_exam',
+            'Application for End-Semester Supplementary Examinations Registration': 'form_supplementary_exam',
             'Application for Duplicate Degree Certificate': 'form_duplicate_degree',
             'Application for Registration of Student Name change in the Institute Records': 'form_name_change',
-            'Application for repeating a paper for supplementary examinations(CIE and ESE)': 'form_repeat_paper',
+            'Application for repeating a paper for supplementary examinations (CIE and ESE)': 'form_repeat_paper',
             'Application for Re-Totalling of Marks': 'form_retotaling',
             'Application for On-Request Degree Certificate': 'form_on_request_degree',
             'Application for Migration Certificate': 'form_migration_certificate',
@@ -685,9 +689,9 @@ function getDirectorEmail(campus) {
 function shouldNotifyDirector(formType) {
     const forms = [
         'Application for Duplicate Grade Card',
-        'Application for End-Semester Supplementary Examinations',
+        'Application for End-Semester Supplementary Examinations Registration',
         'Application for Registration of Student Name change in the Institute Records',
-        'Application for repeating a paper for supplementary examinations(CIE and ESE)',
+        'Application for repeating a paper for supplementary examinations (CIE and ESE)',
     ];
     return forms.includes(formType);
 }
@@ -767,12 +771,15 @@ function getStudentEmailSubject(formType, appId, isApproved) {
 }
 
 function generateStudentEmailHTML(verification, isApproved, portalUrl) {
+    const needsTwoStep = shouldNotifyDirector(verification.form_type);
     const statusColor = isApproved ? '#059669' : '#dc2626';
     const statusBgColor = isApproved ? '#d1fae5' : '#fee2e2';
     const statusText = isApproved ? 'APPROVED' : 'REJECTED';
-    const heading = isApproved ? 'Application Approved' : 'Application Status Update';
+    const heading = isApproved ? 'Application Approved by Director' : 'Application Status Update';
     const message = isApproved
-        ? 'We are pleased to inform you that your application has been approved by the Director.'
+        ? (needsTwoStep
+            ? 'Your application has been approved by the Director. Please return to the portal to complete your submission to the Controller of Examinations (COE).'
+            : 'We are pleased to inform you that your application has been approved by the Director.')
         : 'Your application status has been updated. Please see the details below.';
 
     const submissionDate = verification.created_at
@@ -860,9 +867,15 @@ function generateStudentEmailHTML(verification, isApproved, portalUrl) {
                                 <h3 style="margin: 0 0 12px 0; color: #1e40af; font-size: 16px; font-weight: 600;">Next Steps</h3>
                                 <ul style="margin: 0; padding-left: 20px; color: #1e40af; font-size: 14px; line-height: 1.8;">
                                     ${isApproved
-            ? `<li>Your request is being processed by the Examination Department</li>
+            ? (needsTwoStep
+                ? `<li>Your Director has approved your application</li>
+                                           <li>Please visit the portal and go to <strong>"Track Application"</strong></li>
+                                           <li>Enter your Application ID: <strong>${verification.id}</strong></li>
+                                           <li>Click <strong>"Submit to COE"</strong> to complete your submission</li>
+                                           <li>Portal: <a href="${portalUrl}#track" style="color: #2563eb; text-decoration: none; font-weight: 600;">${portalUrl}#track</a></li>`
+                : `<li>Your request is being processed by the Examination Department</li>
                                            <li>You will receive further updates via email</li>
-                                           <li>Track your application status anytime at: <a href="${portalUrl}" style="color: #2563eb; text-decoration: none; font-weight: 600;">${portalUrl}</a></li>`
+                                           <li>Track your application status anytime at: <a href="${portalUrl}" style="color: #2563eb; text-decoration: none; font-weight: 600;">${portalUrl}</a></li>`)
             : `<li>For queries or clarifications, please contact: <a href="mailto:examination@sssihl.edu.in" style="color: #2563eb; text-decoration: none;">examination@sssihl.edu.in</a></li>
                                            <li>Track your application status: <a href="${portalUrl}" style="color: #2563eb; text-decoration: none; font-weight: 600;">${portalUrl}</a></li>`
         }
@@ -1104,6 +1117,49 @@ async function sendStudentConfirmationEmail(env, appId, formType, applicantName,
     }
 }
 
+async function sendDirectorSoughtConfirmationEmail(env, appId, formType, applicantName, email, campus) {
+    if (!email) return;
+    try {
+        const accessToken = await getGoogleAuth(env);
+        const subject = `Director Approval Requested - ${formType} - ${appId}`;
+        const htmlBody = `
+            <div style="font-family: 'Segoe UI', Arial, sans-serif; max-width: 600px; margin: 0 auto; background: #ffffff;">
+                <div style="background: linear-gradient(135deg, #1e3a5f 0%, #2563eb 100%); padding: 30px; text-align: center;">
+                    <h1 style="color: #ffffff; margin: 0; font-size: 22px;">Application Sent for Director's Approval</h1>
+                </div>
+                <div style="padding: 30px;">
+                    <p style="font-size: 15px; color: #334155;">Sai Ram! Dear <strong>${applicantName}</strong>,</p>
+                    <p style="font-size: 15px; color: #334155;">Your application has been successfully submitted and sent to the <strong>Director of ${campus}</strong> for approval.</p>
+
+                    <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 12px; padding: 20px; margin: 20px 0;">
+                        <p style="margin: 5px 0; font-size: 14px;"><strong>Application ID:</strong> ${appId}</p>
+                        <p style="margin: 5px 0; font-size: 14px;"><strong>Form Type:</strong> ${formType}</p>
+                        <p style="margin: 5px 0; font-size: 14px;"><strong>Campus:</strong> ${campus}</p>
+                    </div>
+
+                    <div style="background: #fffbeb; border: 1px solid #fde68a; border-radius: 12px; padding: 20px; margin: 20px 0;">
+                        <h3 style="color: #92400e; margin: 0 0 10px 0; font-size: 15px;">What happens next?</h3>
+                        <ul style="color: #92400e; font-size: 14px; padding-left: 20px; margin: 0;">
+                            <li style="margin-bottom: 6px;">The Director will review your application and supporting documents.</li>
+                            <li style="margin-bottom: 6px;">You will receive an email notification once the Director makes a decision.</li>
+                            <li style="margin-bottom: 6px;">If approved, you must return to the portal and submit your application to COE using the <strong>Track Application</strong> feature.</li>
+                        </ul>
+                    </div>
+
+                    <p style="font-size: 14px; color: #64748b;">Please save your <strong>Application ID: ${appId}</strong> for tracking your application status.</p>
+                </div>
+                <div style="background: #f8fafc; padding: 20px; text-align: center; border-top: 1px solid #e2e8f0;">
+                    <p style="color: #64748b; font-size: 12px; margin: 0;">Office of the Controller of Examinations<br>Sri Sathya Sai Institute of Higher Learning</p>
+                </div>
+            </div>
+        `;
+        await sendEmail(accessToken, { to: email, subject, htmlBody });
+        console.log(`Director-sought confirmation email sent to ${email} for app ${appId}`);
+    } catch (error) {
+        console.error('Failed to send director-sought confirmation:', error);
+    }
+}
+
 
 // ==================== FORM HANDLERS ====================
 
@@ -1117,13 +1173,13 @@ async function handleSubmission(request, env, corsHeaders) {
             return await handleDuplicateGradeCard(formData, request, env, corsHeaders);
         case 'Application for CGPA to Marks Conversion':
             return await handleCGPAConversion(formData, request, env, corsHeaders);
-        case 'Application for End-Semester Supplementary Examinations':
+        case 'Application for End-Semester Supplementary Examinations Registration':
             return await handleSupplementaryExam(formData, request, env, corsHeaders);
         case 'Application for Duplicate Degree Certificate':
             return await handleDuplicateDegree(formData, request, env, corsHeaders);
         case 'Application for Registration of Student Name change in the Institute Records':
             return await handleNameChange(formData, request, env, corsHeaders);
-        case 'Application for repeating a paper for supplementary examinations(CIE and ESE)':
+        case 'Application for repeating a paper for supplementary examinations (CIE and ESE)':
             return await handleRepeatPaper(formData, request, env, corsHeaders);
         case 'Application for Re-Totalling of Marks':
             return await handleRetotaling(formData, request, env, corsHeaders);
@@ -1146,14 +1202,16 @@ async function handleDuplicateGradeCard(formData, request, env, corsHeaders) {
     const regNo = formData.get('regNo');
     const campus = formData.get('campus');
     const formType = formData.get('formType');
+    const submissionType = formData.get('submissionType');
+    const isSeekingDirectorApproval = submissionType === 'seek-director-approval';
 
     const appId = generateAppId('DGC');
 
     // 1. Save to main applications table
     await env.DB.prepare(
-        `INSERT INTO applications (id, student_email, form_type, applicant_name, reg_no, campus)
-         VALUES (?, ?, ?, ?, ?, ?)`
-    ).bind(appId, email, formType, applicantName, regNo, campus).run();
+        `INSERT INTO applications (id, student_email, form_type, applicant_name, reg_no, campus, status)
+         VALUES (?, ?, ?, ?, ?, ?, ?)`
+    ).bind(appId, email, formType, applicantName, regNo, campus, isSeekingDirectorApproval ? 'AWAITING_DIRECTOR' : 'PENDING').run();
 
     // 2. Save to form-specific table
     await env.DB.prepare(
@@ -1187,14 +1245,15 @@ async function handleDuplicateGradeCard(formData, request, env, corsHeaders) {
         }
     }
 
-    // 4. Send admin notification
-    await sendAdminNotification(env, appId, formType, applicantName, email);
-
-    // 5. Send director notification if required
-    await sendDirectorNotification(env, request, appId, formType, applicantName, email, campus);
-
-    // 6. Send student confirmation email
-    await sendStudentConfirmationEmail(env, appId, formType, applicantName, email, campus);
+    // 4. Send notifications based on submission type
+    if (isSeekingDirectorApproval) {
+        await sendDirectorNotification(env, request, appId, formType, applicantName, email, campus);
+        await sendDirectorSoughtConfirmationEmail(env, appId, formType, applicantName, email, campus);
+    } else {
+        await sendAdminNotification(env, appId, formType, applicantName, email);
+        await sendDirectorNotification(env, request, appId, formType, applicantName, email, campus);
+        await sendStudentConfirmationEmail(env, appId, formType, applicantName, email, campus);
+    }
 
     return new Response(JSON.stringify({ success: true, appId }), {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' }
@@ -1260,13 +1319,15 @@ async function handleSupplementaryExam(formData, request, env, corsHeaders) {
     const regNo = formData.get('regNo');
     const campus = formData.get('campus');
     const formType = formData.get('formType');
+    const submissionType = formData.get('submissionType');
+    const isSeekingDirectorApproval = submissionType === 'seek-director-approval';
 
     const appId = generateAppId('SE');
 
     await env.DB.prepare(
-        `INSERT INTO applications (id, student_email, form_type, applicant_name, reg_no, campus)
-         VALUES (?, ?, ?, ?, ?, ?)`
-    ).bind(appId, email, formType, applicantName, regNo, campus).run();
+        `INSERT INTO applications (id, student_email, form_type, applicant_name, reg_no, campus, status)
+         VALUES (?, ?, ?, ?, ?, ?, ?)`
+    ).bind(appId, email, formType, applicantName, regNo, campus, isSeekingDirectorApproval ? 'AWAITING_DIRECTOR' : 'PENDING').run();
 
     // Parse paper details JSON and format for storage
     const paperDetailsJson = formData.get('paperDetails') || '[]';
@@ -1311,9 +1372,14 @@ async function handleSupplementaryExam(formData, request, env, corsHeaders) {
         }
     }
 
-    await sendAdminNotification(env, appId, formType, applicantName, email);
-    await sendDirectorNotification(env, request, appId, formType, applicantName, email, campus);
-    await sendStudentConfirmationEmail(env, appId, formType, applicantName, email, campus);
+    if (isSeekingDirectorApproval) {
+        await sendDirectorNotification(env, request, appId, formType, applicantName, email, campus);
+        await sendDirectorSoughtConfirmationEmail(env, appId, formType, applicantName, email, campus);
+    } else {
+        await sendAdminNotification(env, appId, formType, applicantName, email);
+        await sendDirectorNotification(env, request, appId, formType, applicantName, email, campus);
+        await sendStudentConfirmationEmail(env, appId, formType, applicantName, email, campus);
+    }
 
     return new Response(JSON.stringify({ success: true, appId }), {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' }
@@ -1327,13 +1393,15 @@ async function handleRepeatPaper(formData, request, env, corsHeaders) {
     const regNo = formData.get('regNo');
     const campus = formData.get('campus');
     const formType = formData.get('formType');
+    const submissionType = formData.get('submissionType');
+    const isSeekingDirectorApproval = submissionType === 'seek-director-approval';
 
     const appId = generateAppId('RP');
 
     await env.DB.prepare(
-        `INSERT INTO applications (id, student_email, form_type, applicant_name, reg_no, campus)
-         VALUES (?, ?, ?, ?, ?, ?)`
-    ).bind(appId, email, formType, applicantName, regNo, campus).run();
+        `INSERT INTO applications (id, student_email, form_type, applicant_name, reg_no, campus, status)
+         VALUES (?, ?, ?, ?, ?, ?, ?)`
+    ).bind(appId, email, formType, applicantName, regNo, campus, isSeekingDirectorApproval ? 'AWAITING_DIRECTOR' : 'PENDING').run();
 
     // Parse paper details JSON and format for storage
     const paperDetailsJson = formData.get('paperDetails') || '[]';
@@ -1377,9 +1445,14 @@ async function handleRepeatPaper(formData, request, env, corsHeaders) {
         }
     }
 
-    await sendAdminNotification(env, appId, formType, applicantName, email);
-    await sendDirectorNotification(env, request, appId, formType, applicantName, email, campus);
-    await sendStudentConfirmationEmail(env, appId, formType, applicantName, email, campus);
+    if (isSeekingDirectorApproval) {
+        await sendDirectorNotification(env, request, appId, formType, applicantName, email, campus);
+        await sendDirectorSoughtConfirmationEmail(env, appId, formType, applicantName, email, campus);
+    } else {
+        await sendAdminNotification(env, appId, formType, applicantName, email);
+        await sendDirectorNotification(env, request, appId, formType, applicantName, email, campus);
+        await sendStudentConfirmationEmail(env, appId, formType, applicantName, email, campus);
+    }
 
     return new Response(JSON.stringify({ success: true, appId }), {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' }
@@ -1447,13 +1520,15 @@ async function handleNameChange(formData, request, env, corsHeaders) {
     const regNo = formData.get('regNo');
     const campus = formData.get('campus');
     const formType = formData.get('formType');
+    const submissionType = formData.get('submissionType');
+    const isSeekingDirectorApproval = submissionType === 'seek-director-approval';
 
     const appId = generateAppId('NC');
 
     await env.DB.prepare(
-        `INSERT INTO applications (id, student_email, form_type, applicant_name, reg_no, campus)
-         VALUES (?, ?, ?, ?, ?, ?)`
-    ).bind(appId, email, formType, applicantName, regNo, campus).run();
+        `INSERT INTO applications (id, student_email, form_type, applicant_name, reg_no, campus, status)
+         VALUES (?, ?, ?, ?, ?, ?, ?)`
+    ).bind(appId, email, formType, applicantName, regNo, campus, isSeekingDirectorApproval ? 'AWAITING_DIRECTOR' : 'PENDING').run();
 
     await env.DB.prepare(
         `INSERT INTO form_name_change
@@ -1483,9 +1558,14 @@ async function handleNameChange(formData, request, env, corsHeaders) {
         }
     }
 
-    await sendAdminNotification(env, appId, formType, applicantName, email);
-    await sendDirectorNotification(env, request, appId, formType, applicantName, email, campus);
-    await sendStudentConfirmationEmail(env, appId, formType, applicantName, email, campus);
+    if (isSeekingDirectorApproval) {
+        await sendDirectorNotification(env, request, appId, formType, applicantName, email, campus);
+        await sendDirectorSoughtConfirmationEmail(env, appId, formType, applicantName, email, campus);
+    } else {
+        await sendAdminNotification(env, appId, formType, applicantName, email);
+        await sendDirectorNotification(env, request, appId, formType, applicantName, email, campus);
+        await sendStudentConfirmationEmail(env, appId, formType, applicantName, email, campus);
+    }
 
     return new Response(JSON.stringify({ success: true, appId }), {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' }
@@ -1666,8 +1746,14 @@ async function handleApproval(url, env, corsHeaders) {
 
     try {
         if (role === 'Director') {
-            // Set overall status to APPROVED when director approves, REJECTED when director rejects
-            const overallStatus = statusValue === 'APPROVED' ? 'APPROVED' : 'REJECTED';
+            // Determine overall status based on whether this is a two-step form
+            const app = await env.DB.prepare('SELECT form_type FROM applications WHERE id = ?').bind(id).first();
+            let overallStatus;
+            if (statusValue === 'APPROVED') {
+                overallStatus = shouldNotifyDirector(app.form_type) ? 'DIRECTOR_APPROVED' : 'APPROVED';
+            } else {
+                overallStatus = 'REJECTED';
+            }
             console.log(`Updating director_status to ${statusValue} and status to ${overallStatus} for application ${id}`);
             const result = await env.DB.prepare(
                 `UPDATE applications SET director_status = ?, status = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?`
@@ -2066,6 +2152,60 @@ async function handleApproval(url, env, corsHeaders) {
         return new Response(errorHtml, {
             status: 500,
             headers: { ...corsHeaders, 'Content-Type': 'text/html' }
+        });
+    }
+}
+
+async function handleSubmitToCOE(request, env, corsHeaders) {
+    try {
+        const body = await request.json();
+        const { appId } = body;
+
+        if (!appId) {
+            return new Response(JSON.stringify({ success: false, error: 'Application ID is required' }), {
+                status: 400,
+                headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+            });
+        }
+
+        const app = await env.DB.prepare(
+            'SELECT * FROM applications WHERE id = ?'
+        ).bind(appId).first();
+
+        if (!app) {
+            return new Response(JSON.stringify({ success: false, error: 'Application not found' }), {
+                status: 404,
+                headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+            });
+        }
+
+        if (app.status !== 'DIRECTOR_APPROVED') {
+            return new Response(JSON.stringify({
+                success: false,
+                error: app.status === 'PENDING' || app.status === 'COMPLETED' || app.status === 'APPROVED'
+                    ? 'This application has already been submitted to COE.'
+                    : 'This application cannot be submitted to COE in its current state.'
+            }), {
+                status: 400,
+                headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+            });
+        }
+
+        await env.DB.prepare(
+            `UPDATE applications SET status = 'PENDING', updated_at = CURRENT_TIMESTAMP WHERE id = ?`
+        ).bind(appId).run();
+
+        await sendAdminNotification(env, appId, app.form_type, app.applicant_name, app.student_email);
+        await sendStudentConfirmationEmail(env, appId, app.form_type, app.applicant_name, app.student_email, app.campus);
+
+        return new Response(JSON.stringify({ success: true }), {
+            headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+        });
+    } catch (error) {
+        console.error('Error in submit-to-coe:', error);
+        return new Response(JSON.stringify({ success: false, error: error.message }), {
+            status: 500,
+            headers: { ...corsHeaders, 'Content-Type': 'application/json' }
         });
     }
 }
