@@ -133,7 +133,8 @@ export default function InstructionsScreen({ config, onProceed, onCancel }) {
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
                     {instructions.map((instruction, index) => {
                         const isFormat = typeof instruction === 'object' && instruction.type === 'format';
-                        const text = isFormat ? instruction.text : instruction;
+                        const isTextWithFormat = typeof instruction === 'object' && instruction.type === 'textWithFormat';
+                        const text = isFormat ? instruction.text : (isTextWithFormat ? instruction.text : instruction);
 
                         return (
                             <div key={index} style={{ display: 'flex', alignItems: 'flex-start', gap: '14px' }}>
@@ -168,6 +169,34 @@ export default function InstructionsScreen({ config, onProceed, onCancel }) {
                                         whiteSpace: 'pre-wrap'
                                     }}>
                                         {formatText(text)}
+                                    </div>
+                                ) : isTextWithFormat ? (
+                                    <div style={{ flex: 1 }}>
+                                        <p style={{
+                                            color: 'var(--text-main)',
+                                            fontSize: '0.95rem',
+                                            fontWeight: '500',
+                                            lineHeight: '1.6',
+                                            margin: 0,
+                                            whiteSpace: 'pre-wrap',
+                                            textAlign: 'justify'
+                                        }}>
+                                            {formatText(text)}
+                                        </p>
+                                        <div style={{
+                                            marginTop: '12px',
+                                            background: 'rgba(37, 99, 235, 0.06)',
+                                            border: '2px solid rgba(37, 99, 235, 0.35)',
+                                            borderRadius: '10px',
+                                            padding: '16px 20px',
+                                            fontSize: '0.9rem',
+                                            fontWeight: '500',
+                                            lineHeight: '1.7',
+                                            color: 'var(--text-main)',
+                                            whiteSpace: 'pre-wrap'
+                                        }}>
+                                            {formatText(instruction.format)}
+                                        </div>
                                     </div>
                                 ) : (
                                     <p style={{
