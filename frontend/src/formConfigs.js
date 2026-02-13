@@ -60,8 +60,9 @@ export const FORM_CONFIGS = {
         files: [
             { name: 'policeComplaint', label: 'Police Complaint', required: true },
             { name: 'affidavit', label: 'Sworn Affidavit', required: true },
-            { name: 'gradeCard', label: 'Original Grade Card  (SCAN COPY IF AVAILABLE)', required: false },
             { name: 'sbiReceipt', label: 'SBI Collect Receipt (₹500) for each duplicate grade card', required: true },
+            { name: 'gradeCard', label: 'Original Grade Card  (SCAN COPY IF AVAILABLE)', required: false }
+            
         ]
     },
     'cgpa-conversion': {
