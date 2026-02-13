@@ -1776,7 +1776,8 @@ async function handleApproval(url, env, corsHeaders) {
 
         // Send student notification email
         try {
-            await sendStudentDecisionEmail(env, verification, action === 'Approve', url.origin);
+            const frontendUrl = 'https://student-service.pages.dev';
+            await sendStudentDecisionEmail(env, verification, action === 'Approve', frontendUrl);
             console.log(`Student notification sent to ${verification.student_email}`);
         } catch (emailError) {
             console.error('Failed to send student email:', emailError);
