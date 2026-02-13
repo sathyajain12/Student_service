@@ -34,7 +34,7 @@ export const FORM_CONFIGS = {
             'Students of foreign nationality may affix appropriate postage for an envelope weighing 100-120 g.',
             'Keep your SBI Collect receipt ready for upload.',
             'Original Grade Card scan is optional but recommended if available.',
-            'In the event of loss in transit or misplacement of the Original Grade card, the candidate is required to lodge a First Information Report(FIR) and obtain an official acknowledgment from the concerned police station. A scanned copy of the FIR, along with the original acknowledgment, must be uploaded through the designated form.'
+            'In the event of loss in transit or misplacement of the Original Grade card, the candidate is required to lodge a police complaint and obtain an official acknowledgment from the concerned police station. A scanned copy of the FIR, along with the original acknowledgment, must be uploaded through the designated form.'
         ],
         titleLink: {
             text: 'Please click here to make the payment of ₹500 for each Duplicate Grade Card using SBI Collect',
@@ -204,11 +204,11 @@ export const FORM_CONFIGS = {
             'Before applying for a Duplicate Degree Certificate, the applicant must make all reasonable efforts to trace the Original Degree Certificate. Only after being fully satisfied that the Original Degree Certificate has been lost beyond recovery may the candidate proceed to apply for a Duplicate Degree Certificate.',
             'In the event of loss in transit or misplacement of the Original Degree Certificate, the candidate is required to lodge a First Information Report (FIR) and obtain an official acknowledgment from the concerned police station. A scanned copy of the FIR, along with the original acknowledgment, must be uploaded.',
             'A press notification, in the prescribed format, must be published in a recognized daily newspaper. A scanned copy of the newspaper cutting must be uploaded.',
-            'An affidavit, sworn before a Notary Public or a First-Class Magistrate, must be uploaded in accordance with the prescribed format.',
+            'An affidavit, sworn before a Notary Public or a First-Class Magistrate, in accordance with the prescribed format, must be uploaded.',
             'The applicant must clearly state the reason for the loss of the Original Degree Certificate.',
-            'Applicants are required to send a self-addressed, cloth-lined envelope – 16x12 inches in size. The Institute requires this in order to send the Duplicate Degree Certificate back to the applicant by post.',
-            'The name of the applicant, along with the complete postal address, including the town/city, PIN code, district and state must be clearly written or typed on the envelope.',
-            'Stamps totalling ₹95 must be affixed to the envelope. This will ensure safe delivery of the document by India Post or Speed Post.',
+            'Applicants are required to send a self-addressed, cloth-lined envelope – 16x12 inches in size. The Institute requires this in order to send the Duplicate Degree Certificate to the applicant by post.',
+            'The name of the applicant, along with the complete postal address, including the town / city, PIN code, district and state must be clearly written or typed on the envelope.',
+            'Stamps totalling ₹95 must be affixed to the envelope. This will ensure safe delivery of the document by Speed Post service of India Post.  ',
             'Students of foreign nationality may affix appropriate postage for an envelope weighing 100-120 g.',
             { type: 'format', text: '**FORMAT OF THE NEWSPAPER NOTIFICATION**\n\nNotice is hereby given that the undersigned has lost the Original Degree Certificate pertaining to the _________________________________ Academic Programme, issued by Sri Sathya Sai Institute of Higher Learning. Any person who finds the said certificate is requested to return it to the undersigned without delay. Possession of the certificate despite this public notice shall be deemed unauthorized and unlawful, and the holder shall be liable for any misuse thereof.\n\nName of the Candidate:\nMobile No:\nAddress(with city and state):\n\nDate:' },
             { type: 'format', text: '**FORMAT FOR AFFIDAVIT**\n\nI, _________________________________, daughter / son of \n_________________________________, aged ______, residing at  _________ , do hereby solemnly affirm and declare as follows:\n\n1. That the Original Degree Certificate pertaining to the _________________________________ Academic Programme, issued to me by Sri Sathya Sai Institute of Higher Learning, Prasanthi Nilayam, has been irrecoverably lost or destroyed.\n\n2. That I have made a thorough and diligent search for the said Original Degree Certificate, but despite my best efforts, I have been unable to recover it.\n\n3. That a duplicate copy of the ________ Degree Certificate is now required by me, for the purpose of\n___________________________________________________________________________\n(state clearly why the duplicate is required and where it is to be submitted or produced).\n\n4. That I understand and acknowledge that if the lost Original Degree Certificate is misused by me or by any other person into whose possession it may fall, I shall be fully liable for all consequences arising therefrom. I further undertake to indemnify and hold harmless the Institute against any loss or consequences that may arise due to any improper or unfair use of the aforesaid Degree Certificate.\n\nDate:\n\nStudent Signature:\n\n**VERIFICATION**\n\nI, the deponent above named, do hereby solemnly affirm and state that the contents of Paragraphs 1 to 4 of the above affidavit are true and correct to my knowledge, and that no part of it is false and nothing  has been concealed therein.\nSolemnly affirmed / Sworn on this ______ day of _________________________________ at _________________________________\n\n **Attested and identified by me**\t**Signature of Deponent**\n\n(Signature and Seal of Notary Public / First-Class Magistrate)' }
@@ -254,7 +254,7 @@ export const FORM_CONFIGS = {
         files: [
             {
                 name: 'policeComplaint',
-                label: 'Police Complaint (FIR)',
+                label: 'Police Complaint',
                 required: true
             },
             {
@@ -269,20 +269,20 @@ export const FORM_CONFIGS = {
             },
             {
                 name: 'originalDegreeScan',
-                label: 'Original Degree Certificate (Scanned)',
+                label: 'Original Degree Certificate (SCAN COPY IF AVAILABLE)',
                 required: false
 
             },
             {
                 name: 'sbiReceipt',
-                label: 'SBI Collect Receipt (₹1000)',
+                label: 'SBI Collect Receipt (₹1000)  FOR EACH DUPLICATE DEGREE CERTIFICATE',
                 required: true
             },
         ],
         declarations: [
             {
                 name: 'declaration',
-                label: 'I undertake that if my Original Degree Certificate, which has been irrecoverably lost, is put to unfair use by any person who may lay hands on it, I shall be liable for all consequences and loss which may accrue from such misuse.',
+                label: 'I acknowledge that my Original Degree Certificate has been irrecoverably lost, and I undertake to accept responsibility for any consequences that may result from its misuse by any person who may obtain it.',
                 required: true
             }
         ]
