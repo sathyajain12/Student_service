@@ -26,15 +26,14 @@ export const FORM_CONFIGS = {
         instructions: [
             'This form is applicable only for students from batches before 2021.',
             'Students from 2021 batch onwards can download their Grade Cards directly from DigiLocker.',
-            'You must upload a Police Complaint and a Sworn Affidavit.',
             { type: 'format', text: '**AFFIDAVIT FOR DUPLICATE GRADE CARD**\\n**To be sworn before a Notary Public / First-Class Magistrate**\\n\\nI, _________________________ (Name), son/daughter of _________________________, Registration Number _________________________, do hereby solemnly affirm and declare that:\\n\\n1. I am a bonafide student/alumnus of Sri Sathya Sai Institute of Higher Learning, Prasanthi Nilayam.\\n2. The Institute had issued me the Original Grade Card for Semester _______ of Programme _________________________, bearing Registration Number _________________________.\\n3. The said Original Grade Card has been lost whilst in my possession despite exercising due care.\\n4. I have applied to the Institute for issuance of a Duplicate Grade Card.\\n5. I hereby undertake that:\\n   - If the Original Grade Card is recovered by me at any time, I shall immediately surrender it to the Institute.\\n   - I shall be solely responsible for any misuse of the lost Original Grade Card.\\n6. The statements made herein are true to the best of my knowledge and belief.\\n\\n\\n**DEPONENT**\\nSignature: _________________________\\nName: _________________________\\nRegistration Number: _________________________\\nDate: _________________________' },
             'Applicants are required to send a self-addressed, cloth-lined envelope – 16x12 inches in size. The Institute requires this in order to send the Duplicate Grade Card back to the applicant by Indian post or Speed Post.',
             'The name of the applicant, along with the complete postal address, including the town/city, PIN code, district and state must be clearly written or typed on the envelope.',
-            'Stamps totalling ₹95 must be affixed to the envelope. This will ensure safe delivery of the document by Indian Post or Speed Post. ',
+            'Stamps totalling ₹95 must be affixed to the envelope. This will ensure safe delivery of the document by Speed Post service of India Post.',
             'Students of foreign nationality may affix appropriate postage for an envelope weighing 100-120 g.',
             'Keep your SBI Collect receipt ready for upload.',
             'Original Grade Card scan is optional but recommended if available.',
-            'In the event of loss in transit or misplacement of the Original Grade card, the candidate is required to lodge a police complaint and obtain an official acknowledgment from the concerned police station. A scanned copy of the FIR, along with the original acknowledgment, must be uploaded through the designated form.'
+            'In the event of loss in transit or misplacement of the Original Grade card, the candidate is required to lodge a police complaint and obtain an official acknowledgment from the concerned police station. A scanned copy of the police complaint, along with the original acknowledgment, must be uploaded through the designated form.'
         ],
         titleLink: {
             text: 'Please click here to make the payment of ₹500 for each Duplicate Grade Card using SBI Collect',
@@ -202,7 +201,7 @@ export const FORM_CONFIGS = {
         description: 'This form is applicable only to students belonging to batches up to and including 2020. Students from 2021 batch onwards can download their Duplicate Degree Certificate from [DigiLocker](https://accounts.digilocker.gov.in/v3/7b9f84c86732efd21cd8076ff06f3fd60b1fbe146732fa57444b03b35f3740a4--en).',
         instructions: [
             'Before applying for a Duplicate Degree Certificate, the applicant must make all reasonable efforts to trace the Original Degree Certificate. Only after being fully satisfied that the Original Degree Certificate has been lost beyond recovery may the candidate proceed to apply for a Duplicate Degree Certificate.',
-            'In the event of loss in transit or misplacement of the Original Degree Certificate, the candidate is required to lodge a First Information Report (FIR) and obtain an official acknowledgment from the concerned police station. A scanned copy of the FIR, along with the original acknowledgment, must be uploaded.',
+            'In the event of loss in transit or misplacement of the Original Degree Certificate, the candidate is required to lodge a police complaint and obtain an official acknowledgment from the concerned police station. A scanned copy of the police complaint, along with the original acknowledgment, must be uploaded.',
             'A press notification, in the prescribed format, must be published in a recognized daily newspaper. A scanned copy of the newspaper cutting must be uploaded.',
             'An affidavit, sworn before a Notary Public or a First-Class Magistrate, in accordance with the prescribed format, must be uploaded.',
             'The applicant must clearly state the reason for the loss of the Original Degree Certificate.',
