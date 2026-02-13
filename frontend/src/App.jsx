@@ -22,7 +22,7 @@ function App() {
     }
 
     // Check if URL has #track hash (from email link)
-    if (window.location.hash === '#track') {
+    if (window.location.hash.startsWith('#track')) {
       setView('status');
       setIsLoading(false);
       return;

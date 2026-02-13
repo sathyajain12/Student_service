@@ -869,10 +869,8 @@ function generateStudentEmailHTML(verification, isApproved, portalUrl) {
                                     ${isApproved
             ? (needsTwoStep
                 ? `<li>Your Director has approved your application</li>
-                                           <li>Please visit the portal and go to <strong>"Track Application"</strong></li>
-                                           <li>Enter your Application ID: <strong>${verification.id}</strong></li>
-                                           <li>Click <strong>"Submit to COE"</strong> to complete your submission</li>
-                                           <li>Portal: <a href="${portalUrl}#track" style="color: #2563eb; text-decoration: none; font-weight: 600;">${portalUrl}#track</a></li>`
+                                           <li>Click the link below to submit your application to COE</li>
+                                           <li><a href="${portalUrl}#track=${verification.id}" style="color: #2563eb; text-decoration: none; font-weight: 600;">Click here to Submit to COE</a></li>`
                 : `<li>Your request is being processed by the Examination Department</li>
                                            <li>You will receive further updates via email</li>
                                            <li>Track your application status anytime at: <a href="${portalUrl}" style="color: #2563eb; text-decoration: none; font-weight: 600;">${portalUrl}</a></li>`)
@@ -886,7 +884,7 @@ function generateStudentEmailHTML(verification, isApproved, portalUrl) {
                             <table width="100%" cellpadding="0" cellspacing="0">
                                 <tr>
                                     <td align="center">
-                                        <a href="${portalUrl}" style="display: inline-block; background: linear-gradient(135deg, #2563eb 0%, #7c3aed 100%); color: #ffffff; text-decoration: none; padding: 14px 32px; border-radius: 10px; font-weight: 600; font-size: 15px;">Track Application Status</a>
+                                        <a href="${needsTwoStep && isApproved ? portalUrl + '#track=' + verification.id : portalUrl}" style="display: inline-block; background: linear-gradient(135deg, #2563eb 0%, #7c3aed 100%); color: #ffffff; text-decoration: none; padding: 14px 32px; border-radius: 10px; font-weight: 600; font-size: 15px;">${needsTwoStep && isApproved ? 'Submit to COE Now' : 'Track Application Status'}</a>
                                     </td>
                                 </tr>
                             </table>

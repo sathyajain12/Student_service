@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
     Search,
     MapPin,
@@ -24,17 +24,14 @@ export default function StatusTracker({ onBack }) {
     const [submittingToCOE, setSubmittingToCOE] = useState(false);
     const [coeSubmitStatus, setCoeSubmitStatus] = useState(null);
 
-    const handleSearch = async (e) => {
-        e.preventDefault();
-        if (!appId.trim()) return;
-
+    const fetchApplication = async (id) => {
         setLoading(true);
         setError(null);
         setApplication(null);
 
         try {
             const backendUrl = import.meta.env.VITE_BACKEND_URL || 'http://localhost:8787';
-            const response = await fetch(`${backendUrl}/status?id=${appId.trim()}`);
+            const response = await fetch(`${backendUrl}/status?id=${id.trim()}`);
             const result = await response.json();
 
             if (response.ok) {
@@ -47,6 +44,23 @@ export default function StatusTracker({ onBack }) {
         } finally {
             setLoading(false);
         }
+    };
+
+    useEffect(() => {
+        const hash = window.location.hash;
+        if (hash.startsWith('#track=')) {
+            const id = hash.replace('#track=', '');
+            if (id) {
+                setAppId(id);
+                fetchApplication(id);
+            }
+        }
+    }, []);
+
+    const handleSearch = async (e) => {
+        e.preventDefault();
+        if (!appId.trim()) return;
+        await fetchApplication(appId);
     };
 
     const downloadResponseDocument = async (fileId, fileName, applicationId) => {
