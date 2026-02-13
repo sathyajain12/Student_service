@@ -18,19 +18,31 @@ const COMMON_ACADEMIC_FIELDS = [
 
 ];
 
+const CONTROLLER_ADDRESS = `**The Controller of Examinations**
+**Administrative Office**
+**Sri Sathya Sai Institute of Higher Learning**
+**Prasanthi Nilayam – 515134**
+**Sri Sathya Sai District, Andhra Pradesh**
+
+**Contact Details**
+**Tel: +91 8555 287 191**
+**Email: controller@sssihl.edu.in**
+**Web: sssihl.edu.in**`;
+
+
 export const FORM_CONFIGS = {
     'duplicate-grade-card': {
         needsDirectorApproval: true,
         title: 'Application for Duplicate Grade Card',
         description: 'This form is applicable only to students belonging to batches up to and including 2020. Students from 2021 batch onwards can download their Duplicate Grade Cards from [DigiLocker](https://accounts.digilocker.gov.in/v3/7b9f84c86732efd21cd8076ff06f3fd60b1fbe146732fa57444b03b35f3740a4--en).',
-        
+
         instructions: [
             'Before applying for a Duplicate Grade Card, the applicant must make all reasonable efforts to trace the Original Grade Card. Only after being fully satisfied that the Original Grade Card has been lost beyond recovery may the candidate proceed to apply for a Duplicate Grade Card.',
             'In the event of loss in transit or misplacement of the Original Grade Card, the candidate is required to lodge a police complaint and obtain an official acknowledgment from the concerned police station. A scanned copy of the police complaint, along with the original acknowledgment, must be uploaded.',
             'An affidavit, sworn before a Notary Public or a First-Class Magistrate, in accordance with the prescribed format, must be uploaded.',
             { type: 'format', text: '**AFFIDAVIT FOR DUPLICATE GRADE CARD**\\n**To be sworn before a Notary Public / First-Class Magistrate**\\n\\nI, _________________________ (Name), son/daughter of _________________________, Registered Number _________________________, do hereby solemnly affirm and declare that:\\n\\n1. I am a bonafide student/alumnus of Sri Sathya Sai Institute of Higher Learning, Prasanthi Nilayam.\\n2. The Institute had issued me the Original Grade Card for Semester _______ of Programme _________________________, bearing Registration Number _________________________.\\n3. The said Original Grade Card has been lost whilst in my possession despite exercising due care.\\n4. I have applied to the Institute for issuance of a Duplicate Grade Card.\\n5. I hereby undertake that:\\n   - If the Original Grade Card is recovered by me at any time, I shall immediately surrender it to the Institute.\\n   - I shall be solely responsible for any misuse of the lost Original Grade Card.\\n6. The statements made herein are true to the best of my knowledge and belief.\n\nDate:\n\nStudent Signature:\n\n**VERIFICATION**\n\nI, the deponent above named, do hereby solemnly affirm and state that the contents of the above affidavit are true and correct to my knowledge and belief, and that no part of it is false and nothing  has been concealed therein.\nSolemnly affirmed / Sworn on this ______ day of _________________________________ at _________________________________\n\n **Attested and identified by me**\t**Signature of Deponent**\n\n(Signature and Seal of Notary Public / First-Class Magistrate)' },
-            { type: 'textWithFormat', text: 'Applicants are required to send a self-addressed, cloth-lined envelope (16 × 12 inches in size) to the address mentioned below. The Institute requires this for dispatch of the Duplicate Grade Card to the applicant by Speed Post service of India Post.', format: '**The Controller of Examinations**\n**Administrative Office**\n**Sri Sathya Sai Institute of Higher Learning**\n**Prasanthi Nilayam – 515134**\n**Sri Sathya Sai District, Andhra Pradesh**' },
-            
+            { type: 'textWithFormat', text: 'Applicants are required to send a self-addressed, cloth-lined envelope (16 × 12 inches in size) to the address mentioned below. The Institute requires this for dispatch of the Duplicate Grade Card to the applicant by Speed Post service of India Post.', format: CONTROLLER_ADDRESS },
+
             'The name of the applicant, along with the complete postal address, including the town / city, PIN code, district and state must be clearly written or typed on the envelope.',
             'Stamps totalling ₹95 must be affixed to the envelope. This will ensure safe delivery of the document by Speed Post service of India Post.',
             'Students of foreign nationality may affix appropriate postage for an envelope weighing 100-120 g.',
@@ -64,7 +76,7 @@ export const FORM_CONFIGS = {
             { name: 'affidavit', label: 'Sworn Affidavit', required: true },
             { name: 'sbiReceipt', label: 'SBI Collect Receipt (₹500)', required: true },
             { name: 'gradeCard', label: 'Original Grade Card  (SCAN COPY IF AVAILABLE)', required: false }
-            
+
         ]
     },
     'cgpa-conversion': {
@@ -72,7 +84,7 @@ export const FORM_CONFIGS = {
         instructions: [
             'As the Institute follows a grading system, grade cards-which are already issued to the students by the Institute-serve as Statement of Marks. No other mark statements are issued. However, if required, a Statement of CGPA Equivalent Percentage of Marks is issued on application to pursue further studies or to seek a job.',
             'No Fee is charged for the issue of a Statement of CGPA Equivalent Percentage of Marks.',
-            'Applicants are required to send a self-addressed, envelope along with the application. The Institute requires this in order to send it back to the applicant by post.',
+            { type: 'textWithFormat', text: 'Applicants are required to send a self-addressed envelope along with the application. The Institute requires this in order to send it back to the applicant by post.', format: CONTROLLER_ADDRESS },
             'The name of the applicant, along with the full, complete postal address, including the town/city, PIN code, district and state must be clearly written or typed on the envelope.',
             'Stamps totalling ₹95 must be affixed to the envelope. This will ensure safe delivery of the document by India Post, via Registered Post with Acknowledgement Due. This is especially important since the Statement of CGPA Equivalent Percentage of Marks is an original document (like a Grade Card or the Degree Certificate).',
             'Students of foreign nationality may affix appropriate postage for an envelope weighing 100-120 g.',
@@ -208,7 +220,7 @@ export const FORM_CONFIGS = {
             'A press notification, in the prescribed format, must be published in a recognized daily newspaper. A scanned copy of the newspaper cutting must be uploaded.',
             'An affidavit, sworn before a Notary Public or a First-Class Magistrate, in accordance with the prescribed format, must be uploaded.',
             'The applicant must clearly state the reason for the loss of the Original Degree Certificate.',
-            { type: 'textWithFormat', text: 'Applicants are required to send a self-addressed, cloth-lined envelope (16 × 12 inches in size) to the address mentioned below. The Institute requires this for dispatch of the Duplicate Degree Certificate to the applicant by Speed Post service of India Post.', format: '**The Controller of Examinations**\n**Administrative Office**\n**Sri Sathya Sai Institute of Higher Learning**\n**Prasanthi Nilayam – 515134**\n**Sri Sathya Sai District, Andhra Pradesh**' },
+            { type: 'textWithFormat', text: 'Applicants are required to send a self-addressed, cloth-lined envelope (16 × 12 inches in size) to the address mentioned below. The Institute requires this for dispatch of the Duplicate Degree Certificate to the applicant by Speed Post service of India Post.', format: CONTROLLER_ADDRESS },
             'The name of the applicant, along with the complete postal address, including the town / city, PIN code, district and state must be clearly written or typed on the envelope.',
             'Stamps totalling ₹95 must be affixed to the envelope. This will ensure safe delivery of the document by Speed Post service of India Post.  ',
             'Students of foreign nationality may affix appropriate postage for an envelope weighing 100-120 g.',
@@ -370,8 +382,8 @@ export const FORM_CONFIGS = {
             { name: 'stateProvince', label: 'State/Province/Region', type: 'stateSelect', required: true },
             { name: 'city', label: 'City', type: 'text', required: true },
             { name: 'postalCode', label: 'Postal Code', type: 'text', required: true },
-            
-            
+
+
         ],
         files: [
             { name: 'gazetteNotification', label: 'Gazette Notification', required: true },
@@ -448,7 +460,7 @@ export const FORM_CONFIGS = {
             'This service is for verification of marks totaling in your answer script.',
             'Select whether it is for End-Semester or Supplementary Examinations.',
             'Grade Card upload is optional but recommended.',
-            'Each application must be enclosed in a self-addressed envelope affixing a postal stamp for ₹95.'
+            { type: 'textWithFormat', text: 'Each application must be enclosed in a self-addressed envelope affixing a postal stamp for ₹95 and sent to the address mentioned below.', format: CONTROLLER_ADDRESS }
         ],
 
         titleLink: {
@@ -501,7 +513,7 @@ export const FORM_CONFIGS = {
         titleLink: {
             text: 'Please click here to make the payment of ₹3000 using SBI Collect',
             url: 'https://www.onlinesbi.sbi/sbicollect/icollecthome.htm?corpID=350506&categoryName=SSSIHL%20Exam%20App%20%20Re-Totaling%20of%20Marks'
-        },        
+        },
         instructions: [
             'This service is for early issuance of degree certificate before the convocation.',
             'Upload your Qualifying Certificate as proof of completion.',
@@ -539,9 +551,9 @@ export const FORM_CONFIGS = {
             'Provide complete postal address details.',
             'Mention the University/Institute you propose to join.',
             'Indicate whether you have received your Degree Certificate.',
-            'Applicants are required to send a self-addressed envelope along with the application.The Institute requires this in order to send the Migration Certificate back to the applicant by post',
+            { type: 'textWithFormat', text: 'Applicants are required to send a self-addressed envelope along with the application. The Institute requires this in order to send the Migration Certificate back to the applicant by post to the address mentioned below.', format: CONTROLLER_ADDRESS },
             'The name of the applicant, along with the full, complete postal address, including the town/city, PIN code, district and state must be clearly written or typed on the envelope.',
-            'Stamps totalling ₹65 must be affixed on the top right-hand corner of the envelope. This will ensure safe delivery of the document by India Post, via Registered Post with Acknowledgement Due.Students of foreign nationality may affix appropriate postage for an envelope weighing 100-120 g.'
+            'Stamps totalling ₹65 must be affixed on the top right-hand corner of the envelope. This will ensure safe delivery of the document by India Post, via Registered Post with Acknowledgement Due. Students of foreign nationality may affix appropriate postage for an envelope weighing 100-120 g.'
 
         ],
         fields: [
