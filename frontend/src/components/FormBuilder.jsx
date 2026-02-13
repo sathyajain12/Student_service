@@ -852,28 +852,10 @@ export default function FormBuilder({ config, onSubmit, onCancel, onTrackStatus 
                 )}
 
                 <div style={{ display: 'flex', gap: '15px', marginTop: '10px', flexWrap: 'wrap' }}>
-                    {config.needsDirectorApproval ? (
-                        <>
-                            <button type="submit" className="btn-primary" disabled={loading} style={{ flexGrow: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '10px' }}>
-                                {loading && <Loader2 size={18} className="animate-spin" />}
-                                {loading ? 'Sending to Director...' : "Seek Director's Approval"}
-                            </button>
-                            <button
-                                type="button"
-                                className="btn-secondary"
-                                disabled={true}
-                                title="Submit to COE will be available after Director's approval. Use the Status Tracker."
-                                style={{ flexGrow: 1, opacity: 0.5, cursor: 'not-allowed' }}
-                            >
-                                Submit to COE (After Director Approval)
-                            </button>
-                        </>
-                    ) : (
-                        <button type="submit" className="btn-primary" disabled={loading} style={{ flexGrow: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '10px' }}>
-                            {loading && <Loader2 size={18} className="animate-spin" />}
-                            {loading ? 'Processing...' : 'Submit Application'}
-                        </button>
-                    )}
+                    <button type="submit" className="btn-primary" disabled={loading} style={{ flexGrow: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '10px' }}>
+                        {loading && <Loader2 size={18} className="animate-spin" />}
+                        {loading ? (config.needsDirectorApproval ? 'Sending to Director...' : 'Processing...') : (config.needsDirectorApproval ? "Seek Director's Approval" : 'Submit Application')}
+                    </button>
                     <button type="button" onClick={onCancel} className="btn-secondary">
                         Cancel
                     </button>
