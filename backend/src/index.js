@@ -2220,7 +2220,7 @@ async function handleStatusRequest(url, env, corsHeaders) {
 
     try {
         const app = await env.DB.prepare(
-            `SELECT id, student_email, form_type, applicant_name, reg_no, campus, status, director_status, controller_status, created_at, updated_at 
+            `SELECT id, student_email, form_type, applicant_name, reg_no, campus, status, director_status, controller_status, created_at, updated_at
              FROM applications WHERE id = ?`
         ).bind(id).first();
 
@@ -2231,6 +2231,13 @@ async function handleStatusRequest(url, env, corsHeaders) {
             });
         }
 
+        // Fetch student-uploaded files
+        const studentFiles = await env.DB.prepare(
+            `SELECT id, field_name, file_name, file_type, file_size, created_at
+             FROM file_blobs
+             WHERE application_id = ? AND (is_response = FALSE OR is_response IS NULL)`
+        ).bind(id).all();
+
         // Fetch response documents (admin-uploaded files)
         const responseFiles = await env.DB.prepare(
             `SELECT id, file_name, file_type, file_size, created_at
@@ -2238,9 +2245,36 @@ async function handleStatusRequest(url, env, corsHeaders) {
              WHERE application_id = ? AND is_response = TRUE`
         ).bind(id).all();
 
+        // Map form_type to the corresponding form table
+        const formTableMap = {
+            'Application for Duplicate Grade Card': 'form_duplicate_grade_card',
+            'Application for CGPA to Percentage Conversion': 'form_cgpa_conversion',
+            'Application for End-Semester Supplementary Examinations Registration': 'form_supplementary_exam',
+            'Application for Duplicate Degree Certificate': 'form_duplicate_degree',
+            'Application for Registration of Student Name change in the Institute Records': 'form_name_change',
+            'Application for repeating a paper for supplementary examinations (CIE and ESE)': 'form_repeat_paper',
+            'Application for Re-Totalling of Marks': 'form_retotaling',
+            'Application for On-Request Degree Certificate': 'form_on_request_degree',
+            'Application for Migration Certificate': 'form_migration_certificate',
+        };
+
+        let formData = null;
+        const formTable = formTableMap[app.form_type];
+        if (formTable) {
+            try {
+                formData = await env.DB.prepare(
+                    `SELECT * FROM ${formTable} WHERE application_id = ?`
+                ).bind(id).first();
+            } catch (e) {
+                formData = null;
+            }
+        }
+
         return new Response(JSON.stringify({
             ...app,
             needs_director_approval: shouldNotifyDirector(app.form_type),
+            formData,
+            files: studentFiles.results || [],
             responseDocuments: responseFiles.results || []
         }), {
             headers: { ...corsHeaders, 'Content-Type': 'application/json' }

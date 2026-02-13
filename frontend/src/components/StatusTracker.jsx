@@ -374,6 +374,259 @@ export default function StatusTracker({ onBack }) {
                         </div>
                     )}
 
+                    {/* View Application Form Section */}
+                    {application.formData && (
+                        <div className="glass-card" style={{ padding: '30px', marginTop: '30px' }}>
+                            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '25px' }}>
+                                <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                                    <div style={{
+                                        width: '40px',
+                                        height: '40px',
+                                        borderRadius: '10px',
+                                        background: 'rgba(37, 99, 235, 0.1)',
+                                        display: 'flex',
+                                        alignItems: 'center',
+                                        justifyContent: 'center'
+                                    }}>
+                                        <FileText size={20} style={{ color: 'var(--accent)' }} />
+                                    </div>
+                                    <h4 style={{ fontSize: '1.1rem', color: 'var(--text-main)', margin: 0 }}>
+                                        Application Details
+                                    </h4>
+                                </div>
+                                {application.needs_director_approval && application.status === 'DIRECTOR_APPROVED' && (
+                                    <button
+                                        onClick={() => handleSubmitToCOE(application.id)}
+                                        className="btn-primary"
+                                        disabled={submittingToCOE}
+                                        style={{
+                                            padding: '10px 24px',
+                                            fontSize: '0.95rem',
+                                            display: 'inline-flex',
+                                            alignItems: 'center',
+                                            gap: '8px'
+                                        }}
+                                    >
+                                        {submittingToCOE && <Loader2 size={16} className="animate-spin" />}
+                                        {submittingToCOE ? 'Submitting...' : 'Submit to COE'}
+                                    </button>
+                                )}
+                            </div>
+
+                            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '20px' }}>
+                                {/* Personal Information */}
+                                <div style={{ gridColumn: '1 / -1', marginBottom: '10px' }}>
+                                    <h5 style={{ fontSize: '1rem', color: 'var(--text-main)', marginBottom: '15px', borderBottom: '2px solid #e2e8f0', paddingBottom: '8px' }}>
+                                        Personal Information
+                                    </h5>
+                                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '15px' }}>
+                                        {application.formData.student_name && (
+                                            <div>
+                                                <p style={{ fontSize: '0.75rem', fontWeight: '700', color: 'var(--text-muted)', textTransform: 'uppercase', marginBottom: '4px' }}>
+                                                    Candidate Name
+                                                </p>
+                                                <p style={{ fontSize: '0.95rem', color: 'var(--text-main)', margin: 0 }}>
+                                                    {application.formData.student_name}
+                                                </p>
+                                            </div>
+                                        )}
+                                        {application.formData.Registration_Number && (
+                                            <div>
+                                                <p style={{ fontSize: '0.75rem', fontWeight: '700', color: 'var(--text-muted)', textTransform: 'uppercase', marginBottom: '4px' }}>
+                                                    Registration Number
+                                                </p>
+                                                <p style={{ fontSize: '0.95rem', color: 'var(--text-main)', margin: 0 }}>
+                                                    {application.formData.Registration_Number}
+                                                </p>
+                                            </div>
+                                        )}
+                                        {application.formData.Campus && (
+                                            <div>
+                                                <p style={{ fontSize: '0.75rem', fontWeight: '700', color: 'var(--text-muted)', textTransform: 'uppercase', marginBottom: '4px' }}>
+                                                    Campus
+                                                </p>
+                                                <p style={{ fontSize: '0.95rem', color: 'var(--text-main)', margin: 0 }}>
+                                                    {application.formData.Campus}
+                                                </p>
+                                            </div>
+                                        )}
+                                        {application.formData.Programme && (
+                                            <div>
+                                                <p style={{ fontSize: '0.75rem', fontWeight: '700', color: 'var(--text-muted)', textTransform: 'uppercase', marginBottom: '4px' }}>
+                                                    Programme
+                                                </p>
+                                                <p style={{ fontSize: '0.95rem', color: 'var(--text-main)', margin: 0 }}>
+                                                    {application.formData.Programme}
+                                                </p>
+                                            </div>
+                                        )}
+                                        {application.formData.Mobile_Number && (
+                                            <div>
+                                                <p style={{ fontSize: '0.75rem', fontWeight: '700', color: 'var(--text-muted)', textTransform: 'uppercase', marginBottom: '4px' }}>
+                                                    Mobile Number
+                                                </p>
+                                                <p style={{ fontSize: '0.95rem', color: 'var(--text-main)', margin: 0 }}>
+                                                    {application.formData.Mobile_Number}
+                                                </p>
+                                            </div>
+                                        )}
+                                        {application.formData.student_email && (
+                                            <div>
+                                                <p style={{ fontSize: '0.75rem', fontWeight: '700', color: 'var(--text-muted)', textTransform: 'uppercase', marginBottom: '4px' }}>
+                                                    Email Address
+                                                </p>
+                                                <p style={{ fontSize: '0.95rem', color: 'var(--text-main)', margin: 0 }}>
+                                                    {application.formData.student_email}
+                                                </p>
+                                            </div>
+                                        )}
+                                    </div>
+                                </div>
+
+                                {/* Address */}
+                                {(application.formData.address_line1 || application.formData.city) && (
+                                    <div style={{ gridColumn: '1 / -1', marginBottom: '10px' }}>
+                                        <h5 style={{ fontSize: '1rem', color: 'var(--text-main)', marginBottom: '15px', borderBottom: '2px solid #e2e8f0', paddingBottom: '8px' }}>
+                                            Permanent Address
+                                        </h5>
+                                        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '15px' }}>
+                                            {application.formData.address_line1 && (
+                                                <div style={{ gridColumn: 'span 2' }}>
+                                                    <p style={{ fontSize: '0.75rem', fontWeight: '700', color: 'var(--text-muted)', textTransform: 'uppercase', marginBottom: '4px' }}>
+                                                        Address
+                                                    </p>
+                                                    <p style={{ fontSize: '0.95rem', color: 'var(--text-main)', margin: 0 }}>
+                                                        {application.formData.address_line1}
+                                                        {application.formData.address_line2 && `, ${application.formData.address_line2}`}
+                                                    </p>
+                                                </div>
+                                            )}
+                                            {application.formData.city && (
+                                                <div>
+                                                    <p style={{ fontSize: '0.75rem', fontWeight: '700', color: 'var(--text-muted)', textTransform: 'uppercase', marginBottom: '4px' }}>
+                                                        City
+                                                    </p>
+                                                    <p style={{ fontSize: '0.95rem', color: 'var(--text-main)', margin: 0 }}>
+                                                        {application.formData.city}
+                                                    </p>
+                                                </div>
+                                            )}
+                                            {application.formData.state_province && (
+                                                <div>
+                                                    <p style={{ fontSize: '0.75rem', fontWeight: '700', color: 'var(--text-muted)', textTransform: 'uppercase', marginBottom: '4px' }}>
+                                                        State/Province
+                                                    </p>
+                                                    <p style={{ fontSize: '0.95rem', color: 'var(--text-main)', margin: 0 }}>
+                                                        {application.formData.state_province}
+                                                    </p>
+                                                </div>
+                                            )}
+                                            {application.formData.postal_code && (
+                                                <div>
+                                                    <p style={{ fontSize: '0.75rem', fontWeight: '700', color: 'var(--text-muted)', textTransform: 'uppercase', marginBottom: '4px' }}>
+                                                        Postal Code
+                                                    </p>
+                                                    <p style={{ fontSize: '0.95rem', color: 'var(--text-main)', margin: 0 }}>
+                                                        {application.formData.postal_code}
+                                                    </p>
+                                                </div>
+                                            )}
+                                            {application.formData.country && (
+                                                <div>
+                                                    <p style={{ fontSize: '0.75rem', fontWeight: '700', color: 'var(--text-muted)', textTransform: 'uppercase', marginBottom: '4px' }}>
+                                                        Country
+                                                    </p>
+                                                    <p style={{ fontSize: '0.95rem', color: 'var(--text-main)', margin: 0 }}>
+                                                        {application.formData.country}
+                                                    </p>
+                                                </div>
+                                            )}
+                                        </div>
+                                    </div>
+                                )}
+
+                                {/* Form-Specific Fields */}
+                                <div style={{ gridColumn: '1 / -1' }}>
+                                    <h5 style={{ fontSize: '1rem', color: 'var(--text-main)', marginBottom: '15px', borderBottom: '2px solid #e2e8f0', paddingBottom: '8px' }}>
+                                        Additional Information
+                                    </h5>
+                                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '15px' }}>
+                                        {/* Duplicate Grade Card specific */}
+                                        {application.formData.Period_of_Study && (
+                                            <div>
+                                                <p style={{ fontSize: '0.75rem', fontWeight: '700', color: 'var(--text-muted)', textTransform: 'uppercase', marginBottom: '4px' }}>
+                                                    Period of Study
+                                                </p>
+                                                <p style={{ fontSize: '0.95rem', color: 'var(--text-main)', margin: 0 }}>
+                                                    {application.formData.Period_of_Study}
+                                                </p>
+                                            </div>
+                                        )}
+                                        {application.formData.Semester && (
+                                            <div>
+                                                <p style={{ fontSize: '0.75rem', fontWeight: '700', color: 'var(--text-muted)', textTransform: 'uppercase', marginBottom: '4px' }}>
+                                                    Semester
+                                                </p>
+                                                <p style={{ fontSize: '0.95rem', color: 'var(--text-main)', margin: 0 }}>
+                                                    {application.formData.Semester}
+                                                </p>
+                                            </div>
+                                        )}
+                                        {application.formData.Reason && (
+                                            <div style={{ gridColumn: '1 / -1' }}>
+                                                <p style={{ fontSize: '0.75rem', fontWeight: '700', color: 'var(--text-muted)', textTransform: 'uppercase', marginBottom: '4px' }}>
+                                                    Reason for Loss
+                                                </p>
+                                                <p style={{ fontSize: '0.95rem', color: 'var(--text-main)', margin: 0, whiteSpace: 'pre-wrap' }}>
+                                                    {application.formData.Reason}
+                                                </p>
+                                            </div>
+                                        )}
+                                        {/* CGPA Conversion specific */}
+                                        {application.formData.CGPA && (
+                                            <div>
+                                                <p style={{ fontSize: '0.75rem', fontWeight: '700', color: 'var(--text-muted)', textTransform: 'uppercase', marginBottom: '4px' }}>
+                                                    CGPA
+                                                </p>
+                                                <p style={{ fontSize: '0.95rem', color: 'var(--text-main)', margin: 0 }}>
+                                                    {application.formData.CGPA}
+                                                </p>
+                                            </div>
+                                        )}
+                                        {/* Other form-specific fields can be added here */}
+                                    </div>
+                                </div>
+
+                                {/* Uploaded Files */}
+                                {application.files && application.files.length > 0 && (
+                                    <div style={{ gridColumn: '1 / -1', marginTop: '10px' }}>
+                                        <h5 style={{ fontSize: '1rem', color: 'var(--text-main)', marginBottom: '15px', borderBottom: '2px solid #e2e8f0', paddingBottom: '8px' }}>
+                                            Uploaded Documents
+                                        </h5>
+                                        <div style={{ display: 'flex', flexWrap: 'wrap', gap: '12px' }}>
+                                            {application.files.map((file, index) => (
+                                                <div key={index} style={{
+                                                    padding: '10px 16px',
+                                                    background: 'rgba(37, 99, 235, 0.05)',
+                                                    border: '1px solid rgba(37, 99, 235, 0.2)',
+                                                    borderRadius: '8px',
+                                                    display: 'flex',
+                                                    alignItems: 'center',
+                                                    gap: '8px'
+                                                }}>
+                                                    <FileText size={16} style={{ color: 'var(--accent)' }} />
+                                                    <span style={{ fontSize: '0.85rem', color: 'var(--text-main)' }}>
+                                                        {file.file_name}
+                                                    </span>
+                                                </div>
+                                            ))}
+                                        </div>
+                                    </div>
+                                )}
+                            </div>
+                        </div>
+                    )}
+
                     {/* Response Documents Download Section */}
                     {application.responseDocuments && application.responseDocuments.length > 0 && (
                         <div className="glass-card" style={{ padding: '30px', marginTop: '30px' }}>
