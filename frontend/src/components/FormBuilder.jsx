@@ -854,7 +854,7 @@ export default function FormBuilder({ config, onSubmit, onCancel, onTrackStatus 
                 <div style={{ display: 'flex', gap: '15px', marginTop: '10px', flexWrap: 'wrap' }}>
                     <button type="submit" className="btn-primary" disabled={loading} style={{ flexGrow: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '10px' }}>
                         {loading && <Loader2 size={18} className="animate-spin" />}
-                        {loading ? (config.needsDirectorApproval ? 'Sending to Director...' : 'Processing...') : (config.needsDirectorApproval ? "Seek Director's Approval" : 'Submit Application')}
+                        {loading ? (config.needsDirectorApproval ? 'Sending to Director...' : 'Processing...') : (config.needsDirectorApproval ? "Seek Director's Clearance" : 'Submit Application')}
                     </button>
                     <button type="button" onClick={onCancel} className="btn-secondary">
                         Cancel
