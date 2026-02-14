@@ -734,16 +734,11 @@ async function sendDirectorNotification(env, request, appId, formType, applicant
                 <table width="100%" cellpadding="0" cellspacing="0" style="max-width: 650px; background-color: #ffffff; border-radius: 16px; overflow: hidden; box-shadow: 0 10px 25px -5px rgba(15, 23, 42, 0.1);">
                     <!-- Header -->
                     <tr>
-                        <td align="center" style="background: #2563eb; padding: 40px 20px;">
+                        <td align="center" style="background: linear-gradient(to right, #213c69, #255fdd);; padding: 40px 20px;">
                             <table cellpadding="0" cellspacing="0">
                                 <tr>
                                     <td align="center">
-                                        <img src="https://student-service.pages.dev/logo.png" alt="SSSIHL Logo" style="width: 80px; height: 80px; display: block; margin: 0 auto 16px;">
-                                    </td>
-                                </tr>
-                                <tr>
-                                    <td align="center" style="color: #ffffff; font-size: 24px; font-weight: 700; padding-top: 10px;">
-                                        SSSIHL - Examination Services
+                                        <img src="https://student-service.pages.dev/Examinations_Service.png" alt="SSSIHL Logo" style="width: 80px; height: 80px; display: block; margin: 0 auto 16px;">
                                     </td>
                                 </tr>
                                 <tr>
@@ -784,7 +779,7 @@ async function sendDirectorNotification(env, request, appId, formType, applicant
                                     <td style="border-bottom: 1px solid #e2e8f0; padding: 14px; color: #0f172a; font-size: 14px; font-weight: 600; text-align: right;">${applicantName}</td>
                                 </tr>
                                 ${regNo ? `<tr>
-                                    <td style="border-bottom: 1px solid #e2e8f0; padding: 14px; color: #64748b; font-size: 14px;">Registration Number</td>
+                                    <td style="border-bottom: 1px solid #e2e8f0; padding: 14px; color: #64748b; font-size: 14px;">Registered Number</td>
                                     <td style="border-bottom: 1px solid #e2e8f0; padding: 14px; color: #0f172a; font-size: 14px; font-weight: 600; text-align: right;">${regNo}</td>
                                 </tr>` : ''}
                                 <tr>
@@ -802,10 +797,6 @@ async function sendDirectorNotification(env, request, appId, formType, applicant
                                 <tr>
                                     <td style="border-bottom: 1px solid #e2e8f0; padding: 14px; color: #64748b; font-size: 14px;">Submission Date</td>
                                     <td style="border-bottom: 1px solid #e2e8f0; padding: 14px; color: #0f172a; font-size: 14px; font-weight: 600; text-align: right;">${submissionDate}</td>
-                                </tr>
-                                <tr>
-                                    <td style="padding: 14px; color: #64748b; font-size: 14px;">Attachments</td>
-                                    <td style="padding: 14px; color: #0f172a; font-size: 14px; font-weight: 600; text-align: right;">${files.length} document(s)</td>
                                 </tr>
                             </table>
                         </td>
@@ -2186,7 +2177,7 @@ async function handleApproval(url, env, corsHeaders) {
                 <span class="detail-value">${verification?.applicant_name || 'N/A'}</span>
             </div>
             <div class="detail-row">
-                <span class="detail-label">Registration Number</span>
+                <span class="detail-label">Registered Number</span>
                 <span class="detail-value">${verification?.reg_no || 'N/A'}</span>
             </div>
             <div class="detail-row">
