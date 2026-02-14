@@ -867,11 +867,14 @@ function generateStudentEmailHTML(verification, isApproved, portalUrl) {
     const statusBgColor = isApproved ? '#d1fae5' : '#fee2e2';
     const statusText = isApproved ? 'APPROVED' : 'REJECTED';
     const heading = isApproved ? 'Application Approved by Director' : 'Application Status Update';
+    const isDuplicateGradeCard = verification.form_type === 'Application for Duplicate Grade Card';
     const message = isApproved
         ? (needsTwoStep
             ? 'Your application has been approved by the Director. Please return to the portal to complete your submission to the Controller of Examinations (COE).'
             : 'We are pleased to inform you that your application has been approved by the Director.')
-        : 'Your application status has been updated. Please see the details below.';
+        : (isDuplicateGradeCard
+            ? 'Your application for Duplicate Grade Card has been reviewed. Please see the details below.'
+            : 'Your application status has been updated. Please see the details below.');
 
     const submissionDate = verification.created_at
         ? new Date(verification.created_at).toLocaleString('en-IN', {
@@ -965,8 +968,13 @@ function generateStudentEmailHTML(verification, isApproved, portalUrl) {
                 : `<li>Your request is being processed by the Examination Department</li>
                                            <li>You will receive further updates via email</li>
                                            <li>Track your application status anytime at: <a href="${portalUrl}" style="color: #2563eb; text-decoration: none; font-weight: 600;">${portalUrl}</a></li>`)
-            : `<li>For queries or clarifications, please contact: <a href="mailto:examination@sssihl.edu.in" style="color: #2563eb; text-decoration: none;">examination@sssihl.edu.in</a></li>
-                                           <li>Track your application status: <a href="${portalUrl}" style="color: #2563eb; text-decoration: none; font-weight: 600;">${portalUrl}</a></li>`
+            : (isDuplicateGradeCard
+                ? `<li><strong>Your original grade card is available at the ${verification.campus || 'campus'} office</strong></li>
+                                           <li>Please contact the campus office to collect your grade card</li>
+                                           <li>Duplicate grade cards are issued only when the original has been lost beyond recovery</li>
+                                           <li>For queries, please contact: <a href="mailto:examination@sssihl.edu.in" style="color: #2563eb; text-decoration: none;">examination@sssihl.edu.in</a></li>`
+                : `<li>For queries or clarifications, please contact: <a href="mailto:examination@sssihl.edu.in" style="color: #2563eb; text-decoration: none;">examination@sssihl.edu.in</a></li>
+                                           <li>Track your application status: <a href="${portalUrl}" style="color: #2563eb; text-decoration: none; font-weight: 600;">${portalUrl}</a></li>`)
         }
                                 </ul>
                             </div>
