@@ -78,6 +78,7 @@ export default function FormBuilder({ config, onSubmit, onCancel, onTrackStatus 
     const [dateRanges, setDateRanges] = useState({});
     const [files, setFiles] = useState({});
     const [loading, setLoading] = useState(false);
+    const [submitted, setSubmitted] = useState(false);
     const [status, setStatus] = useState(null);
     const fileInputRefs = useRef({});
     const [paperTables, setPaperTables] = useState({});
@@ -178,6 +179,7 @@ export default function FormBuilder({ config, onSubmit, onCancel, onTrackStatus 
             const result = await response.json();
 
             if (result.success) {
+                setSubmitted(true);
                 setStatus({ type: 'success', message: `Successfully Submitted! Application ID: ${result.appId}` });
             } else {
                 throw new Error(result.error || 'Submission failed');
@@ -210,6 +212,7 @@ export default function FormBuilder({ config, onSubmit, onCancel, onTrackStatus 
             const result = await response.json();
 
             if (result.success) {
+                setSubmitted(true);
                 setStatus({ type: 'success', message: `Application sent to Director for approval! Your Application ID: ${result.appId}. You will receive an email once the Director responds. After approval, return to the Status Tracker to submit your application to COE.` });
             } else {
                 throw new Error(result.error || 'Submission failed');
@@ -852,9 +855,28 @@ export default function FormBuilder({ config, onSubmit, onCancel, onTrackStatus 
                 )}
 
                 <div style={{ display: 'flex', gap: '15px', marginTop: '10px', flexWrap: 'wrap' }}>
-                    <button type="submit" className="btn-primary" disabled={loading} style={{ flexGrow: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '10px' }}>
+                    <button
+                        type="submit"
+                        className="btn-primary"
+                        disabled={loading || submitted}
+                        style={{
+                            flexGrow: 1,
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            gap: '10px',
+                            opacity: (loading || submitted) ? 0.6 : 1,
+                            cursor: (loading || submitted) ? 'not-allowed' : 'pointer'
+                        }}
+                    >
                         {loading && <Loader2 size={18} className="animate-spin" />}
-                        {loading ? (config.needsDirectorApproval ? 'Sending to Director...' : 'Processing...') : (config.needsDirectorApproval ? "Seek Director's Clearance" : 'Submit Application')}
+                        {submitted
+                            ? 'Submitted ✓'
+                            : (loading
+                                ? (config.needsDirectorApproval ? 'Sending to Director...' : 'Processing...')
+                                : (config.needsDirectorApproval ? "Seek Director's Clearance" : 'Submit Application')
+                            )
+                        }
                     </button>
                     <button type="button" onClick={onCancel} className="btn-secondary">
                         Cancel

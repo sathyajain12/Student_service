@@ -319,3 +319,77 @@ button {
   justify-content: center;
   z-index: 9999;
 }
+/* Mobile Responsive Styles */
+@media (max-width: 768px) {
+  .container {
+    padding: 30px 15px;
+  }
+
+  h1 {
+    font-size: 1.75rem;
+  }
+
+  h2 {
+    font-size: 1.5rem;
+  }
+
+  h3 {
+    font-size: 1.25rem;
+  }
+
+  .glass-card {
+    border-radius: 16px;
+    padding: 20px !important;
+  }
+
+  /* Form styles */
+  .form-input,
+  .form-select,
+  .form-textarea {
+    font-size: 16px; /* Prevents iOS zoom on input focus */
+  }
+
+  /* Button styles */
+  button {
+    font-size: 14px;
+    padding: 12px 20px;
+  }
+
+  /* Stack buttons vertically on mobile */
+  div[style*="display: flex"][style*="gap"] {
+    flex-direction: column;
+  }
+
+  div[style*="display: flex"][style*="gap"] button {
+    width: 100% !important;
+  }
+
+  /* Make images responsive */
+  img {
+    max-width: 100%;
+    height: auto;
+  }
+
+  /* Adjust grid layouts for mobile */
+  div[style*="display: grid"] {
+    grid-template-columns: 1fr !important;
+  }
+}
+
+@media (max-width: 480px) {
+  .container {
+    padding: 20px 10px;
+  }
+
+  h1 {
+    font-size: 1.5rem;
+  }
+
+  h2 {
+    font-size: 1.25rem;
+  }
+
+  .glass-card {
+    padding: 15px !important;
+  }
+}
