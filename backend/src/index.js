@@ -1221,8 +1221,8 @@ async function sendDirectorSoughtConfirmationEmail(env, appId, formType, applica
         const subject = `Director Approval Requested - ${formType} - ${appId}`;
         const htmlBody = `
             <div style="font-family: 'Segoe UI', Arial, sans-serif; max-width: 600px; margin: 0 auto; background: #ffffff;">
-                <div style="background: linear-gradient(135deg, #1e3a5f 0%, #2563eb 100%); padding: 30px; text-align: center;">
-                    <h1 style="color: #ffffff; margin: 0; font-size: 22px;">Application Sent for Director's Approval</h1>
+                <div style="text-align: center; padding: 0;">
+                    <img src="https://student-service.pages.dev/Examinations_Service.png" alt="SSSIHL Examinations Service" style="width: 100%; max-width: 600px; display: block; border: 0;">
                 </div>
                 <div style="padding: 30px;">
                     <p style="font-size: 15px; color: #334155;">Sai Ram! Dear <strong>${applicantName}</strong>,</p>
