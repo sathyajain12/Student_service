@@ -734,19 +734,8 @@ async function sendDirectorNotification(env, request, appId, formType, applicant
                 <table width="100%" cellpadding="0" cellspacing="0" style="max-width: 650px; background-color: #ffffff; border-radius: 16px; overflow: hidden; box-shadow: 0 10px 25px -5px rgba(15, 23, 42, 0.1);">
                     <!-- Header -->
                     <tr>
-                        <td align="center" style="background: linear-gradient(to right, #213c69, #255fdd);; padding: 40px 20px;">
-                            <table cellpadding="0" cellspacing="0">
-                                <tr>
-                                    <td align="center">
-                                        <img src="https://student-service.pages.dev/Examinations_Service.png" alt="SSSIHL Logo" style="width: 80px; height: 80px; display: block; margin: 0 auto 16px;">
-                                    </td>
-                                </tr>
-                                <tr>
-                                    <td align="center" style="color: rgba(255, 255, 255, 0.9); font-size: 16px; padding-top: 8px; font-weight: 600;">
-                                        Director's Clearance Required
-                                    </td>
-                                </tr>
-                            </table>
+                        <td align="center" style="padding: 0;">
+                            <img src="https://student-service.pages.dev/Examinations_Service.png" alt="SSSIHL Examinations Service" width="650" style="width: 100%; max-width: 650px; display: block; border: 0;">
                         </td>
                     </tr>
 
