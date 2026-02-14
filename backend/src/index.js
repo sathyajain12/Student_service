@@ -1225,8 +1225,7 @@ async function sendDirectorSoughtConfirmationEmail(env, appId, formType, applica
                     <img src="https://student-service.pages.dev/Examinations_Service.png" alt="SSSIHL Examinations Service" style="width: 100%; max-width: 600px; display: block; border: 0;">
                 </div>
                 <div style="padding: 30px;">
-                    <p style="font-size: 15px; color: #334155; margin-bottom: 5px;">Sai Ram!</p>
-                    <p style="font-size: 15px; color: #334155; margin-bottom: 15px;">Dear <strong>${applicantName}</strong>,</p>
+                    <p style="font-size: 15px; color: #334155; margin-bottom: 15px;">Sai Ram!<br>Dear <strong>${applicantName}</strong>,</p>
                     <p style="font-size: 15px; color: #334155;">Your application has been successfully submitted and sent to the <strong>Director of ${campus}</strong> for approval.</p>
 
                     <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 12px; padding: 20px; margin: 20px 0;">
