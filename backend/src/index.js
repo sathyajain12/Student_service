@@ -696,7 +696,7 @@ function shouldNotifyDirector(formType) {
     return forms.includes(formType);
 }
 
-async function sendDirectorNotification(env, request, appId, formType, applicantName, email, campus, semester = null) {
+async function sendDirectorNotification(env, request, appId, formType, applicantName, email, campus, semester = null, regNo = null) {
     if (!shouldNotifyDirector(formType)) {
         return;
     }
@@ -706,16 +706,9 @@ async function sendDirectorNotification(env, request, appId, formType, applicant
         const directorEmail = getDirectorEmail(campus);
         const url = new URL(request.url);
 
-            // Fetch student's uploaded documents
+            // Fetch student's uploaded documents count (not attaching files)
             const files = await getApplicationFiles(env, appId);
             console.log(`Found ${files.length} files for application ${appId}`);
-
-            // Convert to attachment format
-            const attachments = files.map(file => ({
-                filename: file.file_name,
-                mimeType: file.file_type,
-                data: file.file_data  // Already base64
-            }));
 
             const submissionDate = new Date().toLocaleString('en-IN', {
                 dateStyle: 'long',
@@ -741,7 +734,7 @@ async function sendDirectorNotification(env, request, appId, formType, applicant
                 <table width="100%" cellpadding="0" cellspacing="0" style="max-width: 650px; background-color: #ffffff; border-radius: 16px; overflow: hidden; box-shadow: 0 10px 25px -5px rgba(15, 23, 42, 0.1);">
                     <!-- Header -->
                     <tr>
-                        <td align="center" style="background: linear-gradient(135deg, #1e40af 0%, #7c3aed 100%); padding: 40px 20px;">
+                        <td align="center" style="background: #2563eb; padding: 40px 20px;">
                             <table cellpadding="0" cellspacing="0">
                                 <tr>
                                     <td align="center">
@@ -765,20 +758,11 @@ async function sendDirectorNotification(env, request, appId, formType, applicant
                     <!-- Main Message -->
                     <tr>
                         <td style="padding: 40px 30px 30px 30px;">
-                            <p style="margin: 0 0 8px 0; color: #0f172a; font-size: 18px; font-weight: 700;">Sai Ram! Dear Director,</p>
+                            <p style="margin: 0 0 4px 0; color: #0f172a; font-size: 18px; font-weight: 700;">Sai Ram!</p>
+                            <p style="margin: 0 0 16px 0; color: #0f172a; font-size: 18px; font-weight: 700;">Dear Director,</p>
                             <p style="margin: 0; color: #475569; font-size: 15px; line-height: 1.6;">
                                 A new <strong>${formType}</strong> has been submitted and requires your clearance for further processing.
                             </p>
-                        </td>
-                    </tr>
-
-                    <!-- Application ID Highlight -->
-                    <tr>
-                        <td style="padding: 0 30px 30px 30px;">
-                            <div style="background: linear-gradient(135deg, #dbeafe 0%, #e0e7ff 100%); border: 2px solid #3b82f6; border-radius: 12px; padding: 20px; text-align: center;">
-                                <p style="margin: 0 0 8px 0; color: #64748b; font-size: 13px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px;">Application ID</p>
-                                <p style="margin: 0; color: #1e40af; font-size: 28px; font-weight: 700; font-family: 'Monaco', 'Courier New', monospace;">${appId}</p>
-                            </div>
                         </td>
                     </tr>
 
@@ -788,6 +772,10 @@ async function sendDirectorNotification(env, request, appId, formType, applicant
                             <h2 style="margin: 0 0 16px 0; color: #0f172a; font-size: 18px; font-weight: 600;">Application Details</h2>
                             <table width="100%" cellpadding="12" cellspacing="0" style="background-color: #f8fafc; border-radius: 12px;">
                                 <tr>
+                                    <td style="border-bottom: 1px solid #e2e8f0; padding: 14px; color: #64748b; font-size: 14px;">Application ID</td>
+                                    <td style="border-bottom: 1px solid #e2e8f0; padding: 14px; color: #0f172a; font-size: 14px; font-weight: 600; text-align: right;">${appId}</td>
+                                </tr>
+                                <tr>
                                     <td style="border-bottom: 1px solid #e2e8f0; padding: 14px; color: #64748b; font-size: 14px;">Form Type</td>
                                     <td style="border-bottom: 1px solid #e2e8f0; padding: 14px; color: #0f172a; font-size: 14px; font-weight: 600; text-align: right;">${formType}</td>
                                 </tr>
@@ -795,6 +783,10 @@ async function sendDirectorNotification(env, request, appId, formType, applicant
                                     <td style="border-bottom: 1px solid #e2e8f0; padding: 14px; color: #64748b; font-size: 14px;">Applicant Name</td>
                                     <td style="border-bottom: 1px solid #e2e8f0; padding: 14px; color: #0f172a; font-size: 14px; font-weight: 600; text-align: right;">${applicantName}</td>
                                 </tr>
+                                ${regNo ? `<tr>
+                                    <td style="border-bottom: 1px solid #e2e8f0; padding: 14px; color: #64748b; font-size: 14px;">Registration Number</td>
+                                    <td style="border-bottom: 1px solid #e2e8f0; padding: 14px; color: #0f172a; font-size: 14px; font-weight: 600; text-align: right;">${regNo}</td>
+                                </tr>` : ''}
                                 <tr>
                                     <td style="border-bottom: 1px solid #e2e8f0; padding: 14px; color: #64748b; font-size: 14px;">Applicant Email</td>
                                     <td style="border-bottom: 1px solid #e2e8f0; padding: 14px; color: #0f172a; font-size: 14px; font-weight: 600; text-align: right;">${email}</td>
@@ -824,8 +816,9 @@ async function sendDirectorNotification(env, request, appId, formType, applicant
                         <td style="padding: 0 30px 30px 30px;">
                             <div style="background: #fffbeb; border-left: 4px solid #f59e0b; border-radius: 8px; padding: 16px;">
                                 <p style="margin: 0 0 8px 0; color: #92400e; font-size: 15px; font-weight: 700;">⚠️ Important Note</p>
-                                <p style="margin: 0; color: #78350f; font-size: 14px; line-height: 1.6;">
-                                    Request you to please verify with the campus office regarding the availability of the original grade card before approving.
+                                <p style="margin: 0; color: #78350f; font-size: 14px; line-height: 1.8;">
+                                    Request you to please verify with the campus office regarding the availability of the original grade card before processing this application.<br><br>
+                                    <strong>If the grade card is available at the campus office and the student has not collected it yet, please reject this application.</strong> The student will be notified to contact the campus office to collect their original grade card.
                                 </p>
                             </div>
                         </td>
@@ -871,9 +864,9 @@ async function sendDirectorNotification(env, request, appId, formType, applicant
 </body>
 </html>
                 `,
-                attachments: attachments
+                attachments: []
             });
-            console.log(`Director email sent to ${directorEmail} for app ${appId} with ${attachments.length} attachments`);
+            console.log(`Director email sent to ${directorEmail} for app ${appId}`);
         } catch (e) {
             console.error('Failed to send director notification:', e);
         }
@@ -1364,11 +1357,11 @@ async function handleDuplicateGradeCard(formData, request, env, corsHeaders) {
 
     // 4. Send notifications based on submission type
     if (isSeekingDirectorApproval) {
-        await sendDirectorNotification(env, request, appId, formType, applicantName, email, campus, semester);
+        await sendDirectorNotification(env, request, appId, formType, applicantName, email, campus, semester, regNo);
         await sendDirectorSoughtConfirmationEmail(env, appId, formType, applicantName, email, campus);
     } else {
         await sendAdminNotification(env, appId, formType, applicantName, email);
-        await sendDirectorNotification(env, request, appId, formType, applicantName, email, campus, semester);
+        await sendDirectorNotification(env, request, appId, formType, applicantName, email, campus, semester, regNo);
         await sendStudentConfirmationEmail(env, appId, formType, applicantName, email, campus);
     }
 
@@ -1421,7 +1414,7 @@ async function handleCGPAConversion(formData, request, env, corsHeaders) {
     }
 
     await sendAdminNotification(env, appId, formType, applicantName, email);
-    await sendDirectorNotification(env, request, appId, formType, applicantName, email, campus, null);
+    await sendDirectorNotification(env, request, appId, formType, applicantName, email, campus, null, regNo);
     await sendStudentConfirmationEmail(env, appId, formType, applicantName, email, campus);
 
     return new Response(JSON.stringify({ success: true, appId }), {
@@ -1490,11 +1483,11 @@ async function handleSupplementaryExam(formData, request, env, corsHeaders) {
     }
 
     if (isSeekingDirectorApproval) {
-        await sendDirectorNotification(env, request, appId, formType, applicantName, email, campus, semester);
+        await sendDirectorNotification(env, request, appId, formType, applicantName, email, campus, semester, regNo);
         await sendDirectorSoughtConfirmationEmail(env, appId, formType, applicantName, email, campus);
     } else {
         await sendAdminNotification(env, appId, formType, applicantName, email);
-        await sendDirectorNotification(env, request, appId, formType, applicantName, email, campus, semester);
+        await sendDirectorNotification(env, request, appId, formType, applicantName, email, campus, semester, regNo);
         await sendStudentConfirmationEmail(env, appId, formType, applicantName, email, campus);
     }
 
@@ -1563,11 +1556,11 @@ async function handleRepeatPaper(formData, request, env, corsHeaders) {
     }
 
     if (isSeekingDirectorApproval) {
-        await sendDirectorNotification(env, request, appId, formType, applicantName, email, campus, semester);
+        await sendDirectorNotification(env, request, appId, formType, applicantName, email, campus, semester, regNo);
         await sendDirectorSoughtConfirmationEmail(env, appId, formType, applicantName, email, campus);
     } else {
         await sendAdminNotification(env, appId, formType, applicantName, email);
-        await sendDirectorNotification(env, request, appId, formType, applicantName, email, campus, semester);
+        await sendDirectorNotification(env, request, appId, formType, applicantName, email, campus, semester, regNo);
         await sendStudentConfirmationEmail(env, appId, formType, applicantName, email, campus);
     }
 
@@ -1622,7 +1615,7 @@ async function handleDuplicateDegree(formData, request, env, corsHeaders) {
     }
 
     await sendAdminNotification(env, appId, formType, applicantName, email);
-    await sendDirectorNotification(env, request, appId, formType, applicantName, email, campus, null);
+    await sendDirectorNotification(env, request, appId, formType, applicantName, email, campus, null, regNo);
     await sendStudentConfirmationEmail(env, appId, formType, applicantName, email, campus);
 
     return new Response(JSON.stringify({ success: true, appId }), {
@@ -1676,11 +1669,11 @@ async function handleNameChange(formData, request, env, corsHeaders) {
     }
 
     if (isSeekingDirectorApproval) {
-        await sendDirectorNotification(env, request, appId, formType, applicantName, email, campus, null);
+        await sendDirectorNotification(env, request, appId, formType, applicantName, email, campus, null, regNo);
         await sendDirectorSoughtConfirmationEmail(env, appId, formType, applicantName, email, campus);
     } else {
         await sendAdminNotification(env, appId, formType, applicantName, email);
-        await sendDirectorNotification(env, request, appId, formType, applicantName, email, campus, null);
+        await sendDirectorNotification(env, request, appId, formType, applicantName, email, campus, null, regNo);
         await sendStudentConfirmationEmail(env, appId, formType, applicantName, email, campus);
     }
 
