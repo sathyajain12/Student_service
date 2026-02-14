@@ -717,45 +717,159 @@ async function sendDirectorNotification(env, request, appId, formType, applicant
                 data: file.file_data  // Already base64
             }));
 
+            const submissionDate = new Date().toLocaleString('en-IN', {
+                dateStyle: 'long',
+                timeStyle: 'short',
+                timeZone: 'Asia/Kolkata'
+            });
+
             await sendEmail(accessToken, {
                 to: directorEmail,
                 subject: `Clearance Required: ${formType} - ${appId}`,
                 htmlBody: `
-                    <p><strong>Sai Ram !</strong></p>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Clearance Required</title>
+</head>
+<body style="margin: 0; padding: 0; font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background-color: #f1f5f9;">
+    <table width="100%" cellpadding="0" cellspacing="0" style="background-color: #f1f5f9; padding: 40px 20px;">
+        <tr>
+            <td align="center">
+                <table width="100%" cellpadding="0" cellspacing="0" style="max-width: 650px; background-color: #ffffff; border-radius: 16px; overflow: hidden; box-shadow: 0 10px 25px -5px rgba(15, 23, 42, 0.1);">
+                    <!-- Header -->
+                    <tr>
+                        <td align="center" style="background: linear-gradient(135deg, #1e40af 0%, #7c3aed 100%); padding: 40px 20px;">
+                            <table cellpadding="0" cellspacing="0">
+                                <tr>
+                                    <td align="center">
+                                        <img src="https://student-service.pages.dev/logo.png" alt="SSSIHL Logo" style="width: 80px; height: 80px; display: block; margin: 0 auto 16px;">
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td align="center" style="color: #ffffff; font-size: 24px; font-weight: 700; padding-top: 10px;">
+                                        SSSIHL - Examination Services
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td align="center" style="color: rgba(255, 255, 255, 0.9); font-size: 16px; padding-top: 8px; font-weight: 600;">
+                                        Director's Clearance Required
+                                    </td>
+                                </tr>
+                            </table>
+                        </td>
+                    </tr>
 
-                    <p>Dear Director,</p>
+                    <!-- Main Message -->
+                    <tr>
+                        <td style="padding: 40px 30px 30px 30px;">
+                            <p style="margin: 0 0 8px 0; color: #0f172a; font-size: 18px; font-weight: 700;">Sai Ram! Dear Director,</p>
+                            <p style="margin: 0; color: #475569; font-size: 15px; line-height: 1.6;">
+                                A new <strong>${formType}</strong> has been submitted and requires your clearance for further processing.
+                            </p>
+                        </td>
+                    </tr>
 
-                    <p>This is to notify you that a new <strong>${formType}</strong> requires your clearance.</p>
+                    <!-- Application ID Highlight -->
+                    <tr>
+                        <td style="padding: 0 30px 30px 30px;">
+                            <div style="background: linear-gradient(135deg, #dbeafe 0%, #e0e7ff 100%); border: 2px solid #3b82f6; border-radius: 12px; padding: 20px; text-align: center;">
+                                <p style="margin: 0 0 8px 0; color: #64748b; font-size: 13px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px;">Application ID</p>
+                                <p style="margin: 0; color: #1e40af; font-size: 28px; font-weight: 700; font-family: 'Monaco', 'Courier New', monospace;">${appId}</p>
+                            </div>
+                        </td>
+                    </tr>
 
-                    <p><strong>Application Details:</strong></p>
-                    <p style="margin: 4px 0;">&bull; Application ID: ${appId}</p>
-                    <p style="margin: 4px 0;">&bull; Form Type: ${formType}</p>
-                    <p style="margin: 4px 0;">&bull; Applicant Name: ${applicantName}</p>
-                    <p style="margin: 4px 0;">&bull; Applicant Email: ${email}</p>
-                    <p style="margin: 4px 0;">&bull; Campus: ${campus}</p>
-                    ${semester ? `<p style="margin: 4px 0;">&bull; Semester: ${semester}</p>` : ''}
-                    <p style="margin: 4px 0;">&bull; Submission Date: ${new Date().toLocaleString()}</p>
-                    <p style="margin: 4px 0;">&bull; Attachments: ${files.length} document(s)</p>
+                    <!-- Details Table -->
+                    <tr>
+                        <td style="padding: 0 30px 30px 30px;">
+                            <h2 style="margin: 0 0 16px 0; color: #0f172a; font-size: 18px; font-weight: 600;">Application Details</h2>
+                            <table width="100%" cellpadding="12" cellspacing="0" style="background-color: #f8fafc; border-radius: 12px;">
+                                <tr>
+                                    <td style="border-bottom: 1px solid #e2e8f0; padding: 14px; color: #64748b; font-size: 14px;">Form Type</td>
+                                    <td style="border-bottom: 1px solid #e2e8f0; padding: 14px; color: #0f172a; font-size: 14px; font-weight: 600; text-align: right;">${formType}</td>
+                                </tr>
+                                <tr>
+                                    <td style="border-bottom: 1px solid #e2e8f0; padding: 14px; color: #64748b; font-size: 14px;">Applicant Name</td>
+                                    <td style="border-bottom: 1px solid #e2e8f0; padding: 14px; color: #0f172a; font-size: 14px; font-weight: 600; text-align: right;">${applicantName}</td>
+                                </tr>
+                                <tr>
+                                    <td style="border-bottom: 1px solid #e2e8f0; padding: 14px; color: #64748b; font-size: 14px;">Applicant Email</td>
+                                    <td style="border-bottom: 1px solid #e2e8f0; padding: 14px; color: #0f172a; font-size: 14px; font-weight: 600; text-align: right;">${email}</td>
+                                </tr>
+                                <tr>
+                                    <td style="border-bottom: 1px solid #e2e8f0; padding: 14px; color: #64748b; font-size: 14px;">Campus</td>
+                                    <td style="border-bottom: 1px solid #e2e8f0; padding: 14px; color: #0f172a; font-size: 14px; font-weight: 600; text-align: right;">${campus}</td>
+                                </tr>
+                                ${semester ? `<tr>
+                                    <td style="border-bottom: 1px solid #e2e8f0; padding: 14px; color: #64748b; font-size: 14px;">Semester</td>
+                                    <td style="border-bottom: 1px solid #e2e8f0; padding: 14px; color: #0f172a; font-size: 14px; font-weight: 600; text-align: right;">${semester}</td>
+                                </tr>` : ''}
+                                <tr>
+                                    <td style="border-bottom: 1px solid #e2e8f0; padding: 14px; color: #64748b; font-size: 14px;">Submission Date</td>
+                                    <td style="border-bottom: 1px solid #e2e8f0; padding: 14px; color: #0f172a; font-size: 14px; font-weight: 600; text-align: right;">${submissionDate}</td>
+                                </tr>
+                                <tr>
+                                    <td style="padding: 14px; color: #64748b; font-size: 14px;">Attachments</td>
+                                    <td style="padding: 14px; color: #0f172a; font-size: 14px; font-weight: 600; text-align: right;">${files.length} document(s)</td>
+                                </tr>
+                            </table>
+                        </td>
+                    </tr>
 
-                    <br>
-                    <p style="background:#fffbeb;border-left:4px solid #f59e0b;padding:12px;margin:10px 0;">
-                        <strong>Note:</strong> Request you to please verify with the campus office regarding the availability of the original grade card before approving.
-                    </p>
+                    <!-- Important Note -->
+                    <tr>
+                        <td style="padding: 0 30px 30px 30px;">
+                            <div style="background: #fffbeb; border-left: 4px solid #f59e0b; border-radius: 8px; padding: 16px;">
+                                <p style="margin: 0 0 8px 0; color: #92400e; font-size: 15px; font-weight: 700;">⚠️ Important Note</p>
+                                <p style="margin: 0; color: #78350f; font-size: 14px; line-height: 1.6;">
+                                    Request you to please verify with the campus office regarding the availability of the original grade card before approving.
+                                </p>
+                            </div>
+                        </td>
+                    </tr>
 
-                    <br>
-                    <p>
-                        <a href="${url.origin}/approve?id=${appId}&role=Director&action=Approve" style="background:#10b981;color:#fff;padding:10px 20px;text-decoration:none;border-radius:5px;margin-right:10px;">✓ Clear</a>
-                        <a href="${url.origin}/approve?id=${appId}&role=Director&action=Reject" style="background:#ef4444;color:#fff;padding:10px 20px;text-decoration:none;border-radius:5px;">✗ Reject</a>
-                    </p>
+                    <!-- Action Buttons -->
+                    <tr>
+                        <td style="padding: 0 30px 40px 30px;">
+                            <table width="100%" cellpadding="0" cellspacing="0">
+                                <tr>
+                                    <td align="center">
+                                        <table cellpadding="0" cellspacing="0">
+                                            <tr>
+                                                <td style="padding-right: 10px;">
+                                                    <a href="${url.origin}/approve?id=${appId}&role=Director&action=Approve" style="display: inline-block; background: linear-gradient(135deg, #10b981 0%, #059669 100%); color: #ffffff; text-decoration: none; padding: 14px 32px; border-radius: 10px; font-weight: 600; font-size: 15px; box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);">✓ Clear Application</a>
+                                                </td>
+                                                <td style="padding-left: 10px;">
+                                                    <a href="${url.origin}/approve?id=${appId}&role=Director&action=Reject" style="display: inline-block; background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%); color: #ffffff; text-decoration: none; padding: 14px 32px; border-radius: 10px; font-weight: 600; font-size: 15px; box-shadow: 0 4px 12px rgba(239, 68, 68, 0.3);">✗ Reject</a>
+                                                </td>
+                                            </tr>
+                                        </table>
+                                    </td>
+                                </tr>
+                            </table>
+                        </td>
+                    </tr>
 
-                    <br>
-                    <p><strong>Best regards,</strong><br>
-                    Office of the Controller of Examinations,<br>
-                    Sri Sathya Sai Institute of Higher Learning (Deemed to be University),<br>
-                    Prasanthi Nilayam – 515 134, Sri Sathya Sai District,<br>
-                    Andhra Pradesh, India.</p>
-
-                    <p><strong>Phone:</strong> 08555-287191</p>
+                    <!-- Footer -->
+                    <tr>
+                        <td style="background-color: #f8fafc; padding: 30px; text-align: center; border-top: 1px solid #e2e8f0;">
+                            <p style="margin: 0 0 8px 0; color: #0f172a; font-size: 15px; font-weight: 600;">Office of the Controller of Examinations</p>
+                            <p style="margin: 0 0 4px 0; color: #64748b; font-size: 14px;">Sri Sathya Sai Institute of Higher Learning</p>
+                            <p style="margin: 0 0 12px 0; color: #64748b; font-size: 14px;">Prasanthi Nilayam – 515 134, Sri Sathya Sai District, Andhra Pradesh, India</p>
+                            <p style="margin: 0; color: #64748b; font-size: 13px;">
+                                <strong>Phone:</strong> 08555-287191
+                            </p>
+                        </td>
+                    </tr>
+                </table>
+            </td>
+        </tr>
+    </table>
+</body>
+</html>
                 `,
                 attachments: attachments
             });
