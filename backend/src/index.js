@@ -701,11 +701,10 @@ async function sendDirectorNotification(env, request, appId, formType, applicant
         return;
     }
 
-    if (env.GOOGLE_CLIENT_ID && env.GOOGLE_CLIENT_SECRET && env.GOOGLE_REFRESH_TOKEN) {
-        try {
-            const accessToken = await getGoogleAuth(env);
-            const directorEmail = getDirectorEmail(campus);
-            const url = new URL(request.url);
+    try {
+        const accessToken = await getGoogleAuth(env);
+        const directorEmail = getDirectorEmail(campus);
+        const url = new URL(request.url);
 
             // Fetch student's uploaded documents
             const files = await getApplicationFiles(env, appId);
@@ -764,7 +763,6 @@ async function sendDirectorNotification(env, request, appId, formType, applicant
         } catch (e) {
             console.error('Failed to send director notification:', e);
         }
-    }
 }
 
 // Student email notification functions
