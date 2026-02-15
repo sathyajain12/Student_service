@@ -307,11 +307,11 @@ export const FORM_CONFIGS = {
         needsDirectorApproval: true,
         title: 'Application for Registration of Student Name change in the Institute Records',
         instructions: [
-            'A fee of ₹500 must be paid via SBI Collect before submission. To make the payment: Click on the SBI Collect link provided, which will open the SBI Collect homepage. Select "Educational Institutes" as the Category. Search for "SSSIHL-ADMN" in the search field. Select the appropriate Payment Category. In the payment category dropdown, select the application name for which you are applying (Change of Name). Complete the payment process and keep your receipt for upload.',
-            'You must have a valid Gazette Notification for the name change. The Gazette Notification must be from the Government of India (Gazette of India).',
+            'You must have a valid Gazette Notification for the name change. The Gazette Notification must be from the Gazette of India.',
             'Upload your Previous Qualification Certificate as proof.',
             'The new name should exactly match the Gazette notification.',
-            'Complete address details are required.'
+            'Complete address details are required.',
+            'Once the application is submitted, the applicant must wait for clearance from the Director of the concerned Campus of the Institute. Only after the Director clears the application will the Examination Section process it further. The applicant can track the status of the application using the Application ID provided at the time of submission.'
         ],
         titleLink: {
             text: 'Please click here to make the payment of ₹500 using SBI Collect',
