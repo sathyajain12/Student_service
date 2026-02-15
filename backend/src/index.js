@@ -726,7 +726,7 @@ function renderEmailTemplate({ title, greeting, content, details = [], actionBut
                     <!-- Important Note -->
                     <tr>
                         <td style="padding: 0 30px 30px 30px;">
-                            <div style="background: #fffbeb; border-left: 4px solid #f59e0b; border-radius: 8px; padding: 16px;">
+                            <div style="background: #fffbeb; border: 1px solid #fde68a; border-radius: 12px; padding: 20px;">
                                 <p style="margin: 0 0 8px 0; color: #92400e; font-size: 15px; font-weight: 700;">⚠️ Important Information</p>
                                 <div style="margin: 0; color: #78350f; font-size: 14px; line-height: 1.8;">
                                     ${importantNote}
