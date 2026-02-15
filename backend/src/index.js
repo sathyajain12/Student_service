@@ -729,7 +729,7 @@ function renderEmailTemplate({ title, greeting, content, details = [], actionBut
                     <tr>
                         <td style="padding: 0 30px 30px 30px;">
                             <div style="background-color: #fffbeb; border-radius: 12px; padding: 20px; border: 1px solid #fef3c7;">
-                                <p style="margin: 0 0 8px 0; color: #92400e; font-size: 15px; font-weight: 700;">⚠️ Important Information</p>
+                                
                                 <div style="margin: 0; color: #78350f; font-size: 14px; line-height: 1.8;">
                                     ${importantNote}
                                 </div>
@@ -947,7 +947,7 @@ function generateStudentEmailHTML(verification, isApproved, portalUrl) {
         actionButtons: [
             {
                 label: (needsTwoStep && isApproved) ? 'Submit to COE Now' : 'Track Application Status',
-                link: (needsTwoStep && isApproved) ? `${portalUrl}#track=${verification.id}` : portalUrl
+                link: `${portalUrl}#track=${verification.id}`
             }
         ]
     });
