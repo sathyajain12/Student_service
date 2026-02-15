@@ -1,87 +1,82 @@
 import React from 'react';
-import { Loader2, Sparkles } from 'lucide-react';
 
 export default function LoadingScreen() {
     const logoUrl = "/logo.png";
 
     return (
         <div className="loading-overlay">
-            <div style={{ textAlign: 'center', maxWidth: '400px', width: '90%' }}>
-                <div style={{ position: 'relative', marginBottom: '40px', display: 'inline-block' }}>
-                    <div className="animate-spin-slow" style={{
-                        width: '140px',
-                        height: '140px',
-                        borderRadius: '50%',
-                        border: '2px solid rgba(15, 23, 42, 0.05)',
-                        borderTop: '2px solid var(--accent)',
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'center'
-                    }}>
-                    </div>
-                    <div style={{
-                        position: 'absolute',
-                        top: '50%',
-                        left: '50%',
-                        transform: 'translate(-50%, -50%)',
-                        background: 'white',
-                        width: '100px',
-                        height: '100px',
-                        borderRadius: '30%',
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                        boxShadow: '0 10px 25px -5px rgba(37, 99, 235, 0.1)',
-                        border: '1px solid var(--glass-border)',
-                        overflow: 'hidden',
-                        padding: '10px'
-                    }}>
-                        <img
-                            src={logoUrl}
-                            alt="Institute Logo"
-                            style={{
-                                width: '100%',
-                                height: '100%',
-                                objectFit: 'contain'
-                            }}
-                        />
-                    </div>
-                    <div className="animate-pulse-slow" style={{
-                        position: 'absolute',
-                        top: '-10px',
-                        right: '-10px',
-                        color: '#7c3aed'
-                    }}>
-                        <Sparkles size={24} />
-                    </div>
+            <div className="glass-card" style={{
+                textAlign: 'center',
+                maxWidth: '400px',
+                width: '90%',
+                padding: '40px 20px',
+                display: 'flex',
+                flexDirection: 'column',
+                alignItems: 'center',
+                gap: '24px'
+            }}>
+                {/* Breathing Logo Container */}
+                <div className="animate-breathe" style={{
+                    width: '120px',
+                    height: '120px',
+                    borderRadius: '50%',
+                    background: 'white',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    padding: '15px',
+                    boxShadow: '0 8px 32px rgba(37, 99, 235, 0.1)'
+                }}>
+                    <img
+                        src={logoUrl}
+                        alt="Institute Logo"
+                        style={{
+                            width: '100%',
+                            height: '100%',
+                            objectFit: 'contain'
+                        }}
+                    />
                 </div>
 
+                {/* Text Content */}
                 <div className="animate-slide-up">
                     <h2 style={{
-                        fontSize: '1.8rem',
-                        marginBottom: '10px',
-                        background: 'linear-gradient(to right, #1e293b, #334155)',
-                        WebkitBackgroundClip: 'text',
-                        WebkitTextFillColor: 'transparent',
-                        fontWeight: '800'
+                        fontSize: '1.5rem',
+                        marginBottom: '8px',
+                        color: 'var(--primary)',
+                        fontWeight: '700',
+                        letterSpacing: '-0.02em'
                     }}>
-                        SSSIHL-Examination Services
+                        SSSIHL Examination Services
                     </h2>
                     <p style={{
                         color: 'var(--text-muted)',
-                        fontSize: '0.95rem',
+                        fontSize: '0.9rem',
                         fontWeight: '500',
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                        gap: '8px'
+                        opacity: 0.8
                     }}>
-                        <Loader2 size={16} className="animate-spin" />
-                        Initializing secure session...
+                        Securing connection...
                     </p>
+                </div>
+
+                {/* Sleek Progress Bar */}
+                <div style={{
+                    width: '100%',
+                    height: '4px',
+                    background: 'rgba(15, 23, 42, 0.05)',
+                    borderRadius: '999px',
+                    overflow: 'hidden',
+                    marginTop: '10px'
+                }}>
+                    <div className="animate-shimmer" style={{
+                        width: '100%',
+                        height: '100%',
+                        borderRadius: '999px'
+                    }}></div>
                 </div>
             </div>
 
+            {/* Footer Text */}
             <div style={{
                 position: 'fixed',
                 bottom: '40px',
@@ -90,7 +85,9 @@ export default function LoadingScreen() {
                 textAlign: 'center',
                 color: 'var(--text-muted)',
                 fontSize: '0.8rem',
-                opacity: 0.6
+                opacity: 0.6,
+                letterSpacing: '0.05em',
+                textTransform: 'uppercase'
             }} className="animate-fade-in">
                 Sri Sathya Sai Institute of Higher Learning
             </div>

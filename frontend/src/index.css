@@ -306,6 +306,45 @@ button {
   animation: slide-up 0.8s ease-out forwards;
 }
 
+@keyframes breathe {
+
+  0%,
+  100% {
+    transform: scale(1);
+    opacity: 1;
+    filter: drop-shadow(0 4px 6px rgba(37, 99, 235, 0.1));
+  }
+
+  50% {
+    transform: scale(1.05);
+    opacity: 0.8;
+    filter: drop-shadow(0 8px 12px rgba(37, 99, 235, 0.2));
+  }
+}
+
+.animate-breathe {
+  animation: breathe 3s ease-in-out infinite;
+}
+
+@keyframes shimmer {
+  0% {
+    background-position: -200% 0;
+  }
+
+  100% {
+    background-position: 200% 0;
+  }
+}
+
+.animate-shimmer {
+  background: linear-gradient(90deg,
+      var(--accent) 0%,
+      #7c3aed 50%,
+      var(--accent) 100%);
+  background-size: 200% 100%;
+  animation: shimmer 2s linear infinite;
+}
+
 .loading-overlay {
   position: fixed;
   top: 0;
@@ -319,6 +358,7 @@ button {
   justify-content: center;
   z-index: 9999;
 }
+
 /* Mobile Responsive Styles */
 @media (max-width: 768px) {
   .container {
@@ -346,7 +386,8 @@ button {
   .form-input,
   .form-select,
   .form-textarea {
-    font-size: 16px; /* Prevents iOS zoom on input focus */
+    font-size: 16px;
+    /* Prevents iOS zoom on input focus */
   }
 
   /* Button styles */
