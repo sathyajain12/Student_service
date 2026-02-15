@@ -800,6 +800,7 @@ async function sendAdminNotification(env, appId, formType, applicantName, email)
                 subject: `New Application Received: ${formType} - ${appId}`,
                 htmlBody: htmlBody
             });
+            console.log(`Admin notification sent successfully to ${ADMIN_EMAIL} for app ${appId}`);
         } catch (e) {
             console.error('Failed to send admin notification:', e);
         }
@@ -1723,8 +1724,14 @@ async function handleApproval(url, env, corsHeaders) {
             const frontendUrl = 'https://student-service.pages.dev';
             await sendStudentDecisionEmail(env, verification, action === 'Approve', frontendUrl);
             console.log(`Student notification sent to ${verification.student_email}`);
+
+            // If Director approved, notify Admin (COE)
+            if (role === 'Director' && action === 'Approve') {
+                await sendAdminNotification(env, id, verification.form_type, verification.applicant_name, verification.student_email);
+                console.log(`Admin notification sent for Director-approved app ${id}`);
+            }
         } catch (emailError) {
-            console.error('Failed to send student email:', emailError);
+            console.error('Failed to send email notifications:', emailError);
             // Continue - email failure is non-critical
         }
 
