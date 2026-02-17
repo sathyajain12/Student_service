@@ -551,7 +551,7 @@ export const FORM_CONFIGS = {
             'Mention the University / Institute you propose to join.',
             'Indicate whether you have received your Degree Certificate.',
             { type: 'address', text: 'Applicants are required to send a self-addressed envelope, affixed with stamps totalling ₹65, to the address mentioned below. The Institute requires this for dispatch of the Migration Certificate to the applicant by Speed Post service of India Post.', details: CONTROLLER_ADDRESS },
-            'The name of the applicant, along with the , complete postal address, including the town / city, PIN code, district and state must be clearly written or typed on the envelope.',
+            'The name of the applicant, along with the, complete postal address, including the town / city, PIN code, district and state must be clearly written or typed on the envelope.',
             'Students of foreign nationality may affix appropriate postage for an envelope weighing 100-120 g.'
 
         ],
