@@ -459,7 +459,7 @@ export const FORM_CONFIGS = {
             'This service is for verification of marks totaling in your answer script.',
             'Select whether it is for End-Semester or Supplementary Examinations.',
             'Grade Card upload is optional but recommended.',
-            { type: 'address', text: 'Each application must be enclosed in a self-addressed envelope affixing a postal stamp for ₹95 and sent to the address mentioned below.', details: CONTROLLER_ADDRESS }
+            { type: 'address', text: 'Applicants are required to send a self-addressed envelope affixed with stamps totalling ₹95, to the address mentioned below.', details: CONTROLLER_ADDRESS }
         ],
 
         titleLink: {
