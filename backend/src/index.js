@@ -854,7 +854,7 @@ async function sendDirectorNotification(env, request, appId, formType, applicant
             htmlBody: renderEmailTemplate({
                 title: 'Clearance Required',
                 greeting: 'Dear Madam / Sir,<br><br>Sairam!<br><br>Greetings from the Examinations Section, SSSIHL.',
-                content: `An application for <strong>${formType}</strong> has been submitted and requires your clearance for further processing.`,
+                content: `An <strong>${formType}</strong> has been submitted and requires your clearance for further processing.`,
                 details: [
                     { label: 'Form Type', value: formType },
                     { label: 'Application ID', value: appId },
@@ -2013,8 +2013,12 @@ async function handleApproval(url, env, corsHeaders) {
             ${isApproved ? '✓' : '✗'}
         </div>
         <h1>Application ${isApproved ? 'Approved' : 'Rejected'}</h1>
-        <p class="subtitle">Your decision has been recorded successfully</p>
+        <p class="subtitle">Your decision is recorded successfully</p>
 
+        <div class="detail-row">
+            <span class="detail-label">Form Type</span>
+            <span class="detail-value">${verification?.form_type || 'N/A'}</span>
+        </div>
         <div class="details">
             <div class="detail-row">
                 <span class="detail-label">Application ID</span>
@@ -2032,10 +2036,17 @@ async function handleApproval(url, env, corsHeaders) {
                 <span class="detail-label">Campus</span>
                 <span class="detail-value">${verification?.campus || 'N/A'}</span>
             </div>
+            
             <div class="detail-row">
-                <span class="detail-label">Form Type</span>
-                <span class="detail-value">${verification?.form_type || 'N/A'}</span>
+                <span class="detail-label">Programme</span>
+                <span class="detail-value">${verification?.programme || 'N/A'}</span>
             </div>
+
+            <div class="detail-row">
+                <span class="detail-label">Semester</span>
+                <span class="detail-value">${verification?.semester || 'N/A'}</span>
+            </div>
+          
             <div class="detail-row">
                 <span class="detail-label">Submitted On</span>
                 <span class="detail-value">${submissionDate}</span>
@@ -2052,7 +2063,7 @@ async function handleApproval(url, env, corsHeaders) {
 
         <div class="footer">
             Sri Sathya Sai Institute of Higher Learning
-            <div class="footer-subtitle">Examination Services Portal</div>
+            <div class="footer-subtitle">Examination Services</div>
         </div>
     </div>
 </body>
