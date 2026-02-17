@@ -1083,7 +1083,7 @@ async function sendDirectorSoughtConfirmationEmail(env, appId, formType, applica
             },
             details: [
                 { label: 'Applicant Name', value: applicantName },
-                ...(regNo ? [{ label: 'Registration Number', value: regNo }] : []),
+                ...(regNo ? [{ label: 'Registered Number', value: regNo }] : []),
                 { label: 'Form Type', value: formType },
                 { label: 'Campus', value: campus },
                 ...(programme ? [{ label: 'Programme', value: programme }] : []),
@@ -1091,7 +1091,7 @@ async function sendDirectorSoughtConfirmationEmail(env, appId, formType, applica
                 { label: 'Submitted On', value: submissionDate }
             ],
             importantNote: `
-                <p style="margin: 0;">Once your Director provides clearance, your application will be forwarded to the Controller of Examinations. You will receive an email notification when this happens.</p>
+                <p style="margin: 0;">Once the Director of the Campus provides clearance, your application will be forwarded to the Controller of Examinations. You will receive an email notification when this happens.</p>
             `,
             actionButtons: [
                 { label: 'Track Application Status', link: 'https://student-service.pages.dev/#track' }
