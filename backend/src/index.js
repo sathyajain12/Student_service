@@ -1082,8 +1082,8 @@ async function sendDirectorSoughtConfirmationEmail(env, appId, formType, applica
                 subtext: 'Use this ID to track status updates'
             },
             details: [
-                { label: 'Applicant Name', value: applicantName },
                 { label: 'Form Type', value: formType },
+                { label: 'Applicant Name', value: applicantName },
                 { label: 'Campus', value: campus },
                 ...(programme ? [{ label: 'Programme', value: programme }] : []),
                 ...(semester ? [{ label: 'Semester', value: semester }] : []),
