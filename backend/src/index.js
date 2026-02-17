@@ -810,7 +810,7 @@ async function sendAdminNotification(env, appId, formType, applicantName, email)
 // Director email functions
 function getDirectorEmail(campus) {
     const map = {
-        'Prashanti Nilayam Campus': 'saisathyajain@sssihl.edu.in',
+        'Prashanti Nilayam Campus': 'controller@sssihl.edu.in',
         'Anantapur Campus': 'results@sssihl.edu.in',
         'Brindavan Campus': 'sathyajain9@gmail.com',
         'Nandigiri Campus': 'sathyajain99@outlook.com'
@@ -941,6 +941,8 @@ function generateStudentEmailHTML(verification, isApproved, portalUrl) {
             { label: 'Applicant', value: verification.applicant_name },
             { label: 'Form Type', value: verification.form_type },
             { label: 'Campus', value: verification.campus },
+            ...(verification.programme ? [{ label: 'Programme', value: verification.programme }] : []),
+            ...(verification.semester ? [{ label: 'Semester', value: verification.semester }] : []),
             { label: 'Submitted On', value: submissionDate },
             { label: 'Status', value: `<span style="color: ${statusColor}; font-weight: 700;">${statusText}</span>` }
         ],
@@ -984,7 +986,7 @@ async function sendStudentDecisionEmail(env, verification, isApproved, portalUrl
 }
 
 // Student confirmation email (sent when application is first submitted)
-function generateStudentConfirmationHTML(appId, formType, applicantName, email, campus) {
+function generateStudentConfirmationHTML(appId, formType, applicantName, email, campus, programme = null, semester = null) {
     const submissionDate = new Date().toLocaleString('en-IN', {
         dateStyle: 'long',
         timeStyle: 'short',
@@ -1005,6 +1007,8 @@ function generateStudentConfirmationHTML(appId, formType, applicantName, email, 
             { label: 'Email', value: email },
             { label: 'Form Type', value: formType },
             { label: 'Campus', value: campus },
+            ...(programme ? [{ label: 'Programme', value: programme }] : []),
+            ...(semester ? [{ label: 'Semester', value: semester }] : []),
             { label: 'Submitted On', value: submissionDate }
         ],
         importantNote: `
@@ -1022,7 +1026,7 @@ function generateStudentConfirmationHTML(appId, formType, applicantName, email, 
     });
 }
 
-async function sendStudentConfirmationEmail(env, appId, formType, applicantName, email, campus) {
+async function sendStudentConfirmationEmail(env, appId, formType, applicantName, email, campus, programme = null, semester = null) {
     console.log(`[STUDENT CONFIRMATION] Starting for appId: ${appId}, email: ${email}`);
 
     // Validate student email exists
@@ -1039,7 +1043,7 @@ async function sendStudentConfirmationEmail(env, appId, formType, applicantName,
 
         // Generate email subject and body
         const subject = `Application Received - ${formType} - ${appId}`;
-        const htmlBody = generateStudentConfirmationHTML(appId, formType, applicantName, email, campus);
+        const htmlBody = generateStudentConfirmationHTML(appId, formType, applicantName, email, campus, programme, semester);
         console.log('[STUDENT CONFIRMATION] Email content generated');
 
         // Send email
@@ -1070,7 +1074,7 @@ async function sendDirectorSoughtConfirmationEmail(env, appId, formType, applica
 
         const htmlBody = renderEmailTemplate({
             title: 'Application Sent for Clearance',
-            greeting: 'Sai Ram!',
+            greeting: 'Dear Student,<br><br>Sairam!<br><br>Greetings from the Examinations Section, SSSIHL.',
             content: `Your application requires clearance from the Director of your campus. It has been automatically forwarded for review.`,
             highlight: {
                 label: 'Your Application ID',
@@ -1081,6 +1085,7 @@ async function sendDirectorSoughtConfirmationEmail(env, appId, formType, applica
                 { label: 'Applicant Name', value: applicantName },
                 { label: 'Form Type', value: formType },
                 { label: 'Campus', value: campus },
+             
                 { label: 'Submitted On', value: submissionDate }
             ],
             importantNote: `
@@ -1093,7 +1098,7 @@ async function sendDirectorSoughtConfirmationEmail(env, appId, formType, applica
 
         await sendEmail(accessToken, {
             to: email,
-            subject: `Action Required: Application Sent for Clearance - ${appId}`,
+            subject: `Application Sent for Clearance - ${appId}`,
             htmlBody: htmlBody
         });
         console.log(`Director-sought confirmation email sent to ${email} for app ${appId}`);
@@ -1195,7 +1200,7 @@ async function handleDuplicateGradeCard(formData, request, env, corsHeaders) {
     } else {
         await sendAdminNotification(env, appId, formType, applicantName, email);
         await sendDirectorNotification(env, request, appId, formType, applicantName, email, campus, semester, regNo, formData.get('program') || null);
-        await sendStudentConfirmationEmail(env, appId, formType, applicantName, email, campus);
+        await sendStudentConfirmationEmail(env, appId, formType, applicantName, email, campus, formData.get('program') || null, formData.get('semester') || null);
     }
 
     return new Response(JSON.stringify({ success: true, appId }), {
@@ -1248,7 +1253,7 @@ async function handleCGPAConversion(formData, request, env, corsHeaders) {
 
     await sendAdminNotification(env, appId, formType, applicantName, email);
     await sendDirectorNotification(env, request, appId, formType, applicantName, email, campus, null, regNo, formData.get('program') || null);
-    await sendStudentConfirmationEmail(env, appId, formType, applicantName, email, campus);
+    await sendStudentConfirmationEmail(env, appId, formType, applicantName, email, campus, formData.get('program') || null, formData.get('semester') || null);
 
     return new Response(JSON.stringify({ success: true, appId }), {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' }
@@ -1321,7 +1326,7 @@ async function handleSupplementaryExam(formData, request, env, corsHeaders) {
     } else {
         await sendAdminNotification(env, appId, formType, applicantName, email);
         await sendDirectorNotification(env, request, appId, formType, applicantName, email, campus, semester, regNo, formData.get('program') || null);
-        await sendStudentConfirmationEmail(env, appId, formType, applicantName, email, campus);
+        await sendStudentConfirmationEmail(env, appId, formType, applicantName, email, campus, formData.get('program') || null, semester || null);
     }
 
     return new Response(JSON.stringify({ success: true, appId }), {
@@ -1394,7 +1399,7 @@ async function handleRepeatPaper(formData, request, env, corsHeaders) {
     } else {
         await sendAdminNotification(env, appId, formType, applicantName, email);
         await sendDirectorNotification(env, request, appId, formType, applicantName, email, campus, semester, regNo, formData.get('program') || null);
-        await sendStudentConfirmationEmail(env, appId, formType, applicantName, email, campus);
+        await sendStudentConfirmationEmail(env, appId, formType, applicantName, email, campus, formData.get('program') || null, semester || null);
     }
 
     return new Response(JSON.stringify({ success: true, appId }), {
@@ -1449,7 +1454,7 @@ async function handleDuplicateDegree(formData, request, env, corsHeaders) {
 
     await sendAdminNotification(env, appId, formType, applicantName, email);
     await sendDirectorNotification(env, request, appId, formType, applicantName, email, campus, null, regNo, formData.get('program') || null);
-    await sendStudentConfirmationEmail(env, appId, formType, applicantName, email, campus);
+    await sendStudentConfirmationEmail(env, appId, formType, applicantName, email, campus, formData.get('program') || null, formData.get('semester') || null);
 
     return new Response(JSON.stringify({ success: true, appId }), {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' }
@@ -1507,7 +1512,7 @@ async function handleNameChange(formData, request, env, corsHeaders) {
     } else {
         await sendAdminNotification(env, appId, formType, applicantName, email);
         await sendDirectorNotification(env, request, appId, formType, applicantName, email, campus, null, regNo, formData.get('program') || null);
-        await sendStudentConfirmationEmail(env, appId, formType, applicantName, email, campus);
+        await sendStudentConfirmationEmail(env, appId, formType, applicantName, email, campus, formData.get('program') || null, formData.get('semester') || null);
     }
 
     return new Response(JSON.stringify({ success: true, appId }), {
@@ -1564,7 +1569,7 @@ async function handleRetotaling(formData, request, env, corsHeaders) {
     }
 
     await sendAdminNotification(env, appId, formType, applicantName, email);
-    await sendStudentConfirmationEmail(env, appId, formType, applicantName, email, campus);
+    await sendStudentConfirmationEmail(env, appId, formType, applicantName, email, campus, formData.get('program') || null, formData.get('semester') || null);
 
     return new Response(JSON.stringify({ success: true, appId }), {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' }
@@ -1612,7 +1617,7 @@ async function handleOnRequestDegree(formData, request, env, corsHeaders) {
     }
 
     await sendAdminNotification(env, appId, formType, applicantName, email);
-    await sendStudentConfirmationEmail(env, appId, formType, applicantName, email, campus);
+    await sendStudentConfirmationEmail(env, appId, formType, applicantName, email, campus, formData.get('program') || null, formData.get('semester') || null);
 
     return new Response(JSON.stringify({ success: true, appId }), {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' }
@@ -1663,7 +1668,7 @@ async function handleMigration(formData, request, env, corsHeaders) {
     }
 
     await sendAdminNotification(env, appId, formType, applicantName, email);
-    await sendStudentConfirmationEmail(env, appId, formType, applicantName, email, campus);
+    await sendStudentConfirmationEmail(env, appId, formType, applicantName, email, campus, formData.get('program') || null, formData.get('semester') || null);
 
     return new Response(JSON.stringify({ success: true, appId }), {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' }
@@ -2178,7 +2183,7 @@ async function handleSubmitToCOE(request, env, corsHeaders) {
         ).bind(appId).run();
 
         await sendAdminNotification(env, appId, app.form_type, app.applicant_name, app.student_email);
-        await sendStudentConfirmationEmail(env, appId, app.form_type, app.applicant_name, app.student_email, app.campus);
+        await sendStudentConfirmationEmail(env, appId, app.form_type, app.applicant_name, app.student_email, app.campus, null, null);
 
         return new Response(JSON.stringify({ success: true }), {
             headers: { ...corsHeaders, 'Content-Type': 'application/json' }
