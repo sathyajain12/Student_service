@@ -514,7 +514,7 @@ export const FORM_CONFIGS = {
         title: 'Application for On-Request Degree Certificate',
         titleLink: {
             text: 'Please click here to make the payment of ₹3000 using SBI Collect',
-            url: 'https://www.onlinesbi.sbi/sbicollect/icollecthome.htm?corpID=350506&categoryName=SSSIHL%20Exam%20App%20%20Re-Totaling%20of%20Marks'
+            url: 'https://onlinesbi.sbi.bank.in/sbicollect/icollecthome.htm?corpID=350506&categoryName=APP%20on%20Request%20Degree%20Certificate%20Issue'
         },
         instructions: [
             'This service is for early issuance of degree certificate before the convocation.',
