@@ -1717,6 +1717,27 @@ async function handleApproval(url, env, corsHeaders) {
             `SELECT id, director_status, controller_status, status, applicant_name, form_type, student_email, reg_no, campus, created_at, updated_at FROM applications WHERE id = ?`
         ).bind(id).first();
 
+        // Fetch programme and semester from the form-specific table
+        const approvalFormTableMap = {
+            'Application for Duplicate Grade Card': 'form_duplicate_grade_card',
+            'Application for End-Semester Supplementary Examinations Registration': 'form_supplementary_exam',
+            'Application for repeating a paper for supplementary examinations (CIE and ESE)': 'form_repeat_paper',
+        };
+        const approvalFormTable = approvalFormTableMap[verification?.form_type];
+        if (approvalFormTable) {
+            try {
+                const formDetails = await env.DB.prepare(
+                    `SELECT Programme, Semester FROM ${approvalFormTable} WHERE application_id = ?`
+                ).bind(id).first();
+                if (formDetails) {
+                    verification.programme = formDetails.Programme || null;
+                    verification.semester = formDetails.Semester || null;
+                }
+            } catch (e) {
+                console.error('Failed to fetch form details for approval page:', e);
+            }
+        }
+
         console.log(`Verification query result:`, verification);
 
         // Send student notification email
