@@ -547,7 +547,6 @@ export const FORM_CONFIGS = {
         instructions: [
             'No Fees is charged for migration certificate.',
             'This certificate is required for joining another University / Institute.',
-            'Upload your Consolidated Grade Card as proof.',
             'Provide complete postal address details.',
             'Mention the University / Institute you propose to join.',
             'Indicate whether you have received your Degree Certificate.',
@@ -609,11 +608,7 @@ export const FORM_CONFIGS = {
             { name: 'city', label: 'City', type: 'text', required: true },
             { name: 'postalCode', label: 'Postal Code', type: 'text', required: true }
         ],
-        files: [{
-            name: 'gradeCard',
-            label: 'Consolidated Grade Card',
-            required: true
-        }]
+        
     }
 };
 
