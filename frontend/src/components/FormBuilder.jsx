@@ -167,7 +167,14 @@ export default function FormBuilder({ config, onSubmit, onCancel, onTrackStatus 
         const bundle = new FormData();
         bundle.append('formId', config.id);
         bundle.append('formType', config.title);
-        Object.entries(formData).forEach(([k, v]) => bundle.append(k, v));
+        Object.entries(formData).forEach(([k, v]) => {
+            if (k === 'programOther') return;
+            if (k === 'program' && v === 'Others' && formData['programOther']) {
+                bundle.append('program', formData['programOther']);
+            } else {
+                bundle.append(k, v);
+            }
+        });
         Object.entries(files).forEach(([k, v]) => bundle.append(k, v));
 
         try {
@@ -200,7 +207,14 @@ export default function FormBuilder({ config, onSubmit, onCancel, onTrackStatus 
         bundle.append('formId', config.id);
         bundle.append('formType', config.title);
         bundle.append('submissionType', 'seek-director-approval');
-        Object.entries(formData).forEach(([k, v]) => bundle.append(k, v));
+        Object.entries(formData).forEach(([k, v]) => {
+            if (k === 'programOther') return;
+            if (k === 'program' && v === 'Others' && formData['programOther']) {
+                bundle.append('program', formData['programOther']);
+            } else {
+                bundle.append(k, v);
+            }
+        });
         Object.entries(files).forEach(([k, v]) => bundle.append(k, v));
 
         try {
@@ -455,18 +469,36 @@ export default function FormBuilder({ config, onSubmit, onCancel, onTrackStatus 
                                             }}>{field.label}</span>
                                         </label>
                                     ) : field.type === 'select' ? (
-                                        <div style={{ position: 'relative' }}>
-                                            <select
-                                                name={field.name}
-                                                required={field.required}
-                                                onChange={handleChange}
-                                                className="form-input"
-                                                style={{ width: '100%', appearance: 'none' }}
-                                            >
-                                                <option value="">Select Option</option>
-                                                {field.options.map(opt => <option key={opt} value={opt}>{opt}</option>)}
-                                            </select>
-                                            <ChevronDown size={18} style={{ position: 'absolute', right: '16px', top: '50%', transform: 'translateY(-50%)', color: 'var(--text-muted)', pointerEvents: 'none' }} />
+                                        <div>
+                                            <div style={{ position: 'relative' }}>
+                                                <select
+                                                    name={field.name}
+                                                    required={field.required}
+                                                    onChange={(e) => {
+                                                        handleChange(e);
+                                                        if (e.target.value !== 'Others') {
+                                                            setFormData(prev => { const next = { ...prev }; delete next.programOther; return next; });
+                                                        }
+                                                    }}
+                                                    className="form-input"
+                                                    style={{ width: '100%', appearance: 'none' }}
+                                                >
+                                                    <option value="">Select Option</option>
+                                                    {field.options.map(opt => <option key={opt} value={opt}>{opt}</option>)}
+                                                </select>
+                                                <ChevronDown size={18} style={{ position: 'absolute', right: '16px', top: '50%', transform: 'translateY(-50%)', color: 'var(--text-muted)', pointerEvents: 'none' }} />
+                                            </div>
+                                            {field.name === 'program' && formData['program'] === 'Others' && (
+                                                <input
+                                                    type="text"
+                                                    name="programOther"
+                                                    placeholder="Please specify your programme"
+                                                    required
+                                                    onChange={handleChange}
+                                                    className="form-input"
+                                                    style={{ marginTop: '8px', width: '100%' }}
+                                                />
+                                            )}
                                         </div>
                                     ) : field.type === 'conditionalSelect' ? (
                                         <div style={{ position: 'relative' }}>
