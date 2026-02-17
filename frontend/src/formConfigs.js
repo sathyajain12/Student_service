@@ -543,17 +543,17 @@ export const FORM_CONFIGS = {
     },
     'migration': {
         title: 'Application for Migration Certificate',
-        descriptionLink: { text: 'To download your Migration Certificate,', linkText: 'please click here', url: 'https://accounts.digilocker.gov.in/v3/7b9f84c86732efd21cd8076ff06f3fd60b1fbe146732fa57444b03b35f3740a4--en' },
+        descriptionLink: { text: 'You can download your Migration Certificate from digilocker,', linkText: 'please click here', url: 'https://accounts.digilocker.gov.in/v3/7b9f84c86732efd21cd8076ff06f3fd60b1fbe146732fa57444b03b35f3740a4--en' },
         instructions: [
             'No Fees is charged for migration certificate.',
-            'This certificate is required for joining another University/Institute.',
+            'This certificate is required for joining another University / Institute.',
             'Upload your Consolidated Grade Card as proof.',
             'Provide complete postal address details.',
-            'Mention the University/Institute you propose to join.',
+            'Mention the University / Institute you propose to join.',
             'Indicate whether you have received your Degree Certificate.',
-            { type: 'address', text: 'Applicants are required to send a self-addressed envelope along with the application. The Institute requires this in order to send the Migration Certificate back to the applicant by post to the address mentioned below.', details: CONTROLLER_ADDRESS },
-            'The name of the applicant, along with the full, complete postal address, including the town/city, PIN code, district and state must be clearly written or typed on the envelope.',
-            'Stamps totalling ₹65 must be affixed on the top right-hand corner of the envelope. This will ensure safe delivery of the document by India Post, via Registered Post with Acknowledgement Due. Students of foreign nationality may affix appropriate postage for an envelope weighing 100-120 g.'
+            { type: 'address', text: 'Applicants are required to send a self-addressed envelope, affixed with stamps totalling ₹65, to the address mentioned below. The Institute requires this for dispatch of the Migration Certificate to the applicant by Speed Post service of India Post.', details: CONTROLLER_ADDRESS },
+            'The name of the applicant, along with the , complete postal address, including the town / city, PIN code, district and state must be clearly written or typed on the envelope.',
+            'Students of foreign nationality may affix appropriate postage for an envelope weighing 100-120 g.'
 
         ],
         fields: [
@@ -578,7 +578,7 @@ export const FORM_CONFIGS = {
             },
             {
                 name: 'lastExam',
-                label: 'Last examination appeared at this Institute(Registration no. and Month & Year of examination)',
+                label: 'Last examination appeared at this Institute (Registered no. and Month & Year of examination)',
                 type: 'text',
                 required: true
             },
@@ -611,7 +611,7 @@ export const FORM_CONFIGS = {
         ],
         files: [{
             name: 'gradeCard',
-            label: 'Grade Card',
+            label: 'Consolidated Grade Card',
             required: true
         }]
     }
