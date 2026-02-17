@@ -651,24 +651,156 @@ async function getApplicationFiles(env, appId) {
     }
 }
 
+// Email Template Utility
+function renderEmailTemplate({ title, greeting, content, details = [], actionButtons = [], importantNote = null, highlight = null }) {
+    const detailRows = details.map(detail => `
+        <tr>
+            <td style="padding: 12px 0; border-bottom: 1px solid #e2e8f0;">
+                <span style="display: block; font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; color: #64748b; margin-bottom: 4px;">${detail.label}</span>
+                <span style="display: block; font-size: 14px; font-weight: 500; color: #1e293b;">${detail.value}</span>
+            </td>
+        </tr>
+    `).join('');
+
+    const buttons = actionButtons.map(btn => `
+        <td style="padding: 0 10px 0 0;">
+            <a href="${btn.link}" style="display: inline-block; background-color: ${btn.color || '#3b82f6'}; color: #ffffff; text-decoration: none; padding: 12px 28px; border-radius: 9999px; font-weight: 600; font-size: 14px; box-shadow: 0 4px 6px -1px rgba(59, 130, 246, 0.2); transition: all 0.2s ease;">${btn.label}</a>
+        </td>
+    `).join('');
+
+    return `
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>${title}</title>
+</head>
+<body style="margin: 0; padding: 0; font-family: 'Inter', sans-serif; background-color: #f8fafc; color: #475569;">
+    <table width="100%" cellpadding="0" cellspacing="0" style="background-color: #f8fafc; padding: 40px 20px;">
+        <tr>
+            <td align="center">
+                <table width="100%" cellpadding="0" cellspacing="0" style="max-width: 600px; background-color: #ffffff; border-radius: 20px; box-shadow: 0 10px 40px -10px rgba(148, 163, 184, 0.2); overflow: hidden;">
+                    <!-- Header Banner -->
+                    <tr>
+                        <td align="center" style="padding: 0;">
+                            <img src="https://student-service.pages.dev/Examinations_Service.png" alt="SSSIHL Examinations Service" width="650" style="width: 100%; height: auto; display: block; border-bottom: 1px solid #f1f5f9;">
+                        </td>
+                    </tr>
+
+                    <!-- Main Message -->
+                    <tr>
+                        <td style="padding: 40px 30px 30px 30px;">
+                            ${greeting ? `<p style="margin: 0 0 16px 0; color: #0f172a; font-size: 18px; font-weight: 700;">${greeting}</p>` : ''}
+                            <h1 style="margin: 0 0 12px 0; color: #0f172a; font-size: 24px; font-weight: 700;">${title}</h1>
+                            <div style="margin: 0; color: #475569; font-size: 15px; line-height: 1.6;">
+                                ${content}
+                            </div>
+                        </td>
+                    </tr>
+
+                    ${highlight ? `
+                    <!-- Highlight Section -->
+                    <tr>
+                        <td style="padding: 0 30px 30px 30px;">
+                            <div style="background-color: #f0f9ff; border-radius: 12px; padding: 20px; border: 1px solid #e0f2fe;">
+                                <p style="margin: 0 0 8px 0; color: #64748b; font-size: 13px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px;">${highlight.label}</p>
+                                <p style="margin: 0; color: #2563eb; font-size: 28px; font-weight: 700; font-family: 'Monaco', 'Courier New', monospace;">${highlight.value}</p>
+                                ${highlight.subtext ? `<p style="margin: 12px 0 0 0; color: #64748b; font-size: 13px;">${highlight.subtext}</p>` : ''}
+                            </div>
+                        </td>
+                    </tr>
+                    ` : ''}
+
+                    ${details.length > 0 ? `
+                    <!-- Details Table -->
+                    <tr>
+                        <td style="padding: 0 30px 30px 30px;">
+                            <h2 style="margin: 0 0 16px 0; color: #0f172a; font-size: 18px; font-weight: 600;">Details</h2>
+                            <table width="100%" cellpadding="12" cellspacing="0" style="background-color: #f8fafc; border-radius: 12px;">
+                                ${detailRows}
+                            </table>
+                        </td>
+                    </tr>
+                    ` : ''}
+
+                    ${importantNote ? `
+                    <!-- Important Note -->
+                    <tr>
+                        <td style="padding: 0 30px 30px 30px;">
+                            <div style="background-color: #fffbeb; border-radius: 12px; padding: 20px; border: 1px solid #fef3c7;">
+                                
+                                <div style="margin: 0; color: #78350f; font-size: 14px; line-height: 1.8;">
+                                    ${importantNote}
+                                </div>
+                            </div>
+                        </td>
+                    </tr>
+                    ` : ''}
+
+                    ${actionButtons.length > 0 ? `
+                    <!-- Action Buttons -->
+                    <tr>
+                        <td style="padding: 0 30px 40px 30px;">
+                            <table width="100%" cellpadding="0" cellspacing="0">
+                                <tr>
+                                    <td align="center">
+                                        <table cellpadding="0" cellspacing="0">
+                                            <tr>
+                                                ${buttons}
+                                            </tr>
+                                        </table>
+                                    </td>
+                                </tr>
+                            </table>
+                        </td>
+                    </tr>
+                    ` : ''}
+
+                    <!-- Footer -->
+                    <tr>
+                        <td style="background-color: #f8fafc; padding: 30px; text-align: center; border-top: 1px solid #e2e8f0;">
+                            <p style="margin: 0 0 8px 0; color: #0f172a; font-size: 15px; font-weight: 600;">Office of the Controller of Examinations</p>
+                            <p style="margin: 0 0 4px 0; color: #64748b; font-size: 14px;">Sri Sathya Sai Institute of Higher Learning</p>
+                            <p style="margin: 0 0 12px 0; color: #64748b; font-size: 13px;">Prasanthi Nilayam, Sri Sathya Sai District, Andhra Pradesh, India</p>
+                            <p style="margin: 0; color: #64748b; font-size: 12px;">This is an automated notification. Please do not reply to this email.</p>
+                        </td>
+                    </tr>
+                </table>
+            </td>
+        </tr>
+    </table>
+</body>
+</html>
+    `;
+}
+
 async function sendAdminNotification(env, appId, formType, applicantName, email) {
     if (env.GOOGLE_CLIENT_ID && env.GOOGLE_CLIENT_SECRET && env.GOOGLE_REFRESH_TOKEN) {
         try {
             const accessToken = await getGoogleAuth(env);
+            const htmlBody = renderEmailTemplate({
+                title: 'New Application Received',
+                greeting: 'Sai Ram!',
+                content: 'A new application has been submitted through the portal and is ready for review.',
+                details: [
+                    { label: 'Application ID', value: appId },
+                    { label: 'Form Type', value: formType },
+                    { label: 'Applicant', value: applicantName },
+                    { label: 'Email', value: email },
+                    { label: 'Submitted On', value: new Date().toLocaleString() }
+                ],
+                actionButtons: [
+                    { label: 'Login to Admin Portal', link: 'https://student-service.pages.dev/admin/login' }
+                ]
+            });
+
             await sendEmail(accessToken, {
                 to: ADMIN_EMAIL,
                 subject: `New Application Received: ${formType} - ${appId}`,
-                htmlBody: `
-                    <h2>New Application Submitted</h2>
-                    <p><strong>Application ID:</strong> ${appId}</p>
-                    <p><strong>Form Type:</strong> ${formType}</p>
-                    <p><strong>Applicant:</strong> ${applicantName}</p>
-                    <p><strong>Email:</strong> ${email}</p>
-                    <p><strong>Submitted:</strong> ${new Date().toLocaleString()}</p>
-                    <hr>
-                    <p>Login to the admin portal to view details and download files.</p>
-                `
+                htmlBody: htmlBody
             });
+            console.log(`Admin notification sent successfully to ${ADMIN_EMAIL} for app ${appId}`);
         } catch (e) {
             console.error('Failed to send admin notification:', e);
         }
@@ -706,150 +838,50 @@ async function sendDirectorNotification(env, request, appId, formType, applicant
         const directorEmail = getDirectorEmail(campus);
         const url = new URL(request.url);
 
-            // Fetch student's uploaded documents count (not attaching files)
-            const files = await getApplicationFiles(env, appId);
-            console.log(`Found ${files.length} files for application ${appId}`);
+        // Fetch student's uploaded documents count (not attaching files)
+        const files = await getApplicationFiles(env, appId);
+        console.log(`Found ${files.length} files for application ${appId}`);
 
-            const submissionDate = new Date().toLocaleString('en-IN', {
-                dateStyle: 'long',
-                timeStyle: 'short',
-                timeZone: 'Asia/Kolkata'
-            });
+        const submissionDate = new Date().toLocaleString('en-IN', {
+            dateStyle: 'long',
+            timeStyle: 'short',
+            timeZone: 'Asia/Kolkata'
+        });
 
-            await sendEmail(accessToken, {
-                to: directorEmail,
-                subject: `Clearance Required: ${formType} - ${appId}`,
-                htmlBody: `
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Clearance Required</title>
-</head>
-<body style="margin: 0; padding: 0; font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background-color: #f1f5f9;">
-    <table width="100%" cellpadding="0" cellspacing="0" style="background-color: #f1f5f9; padding: 40px 20px;">
-        <tr>
-            <td align="center">
-                <table width="100%" cellpadding="0" cellspacing="0" style="max-width: 650px; background-color: #ffffff; border-radius: 16px; overflow: hidden; box-shadow: 0 10px 25px -5px rgba(15, 23, 42, 0.1);">
-                    <!-- Header -->
-                    <tr>
-                        <td align="center" style="padding: 0;">
-                            <img src="https://student-service.pages.dev/Examinations_Service.png" alt="SSSIHL Examinations Service" width="650" style="width: 100%; max-width: 650px; display: block; border: 0;">
-                        </td>
-                    </tr>
-
-                    <!-- Main Message -->
-                    <tr>
-                        <td style="padding: 40px 30px 30px 30px;">
-                            <p style="margin: 0 0 4px 0; color: #0f172a; font-size: 18px; font-weight: 700;">Sai Ram!</p>
-                            <p style="margin: 0 0 16px 0; color: #0f172a; font-size: 18px; font-weight: 700;">Dear Director,</p>
-                            <p style="margin: 0; color: #475569; font-size: 15px; line-height: 1.6;">
-                                A new <strong>${formType}</strong> has been submitted and requires your clearance for further processing.
-                            </p>
-                        </td>
-                    </tr>
-
-                    <!-- Details Table -->
-                    <tr>
-                        <td style="padding: 0 30px 30px 30px;">
-                            <h2 style="margin: 0 0 16px 0; color: #0f172a; font-size: 18px; font-weight: 600;">Application Details</h2>
-                            <table width="100%" cellpadding="12" cellspacing="0" style="background-color: #f8fafc; border-radius: 12px;">
-                                <tr>
-                                    <td style="border-bottom: 1px solid #e2e8f0; padding: 14px; color: #64748b; font-size: 14px;">Application ID</td>
-                                    <td style="border-bottom: 1px solid #e2e8f0; padding: 14px; color: #0f172a; font-size: 14px; font-weight: 600; text-align: right;">${appId}</td>
-                                </tr>
-                                <tr>
-                                    <td style="border-bottom: 1px solid #e2e8f0; padding: 14px; color: #64748b; font-size: 14px;">Form Type</td>
-                                    <td style="border-bottom: 1px solid #e2e8f0; padding: 14px; color: #0f172a; font-size: 14px; font-weight: 600; text-align: right;">${formType}</td>
-                                </tr>
-                                <tr>
-                                    <td style="border-bottom: 1px solid #e2e8f0; padding: 14px; color: #64748b; font-size: 14px;">Applicant Name</td>
-                                    <td style="border-bottom: 1px solid #e2e8f0; padding: 14px; color: #0f172a; font-size: 14px; font-weight: 600; text-align: right;">${applicantName}</td>
-                                </tr>
-                                ${regNo ? `<tr>
-                                    <td style="border-bottom: 1px solid #e2e8f0; padding: 14px; color: #64748b; font-size: 14px;">Registered Number</td>
-                                    <td style="border-bottom: 1px solid #e2e8f0; padding: 14px; color: #0f172a; font-size: 14px; font-weight: 600; text-align: right;">${regNo}</td>
-                                </tr>` : ''}
-                                <tr>
-                                    <td style="border-bottom: 1px solid #e2e8f0; padding: 14px; color: #64748b; font-size: 14px;">Applicant Email</td>
-                                    <td style="border-bottom: 1px solid #e2e8f0; padding: 14px; color: #0f172a; font-size: 14px; font-weight: 600; text-align: right;">${email}</td>
-                                </tr>
-                                <tr>
-                                    <td style="border-bottom: 1px solid #e2e8f0; padding: 14px; color: #64748b; font-size: 14px;">Campus</td>
-                                    <td style="border-bottom: 1px solid #e2e8f0; padding: 14px; color: #0f172a; font-size: 14px; font-weight: 600; text-align: right;">${campus}</td>
-                                </tr>
-                                ${semester ? `<tr>
-                                    <td style="border-bottom: 1px solid #e2e8f0; padding: 14px; color: #64748b; font-size: 14px;">Semester</td>
-                                    <td style="border-bottom: 1px solid #e2e8f0; padding: 14px; color: #0f172a; font-size: 14px; font-weight: 600; text-align: right;">${semester}</td>
-                                </tr>` : ''}
-                                <tr>
-                                    <td style="border-bottom: 1px solid #e2e8f0; padding: 14px; color: #64748b; font-size: 14px;">Submission Date</td>
-                                    <td style="border-bottom: 1px solid #e2e8f0; padding: 14px; color: #0f172a; font-size: 14px; font-weight: 600; text-align: right;">${submissionDate}</td>
-                                </tr>
-                            </table>
-                        </td>
-                    </tr>
-
-                    <!-- Important Note -->
-                    <tr>
-                        <td style="padding: 0 30px 30px 30px;">
-                            <div style="background: #fffbeb; border-left: 4px solid #f59e0b; border-radius: 8px; padding: 16px;">
-                                <p style="margin: 0 0 8px 0; color: #92400e; font-size: 15px; font-weight: 700;">⚠️ Important Note</p>
-                                <p style="margin: 0; color: #78350f; font-size: 14px; line-height: 1.8;">
-                                    Request you to please verify with the campus office regarding the availability of the original grade card before processing this application.<br><br>
-                                    <strong>If the grade card is available at the campus office and the student has not collected it yet, please reject this application.</strong> The student will be notified to contact the campus office to collect their original grade card.
-                                </p>
-                            </div>
-                        </td>
-                    </tr>
-
-                    <!-- Action Buttons -->
-                    <tr>
-                        <td style="padding: 0 30px 40px 30px;">
-                            <table width="100%" cellpadding="0" cellspacing="0">
-                                <tr>
-                                    <td align="center">
-                                        <table cellpadding="0" cellspacing="0">
-                                            <tr>
-                                                <td style="padding-right: 10px;">
-                                                    <a href="${url.origin}/approve?id=${appId}&role=Director&action=Approve" style="display: inline-block; background: linear-gradient(135deg, #10b981 0%, #059669 100%); color: #ffffff; text-decoration: none; padding: 14px 32px; border-radius: 10px; font-weight: 600; font-size: 15px; box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);">✓ Clear Application</a>
-                                                </td>
-                                                <td style="padding-left: 10px;">
-                                                    <a href="${url.origin}/approve?id=${appId}&role=Director&action=Reject" style="display: inline-block; background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%); color: #ffffff; text-decoration: none; padding: 14px 32px; border-radius: 10px; font-weight: 600; font-size: 15px; box-shadow: 0 4px 12px rgba(239, 68, 68, 0.3);">✗ Reject</a>
-                                                </td>
-                                            </tr>
-                                        </table>
-                                    </td>
-                                </tr>
-                            </table>
-                        </td>
-                    </tr>
-
-                    <!-- Footer -->
-                    <tr>
-                        <td style="background-color: #f8fafc; padding: 30px; text-align: center; border-top: 1px solid #e2e8f0;">
-                            <p style="margin: 0 0 8px 0; color: #0f172a; font-size: 15px; font-weight: 600;">Office of the Controller of Examinations</p>
-                            <p style="margin: 0 0 4px 0; color: #64748b; font-size: 14px;">Sri Sathya Sai Institute of Higher Learning</p>
-                            <p style="margin: 0 0 12px 0; color: #64748b; font-size: 14px;">Prasanthi Nilayam – 515 134, Sri Sathya Sai District, Andhra Pradesh, India</p>
-                            <p style="margin: 0; color: #64748b; font-size: 13px;">
-                                <strong>Phone:</strong> 08555-287191
-                            </p>
-                        </td>
-                    </tr>
-                </table>
-            </td>
-        </tr>
-    </table>
-</body>
-</html>
-                `,
-                attachments: []
-            });
-            console.log(`Director email sent to ${directorEmail} for app ${appId}`);
-        } catch (e) {
-            console.error('Failed to send director notification:', e);
-        }
+        await sendEmail(accessToken, {
+            to: directorEmail,
+            subject: `Clearance Required: ${formType} - ${appId}`,
+            htmlBody: renderEmailTemplate({
+                title: 'Clearance Required',
+                greeting: 'Sai Ram!',
+                content: `A new application for <strong>${formType}</strong> has been submitted and requires your clearance for further processing.`,
+                details: [
+                    { label: 'Application ID', value: appId },
+                    { label: 'Form Type', value: formType },
+                    { label: 'Applicant Name', value: applicantName },
+                    { label: 'Registered Number', value: regNo || 'N/A' },
+                    { label: 'Applicant Email', value: email },
+                    { label: 'Campus', value: campus },
+                    { label: 'Semester', value: semester || 'N/A' },
+                    { label: 'Submission Date', value: submissionDate },
+                    { label: 'Documents Found', value: `${files.length} file(s)` }
+                ],
+                importantNote: `
+                        <p style="margin: 0; font-weight: 700;">⚠️ Important Note</p>
+                        <p style="margin: 8px 0 0 0;">Request you to please verify with the campus office regarding the availability of the original grade card before processing this application.</p>
+                        <p style="margin: 8px 0 0 0;"><strong>If the grade card is available at the campus office and the student has not collected it yet, please reject this application.</strong> The student will be notified to contact the campus office to collect their original grade card.</p>
+                    `,
+                actionButtons: [
+                    { label: '✓ Clear Application', link: `${url.origin}/approve?id=${appId}&role=Director&action=Approve`, color: '#10b981' },
+                    { label: '✗ Reject', link: `${url.origin}/approve?id=${appId}&role=Director&action=Reject`, color: '#ef4444' }
+                ]
+            }),
+            attachments: []
+        });
+        console.log(`Director email sent to ${directorEmail} for app ${appId}`);
+    } catch (e) {
+        console.error('Failed to send director notification:', e);
+    }
 }
 
 // Student email notification functions
@@ -863,15 +895,15 @@ function getStudentEmailSubject(formType, appId, isApproved) {
 
 function generateStudentEmailHTML(verification, isApproved, portalUrl) {
     const needsTwoStep = shouldNotifyDirector(verification.form_type);
-    const statusColor = isApproved ? '#059669' : '#dc2626';
-    const statusBgColor = isApproved ? '#d1fae5' : '#fee2e2';
     const statusText = isApproved ? 'APPROVED' : 'REJECTED';
-    const heading = isApproved ? 'Application Approved by Director' : 'Application Status Update';
+    const statusColor = isApproved ? '#059669' : '#dc2626';
+    const heading = isApproved ? 'Application Approved' : 'Application Status Update';
     const isDuplicateGradeCard = verification.form_type === 'Application for Duplicate Grade Card';
-    const message = isApproved
+
+    let content = isApproved
         ? (needsTwoStep
             ? 'Your application has been approved by the Director. Please return to the portal to complete your submission to the Controller of Examinations (COE).'
-            : 'We are pleased to inform you that your application has been approved by the Director.')
+            : 'We are pleased to inform you that your application has been approved.')
         : (isDuplicateGradeCard
             ? 'Your application for Duplicate Grade Card has been reviewed. Please see the details below.'
             : 'Your application status has been updated. Please see the details below.');
@@ -884,127 +916,42 @@ function generateStudentEmailHTML(verification, isApproved, portalUrl) {
         })
         : 'N/A';
 
-    return `
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>${heading}</title>
-</head>
-<body style="margin: 0; padding: 0; font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background-color: #f1f5f9;">
-    <table width="100%" cellpadding="0" cellspacing="0" style="background-color: #f1f5f9; padding: 40px 20px;">
-        <tr>
-            <td align="center">
-                <table width="100%" cellpadding="0" cellspacing="0" style="max-width: 600px; background-color: #ffffff; border-radius: 16px; overflow: hidden; box-shadow: 0 10px 25px -5px rgba(15, 23, 42, 0.1);">
-                    <!-- Header -->
-                    <tr>
-                        <td align="center" style="background: linear-gradient(135deg, #2563eb 0%, #7c3aed 100%); padding: 40px 20px;">
-                            <table cellpadding="0" cellspacing="0">
-                                <tr>
-                                    <td align="center">
-                                        <div style="width: 80px; height: 80px; background-color: white; border-radius: 50%; display: inline-block; margin-bottom: 16px;"></div>
-                                    </td>
-                                </tr>
-                                <tr>
-                                    <td align="center" style="color: #ffffff; font-size: 24px; font-weight: 700; font-family: 'Outfit', sans-serif; padding-top: 10px;">
-                                        SSSIHL
-                                    </td>
-                                </tr>
-                                <tr>
-                                    <td align="center" style="color: rgba(255, 255, 255, 0.9); font-size: 14px; padding-top: 4px;">
-                                        Examination Services
-                                    </td>
-                                </tr>
-                            </table>
-                        </td>
-                    </tr>
-
-                    <!-- Content -->
-                    <tr>
-                        <td style="padding: 40px 30px;">
-                            <h1 style="margin: 0 0 12px 0; color: #0f172a; font-size: 24px; font-weight: 700; font-family: 'Outfit', sans-serif;">${heading}</h1>
-                            <p style="margin: 0 0 30px 0; color: #64748b; font-size: 16px; line-height: 1.6;">${message}</p>
-
-                            <!-- Details Table -->
-                            <table width="100%" cellpadding="12" cellspacing="0" style="background-color: #f8fafc; border-radius: 12px; margin-bottom: 30px;">
-                                <tr>
-                                    <td style="border-bottom: 1px solid #e2e8f0; padding: 14px; color: #64748b; font-size: 14px;">Application ID</td>
-                                    <td style="border-bottom: 1px solid #e2e8f0; padding: 14px; color: #0f172a; font-size: 14px; font-weight: 600; text-align: right;">${verification.id}</td>
-                                </tr>
-                                <tr>
-                                    <td style="border-bottom: 1px solid #e2e8f0; padding: 14px; color: #64748b; font-size: 14px;">Applicant</td>
-                                    <td style="border-bottom: 1px solid #e2e8f0; padding: 14px; color: #0f172a; font-size: 14px; font-weight: 600; text-align: right;">${verification.applicant_name}</td>
-                                </tr>
-                                <tr>
-                                    <td style="border-bottom: 1px solid #e2e8f0; padding: 14px; color: #64748b; font-size: 14px;">Form Type</td>
-                                    <td style="border-bottom: 1px solid #e2e8f0; padding: 14px; color: #0f172a; font-size: 14px; font-weight: 600; text-align: right;">${verification.form_type}</td>
-                                </tr>
-                                <tr>
-                                    <td style="border-bottom: 1px solid #e2e8f0; padding: 14px; color: #64748b; font-size: 14px;">Campus</td>
-                                    <td style="border-bottom: 1px solid #e2e8f0; padding: 14px; color: #0f172a; font-size: 14px; font-weight: 600; text-align: right;">${verification.campus || 'N/A'}</td>
-                                </tr>
-                                <tr>
-                                    <td style="border-bottom: 1px solid #e2e8f0; padding: 14px; color: #64748b; font-size: 14px;">Submitted On</td>
-                                    <td style="border-bottom: 1px solid #e2e8f0; padding: 14px; color: #0f172a; font-size: 14px; font-weight: 600; text-align: right;">${submissionDate}</td>
-                                </tr>
-                                <tr>
-                                    <td style="padding: 14px; color: #64748b; font-size: 14px;">Status</td>
-                                    <td style="padding: 14px; text-align: right;">
-                                        <span style="background-color: ${statusBgColor}; color: ${statusColor}; padding: 6px 14px; border-radius: 20px; font-size: 12px; font-weight: 700; display: inline-block;">${statusText}</span>
-                                    </td>
-                                </tr>
-                            </table>
-
-                            <!-- Next Steps -->
-                            <div style="background-color: #eff6ff; border-left: 4px solid #2563eb; padding: 20px; border-radius: 8px; margin-bottom: 30px;">
-                                <h3 style="margin: 0 0 12px 0; color: #1e40af; font-size: 16px; font-weight: 600;">Next Steps</h3>
-                                <ul style="margin: 0; padding-left: 20px; color: #1e40af; font-size: 14px; line-height: 1.8;">
-                                    ${isApproved
+    let nextSteps = `
+        <ul style="margin: 0; padding-left: 20px; color: #1e40af; font-size: 14px; line-height: 1.8;">
+            ${isApproved
             ? (needsTwoStep
                 ? `<li>Your Director has approved your application</li>
-                                           <li>Click the link below to submit your application to COE</li>
-                                           <li><a href="${portalUrl}#track=${verification.id}" style="color: #2563eb; text-decoration: none; font-weight: 600;">Click here to Submit to COE</a></li>`
+                       <li>Click the button below to submit your application to COE</li>`
                 : `<li>Your request is being processed by the Examination Department</li>
-                                           <li>You will receive further updates via email</li>
-                                           <li>Track your application status anytime at: <a href="${portalUrl}" style="color: #2563eb; text-decoration: none; font-weight: 600;">${portalUrl}</a></li>`)
+                       <li>You will receive further updates via email</li>`)
             : (isDuplicateGradeCard
                 ? `<li><strong>Your original grade card is available at the ${verification.campus || 'campus'} office</strong></li>
-                                           <li>Please contact the campus office to collect your grade card</li>
-                                           <li>Duplicate grade cards are issued only when the original has been lost beyond recovery</li>
-                                           <li>For queries, please contact: <a href="mailto:examination@sssihl.edu.in" style="color: #2563eb; text-decoration: none;">examination@sssihl.edu.in</a></li>`
-                : `<li>For queries or clarifications, please contact: <a href="mailto:examination@sssihl.edu.in" style="color: #2563eb; text-decoration: none;">examination@sssihl.edu.in</a></li>
-                                           <li>Track your application status: <a href="${portalUrl}" style="color: #2563eb; text-decoration: none; font-weight: 600;">${portalUrl}</a></li>`)
+                       <li>Please contact the campus office to collect your grade card</li>`
+                : `<li>For queries or clarifications, please contact: <a href="mailto:examination@sssihl.edu.in" style="color: #2563eb; text-decoration: none;">examination@sssihl.edu.in</a></li>`)
         }
-                                </ul>
-                            </div>
-
-                            <!-- CTA Button -->
-                            <table width="100%" cellpadding="0" cellspacing="0">
-                                <tr>
-                                    <td align="center">
-                                        <a href="${needsTwoStep && isApproved ? portalUrl + '#track=' + verification.id : portalUrl}" style="display: inline-block; background: linear-gradient(135deg, #2563eb 0%, #7c3aed 100%); color: #ffffff; text-decoration: none; padding: 14px 32px; border-radius: 10px; font-weight: 600; font-size: 15px;">${needsTwoStep && isApproved ? 'Submit to COE Now' : 'Track Application Status'}</a>
-                                    </td>
-                                </tr>
-                            </table>
-                        </td>
-                    </tr>
-
-                    <!-- Footer -->
-                    <tr>
-                        <td style="background-color: #f8fafc; padding: 30px; text-align: center; border-top: 1px solid #e2e8f0;">
-                            <p style="margin: 0 0 8px 0; color: #0f172a; font-size: 15px; font-weight: 600;">Sri Sathya Sai Institute of Higher Learning</p>
-                            <p style="margin: 0 0 4px 0; color: #64748b; font-size: 13px;">Examination Services Portal</p>
-                            <p style="margin: 0; color: #94a3b8; font-size: 12px;">This is an automated notification. Please do not reply to this email.</p>
-                        </td>
-                    </tr>
-                </table>
-            </td>
-        </tr>
-    </table>
-</body>
-</html>
+        </ul>
     `;
+
+    return renderEmailTemplate({
+        title: heading,
+        greeting: 'Sai Ram!',
+        content: content,
+        details: [
+            { label: 'Application ID', value: verification.id },
+            { label: 'Applicant', value: verification.applicant_name },
+            { label: 'Form Type', value: verification.form_type },
+            { label: 'Campus', value: verification.campus },
+            { label: 'Submitted On', value: submissionDate },
+            { label: 'Status', value: `<span style="color: ${statusColor}; font-weight: 700;">${statusText}</span>` }
+        ],
+        importantNote: nextSteps,
+        actionButtons: [
+            {
+                label: (needsTwoStep && isApproved) ? 'Submit to COE Now' : 'Track Application Status',
+                link: `${portalUrl}#track=${verification.id}`
+            }
+        ]
+    });
 }
 
 async function sendStudentDecisionEmail(env, verification, isApproved, portalUrl) {
@@ -1044,137 +991,35 @@ function generateStudentConfirmationHTML(appId, formType, applicantName, email, 
         timeZone: 'Asia/Kolkata'
     });
 
-    return `
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Application Submitted Successfully</title>
-</head>
-<body style="margin: 0; padding: 0; font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background-color: #f1f5f9;">
-    <table width="100%" cellpadding="0" cellspacing="0" style="background-color: #f1f5f9; padding: 40px 20px;">
-        <tr>
-            <td align="center">
-                <table width="100%" cellpadding="0" cellspacing="0" style="max-width: 600px; background-color: #ffffff; border-radius: 16px; overflow: hidden; box-shadow: 0 10px 25px -5px rgba(15, 23, 42, 0.1);">
-                    <!-- Header -->
-                    <tr>
-                        <td align="center" style="background: linear-gradient(135deg, #2563eb 0%, #7c3aed 100%); padding: 40px 20px;">
-                            <table cellpadding="0" cellspacing="0">
-                                <tr>
-                                    <td align="center">
-                                        <img src="https://student-service.pages.dev/logo.png" alt="SSSIHL Logo" style="width: 80px; height: 80px; display: block; margin: 0 auto 16px;">
-                                    </td>
-                                </tr>
-                                <tr>
-                                    <td align="center" style="color: #ffffff; font-size: 24px; font-weight: 700; padding-top: 10px;">
-                                        SSSIHL
-                                    </td>
-                                </tr>
-                                <tr>
-                                    <td align="center" style="color: rgba(255, 255, 255, 0.9); font-size: 14px; padding-top: 4px;">
-                                        Examination Services Portal
-                                    </td>
-                                </tr>
-                            </table>
-                        </td>
-                    </tr>
-
-                    <!-- Success Message -->
-                    <tr>
-                        <td style="padding: 40px 30px 30px 30px; text-align: center;">
-                            <h1 style="margin: 0 0 12px 0; color: #0f172a; font-size: 26px; font-weight: 700;">Application Submitted Successfully!</h1>
-                            <p style="margin: 0; color: #64748b; font-size: 16px; line-height: 1.6;">
-                                <strong>Sai Ram!</strong><br>
-                                Thank you for submitting your application. We have received your request and it is now being processed.
-                            </p>
-                        </td>
-                    </tr>
-
-                    <!-- Application ID Highlight -->
-                    <tr>
-                        <td style="padding: 0 30px 30px 30px;">
-                            <div style="background: linear-gradient(135deg, #eff6ff 0%, #f5f3ff 100%); border: 2px solid #2563eb; border-radius: 12px; padding: 20px; text-align: center;">
-                                <p style="margin: 0 0 8px 0; color: #64748b; font-size: 13px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px;">Your Application ID</p>
-                                <p style="margin: 0; color: #2563eb; font-size: 28px; font-weight: 700; font-family: 'Monaco', 'Courier New', monospace;">${appId}</p>
-                                <p style="margin: 12px 0 0 0; color: #64748b; font-size: 13px;">Please save this ID for tracking your application</p>
-                            </div>
-                        </td>
-                    </tr>
-
-                    <!-- Details Table -->
-                    <tr>
-                        <td style="padding: 0 30px 30px 30px;">
-                            <h2 style="margin: 0 0 16px 0; color: #0f172a; font-size: 18px; font-weight: 600;">Application Details</h2>
-                            <table width="100%" cellpadding="12" cellspacing="0" style="background-color: #f8fafc; border-radius: 12px;">
-                                <tr>
-                                    <td style="border-bottom: 1px solid #e2e8f0; padding: 14px; color: #64748b; font-size: 14px;">Applicant Name</td>
-                                    <td style="border-bottom: 1px solid #e2e8f0; padding: 14px; color: #0f172a; font-size: 14px; font-weight: 600; text-align: right;">${applicantName}</td>
-                                </tr>
-                                <tr>
-                                    <td style="border-bottom: 1px solid #e2e8f0; padding: 14px; color: #64748b; font-size: 14px;">Email</td>
-                                    <td style="border-bottom: 1px solid #e2e8f0; padding: 14px; color: #0f172a; font-size: 14px; font-weight: 600; text-align: right;">${email}</td>
-                                </tr>
-                                <tr>
-                                    <td style="border-bottom: 1px solid #e2e8f0; padding: 14px; color: #64748b; font-size: 14px;">Form Type</td>
-                                    <td style="border-bottom: 1px solid #e2e8f0; padding: 14px; color: #0f172a; font-size: 14px; font-weight: 600; text-align: right;">${formType}</td>
-                                </tr>
-                                <tr>
-                                    <td style="border-bottom: 1px solid #e2e8f0; padding: 14px; color: #64748b; font-size: 14px;">Campus</td>
-                                    <td style="border-bottom: 1px solid #e2e8f0; padding: 14px; color: #0f172a; font-size: 14px; font-weight: 600; text-align: right;">${campus || 'N/A'}</td>
-                                </tr>
-                                <tr>
-                                    <td style="padding: 14px; color: #64748b; font-size: 14px;">Submitted On</td>
-                                    <td style="padding: 14px; color: #0f172a; font-size: 14px; font-weight: 600; text-align: right;">${submissionDate}</td>
-                                </tr>
-                            </table>
-                        </td>
-                    </tr>
-
-                    <!-- Next Steps -->
-                    <tr>
-                        <td style="padding: 0 30px 30px 30px;">
-                            <div style="background-color: #eff6ff; border-left: 4px solid #2563eb; padding: 20px; border-radius: 8px;">
-                                <h3 style="margin: 0 0 12px 0; color: #1e40af; font-size: 16px; font-weight: 600;">What Happens Next?</h3>
-                                <ul style="margin: 0; padding-left: 20px; color: #1e40af; font-size: 14px; line-height: 1.8;">
-                                    <li>Your application will be reviewed by the relevant authorities</li>
-                                    <li>You will receive email notifications at each stage of the approval process</li>
-                                    <li>You can track your application status anytime using your Application ID</li>
-                                    <li>For queries, contact: <a href="mailto:examination@sssihl.edu.in" style="color: #2563eb; text-decoration: none;">examination@sssihl.edu.in</a></li>
-                                </ul>
-                            </div>
-                        </td>
-                    </tr>
-
-                    <!-- CTA Button -->
-                    <tr>
-                        <td style="padding: 0 30px 40px 30px;">
-                            <table width="100%" cellpadding="0" cellspacing="0">
-                                <tr>
-                                    <td align="center">
-                                        <a href="https://student-service.pages.dev/#track" style="display: inline-block; background: linear-gradient(135deg, #2563eb 0%, #7c3aed 100%); color: #ffffff; text-decoration: none; padding: 14px 32px; border-radius: 10px; font-weight: 600; font-size: 15px;">Track Application Status</a>
-                                    </td>
-                                </tr>
-                            </table>
-                        </td>
-                    </tr>
-
-                    <!-- Footer -->
-                    <tr>
-                        <td style="background-color: #f8fafc; padding: 30px; text-align: center; border-top: 1px solid #e2e8f0;">
-                            <p style="margin: 0 0 8px 0; color: #0f172a; font-size: 15px; font-weight: 600;">Sri Sathya Sai Institute of Higher Learning</p>
-                            <p style="margin: 0 0 4px 0; color: #64748b; font-size: 13px;">(Deemed to be University)</p>
-                            <p style="margin: 0 0 4px 0; color: #64748b; font-size: 13px;">Prasanthi Nilayam – 515 134, Andhra Pradesh, India</p>
-                            <p style="margin: 12px 0 0 0; color: #94a3b8; font-size: 12px;">This is an automated notification. Please do not reply to this email.</p>
-                        </td>
-                    </tr>
-                </table>
-            </td>
-        </tr>
-    </table>
-</body>
-</html>
-    `;
+    return renderEmailTemplate({
+        title: 'Application Submitted Successfully!',
+        greeting: 'Sai Ram!',
+        content: 'Thank you for submitting your application. We have received your request and it is now being processed.',
+        highlight: {
+            label: 'Your Application ID',
+            value: appId,
+            subtext: 'Please save this ID for tracking your application'
+        },
+        details: [
+            { label: 'Applicant Name', value: applicantName },
+            { label: 'Email', value: email },
+            { label: 'Form Type', value: formType },
+            { label: 'Campus', value: campus },
+            { label: 'Submitted On', value: submissionDate }
+        ],
+        importantNote: `
+            <h3 style="margin: 0 0 12px 0; color: #1e40af; font-size: 16px; font-weight: 600;">What Happens Next?</h3>
+            <ul style="margin: 0; padding-left: 20px; color: #1e40af; font-size: 14px; line-height: 1.8;">
+                <li>Your application will be reviewed by the relevant authorities</li>
+                <li>You will receive email notifications at each stage of the approval process</li>
+                <li>You can track your application status anytime using your Application ID</li>
+                <li>For queries, contact: <a href="mailto:examination@sssihl.edu.in" style="color: #2563eb; text-decoration: none;">examination@sssihl.edu.in</a></li>
+            </ul>
+        `,
+        actionButtons: [
+            { label: 'Track Application Status', link: 'https://student-service.pages.dev/#track' }
+        ]
+    });
 }
 
 async function sendStudentConfirmationEmail(env, appId, formType, applicantName, email, campus) {
@@ -1215,42 +1060,42 @@ async function sendStudentConfirmationEmail(env, appId, formType, applicantName,
 }
 
 async function sendDirectorSoughtConfirmationEmail(env, appId, formType, applicantName, email, campus) {
-    if (!email) return;
     try {
         const accessToken = await getGoogleAuth(env);
-        const subject = `Director Approval Requested - ${formType} - ${appId}`;
-        const htmlBody = `
-            <div style="font-family: 'Segoe UI', Arial, sans-serif; max-width: 600px; margin: 0 auto; background: #ffffff;">
-                <div style="text-align: center; padding: 0;">
-                    <img src="https://student-service.pages.dev/Examinations_Service.png" alt="SSSIHL Examinations Service" style="width: 100%; max-width: 600px; display: block; border: 0;">
-                </div>
-                <div style="padding: 30px;">
-                    <p style="font-size: 15px; color: #334155; margin-bottom: 15px;">Sai Ram!<br>Dear <strong>${applicantName}</strong>,</p>
-                    <p style="font-size: 15px; color: #334155;">Your application has been successfully submitted and sent to the <strong>Director of ${campus}</strong> for approval.</p>
+        const submissionDate = new Date().toLocaleString('en-IN', {
+            dateStyle: 'long',
+            timeStyle: 'short',
+            timeZone: 'Asia/Kolkata'
+        });
 
-                    <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 12px; padding: 20px; margin: 20px 0;">
-                        <p style="margin: 5px 0; font-size: 14px;"><strong>Application ID:</strong> ${appId}</p>
-                        <p style="margin: 5px 0; font-size: 14px;"><strong>Form Type:</strong> ${formType}</p>
-                        <p style="margin: 5px 0; font-size: 14px;"><strong>Campus:</strong> ${campus}</p>
-                    </div>
+        const htmlBody = renderEmailTemplate({
+            title: 'Application Sent for Clearance',
+            greeting: 'Sai Ram!',
+            content: `Your application requires clearance from the Director of your campus. It has been automatically forwarded for review.`,
+            highlight: {
+                label: 'Your Application ID',
+                value: appId,
+                subtext: 'Use this ID to track status updates'
+            },
+            details: [
+                { label: 'Applicant Name', value: applicantName },
+                { label: 'Form Type', value: formType },
+                { label: 'Campus', value: campus },
+                { label: 'Submitted On', value: submissionDate }
+            ],
+            importantNote: `
+                <p style="margin: 0;">Once your Director provides clearance, your application will be forwarded to the Controller of Examinations. You will receive an email notification when this happens.</p>
+            `,
+            actionButtons: [
+                { label: 'Track Application Status', link: 'https://student-service.pages.dev/#track' }
+            ]
+        });
 
-                    <div style="background: #fffbeb; border: 1px solid #fde68a; border-radius: 12px; padding: 20px; margin: 20px 0;">
-                        <h3 style="color: #92400e; margin: 0 0 10px 0; font-size: 15px;">What happens next?</h3>
-                        <ul style="color: #92400e; font-size: 14px; padding-left: 20px; margin: 0;">
-                            <li style="margin-bottom: 6px;">The Director will review your application and supporting documents.</li>
-                            <li style="margin-bottom: 6px;">You will receive an email notification once the Director makes a decision.</li>
-                            <li style="margin-bottom: 6px;">If approved, you must return to the portal and submit your application to COE using the <strong>Track Application</strong> feature.</li>
-                        </ul>
-                    </div>
-
-                    <p style="font-size: 14px; color: #64748b;">Please save your <strong>Application ID: ${appId}</strong> for tracking your application status.</p>
-                </div>
-                <div style="background: #f8fafc; padding: 20px; text-align: center; border-top: 1px solid #e2e8f0;">
-                    <p style="color: #64748b; font-size: 12px; margin: 0;">Office of the Controller of Examinations<br>Sri Sathya Sai Institute of Higher Learning</p>
-                </div>
-            </div>
-        `;
-        await sendEmail(accessToken, { to: email, subject, htmlBody });
+        await sendEmail(accessToken, {
+            to: email,
+            subject: `Action Required: Application Sent for Clearance - ${appId}`,
+            htmlBody: htmlBody
+        });
         console.log(`Director-sought confirmation email sent to ${email} for app ${appId}`);
     } catch (error) {
         console.error('Failed to send director-sought confirmation:', error);
@@ -1879,8 +1724,14 @@ async function handleApproval(url, env, corsHeaders) {
             const frontendUrl = 'https://student-service.pages.dev';
             await sendStudentDecisionEmail(env, verification, action === 'Approve', frontendUrl);
             console.log(`Student notification sent to ${verification.student_email}`);
+
+            // If Director approved, notify Admin (COE)
+            if (role === 'Director' && action === 'Approve') {
+                await sendAdminNotification(env, id, verification.form_type, verification.applicant_name, verification.student_email);
+                console.log(`Admin notification sent for Director-approved app ${id}`);
+            }
         } catch (emailError) {
-            console.error('Failed to send student email:', emailError);
+            console.error('Failed to send email notifications:', emailError);
             // Continue - email failure is non-critical
         }
 

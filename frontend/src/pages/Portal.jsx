@@ -158,21 +158,19 @@ export default function Portal({ onSelectForm, onTrackStatus }) {
         })}
       </div>
 
-      <footer style={{
-        marginTop: '80px',
-        padding: '35px 40px',
-        background: 'var(--accent-gradient)',
-        borderRadius: '20px',
-        color: 'white',
+      <footer className="glass-card" style={{
+        marginTop: '60px',
+        padding: '30px',
         display: 'flex',
         justifyContent: 'space-between',
         alignItems: 'flex-start',
         gap: '40px',
-        flexWrap: 'wrap'
+        flexWrap: 'wrap',
+        borderTop: '1px solid var(--glass-border)'
       }}>
         <div>
-          <h4 style={{ fontSize: '1.05rem', fontWeight: '700', margin: 0, marginBottom: '14px' }}>Address</h4>
-          <div style={{ fontSize: '0.9rem', lineHeight: '1.7', opacity: 0.9 }}>
+          <h4 style={{ fontSize: '1rem', fontWeight: '700', margin: 0, marginBottom: '12px', color: 'var(--primary)' }}>Address</h4>
+          <div style={{ fontSize: '0.9rem', lineHeight: '1.6', color: 'var(--text-muted)' }}>
             <p style={{ margin: 0 }}>The Controller of Examinations</p>
             <p style={{ margin: 0 }}>Administrative Office</p>
             <p style={{ margin: 0 }}>Sri Sathya Sai Institute of Higher Learning</p>
@@ -181,11 +179,11 @@ export default function Portal({ onSelectForm, onTrackStatus }) {
           </div>
         </div>
         <div>
-          <h4 style={{ fontSize: '1.05rem', fontWeight: '700', margin: 0, marginBottom: '14px' }}>Contact Details</h4>
-          <div style={{ fontSize: '0.9rem', lineHeight: '1.7', opacity: 0.9 }}>
-            <p style={{ margin: 0 }}>Tel: +91 8555 287 191</p>
-            <p style={{ margin: 0 }}>Email: <a href="mailto:controller@sssihl.edu.in" style={{ color: 'white', textDecoration: 'underline' }}>controller@sssihl.edu.in</a></p>
-            <p style={{ margin: 0 }}>Web: <a href="https://sssihl.edu.in" target="_blank" rel="noopener noreferrer" style={{ color: 'white', textDecoration: 'underline' }}>sssihl.edu.in</a></p>
+          <h4 style={{ fontSize: '1rem', fontWeight: '700', margin: 0, marginBottom: '12px', color: 'var(--primary)' }}>Contact Details</h4>
+          <div style={{ fontSize: '0.9rem', lineHeight: '1.6', color: 'var(--text-muted)' }}>
+            <p style={{ margin: 0 }}>Tel: <span style={{ color: 'var(--text-main)' }}>+91 8555 287 191</span></p>
+            <p style={{ margin: 0 }}>Email: <a href="mailto:controller@sssihl.edu.in" style={{ color: 'var(--accent)', textDecoration: 'none', fontWeight: '500' }}>controller@sssihl.edu.in</a></p>
+            <p style={{ margin: 0 }}>Web: <a href="https://sssihl.edu.in" target="_blank" rel="noopener noreferrer" style={{ color: 'var(--accent)', textDecoration: 'none', fontWeight: '500' }}>sssihl.edu.in</a></p>
           </div>
         </div>
       </footer>
