@@ -85,9 +85,8 @@ export const FORM_CONFIGS = {
         instructions: [
             'As the Institute follows a grading system, grade cards-which are already issued to the students by the Institute-serve as Statement of Marks. No other mark statements are issued. However, if required, a Statement of CGPA Equivalent Percentage of Marks is issued on application to pursue further studies or to seek a job.',
             'No Fee is charged for the issue of a Statement of CGPA Equivalent Percentage of Marks.',
-            { type: 'address', text: 'Applicants are required to send a self-addressed envelope along with the application. The Institute requires this in order to send it back to the applicant by post.', details: CONTROLLER_ADDRESS },
-            'The name of the applicant, along with the full, complete postal address, including the town/city, PIN code, district and state must be clearly written or typed on the envelope.',
-            'Stamps totalling ₹95 must be affixed to the envelope. This will ensure safe delivery of the document by India Post, via Registered Post with Acknowledgement Due. This is especially important since the Statement of CGPA Equivalent Percentage of Marks is an original document (like a Grade Card or the Degree Certificate).',
+            { type: 'address', text: 'Applicants are required to send a self-addressed envelope affixed with stamps totalling ₹95, to the address mentioned below. The Institute requires this for dispatch of the statement of conversion of CGPA into equivalent percentage of marks to the applicant by Speed Post service of India Post.', details: CONTROLLER_ADDRESS },
+            'The name of the applicant, along with the complete postal address, including the town / city, PIN code, district and state must be clearly written or typed on the envelope.',            
             'Students of foreign nationality may affix appropriate postage for an envelope weighing 100-120 g.',
         ],
         fields: [{ name: 'applicantName', label: 'Candidate Name', type: 'text', required: true },
@@ -490,8 +489,8 @@ export const FORM_CONFIGS = {
 
         {
             name: 'subjectCode',
-            label: 'Subject Code',
-            type: 'text',
+            label: 'Papers for Re-Totalling',
+            type: 'paperTable',
             required: true
         }],
 
