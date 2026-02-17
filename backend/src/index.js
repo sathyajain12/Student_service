@@ -934,12 +934,12 @@ function generateStudentEmailHTML(verification, isApproved, portalUrl) {
 
     return renderEmailTemplate({
         title: heading,
-        greeting: 'Sai Ram!',
+        greeting: 'Dear Student,<br><br>Sairam!<br><br>Greetings from the Examinations Section, SSSIHL.',
         content: content,
         details: [
+            { label: 'Form Type', value: verification.form_type },
             { label: 'Application ID', value: verification.id },
             { label: 'Applicant', value: verification.applicant_name },
-            { label: 'Form Type', value: verification.form_type },
             { label: 'Campus', value: verification.campus },
             ...(verification.programme ? [{ label: 'Programme', value: verification.programme }] : []),
             ...(verification.semester ? [{ label: 'Semester', value: verification.semester }] : []),
