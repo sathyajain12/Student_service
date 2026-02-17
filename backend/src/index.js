@@ -828,7 +828,7 @@ function shouldNotifyDirector(formType) {
     return forms.includes(formType);
 }
 
-async function sendDirectorNotification(env, request, appId, formType, applicantName, email, campus, semester = null, regNo = null) {
+async function sendDirectorNotification(env, request, appId, formType, applicantName, email, campus, semester = null, regNo = null, programme = null) {
     if (!shouldNotifyDirector(formType)) {
         return;
     }
@@ -853,23 +853,23 @@ async function sendDirectorNotification(env, request, appId, formType, applicant
             subject: `Clearance Required: ${formType} - ${appId}`,
             htmlBody: renderEmailTemplate({
                 title: 'Clearance Required',
-                greeting: 'Sai Ram!',
-                content: `A new application for <strong>${formType}</strong> has been submitted and requires your clearance for further processing.`,
+                greeting: 'Dear Madam / Sir,<br><br>Sairam!<br><br>Greetings from the Examinations Section, SSSIHL.',
+                content: `An application for <strong>${formType}</strong> has been submitted and requires your clearance for further processing.`,
                 details: [
-                    { label: 'Application ID', value: appId },
                     { label: 'Form Type', value: formType },
+                    { label: 'Application ID', value: appId },
                     { label: 'Applicant Name', value: applicantName },
                     { label: 'Registered Number', value: regNo || 'N/A' },
                     { label: 'Applicant Email', value: email },
                     { label: 'Campus', value: campus },
+                    ...(programme ? [{ label: 'Programme', value: programme }] : []),
                     { label: 'Semester', value: semester || 'N/A' },
                     { label: 'Submission Date', value: submissionDate },
-                    { label: 'Documents Found', value: `${files.length} file(s)` }
                 ],
                 importantNote: `
                         <p style="margin: 0; font-weight: 700;">⚠️ Important Note</p>
-                        <p style="margin: 8px 0 0 0;">Request you to please verify with the campus office regarding the availability of the original grade card before processing this application.</p>
-                        <p style="margin: 8px 0 0 0;"><strong>If the grade card is available at the campus office and the student has not collected it yet, please reject this application.</strong> The student will be notified to contact the campus office to collect their original grade card.</p>
+                        <p style="margin: 8px 0 0 0;">Request you to please verify the availability of the original grade card in the campus office before processing this application.</p>
+                        <p style="margin: 8px 0 0 0;"><strong>If the grade card is available at the campus office and the student has not collected it yet, please reject this application. The student will be notified to contact the campus office to collect her / his original grade card.</p>
                     `,
                 actionButtons: [
                     { label: '✓ Clear Application', link: `${url.origin}/approve?id=${appId}&role=Director&action=Approve`, color: '#10b981' },
@@ -1190,11 +1190,11 @@ async function handleDuplicateGradeCard(formData, request, env, corsHeaders) {
 
     // 4. Send notifications based on submission type
     if (isSeekingDirectorApproval) {
-        await sendDirectorNotification(env, request, appId, formType, applicantName, email, campus, semester, regNo);
+        await sendDirectorNotification(env, request, appId, formType, applicantName, email, campus, semester, regNo, formData.get('program') || null);
         await sendDirectorSoughtConfirmationEmail(env, appId, formType, applicantName, email, campus);
     } else {
         await sendAdminNotification(env, appId, formType, applicantName, email);
-        await sendDirectorNotification(env, request, appId, formType, applicantName, email, campus, semester, regNo);
+        await sendDirectorNotification(env, request, appId, formType, applicantName, email, campus, semester, regNo, formData.get('program') || null);
         await sendStudentConfirmationEmail(env, appId, formType, applicantName, email, campus);
     }
 
@@ -1247,7 +1247,7 @@ async function handleCGPAConversion(formData, request, env, corsHeaders) {
     }
 
     await sendAdminNotification(env, appId, formType, applicantName, email);
-    await sendDirectorNotification(env, request, appId, formType, applicantName, email, campus, null, regNo);
+    await sendDirectorNotification(env, request, appId, formType, applicantName, email, campus, null, regNo, formData.get('program') || null);
     await sendStudentConfirmationEmail(env, appId, formType, applicantName, email, campus);
 
     return new Response(JSON.stringify({ success: true, appId }), {
@@ -1316,11 +1316,11 @@ async function handleSupplementaryExam(formData, request, env, corsHeaders) {
     }
 
     if (isSeekingDirectorApproval) {
-        await sendDirectorNotification(env, request, appId, formType, applicantName, email, campus, semester, regNo);
+        await sendDirectorNotification(env, request, appId, formType, applicantName, email, campus, semester, regNo, formData.get('program') || null);
         await sendDirectorSoughtConfirmationEmail(env, appId, formType, applicantName, email, campus);
     } else {
         await sendAdminNotification(env, appId, formType, applicantName, email);
-        await sendDirectorNotification(env, request, appId, formType, applicantName, email, campus, semester, regNo);
+        await sendDirectorNotification(env, request, appId, formType, applicantName, email, campus, semester, regNo, formData.get('program') || null);
         await sendStudentConfirmationEmail(env, appId, formType, applicantName, email, campus);
     }
 
@@ -1389,11 +1389,11 @@ async function handleRepeatPaper(formData, request, env, corsHeaders) {
     }
 
     if (isSeekingDirectorApproval) {
-        await sendDirectorNotification(env, request, appId, formType, applicantName, email, campus, semester, regNo);
+        await sendDirectorNotification(env, request, appId, formType, applicantName, email, campus, semester, regNo, formData.get('program') || null);
         await sendDirectorSoughtConfirmationEmail(env, appId, formType, applicantName, email, campus);
     } else {
         await sendAdminNotification(env, appId, formType, applicantName, email);
-        await sendDirectorNotification(env, request, appId, formType, applicantName, email, campus, semester, regNo);
+        await sendDirectorNotification(env, request, appId, formType, applicantName, email, campus, semester, regNo, formData.get('program') || null);
         await sendStudentConfirmationEmail(env, appId, formType, applicantName, email, campus);
     }
 
@@ -1448,7 +1448,7 @@ async function handleDuplicateDegree(formData, request, env, corsHeaders) {
     }
 
     await sendAdminNotification(env, appId, formType, applicantName, email);
-    await sendDirectorNotification(env, request, appId, formType, applicantName, email, campus, null, regNo);
+    await sendDirectorNotification(env, request, appId, formType, applicantName, email, campus, null, regNo, formData.get('program') || null);
     await sendStudentConfirmationEmail(env, appId, formType, applicantName, email, campus);
 
     return new Response(JSON.stringify({ success: true, appId }), {
@@ -1502,11 +1502,11 @@ async function handleNameChange(formData, request, env, corsHeaders) {
     }
 
     if (isSeekingDirectorApproval) {
-        await sendDirectorNotification(env, request, appId, formType, applicantName, email, campus, null, regNo);
+        await sendDirectorNotification(env, request, appId, formType, applicantName, email, campus, null, regNo, formData.get('program') || null);
         await sendDirectorSoughtConfirmationEmail(env, appId, formType, applicantName, email, campus);
     } else {
         await sendAdminNotification(env, appId, formType, applicantName, email);
-        await sendDirectorNotification(env, request, appId, formType, applicantName, email, campus, null, regNo);
+        await sendDirectorNotification(env, request, appId, formType, applicantName, email, campus, null, regNo, formData.get('program') || null);
         await sendStudentConfirmationEmail(env, appId, formType, applicantName, email, campus);
     }
 
