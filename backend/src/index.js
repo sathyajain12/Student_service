@@ -810,7 +810,7 @@ async function sendAdminNotification(env, appId, formType, applicantName, email)
 // Director email functions
 function getDirectorEmail(campus) {
     const map = {
-        'Prashanti Nilayam Campus': 'saisathyajain@sssihl.edu.in',
+        'Prashanti Nilayam Campus': 'controller@sssihl.edu.in',
         'Anantapur Campus': 'results@sssihl.edu.in',
         'Brindavan Campus': 'sathyajain9@gmail.com',
         'Nandigiri Campus': 'sathyajain99@outlook.com'
