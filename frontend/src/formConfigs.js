@@ -338,10 +338,10 @@ export const FORM_CONFIGS = {
         needsDirectorApproval: true,
         title: 'Application for Registration of Student Name change in the Institute Records',
         instructions: [
-            'You must have a valid Gazette Notification for the name change. The Gazette Notification must be from the Gazette of India.',
-            'Upload your Previous Qualification Certificate as proof.',
-            'The new name should exactly match the Gazette notification.',
-            'Complete address details are required.',
+            'Any change of name must be notified through the Official Gazette of the Government of India as per the prescribed procedure. The Gazette notification shall serve as the primary legal proof of the change of name and shall be valid for all official purposes.',
+            'It shall be the sole responsibility of the applicant to ensure that the changed name, as notified in the Official Gazette, is duly reflected and consistently recorded across all previous qualifying examination documents, and that the same has been duly updated by the respective issuing authorities prior to submission.',
+            { type: 'address', text: 'Applicants are required to send a self-addressed, cloth-lined envelope (16 × 12 inches in size), affixed with stamps totalling ₹95, to the address mentioned below. The Institute requires this for dispatch of the updated academic documents reflecting the changed name to the applicant by Speed Post service of India Post.', details: CONTROLLER_ADDRESS },
+            'The applicant must submit the original academic documents issued by the Institute, such as Grade Cards and Degree Certificate, in hard copy to the Examinations Section. These documents will then be reissued with the new name and sent back to the applicant. In case the applicant has lost any of the original documents, they must apply for duplicate documents before submitting the request for a name change.',
             'Once the application is submitted, the applicant must wait for clearance from the Director of the concerned Campus of the Institute. Only after the Director clears the application will the Examination Section process it further. The applicant can track the status of the application using the Application ID provided at the time of submission.'
         ],
         titleLink: {
