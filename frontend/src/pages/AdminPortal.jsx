@@ -196,6 +196,8 @@ const getStatusStyle = (status) => {
         case 'COMPLETED':
         case 'APPROVED':
             return { ...baseStyle, background: '#10b981', color: '#ffffff' };
+        case 'DISPATCHED':
+            return { ...baseStyle, background: '#0ea5e9', color: '#ffffff' };
         case 'REJECTED':
             return { ...baseStyle, background: '#ef4444', color: '#ffffff' };
         case 'PENDING':
@@ -475,7 +477,7 @@ export default function AdminPortal() {
             ],
         };
 
-        const statusColors = { APPROVED: '#10b981', COMPLETED: '#059669', REJECTED: '#ef4444', PENDING: '#f59e0b' };
+        const statusColors = { APPROVED: '#10b981', COMPLETED: '#059669', DISPATCHED: '#0ea5e9', REJECTED: '#ef4444', PENDING: '#f59e0b' };
         const statusColor = statusColors[app.status] || '#64748b';
 
         const fieldDefs = FORM_FIELD_LABELS[app.form_type] || [];
@@ -638,6 +640,47 @@ export default function AdminPortal() {
         } catch (err) {
             console.error('Failed to mark as completed:', err);
             showToast('Failed to update status. Please try again.', 'error');
+        }
+    };
+
+    const notifyDispatched = (applicationId) => {
+        setConfirmModal({
+            title: 'Notify Document Dispatched',
+            message: 'This will send an email to the student informing them that their document has been dispatched. Proceed?',
+            confirmText: 'Yes, Notify Student',
+            confirmColor: '#0ea5e9',
+            confirmGradient: 'linear-gradient(135deg, #0ea5e9 0%, #0284c7 100%)',
+            onConfirm: () => {
+                setConfirmModal(null);
+                doNotifyDispatched(applicationId);
+            }
+        });
+    };
+
+    const doNotifyDispatched = async (applicationId) => {
+        try {
+            const response = await fetch(`${API_URL}/admin/notify-dispatched`, {
+                method: 'POST',
+                headers: {
+                    'Authorization': `Bearer ${token}`,
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ applicationId })
+            });
+
+            const data = await response.json();
+
+            if (response.ok) {
+                showToast('Student notified — document marked as dispatched!', 'success');
+                fetchAppDetails(applicationId);
+                fetchStats();
+                fetchApplications();
+            } else {
+                showToast('Error: ' + (data.error || 'Failed to notify student'), 'error');
+            }
+        } catch (err) {
+            console.error('Failed to notify dispatch:', err);
+            showToast('Failed to send notification. Please try again.', 'error');
         }
     };
 
@@ -1114,6 +1157,36 @@ export default function AdminPortal() {
                                             }}
                                         >
                                             <CheckCircle size={16} /> Mark as Completed
+                                        </button>
+                                    </div>
+                                </div>
+                            )}
+
+                            {/* Notify Document Dispatched - only show for COMPLETED status */}
+                            {app.status === 'COMPLETED' && (
+                                <div style={{ marginBottom: '16px', padding: '20px', background: 'rgba(14, 165, 233, 0.06)', borderRadius: '12px', border: '1px solid rgba(14, 165, 233, 0.2)' }}>
+                                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '16px' }}>
+                                        <div>
+                                            <h4 style={{ color: '#0ea5e9', margin: 0, marginBottom: '4px', fontSize: '14px', fontWeight: '700' }}>Document Ready?</h4>
+                                            <p style={{ color: '#64748b', margin: 0, fontSize: '13px' }}>Notify the student that their document has been dispatched</p>
+                                        </div>
+                                        <button
+                                            onClick={() => notifyDispatched(app.id)}
+                                            style={{
+                                                padding: '10px 20px',
+                                                background: 'linear-gradient(135deg, #0ea5e9 0%, #0284c7 100%)',
+                                                color: '#ffffff',
+                                                border: 'none',
+                                                borderRadius: '8px',
+                                                cursor: 'pointer',
+                                                fontWeight: '600',
+                                                fontSize: '13px',
+                                                display: 'flex',
+                                                alignItems: 'center',
+                                                gap: '8px'
+                                            }}
+                                        >
+                                            &#9993; Notify: Document Dispatched
                                         </button>
                                     </div>
                                 </div>

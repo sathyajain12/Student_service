@@ -86,6 +86,10 @@ export default {
                 return await handleMarkCompleted(request, env, corsHeaders);
             }
 
+            if (url.pathname === '/admin/notify-dispatched' && request.method === 'POST') {
+                return await handleNotifyDispatched(request, env, corsHeaders);
+            }
+
             if (url.pathname === '/admin/upload-response' && request.method === 'POST') {
                 return await handleUploadResponse(request, env, corsHeaders);
             }
@@ -347,6 +351,94 @@ async function handleMarkCompleted(request, env, corsHeaders) {
         });
     } catch (error) {
         console.error('Error marking application as completed:', error);
+        return new Response(JSON.stringify({ error: error.message }), {
+            status: 500,
+            headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+        });
+    }
+}
+
+async function sendDocumentDispatchedEmail(env, application) {
+    if (env.GOOGLE_CLIENT_ID && env.GOOGLE_CLIENT_SECRET && env.GOOGLE_REFRESH_TOKEN) {
+        try {
+            const accessToken = await getGoogleAuth(env);
+            const dispatchedOn = new Date().toLocaleDateString('en-IN', { day: '2-digit', month: 'long', year: 'numeric' });
+            const htmlBody = renderEmailTemplate({
+                title: 'Document Dispatched',
+                greeting: `Sai Ram! Dear ${application.applicant_name},`,
+                content: 'Your application has been reviewed and your document has been dispatched from the Examinations Section, SSSIHL. Please collect or expect to receive your document shortly.',
+                details: [
+                    { label: 'Application ID', value: application.id },
+                    { label: 'Form Type', value: application.form_type },
+                    { label: 'Campus', value: application.campus },
+                    { label: 'Dispatched On', value: dispatchedOn }
+                ],
+                importantNote: 'If you do not receive your document within the expected time, please contact the Examinations Section at examination@sssihl.edu.in'
+            });
+
+            await sendEmail(accessToken, {
+                to: application.student_email,
+                subject: `Document Dispatched – ${application.form_type} (${application.id})`,
+                htmlBody
+            });
+            console.log(`Document dispatched email sent to ${application.student_email} for app ${application.id}`);
+        } catch (e) {
+            console.error('Failed to send document dispatched email:', e);
+            throw e;
+        }
+    }
+}
+
+async function handleNotifyDispatched(request, env, corsHeaders) {
+    const admin = await verifyAdminToken(request, env);
+    if (!admin) {
+        return new Response(JSON.stringify({ error: 'Unauthorized' }), {
+            status: 401,
+            headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+        });
+    }
+
+    try {
+        const { applicationId } = await request.json();
+
+        if (!applicationId) {
+            return new Response(JSON.stringify({ error: 'Application ID is required' }), {
+                status: 400,
+                headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+            });
+        }
+
+        const application = await env.DB.prepare(
+            `SELECT id, form_type, applicant_name, student_email, campus, status FROM applications WHERE id = ?`
+        ).bind(applicationId).first();
+
+        if (!application) {
+            return new Response(JSON.stringify({ error: 'Application not found' }), {
+                status: 404,
+                headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+            });
+        }
+
+        if (application.status !== 'COMPLETED') {
+            return new Response(JSON.stringify({ error: 'Application must be in COMPLETED status to dispatch' }), {
+                status: 400,
+                headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+            });
+        }
+
+        await sendDocumentDispatchedEmail(env, application);
+
+        await env.DB.prepare(
+            `UPDATE applications SET status = 'DISPATCHED', updated_at = CURRENT_TIMESTAMP WHERE id = ?`
+        ).bind(applicationId).run();
+
+        console.log(`Application ${applicationId} marked as DISPATCHED by admin`);
+
+        return new Response(JSON.stringify({ success: true, message: 'Student notified and application marked as dispatched' }), {
+            headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+        });
+    } catch (error) {
+        console.error('Error notifying dispatch:', error);
         return new Response(JSON.stringify({ error: error.message }), {
             status: 500,
             headers: { ...corsHeaders, 'Content-Type': 'application/json' }
@@ -1082,9 +1174,9 @@ async function sendDirectorSoughtConfirmationEmail(env, appId, formType, applica
                 subtext: 'Use this ID to track status updates'
             },
             details: [
+                { label: 'Form Type', value: formType },
                 { label: 'Applicant Name', value: applicantName },
                 ...(regNo ? [{ label: 'Registered Number', value: regNo }] : []),
-                { label: 'Form Type', value: formType },
                 { label: 'Campus', value: campus },
                 ...(programme ? [{ label: 'Programme', value: programme }] : []),
                 ...(semester ? [{ label: 'Semester', value: semester }] : []),
