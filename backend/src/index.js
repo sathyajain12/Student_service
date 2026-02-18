@@ -368,7 +368,7 @@ async function sendDocumentDispatchedEmail(env, application, programme = null) {
                 : null;
             const htmlBody = renderEmailTemplate({
                 title: 'Document Dispatched',
-                greeting: `Sai Ram!\n\n Dear ${application.applicant_name},`,
+                greeting: `Sai Ram!<br><br>Dear ${application.applicant_name},`,
                 content: 'Your application has been reviewed and your document has been dispatched from the Examinations Section, SSSIHL. Please collect or expect to receive your document shortly.',
                 details: [
                     { label: 'Form Type', value: application.form_type },
