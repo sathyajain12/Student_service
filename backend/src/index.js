@@ -1075,7 +1075,7 @@ async function sendDirectorSoughtConfirmationEmail(env, appId, formType, applica
         const htmlBody = renderEmailTemplate({
             title: 'Application Sent for Clearance',
             greeting: 'Dear Student,<br><br>Sairam!<br><br>Greetings from the Examinations Section, SSSIHL.',
-            content: `Your application requires clearance from the Director of your campus. It has been automatically forwarded for review.`,
+            content: `Your application requires clearance from the Director of the campus where you studied . It has been automatically forwarded for review.`,
             highlight: {
                 label: 'Your Application ID',
                 value: appId,
