@@ -303,9 +303,11 @@ export default function StatusTracker({ onBack }) {
                                                 }}>
                                                     {stage.label}
                                                 </h5>
-                                                <p style={{ fontSize: '0.75rem', color: isCompleted ? 'var(--success)' : isRejected ? 'var(--error)' : isInProgress ? 'var(--accent)' : 'var(--text-muted)' }}>
-                                                    {isCompleted ? 'Approved' : isRejected ? 'Rejected' : isInProgress ? 'In Progress' : 'Pending'}
-                                                </p>
+                                                {stage.id !== 'submitted' && (
+                                                    <p style={{ fontSize: '0.75rem', color: isCompleted ? 'var(--success)' : isRejected ? 'var(--error)' : isInProgress ? 'var(--accent)' : 'var(--text-muted)' }}>
+                                                        {isCompleted ? 'Approved' : isRejected ? 'Rejected' : isInProgress ? 'In Progress' : 'Pending'}
+                                                    </p>
+                                                )}
                                                 {stage.date && (
                                                     <p style={{ fontSize: '0.7rem', color: 'var(--text-muted)', marginTop: '4px' }}>
                                                         {new Date(stage.date).toLocaleDateString()}
