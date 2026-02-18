@@ -358,27 +358,33 @@ async function handleMarkCompleted(request, env, corsHeaders) {
     }
 }
 
-async function sendDocumentDispatchedEmail(env, application) {
+async function sendDocumentDispatchedEmail(env, application, programme = null) {
     if (env.GOOGLE_CLIENT_ID && env.GOOGLE_CLIENT_SECRET && env.GOOGLE_REFRESH_TOKEN) {
         try {
             const accessToken = await getGoogleAuth(env);
             const dispatchedOn = new Date().toLocaleDateString('en-IN', { day: '2-digit', month: 'long', year: 'numeric' });
+            const appliedOn = application.created_at
+                ? new Date(application.created_at).toLocaleDateString('en-IN', { day: '2-digit', month: 'long', year: 'numeric' })
+                : null;
             const htmlBody = renderEmailTemplate({
                 title: 'Document Dispatched',
-                greeting: `Sai Ram! Dear ${application.applicant_name},`,
+                greeting: `Sai Ram!\n\n Dear ${application.applicant_name},`,
                 content: 'Your application has been reviewed and your document has been dispatched from the Examinations Section, SSSIHL. Please collect or expect to receive your document shortly.',
                 details: [
-                    { label: 'Application ID', value: application.id },
                     { label: 'Form Type', value: application.form_type },
+                    { label: 'Application ID', value: application.id },
+                    ...(application.reg_no ? [{ label: 'Registered Number', value: application.reg_no }] : []),
                     { label: 'Campus', value: application.campus },
+                    ...(programme ? [{ label: 'Programme', value: programme }] : []),
+                    ...(appliedOn ? [{ label: 'Applied On', value: appliedOn }] : []),
                     { label: 'Dispatched On', value: dispatchedOn }
                 ],
-                importantNote: 'If you do not receive your document within the expected time, please contact the Examinations Section at examination@sssihl.edu.in'
+                importantNote: 'If you do not receive your document within the expected time, please contact the Examinations Section at coeoffice@sssihl.edu.in'
             });
 
             await sendEmail(accessToken, {
                 to: application.student_email,
-                subject: `Document Dispatched – ${application.form_type} (${application.id})`,
+                subject: `Document Dispatched : ${application.form_type} (${application.id})`,
                 htmlBody
             });
             console.log(`Document dispatched email sent to ${application.student_email} for app ${application.id}`);
@@ -409,7 +415,7 @@ async function handleNotifyDispatched(request, env, corsHeaders) {
         }
 
         const application = await env.DB.prepare(
-            `SELECT id, form_type, applicant_name, student_email, campus, status FROM applications WHERE id = ?`
+            `SELECT id, form_type, applicant_name, student_email, campus, status, reg_no, created_at FROM applications WHERE id = ?`
         ).bind(applicationId).first();
 
         if (!application) {
@@ -426,7 +432,32 @@ async function handleNotifyDispatched(request, env, corsHeaders) {
             });
         }
 
-        await sendDocumentDispatchedEmail(env, application);
+        // Fetch programme from form-specific table if available
+        const dispatchFormTableMap = {
+            'Application for Duplicate Grade Card': 'form_duplicate_grade_card',
+            'Application for End-Semester Supplementary Examinations Registration': 'form_supplementary_exam',
+            'Application for repeating a paper for supplementary examinations (CIE and ESE)': 'form_repeat_paper',
+            'Application for Duplicate Degree Certificate': 'form_duplicate_degree',
+            'Application for CGPA to Percentage Conversion Certificate': 'form_cgpa_conversion',
+            'Application for Re-totaling of Marks': 'form_retotaling',
+            'Application for On-Request Degree Certificate': 'form_on_request_degree',
+            'Application for Registration of Student Name change': 'form_name_change',
+            'Application for Migration Certificate': 'form_migration_certificate',
+        };
+        let programme = null;
+        const formTable = dispatchFormTableMap[application.form_type];
+        if (formTable) {
+            try {
+                const formDetails = await env.DB.prepare(
+                    `SELECT Programme FROM ${formTable} WHERE application_id = ?`
+                ).bind(applicationId).first();
+                programme = formDetails?.Programme || null;
+            } catch (e) {
+                // Table may not have Programme column — ignore
+            }
+        }
+
+        await sendDocumentDispatchedEmail(env, application, programme);
 
         await env.DB.prepare(
             `UPDATE applications SET status = 'DISPATCHED', updated_at = CURRENT_TIMESTAMP WHERE id = ?`
@@ -1026,7 +1057,7 @@ function generateStudentEmailHTML(verification, isApproved, portalUrl) {
 
     return renderEmailTemplate({
         title: heading,
-        greeting: 'Dear Student,<br><br>Sairam!<br><br>Greetings from the Examinations Section, SSSIHL.',
+        greeting: `Dear ${verification.applicant_name},<br><br>Sairam!<br><br>Greetings from the Examinations Section, SSSIHL.`,
         content: content,
         details: [
             { label: 'Form Type', value: verification.form_type },
@@ -1166,7 +1197,7 @@ async function sendDirectorSoughtConfirmationEmail(env, appId, formType, applica
 
         const htmlBody = renderEmailTemplate({
             title: 'Application Sent for Clearance',
-            greeting: 'Dear Student,<br><br>Sairam!<br><br>Greetings from the Examinations Section, SSSIHL.',
+            greeting: `Dear ${applicantName},<br><br>Sairam!<br><br>Greetings from the Examinations Section, SSSIHL.`,
             content: `Your application requires clearance from the Director of the campus where you studied . It has been automatically forwarded for review.`,
             highlight: {
                 label: 'Your Application ID',
