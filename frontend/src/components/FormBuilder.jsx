@@ -378,6 +378,24 @@ export default function FormBuilder({ config, onSubmit, onCancel, onTrackStatus 
                                             />
                                             <Calendar size={18} style={{ position: 'absolute', right: '16px', top: '50%', transform: 'translateY(-50%)', color: 'var(--text-muted)', pointerEvents: 'none' }} />
                                         </div>
+                                    ) : field.type === 'monthyear' ? (
+                                        <div style={{ position: 'relative', maxWidth: '280px' }}>
+                                            <DatePicker
+                                                selected={dateRanges[field.name]?.[0] || null}
+                                                onChange={(date) => {
+                                                    setDateRanges(prev => ({ ...prev, [field.name]: [date] }));
+                                                    if (date) {
+                                                        const formatted = date.toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
+                                                        setFormData(prev => ({ ...prev, [field.name]: formatted }));
+                                                    }
+                                                }}
+                                                className="form-input"
+                                                dateFormat="MMMM yyyy"
+                                                showMonthYearPicker
+                                                placeholderText={field.placeholder || "Select Month & Year"}
+                                            />
+                                            <Calendar size={18} style={{ position: 'absolute', right: '16px', top: '50%', transform: 'translateY(-50%)', color: 'var(--text-muted)', pointerEvents: 'none' }} />
+                                        </div>
                                     ) : field.type === 'checkbox' ? (
                                         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '12px' }}>
                                             {field.options.map(option => (

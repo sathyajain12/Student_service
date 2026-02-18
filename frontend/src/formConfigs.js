@@ -577,13 +577,9 @@ export const FORM_CONFIGS = {
     },
     'migration': {
         title: 'Application for Migration Certificate',
-        descriptionLink: { text: 'You can download your Migration Certificate from digilocker,', linkText: 'please click here', url: 'https://accounts.digilocker.gov.in/v3/7b9f84c86732efd21cd8076ff06f3fd60b1fbe146732fa57444b03b35f3740a4--en' },
+        descriptionLink: { text: 'You can also download your Migration Certificate from Digilocker,', linkText: 'please click here', url: 'https://accounts.digilocker.gov.in/v3/7b9f84c86732efd21cd8076ff06f3fd60b1fbe146732fa57444b03b35f3740a4--en' },
         instructions: [
             'No Fees is charged for migration certificate.',
-            'This certificate is required for joining another University / Institute.',
-            'Provide complete postal address details.',
-            'Mention the University / Institute you propose to join.',
-            'Indicate whether you have received your Degree Certificate.',
             { type: 'address', text: 'Applicants are required to send a self-addressed envelope, affixed with stamps totalling ₹65, to the address mentioned below. The Institute requires this for dispatch of the Migration Certificate to the applicant by Speed Post service of India Post.', details: CONTROLLER_ADDRESS },
             'The name of the applicant, along with the, complete postal address, including the town / city, PIN code, district and state must be clearly written or typed on the envelope.',
             'Students of foreign nationality may affix appropriate postage for an envelope weighing 100-120 g.'
@@ -610,9 +606,15 @@ export const FORM_CONFIGS = {
                 required: true
             },
             {
-                name: 'lastExam',
-                label: 'Last examination appeared at this Institute (Registered no. and Month & Year of examination)',
+                name: 'lastExamRegNo',
+                label: 'Last Examination Registered Number',
                 type: 'text',
+                required: true
+            },
+            {
+                name: 'lastExamDate',
+                label: 'Month & Year of Last Examination',
+                type: 'monthyear',
                 required: true
             },
             {
