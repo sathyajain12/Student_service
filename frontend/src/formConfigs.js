@@ -579,9 +579,9 @@ export const FORM_CONFIGS = {
         title: 'Application for Migration Certificate',
         descriptionLink: { text: 'You can also download your Migration Certificate from Digilocker,', linkText: 'please click here', url: 'https://accounts.digilocker.gov.in/v3/7b9f84c86732efd21cd8076ff06f3fd60b1fbe146732fa57444b03b35f3740a4--en' },
         instructions: [
-            'No Fees is charged for migration certificate.',
+            'No Fees is charged for issuing of Migration Certificate.',
             { type: 'address', text: 'Applicants are required to send a self-addressed envelope, affixed with stamps totalling ₹65, to the address mentioned below. The Institute requires this for dispatch of the Migration Certificate to the applicant by Speed Post service of India Post.', details: CONTROLLER_ADDRESS },
-            'The name of the applicant, along with the, complete postal address, including the town / city, PIN code, district and state must be clearly written or typed on the envelope.',
+            'The name of the applicant, along with the complete postal address, including the town / city, PIN code, district and state must be clearly written or typed on the envelope.',
             'Students of foreign nationality may affix appropriate postage for an envelope weighing 100-120 g.'
 
         ],
