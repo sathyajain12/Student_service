@@ -358,7 +358,7 @@ async function handleMarkCompleted(request, env, corsHeaders) {
     }
 }
 
-async function sendDocumentDispatchedEmail(env, application, programme = null) {
+async function sendDocumentDispatchedEmail(env, application, programme = null, trackingNumber = null) {
     if (env.GOOGLE_CLIENT_ID && env.GOOGLE_CLIENT_SECRET && env.GOOGLE_REFRESH_TOKEN) {
         try {
             const accessToken = await getGoogleAuth(env);
@@ -371,15 +371,18 @@ async function sendDocumentDispatchedEmail(env, application, programme = null) {
                 greeting: `Sai Ram!<br><br>Dear ${application.applicant_name},`,
                 content: 'Your application has been reviewed and your document has been dispatched from the Examinations Section, SSSIHL. Please collect or expect to receive your document shortly.',
                 details: [
-                    { label: 'Form Type', value: application.form_type },
                     { label: 'Application ID', value: application.id },
-                    ...(application.reg_no ? [{ label: 'Registered Number', value: application.reg_no }] : []),
+                    ...(application.reg_no ? [{ label: 'Registration Number', value: application.reg_no }] : []),
+                    { label: 'Form Type', value: application.form_type },
                     { label: 'Campus', value: application.campus },
                     ...(programme ? [{ label: 'Programme', value: programme }] : []),
                     ...(appliedOn ? [{ label: 'Applied On', value: appliedOn }] : []),
-                    { label: 'Dispatched On', value: dispatchedOn }
+                    { label: 'Dispatched On', value: dispatchedOn },
+                    ...(trackingNumber ? [{ label: 'Postal Tracking Number', value: trackingNumber }] : [])
                 ],
-                importantNote: 'If you do not receive your document within the expected time, please contact the Examinations Section at coeoffice@sssihl.edu.in'
+                importantNote: trackingNumber
+                    ? `You can track your parcel at <a href="https://www.indiapost.gov.in" style="color:#2563eb;">indiapost.gov.in</a> using the tracking number provided above. If you have any queries, please contact the Examinations Section at <a href="mailto:examination@sssihl.edu.in" style="color:#2563eb;">examination@sssihl.edu.in</a>`
+                    : 'If you do not receive your document within the expected time, please contact the Examinations Section at examination@sssihl.edu.in'
             });
 
             await sendEmail(accessToken, {
@@ -405,7 +408,7 @@ async function handleNotifyDispatched(request, env, corsHeaders) {
     }
 
     try {
-        const { applicationId } = await request.json();
+        const { applicationId, trackingNumber } = await request.json();
 
         if (!applicationId) {
             return new Response(JSON.stringify({ error: 'Application ID is required' }), {
@@ -457,7 +460,7 @@ async function handleNotifyDispatched(request, env, corsHeaders) {
             }
         }
 
-        await sendDocumentDispatchedEmail(env, application, programme);
+        await sendDocumentDispatchedEmail(env, application, programme, trackingNumber || null);
 
         await env.DB.prepare(
             `UPDATE applications SET status = 'DISPATCHED', updated_at = CURRENT_TIMESTAMP WHERE id = ?`

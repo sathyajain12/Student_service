@@ -225,6 +225,9 @@ export default function AdminPortal() {
     const [uploadSuccess, setUploadSuccess] = useState(false);
     const [toast, setToast] = useState(null);
     const [confirmModal, setConfirmModal] = useState(null);
+    const [showDispatchModal, setShowDispatchModal] = useState(false);
+    const [dispatchAppId, setDispatchAppId] = useState(null);
+    const [dispatchTrackingNo, setDispatchTrackingNo] = useState('');
     const [searchQuery, setSearchQuery] = useState('');
 
     const showToast = (message, type = 'success') => {
@@ -644,20 +647,12 @@ export default function AdminPortal() {
     };
 
     const notifyDispatched = (applicationId) => {
-        setConfirmModal({
-            title: 'Notify Document Dispatched',
-            message: 'This will send an email to the student informing them that their document has been dispatched. Proceed?',
-            confirmText: 'Yes, Notify Student',
-            confirmColor: '#0ea5e9',
-            confirmGradient: 'linear-gradient(135deg, #0ea5e9 0%, #0284c7 100%)',
-            onConfirm: () => {
-                setConfirmModal(null);
-                doNotifyDispatched(applicationId);
-            }
-        });
+        setDispatchAppId(applicationId);
+        setDispatchTrackingNo('');
+        setShowDispatchModal(true);
     };
 
-    const doNotifyDispatched = async (applicationId) => {
+    const doNotifyDispatched = async (applicationId, trackingNumber) => {
         try {
             const response = await fetch(`${API_URL}/admin/notify-dispatched`, {
                 method: 'POST',
@@ -665,7 +660,7 @@ export default function AdminPortal() {
                     'Authorization': `Bearer ${token}`,
                     'Content-Type': 'application/json'
                 },
-                body: JSON.stringify({ applicationId })
+                body: JSON.stringify({ applicationId, trackingNumber: trackingNumber || null })
             });
 
             const data = await response.json();
@@ -836,6 +831,64 @@ export default function AdminPortal() {
                     >
                         <X size={16} />
                     </button>
+                </div>
+            </div>
+        );
+    };
+
+    // Dispatch Modal Component (with tracking number input)
+    const DispatchModal = () => {
+        if (!showDispatchModal) return null;
+        return (
+            <div style={{
+                position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, zIndex: 9999,
+                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                background: 'rgba(15, 23, 42, 0.5)', backdropFilter: 'blur(4px)',
+                animation: 'fadeIn 0.2s ease-out'
+            }}>
+                <div style={{
+                    background: 'white', borderRadius: '16px', padding: '32px',
+                    maxWidth: '440px', width: '90%',
+                    boxShadow: '0 25px 50px -12px rgba(0,0,0,0.25)',
+                    animation: 'scaleIn 0.2s ease-out'
+                }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '16px' }}>
+                        <div style={{ padding: '10px', borderRadius: '12px', background: 'rgba(14,165,233,0.1)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                            <span style={{ fontSize: '22px', color: '#0ea5e9' }}>&#9993;</span>
+                        </div>
+                        <h3 style={{ margin: 0, fontSize: '18px', color: '#0f172a', fontWeight: '700' }}>Notify: Document Dispatched</h3>
+                    </div>
+                    <p style={{ color: '#475569', fontSize: '14px', lineHeight: '1.6', margin: '0 0 20px 0' }}>
+                        This will send an email to the student informing them that their document has been dispatched.
+                    </p>
+                    <div style={{ marginBottom: '24px' }}>
+                        <label style={{ display: 'block', fontSize: '13px', fontWeight: '600', color: '#0f172a', marginBottom: '6px' }}>
+                            Postal Tracking Number <span style={{ color: '#94a3b8', fontWeight: '400' }}>(optional)</span>
+                        </label>
+                        <input
+                            type="text"
+                            placeholder="e.g. EW123456789IN"
+                            value={dispatchTrackingNo}
+                            onChange={(e) => setDispatchTrackingNo(e.target.value)}
+                            className="form-input"
+                            style={{ width: '100%', boxSizing: 'border-box' }}
+                            autoFocus
+                        />
+                    </div>
+                    <div style={{ display: 'flex', gap: '12px', justifyContent: 'flex-end' }}>
+                        <button
+                            onClick={() => setShowDispatchModal(false)}
+                            style={{ padding: '10px 24px', background: '#f1f5f9', color: '#475569', border: '1px solid #e2e8f0', borderRadius: '8px', cursor: 'pointer', fontWeight: '600', fontSize: '14px' }}
+                        >
+                            Cancel
+                        </button>
+                        <button
+                            onClick={() => { setShowDispatchModal(false); doNotifyDispatched(dispatchAppId, dispatchTrackingNo); }}
+                            style={{ padding: '10px 24px', background: 'linear-gradient(135deg, #0ea5e9 0%, #0284c7 100%)', color: '#ffffff', border: 'none', borderRadius: '8px', cursor: 'pointer', fontWeight: '600', fontSize: '14px' }}
+                        >
+                            &#9993; Notify Student
+                        </button>
+                    </div>
                 </div>
             </div>
         );
@@ -1038,6 +1091,7 @@ export default function AdminPortal() {
                 `}</style>
                 <ToastNotification />
                 <ConfirmationModal />
+                <DispatchModal />
                 <div style={styles.page}>
                     <div style={styles.container}>
                         <button className="btn-back" onClick={() => { setSelectedApp(null); setAppDetails(null); }} style={styles.backButton}>
