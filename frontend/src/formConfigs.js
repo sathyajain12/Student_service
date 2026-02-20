@@ -641,7 +641,6 @@ export const FORM_CONFIGS = {
                 type: 'text',
                 required: true
             },
-            { name: 'deliveryPreference', label: 'Preferred Delivery Method', type: 'radio', options: ['Hard Copy', 'Soft Copy', 'Both Hard Copy and Soft Copy'], required: true },
             { type: 'heading', label: 'Permanent Address', name: 'addressHeading' },
             { name: 'addressLine1', label: 'Address Line 1', type: 'text', required: true },
             { name: 'addressLine2', label: 'Address Line 2', type: 'text', required: false },

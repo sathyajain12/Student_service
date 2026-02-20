@@ -38,6 +38,7 @@ function App() {
     window.scrollTo(0, 0);
   }, [view]);
 
+  const [deliveryPreference, setDeliveryPreference] = useState(null);
   const selectedConfig = FORM_CONFIGS[currentFormId];
 
   const handleSelectForm = (id) => {
@@ -45,16 +46,19 @@ function App() {
     setView('instructions');
   };
 
-  const handleProceedToForm = () => {
+  const handleProceedToForm = (pref) => {
+    setDeliveryPreference(pref || null);
     setView('form');
   };
 
   const handleBackToPortal = () => {
     setCurrentFormId(null);
+    setDeliveryPreference(null);
     setView('portal');
   };
 
   const handleBackToInstructions = () => {
+    setDeliveryPreference(null);
     setView('instructions');
   };
 
@@ -103,6 +107,7 @@ function App() {
                     config={selectedConfig}
                     onCancel={handleBackToInstructions}
                     onTrackStatus={() => setView('status')}
+                    hiddenData={deliveryPreference ? { deliveryPreference } : null}
                   />
                 ) : (
                   <p style={{ color: 'var(--text-muted)' }}>

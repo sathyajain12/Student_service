@@ -73,7 +73,7 @@ const COUNTRY_STATES = {
     ]
 };
 
-export default function FormBuilder({ config, onSubmit, onCancel, onTrackStatus }) {
+export default function FormBuilder({ config, onSubmit, onCancel, onTrackStatus, hiddenData }) {
     const [formData, setFormData] = useState({});
     const [dateRanges, setDateRanges] = useState({});
     const [files, setFiles] = useState({});
@@ -176,6 +176,9 @@ export default function FormBuilder({ config, onSubmit, onCancel, onTrackStatus 
             }
         });
         Object.entries(files).forEach(([k, v]) => bundle.append(k, v));
+        if (hiddenData) {
+            Object.entries(hiddenData).forEach(([k, v]) => bundle.append(k, v));
+        }
 
         try {
             const backendUrl = import.meta.env.VITE_BACKEND_URL || 'http://localhost:8787';
@@ -216,6 +219,9 @@ export default function FormBuilder({ config, onSubmit, onCancel, onTrackStatus 
             }
         });
         Object.entries(files).forEach(([k, v]) => bundle.append(k, v));
+        if (hiddenData) {
+            Object.entries(hiddenData).forEach(([k, v]) => bundle.append(k, v));
+        }
 
         try {
             const backendUrl = import.meta.env.VITE_BACKEND_URL || 'http://localhost:8787';

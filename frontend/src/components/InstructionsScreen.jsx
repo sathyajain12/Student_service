@@ -419,7 +419,13 @@ export default function InstructionsScreen({ config, onProceed, onCancel }) {
 
             <div style={{ display: 'flex', gap: '15px' }}>
                 <button
-                    onClick={onProceed}
+                    onClick={() => {
+                        const pref = hardCopy && softCopy ? 'Both Hard Copy and Soft Copy'
+                                   : hardCopy ? 'Hard Copy'
+                                   : softCopy ? 'Soft Copy'
+                                   : null;
+                        onProceed(pref);
+                    }}
                     className="btn-primary"
                     style={{
                         flexGrow: 1,
