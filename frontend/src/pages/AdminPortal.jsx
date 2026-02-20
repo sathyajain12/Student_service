@@ -227,7 +227,7 @@ export default function AdminPortal() {
     const [confirmModal, setConfirmModal] = useState(null);
     const [showDispatchModal, setShowDispatchModal] = useState(false);
     const [dispatchAppId, setDispatchAppId] = useState(null);
-    const [dispatchTrackingNo, setDispatchTrackingNo] = useState('');
+    const dispatchTrackingRef = useRef(null);
     const [searchQuery, setSearchQuery] = useState('');
 
     const showToast = (message, type = 'success') => {
@@ -648,7 +648,7 @@ export default function AdminPortal() {
 
     const notifyDispatched = (applicationId) => {
         setDispatchAppId(applicationId);
-        setDispatchTrackingNo('');
+        if (dispatchTrackingRef.current) dispatchTrackingRef.current.value = '';
         setShowDispatchModal(true);
     };
 
@@ -868,8 +868,8 @@ export default function AdminPortal() {
                         <input
                             type="text"
                             placeholder="e.g. EW123456789IN"
-                            value={dispatchTrackingNo}
-                            onChange={(e) => setDispatchTrackingNo(e.target.value)}
+                            ref={dispatchTrackingRef}
+                            defaultValue=""
                             className="form-input"
                             style={{ width: '100%', boxSizing: 'border-box' }}
                             autoFocus
@@ -883,7 +883,7 @@ export default function AdminPortal() {
                             Cancel
                         </button>
                         <button
-                            onClick={() => { setShowDispatchModal(false); doNotifyDispatched(dispatchAppId, dispatchTrackingNo); }}
+                            onClick={() => { setShowDispatchModal(false); doNotifyDispatched(dispatchAppId, dispatchTrackingRef.current?.value || null); }}
                             style={{ padding: '10px 24px', background: 'linear-gradient(135deg, #0ea5e9 0%, #0284c7 100%)', color: '#ffffff', border: 'none', borderRadius: '8px', cursor: 'pointer', fontWeight: '600', fontSize: '14px' }}
                         >
                             &#9993; Notify Student
