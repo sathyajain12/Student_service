@@ -396,23 +396,6 @@ export default function StatusTracker({ onBack }) {
                                         Application Details
                                     </h4>
                                 </div>
-                                {application.needs_director_approval && application.status === 'DIRECTOR_APPROVED' && (
-                                    <button
-                                        onClick={() => handleSubmitToCOE(application.id)}
-                                        className="btn-primary"
-                                        disabled={submittingToCOE}
-                                        style={{
-                                            padding: '10px 24px',
-                                            fontSize: '0.95rem',
-                                            display: 'inline-flex',
-                                            alignItems: 'center',
-                                            gap: '8px'
-                                        }}
-                                    >
-                                        {submittingToCOE && <Loader2 size={16} className="animate-spin" />}
-                                        {submittingToCOE ? 'Submitting...' : 'Submit to COE'}
-                                    </button>
-                                )}
                             </div>
 
                             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '20px' }}>
