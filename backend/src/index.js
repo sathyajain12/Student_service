@@ -1789,13 +1789,14 @@ async function handleMigration(formData, request, env, corsHeaders) {
 
     await env.DB.prepare(
         `INSERT INTO form_migration_certificate
-         (application_id, student_name, Mobile_Number, admission_year, Campus_of_admission,
+         (application_id, student_name, Mobile_Number, email, admission_year, Campus_of_admission,
           last_examination_passed, degree_recieved, university_to_migrate, address_line1, address_line2, country, state_province, city, postal_code, delivery_preference)
-         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
     ).bind(
         appId,
         formData.get('applicantName') || '',
         formData.get('mobile') || '',
+        formData.get('email') || '',
         formData.get('yearofAdmission') || '',
         formData.get('campus') || '',
         formData.get('lastExam') || '',

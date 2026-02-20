@@ -211,6 +211,7 @@ CREATE TABLE form_migration_certificate (
   application_id TEXT PRIMARY KEY REFERENCES applications(id),
   student_name TEXT,
   Mobile_Number numeric(10),
+  email TEXT,
   admission_year TEXT,
   Campus_of_admission TEXT,
   last_examination_passed TEXT,
