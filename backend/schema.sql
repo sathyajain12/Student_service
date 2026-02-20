@@ -221,5 +221,6 @@ CREATE TABLE form_migration_certificate (
   country TEXT,
   state_province TEXT,
   city TEXT,
-  postal_code TEXT
+  postal_code TEXT,
+  delivery_preference TEXT
 );

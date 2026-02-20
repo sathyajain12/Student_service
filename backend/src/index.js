@@ -358,7 +358,7 @@ async function handleMarkCompleted(request, env, corsHeaders) {
     }
 }
 
-async function sendDocumentDispatchedEmail(env, application, programme = null, trackingNumber = null) {
+async function sendDocumentDispatchedEmail(env, application, programme = null, trackingNumber = null, digilockerUrl = null) {
     if (env.GOOGLE_CLIENT_ID && env.GOOGLE_CLIENT_SECRET && env.GOOGLE_REFRESH_TOKEN) {
         try {
             const accessToken = await getGoogleAuth(env);
@@ -366,6 +366,14 @@ async function sendDocumentDispatchedEmail(env, application, programme = null, t
             const appliedOn = application.created_at
                 ? new Date(application.created_at).toLocaleDateString('en-IN', { day: '2-digit', month: 'long', year: 'numeric' })
                 : null;
+            let importantNote = '';
+            if (digilockerUrl) {
+                importantNote += `You can download your Migration Certificate from DigiLocker by <a href="${digilockerUrl}" style="color:#2563eb;font-weight:600;">clicking here</a>.<br><br>`;
+            }
+            if (trackingNumber) {
+                importantNote += `You can track your parcel at <a href="https://www.indiapost.gov.in" style="color:#2563eb;">indiapost.gov.in</a> using the tracking number provided above.<br><br>`;
+            }
+            importantNote += 'If you have any queries, please contact the Examinations Section at <a href="mailto:coeoffice@sssihl.edu.in" style="color:#2563eb;">coeoffice@sssihl.edu.in</a>';
             const htmlBody = renderEmailTemplate({
                 title: 'Document Dispatched',
                 greeting: `Sai Ram!<br><br>Dear ${application.applicant_name},`,
@@ -380,9 +388,7 @@ async function sendDocumentDispatchedEmail(env, application, programme = null, t
                     { label: 'Dispatched On', value: dispatchedOn },
                     ...(trackingNumber ? [{ label: 'Postal Tracking Number', value: trackingNumber }] : [])
                 ],
-                importantNote: trackingNumber
-                    ? `You can track your parcel at <a href="https://www.indiapost.gov.in" style="color:#2563eb;">indiapost.gov.in</a> using the tracking number provided above. If you have any queries, please contact the Examinations Section at <a href="mailto:coeoffice@sssihl.edu.in" style="color:#2563eb;">coeoffice@sssihl.edu.in</a>`
-                    : 'If you do not receive your document within the expected time, please contact the Examinations Section at coeoffice@sssihl.edu.in'
+                importantNote
             });
 
             await sendEmail(accessToken, {
@@ -460,7 +466,20 @@ async function handleNotifyDispatched(request, env, corsHeaders) {
             }
         }
 
-        await sendDocumentDispatchedEmail(env, application, programme, trackingNumber || null);
+        let digilockerUrl = null;
+        if (application.form_type === 'Application for Migration Certificate') {
+            try {
+                const migrationDetails = await env.DB.prepare(
+                    `SELECT delivery_preference FROM form_migration_certificate WHERE application_id = ?`
+                ).bind(applicationId).first();
+                const pref = migrationDetails?.delivery_preference || '';
+                if (pref === 'Soft Copy' || pref === 'Both Hard Copy and Soft Copy') {
+                    digilockerUrl = 'https://accounts.digilocker.gov.in/v3/7b9f84c86732efd21cd8076ff06f3fd60b1fbe146732fa57444b03b35f3740a4--en';
+                }
+            } catch (e) { /* ignore */ }
+        }
+
+        await sendDocumentDispatchedEmail(env, application, programme, trackingNumber || null, digilockerUrl);
 
         await env.DB.prepare(
             `UPDATE applications SET status = 'DISPATCHED', updated_at = CURRENT_TIMESTAMP WHERE id = ?`
@@ -1771,8 +1790,8 @@ async function handleMigration(formData, request, env, corsHeaders) {
     await env.DB.prepare(
         `INSERT INTO form_migration_certificate
          (application_id, student_name, Mobile_Number, admission_year, Campus_of_admission,
-          last_examination_passed, degree_recieved, university_to_migrate, address_line1, address_line2, country, state_province, city, postal_code)
-         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
+          last_examination_passed, degree_recieved, university_to_migrate, address_line1, address_line2, country, state_province, city, postal_code, delivery_preference)
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
     ).bind(
         appId,
         formData.get('applicantName') || '',
@@ -1787,7 +1806,8 @@ async function handleMigration(formData, request, env, corsHeaders) {
         formData.get('country') || '',
         formData.get('stateProvince') || '',
         formData.get('city') || '',
-        formData.get('postalCode') || ''
+        formData.get('postalCode') || '',
+        formData.get('deliveryPreference') || ''
     ).run();
 
     for (const [key, value] of formData.entries()) {

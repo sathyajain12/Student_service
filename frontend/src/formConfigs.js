@@ -582,7 +582,7 @@ export const FORM_CONFIGS = {
             {
                 type: 'deliveryOptions',
                 digilockerUrl: 'https://accounts.digilocker.gov.in/v3/7b9f84c86732efd21cd8076ff06f3fd60b1fbe146732fa57444b03b35f3740a4--en',
-                addressText: 'Send a self-addressed envelope, affixed with stamps totalling ₹65, to the address below. The Migration Certificate will be dispatched by Speed Post.',
+                addressText: 'Send a self-addressed envelope, affixed with stamps totalling ₹65, to the address below. The Migration Certificate will be dispatched by Speed Post service of India Post.',
                 addressDetails: CONTROLLER_ADDRESS,
                 envelopeNotes: [
                     'The name of the applicant, along with the complete postal address, including the town / city, PIN code, district and state must be clearly written or typed on the envelope.',
