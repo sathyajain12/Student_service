@@ -310,7 +310,7 @@ export default function InstructionsScreen({ config, onProceed, onCancel }) {
                 <AlertCircle size={22} color="#f59e0b" style={{ marginTop: '2px', flexShrink: 0 }} />
                 <p style={{ color: 'var(--text-main)', fontSize: '0.9rem', margin: 0, lineHeight: '1.5' }}>
                     By proceeding, you acknowledge that you have read and understood the above instructions.
-                    Please ensure all required documents are ready before filling the form.
+                    {config.files?.length > 0 && ' Please ensure all required documents are ready before filling the form.'}
                 </p>
             </div>
 

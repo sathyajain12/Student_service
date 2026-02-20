@@ -369,10 +369,10 @@ async function sendDocumentDispatchedEmail(env, application, programme = null, t
             const htmlBody = renderEmailTemplate({
                 title: 'Document Dispatched',
                 greeting: `Sai Ram!<br><br>Dear ${application.applicant_name},`,
-                content: 'Your application has been reviewed and your document has been dispatched from the Examinations Section, SSSIHL. Please collect or expect to receive your document shortly.',
+                content: 'Your application has been processed and your document has been dispatched from Office of the Controller of Examinations, SSSIHL. Please collect or expect to receive your document shortly.',
                 details: [
                     { label: 'Application ID', value: application.id },
-                    ...(application.reg_no ? [{ label: 'Registration Number', value: application.reg_no }] : []),
+                    ...(application.reg_no ? [{ label: 'Registered Number', value: application.reg_no }] : []),
                     { label: 'Form Type', value: application.form_type },
                     { label: 'Campus', value: application.campus },
                     ...(programme ? [{ label: 'Programme', value: programme }] : []),
@@ -381,8 +381,8 @@ async function sendDocumentDispatchedEmail(env, application, programme = null, t
                     ...(trackingNumber ? [{ label: 'Postal Tracking Number', value: trackingNumber }] : [])
                 ],
                 importantNote: trackingNumber
-                    ? `You can track your parcel at <a href="https://www.indiapost.gov.in" style="color:#2563eb;">indiapost.gov.in</a> using the tracking number provided above. If you have any queries, please contact the Examinations Section at <a href="mailto:examination@sssihl.edu.in" style="color:#2563eb;">examination@sssihl.edu.in</a>`
-                    : 'If you do not receive your document within the expected time, please contact the Examinations Section at examination@sssihl.edu.in'
+                    ? `You can track your parcel at <a href="https://www.indiapost.gov.in" style="color:#2563eb;">indiapost.gov.in</a> using the tracking number provided above. If you have any queries, please contact the Examinations Section at <a href="mailto:coeoffice@sssihl.edu.in" style="color:#2563eb;">coeoffice@sssihl.edu.in</a>`
+                    : 'If you do not receive your document within the expected time, please contact the Examinations Section at coeoffice@sssihl.edu.in'
             });
 
             await sendEmail(accessToken, {
@@ -1028,7 +1028,7 @@ function generateStudentEmailHTML(verification, isApproved, portalUrl) {
 
     let content = isApproved
         ? (needsTwoStep
-            ? 'Your application has been approved by the Director. Please return to the portal to complete your submission to the Controller of Examinations (COE).'
+            ? 'Your application has been approved by the Campus Director. Please return to the portal to complete your submission to the Controller of Examinations (COE).'
             : 'We are pleased to inform you that your application has been approved.')
         : (isDuplicateGradeCard
             ? 'Your application for Duplicate Grade Card has been reviewed. Please see the details below.'
@@ -1046,14 +1046,14 @@ function generateStudentEmailHTML(verification, isApproved, portalUrl) {
         <ul style="margin: 0; padding-left: 20px; color: #1e40af; font-size: 14px; line-height: 1.8;">
             ${isApproved
             ? (needsTwoStep
-                ? `<li>Your Director has approved your application</li>
+                ? `<li>The Campus Director has approved your application</li>
                        <li>Click the button below to submit your application to COE</li>`
                 : `<li>Your request is being processed by the Examination Department</li>
                        <li>You will receive further updates via email</li>`)
             : (isDuplicateGradeCard
                 ? `<li><strong>Your original grade card is available at the ${verification.campus || 'campus'} office</strong></li>
                        <li>Please contact the campus office to collect your grade card</li>`
-                : `<li>For queries or clarifications, please contact: <a href="mailto:examination@sssihl.edu.in" style="color: #2563eb; text-decoration: none;">examination@sssihl.edu.in</a></li>`)
+                : `<li>For queries or clarifications, please contact: <a href="mailto:coeoffice@sssihl.edu.in" style="color: #2563eb; text-decoration: none;">coeoffice@sssihl.edu.in</a></li>`)
         }
         </ul>
     `;
@@ -1065,7 +1065,8 @@ function generateStudentEmailHTML(verification, isApproved, portalUrl) {
         details: [
             { label: 'Form Type', value: verification.form_type },
             { label: 'Application ID', value: verification.id },
-            { label: 'Applicant', value: verification.applicant_name },
+            { label: 'Applicant Name', value: verification.applicant_name },
+            {label: 'Registered Number', value: verification.reg_no || 'N/A' },
             { label: 'Campus', value: verification.campus },
             ...(verification.programme ? [{ label: 'Programme', value: verification.programme }] : []),
             ...(verification.semester ? [{ label: 'Semester', value: verification.semester }] : []),
@@ -1143,7 +1144,7 @@ function generateStudentConfirmationHTML(appId, formType, applicantName, email, 
                 <li>Your application will be reviewed by the relevant authorities</li>
                 <li>You will receive email notifications at each stage of the approval process</li>
                 <li>You can track your application status anytime using your Application ID</li>
-                <li>For queries, contact: <a href="mailto:examination@sssihl.edu.in" style="color: #2563eb; text-decoration: none;">examination@sssihl.edu.in</a></li>
+                <li>For queries, contact: <a href="mailto:coeoffice@sssihl.edu.in" style="color: #2563eb; text-decoration: none;">coeoffice@sssihl.edu.in</a></li>
             </ul>
         `,
         actionButtons: [
