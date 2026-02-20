@@ -577,14 +577,18 @@ export const FORM_CONFIGS = {
     },
     'migration': {
         title: 'Application for Migration Certificate',
-        descriptionLink: { text: 'You can also download your Migration Certificate from Digilocker,', linkText: 'please click here', url: 'https://accounts.digilocker.gov.in/v3/7b9f84c86732efd21cd8076ff06f3fd60b1fbe146732fa57444b03b35f3740a4--en' },
         instructions: [
             'No Fees is charged for issuing of Migration Certificate.',
-            'The applicant may opt for one of the following options for receiving the Migration Certificate:\n\n• Option 1 – Hard Copy: The applicant must send a self-addressed envelope affixed with stamps totalling ₹65 to the address mentioned below. The Migration Certificate will be dispatched by Speed Post.\n\n• Option 2 – Soft Copy: The applicant may log in to their DigiLocker account to download the Migration Certificate directly. No envelope is required.\n\n• Option 3 – Both Hard Copy and Soft Copy: The applicant must send the self-addressed envelope (as described above) and may also log in to their DigiLocker account to download the soft copy.',
-            { type: 'address', text: 'Applicants opting for Hard Copy or Both options are required to send a self-addressed envelope, affixed with stamps totalling ₹65, to the address mentioned below. The Institute requires this for dispatch of the Migration Certificate to the applicant by Speed Post service of India Post.', details: CONTROLLER_ADDRESS },
-            'The name of the applicant, along with the complete postal address, including the town / city, PIN code, district and state must be clearly written or typed on the envelope.',
-            'Students of foreign nationality may affix appropriate postage for an envelope weighing 100-120 g.'
-
+            {
+                type: 'deliveryOptions',
+                digilockerUrl: 'https://accounts.digilocker.gov.in/v3/7b9f84c86732efd21cd8076ff06f3fd60b1fbe146732fa57444b03b35f3740a4--en',
+                addressText: 'Send a self-addressed envelope, affixed with stamps totalling ₹65, to the address below. The Migration Certificate will be dispatched by Speed Post.',
+                addressDetails: CONTROLLER_ADDRESS,
+                envelopeNotes: [
+                    'The name of the applicant, along with the complete postal address, including the town / city, PIN code, district and state must be clearly written or typed on the envelope.',
+                    'Students of foreign nationality may affix appropriate postage for an envelope weighing 100-120 g.'
+                ]
+            }
         ],
         fields: [
             {

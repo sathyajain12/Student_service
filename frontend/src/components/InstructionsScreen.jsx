@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import {
     ArrowLeft,
     ArrowRight,
@@ -57,6 +57,8 @@ const formatText = (text) => {
 
 export default function InstructionsScreen({ config, onProceed, onCancel }) {
     const instructions = config.instructions || [];
+    const [hardCopy, setHardCopy] = useState(false);
+    const [softCopy, setSoftCopy] = useState(false);
 
     return (
         <div className="animate-fade-in">
@@ -141,6 +143,7 @@ export default function InstructionsScreen({ config, onProceed, onCancel }) {
                         const isFormat = isObject && instruction.type === 'format';
                         const isTextWithFormat = isObject && instruction.type === 'textWithFormat';
                         const isAddress = isObject && instruction.type === 'address';
+                        const isDeliveryOptions = isObject && instruction.type === 'deliveryOptions';
                         const text = isObject ? instruction.text : instruction;
 
                         return (
@@ -277,6 +280,106 @@ export default function InstructionsScreen({ config, onProceed, onCancel }) {
                                                 </div>
                                             </div>
                                         </div>
+                                    </div>
+                                ) : isDeliveryOptions ? (
+                                    <div style={{ flex: 1 }}>
+                                        <p style={{ color: 'var(--text-main)', fontSize: '0.95rem', fontWeight: '500', lineHeight: '1.6', margin: '0 0 16px 0' }}>
+                                            Please select your preferred delivery option for the Migration Certificate:
+                                        </p>
+                                        {/* Checkboxes */}
+                                        <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', marginBottom: '20px' }}>
+                                            {[
+                                                { id: 'hardCopy', label: 'Hard Copy', desc: 'Certificate dispatched by Speed Post', checked: hardCopy, setter: setHardCopy },
+                                                { id: 'softCopy', label: 'Soft Copy', desc: 'Download from DigiLocker', checked: softCopy, setter: setSoftCopy }
+                                            ].map(({ id, label, desc, checked, setter }) => (
+                                                <label key={id} style={{
+                                                    display: 'flex', alignItems: 'center', gap: '12px', cursor: 'pointer',
+                                                    padding: '12px 16px', borderRadius: '10px',
+                                                    border: `2px solid ${checked ? 'var(--accent)' : 'var(--glass-border)'}`,
+                                                    background: checked ? 'rgba(37, 99, 235, 0.06)' : 'transparent',
+                                                    transition: 'all 0.2s'
+                                                }}>
+                                                    <input type="checkbox" checked={checked} onChange={e => setter(e.target.checked)}
+                                                        style={{ width: '18px', height: '18px', accentColor: 'var(--accent)', cursor: 'pointer', flexShrink: 0 }} />
+                                                    <div>
+                                                        <span style={{ fontWeight: '600', color: 'var(--text-main)', fontSize: '0.95rem' }}>{label}</span>
+                                                        <span style={{ color: 'var(--text-muted)', fontSize: '0.85rem', marginLeft: '8px' }}>{desc}</span>
+                                                    </div>
+                                                </label>
+                                            ))}
+                                        </div>
+                                        {/* Hard Copy: address card + envelope notes */}
+                                        {hardCopy && (
+                                            <div style={{ marginBottom: softCopy ? '20px' : '0' }}>
+                                                <p style={{ color: 'var(--text-main)', fontSize: '0.95rem', fontWeight: '500', lineHeight: '1.6', margin: '0 0 16px 0', textAlign: 'justify' }}>
+                                                    {instruction.addressText}
+                                                </p>
+                                                <div style={{
+                                                    background: 'linear-gradient(145deg, #ffffff 0%, #f8fafc 100%)',
+                                                    border: '1px solid #e2e8f0', borderRadius: '16px', padding: '24px',
+                                                    boxShadow: '0 4px 15px rgba(0,0,0,0.03)', display: 'flex', flexDirection: 'column', gap: '20px',
+                                                    marginBottom: '12px'
+                                                }}>
+                                                    <div style={{ display: 'flex', gap: '16px', alignItems: 'flex-start' }}>
+                                                        <div style={{ background: 'rgba(37, 99, 235, 0.1)', padding: '10px', borderRadius: '10px' }}>
+                                                            <MapPin size={20} color="var(--accent)" />
+                                                        </div>
+                                                        <div>
+                                                            <h4 style={{ fontSize: '1rem', fontWeight: '700', color: 'var(--text-main)', marginBottom: '4px' }}>
+                                                                {instruction.addressDetails.title}
+                                                            </h4>
+                                                            <p style={{ fontSize: '0.9rem', color: 'var(--text-muted)', lineHeight: '1.5', margin: 0 }}>
+                                                                {instruction.addressDetails.office}<br />
+                                                                {instruction.addressDetails.institution}<br />
+                                                                {instruction.addressDetails.location}<br />
+                                                                {instruction.addressDetails.district}
+                                                            </p>
+                                                        </div>
+                                                    </div>
+                                                    <div style={{ height: '1px', background: '#e2e8f0', width: '100%' }}></div>
+                                                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '16px' }}>
+                                                        <div style={{ display: 'flex', gap: '12px', alignItems: 'center' }}>
+                                                            <div style={{ background: '#f1f5f9', padding: '8px', borderRadius: '8px' }}><Phone size={16} color="#475569" /></div>
+                                                            <div>
+                                                                <p style={{ fontSize: '0.75rem', fontWeight: '700', color: '#64748b', textTransform: 'uppercase', marginBottom: '1px', letterSpacing: '0.025em' }}>Call Us</p>
+                                                                <p style={{ fontSize: '0.9rem', fontWeight: '600', color: 'var(--text-main)', margin: 0 }}>{instruction.addressDetails.contact.tel}</p>
+                                                            </div>
+                                                        </div>
+                                                        <div style={{ display: 'flex', gap: '12px', alignItems: 'center' }}>
+                                                            <div style={{ background: '#f1f5f9', padding: '8px', borderRadius: '8px' }}><Mail size={16} color="#475569" /></div>
+                                                            <div>
+                                                                <p style={{ fontSize: '0.75rem', fontWeight: '700', color: '#64748b', textTransform: 'uppercase', marginBottom: '1px', letterSpacing: '0.025em' }}>Email</p>
+                                                                <p style={{ fontSize: '0.9rem', fontWeight: '600', color: 'var(--accent)', margin: 0 }}>{instruction.addressDetails.contact.email}</p>
+                                                            </div>
+                                                        </div>
+                                                        <div style={{ display: 'flex', gap: '12px', alignItems: 'center' }}>
+                                                            <div style={{ background: '#f1f5f9', padding: '8px', borderRadius: '8px' }}><Globe size={16} color="#475569" /></div>
+                                                            <div>
+                                                                <p style={{ fontSize: '0.75rem', fontWeight: '700', color: '#64748b', textTransform: 'uppercase', marginBottom: '1px', letterSpacing: '0.025em' }}>Website</p>
+                                                                <p style={{ fontSize: '0.9rem', fontWeight: '600', color: 'var(--text-main)', margin: 0 }}>{instruction.addressDetails.contact.web}</p>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                                {instruction.envelopeNotes?.map((note, i) => (
+                                                    <p key={i} style={{ color: 'var(--text-main)', fontSize: '0.9rem', lineHeight: '1.6', margin: '0 0 6px 0', paddingLeft: '4px' }}>
+                                                        • {note}
+                                                    </p>
+                                                ))}
+                                            </div>
+                                        )}
+                                        {/* Soft Copy: DigiLocker link */}
+                                        {softCopy && (
+                                            <a href={instruction.digilockerUrl} target="_blank" rel="noopener noreferrer"
+                                                style={{
+                                                    display: 'inline-flex', alignItems: 'center', gap: '8px',
+                                                    padding: '12px 20px', borderRadius: '10px',
+                                                    background: 'rgba(37, 99, 235, 0.08)', border: '1px solid rgba(37,99,235,0.25)',
+                                                    color: 'var(--accent)', fontWeight: '600', fontSize: '0.95rem', textDecoration: 'none'
+                                                }}>
+                                                Open DigiLocker to download your Migration Certificate
+                                            </a>
+                                        )}
                                     </div>
                                 ) : (
                                     <p style={{
