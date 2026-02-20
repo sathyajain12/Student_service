@@ -358,7 +358,7 @@ async function handleMarkCompleted(request, env, corsHeaders) {
     }
 }
 
-async function sendDocumentDispatchedEmail(env, application, programme = null, trackingNumber = null, digilockerUrl = null) {
+async function sendDocumentDispatchedEmail(env, application, programme = null, trackingNumber = null, digilockerUrl = null, deliveryPreference = null) {
     if (env.GOOGLE_CLIENT_ID && env.GOOGLE_CLIENT_SECRET && env.GOOGLE_REFRESH_TOKEN) {
         try {
             const accessToken = await getGoogleAuth(env);
@@ -374,10 +374,18 @@ async function sendDocumentDispatchedEmail(env, application, programme = null, t
                 importantNote += `You can track your parcel at <a href="https://www.indiapost.gov.in" style="color:#2563eb;">indiapost.gov.in</a> using the tracking number provided above.<br><br>`;
             }
             importantNote += 'If you have any queries, please contact the Examinations Section at <a href="mailto:coeoffice@sssihl.edu.in" style="color:#2563eb;">coeoffice@sssihl.edu.in</a>';
+            let content;
+            if (deliveryPreference === 'Soft Copy') {
+                content = 'Your application has been processed and your Migration Certificate is now available for download from your DigiLocker account.';
+            } else if (deliveryPreference === 'Both Hard Copy and Soft Copy') {
+                content = 'Your application has been processed. Your Migration Certificate has been dispatched by Speed Post and is also available for download from your DigiLocker account.';
+            } else {
+                content = 'Your application has been processed and your document has been dispatched from Office of the Controller of Examinations, SSSIHL. Please collect or expect to receive your document shortly.';
+            }
             const htmlBody = renderEmailTemplate({
                 title: 'Document Dispatched',
                 greeting: `Sai Ram!<br><br>Dear ${application.applicant_name},`,
-                content: 'Your application has been processed and your document has been dispatched from Office of the Controller of Examinations, SSSIHL. Please collect or expect to receive your document shortly.',
+                content,
                 details: [
                     { label: 'Application ID', value: application.id },
                     ...(application.reg_no ? [{ label: 'Registered Number', value: application.reg_no }] : []),
@@ -467,19 +475,20 @@ async function handleNotifyDispatched(request, env, corsHeaders) {
         }
 
         let digilockerUrl = null;
+        let deliveryPreference = null;
         if (application.form_type === 'Application for Migration Certificate') {
             try {
                 const migrationDetails = await env.DB.prepare(
                     `SELECT delivery_preference FROM form_migration_certificate WHERE application_id = ?`
                 ).bind(applicationId).first();
-                const pref = migrationDetails?.delivery_preference || '';
-                if (pref === 'Soft Copy' || pref === 'Both Hard Copy and Soft Copy') {
+                deliveryPreference = migrationDetails?.delivery_preference || null;
+                if (deliveryPreference === 'Soft Copy' || deliveryPreference === 'Both Hard Copy and Soft Copy') {
                     digilockerUrl = 'https://accounts.digilocker.gov.in/v3/7b9f84c86732efd21cd8076ff06f3fd60b1fbe146732fa57444b03b35f3740a4--en';
                 }
             } catch (e) { /* ignore */ }
         }
 
-        await sendDocumentDispatchedEmail(env, application, programme, trackingNumber || null, digilockerUrl);
+        await sendDocumentDispatchedEmail(env, application, programme, trackingNumber || null, digilockerUrl, deliveryPreference);
 
         await env.DB.prepare(
             `UPDATE applications SET status = 'DISPATCHED', updated_at = CURRENT_TIMESTAMP WHERE id = ?`
