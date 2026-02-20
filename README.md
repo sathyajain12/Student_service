@@ -71,8 +71,8 @@ Student_service-main/
 
 1. **Clone the repository:**
 ```bash
-git clone <your-repo-url>
-cd Student_service-main
+git clone https://github.com/sathyajain12/Student_service.git
+cd Student_service
 ```
 
 2. **Set up backend:**
