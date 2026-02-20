@@ -368,17 +368,17 @@ export default function InstructionsScreen({ config, onProceed, onCancel }) {
                                                 ))}
                                             </div>
                                         )}
-                                        {/* Soft Copy: DigiLocker link */}
+                                        {/* Soft Copy: informational note */}
                                         {softCopy && (
-                                            <a href={instruction.digilockerUrl} target="_blank" rel="noopener noreferrer"
-                                                style={{
-                                                    display: 'inline-flex', alignItems: 'center', gap: '8px',
-                                                    padding: '12px 20px', borderRadius: '10px',
-                                                    background: 'rgba(37, 99, 235, 0.08)', border: '1px solid rgba(37,99,235,0.25)',
-                                                    color: 'var(--accent)', fontWeight: '600', fontSize: '0.95rem', textDecoration: 'none'
-                                                }}>
-                                                Open DigiLocker to download your Migration Certificate
-                                            </a>
+                                            <div style={{
+                                                padding: '14px 16px', borderRadius: '10px',
+                                                background: 'rgba(37, 99, 235, 0.06)',
+                                                border: '1px solid rgba(37, 99, 235, 0.2)'
+                                            }}>
+                                                <p style={{ color: 'var(--text-main)', fontSize: '0.9rem', margin: 0, lineHeight: '1.6' }}>
+                                                    Once your application is processed, you will be able to download the Migration Certificate from your DigiLocker account.
+                                                </p>
+                                            </div>
                                         )}
                                     </div>
                                 ) : (
