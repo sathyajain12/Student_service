@@ -672,11 +672,11 @@ async function validateFile(file) {
             `File "${file.name}" is empty. Please upload a valid PDF document.`
         );
     }
-    const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10 MB
+    const MAX_FILE_SIZE = 3 * 1024 * 1024; // 3 MB
     if (file.size > MAX_FILE_SIZE) {
         const sizeMB = (file.size / (1024 * 1024)).toFixed(2);
         throw new FileValidationError(
-            `File "${file.name}" is ${sizeMB} MB, which exceeds the 10 MB limit. Please compress or reduce the file size.`
+            `File "${file.name}" is ${sizeMB} MB, which exceeds the 3 MB limit. Please compress or reduce the file size.`
         );
     }
 
