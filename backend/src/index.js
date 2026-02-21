@@ -1808,10 +1808,12 @@ async function handleMigration(formData, request, env, corsHeaders) {
 
     const appId = generateAppId('MC');
 
+    const regNo = formData.get('regNo') || '';
+
     await env.DB.prepare(
         `INSERT INTO applications (id, student_email, form_type, applicant_name, reg_no, campus)
          VALUES (?, ?, ?, ?, ?, ?)`
-    ).bind(appId, email, formType, applicantName, '', campus).run();
+    ).bind(appId, email, formType, applicantName, regNo, campus).run();
 
     await env.DB.prepare(
         `INSERT INTO form_migration_certificate
