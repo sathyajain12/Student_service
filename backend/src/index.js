@@ -1808,7 +1808,7 @@ async function handleMigration(formData, request, env, corsHeaders) {
         formData.get('email') || '',
         formData.get('yearofAdmission') || '',
         formData.get('campus') || '',
-        formData.get('lastExam') || '',
+        [formData.get('lastExamRegNo') || '', formData.get('lastExamDate') || ''].filter(Boolean).join(' – ') || '',
         formData.get('degreeRecieved') || '',
         formData.get('universityInstitute') || '',
         formData.get('addressLine1') || '',
