@@ -60,6 +60,9 @@ export default function InstructionsScreen({ config, onProceed, onCancel }) {
     const [hardCopy, setHardCopy] = useState(false);
     const [softCopy, setSoftCopy] = useState(false);
 
+    const hasDeliveryOptions = config.instructions?.some(i => i?.type === 'deliveryOptions');
+    const proceedDisabled = hasDeliveryOptions && !hardCopy && !softCopy;
+
     return (
         <div className="animate-fade-in">
             <div style={{ display: 'flex', alignItems: 'flex-start', gap: '15px', marginBottom: '20px' }}>
@@ -426,13 +429,16 @@ export default function InstructionsScreen({ config, onProceed, onCancel }) {
                                    : null;
                         onProceed(pref);
                     }}
+                    disabled={proceedDisabled}
                     className="btn-primary"
                     style={{
                         flexGrow: 1,
                         display: 'flex',
                         alignItems: 'center',
                         justifyContent: 'center',
-                        gap: '10px'
+                        gap: '10px',
+                        opacity: proceedDisabled ? 0.5 : 1,
+                        cursor: proceedDisabled ? 'not-allowed' : 'pointer'
                     }}
                 >
                     <CheckCircle2 size={18} />
