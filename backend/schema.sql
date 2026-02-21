@@ -212,6 +212,7 @@ CREATE TABLE form_migration_certificate (
   student_name TEXT,
   Mobile_Number numeric(10),
   email TEXT,
+  Registration_Number TEXT,
   admission_year TEXT,
   Campus_of_admission TEXT,
   last_examination_passed TEXT,

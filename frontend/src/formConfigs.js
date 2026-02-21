@@ -599,12 +599,6 @@ export const FORM_CONFIGS = {
                 required: true
             },
             {
-                name: 'regNo',
-                label: 'Registered Number',
-                type: 'number',
-                required: true
-            },
-            {
                 name: 'yearofAdmission',
                 label: 'Year of Admission',
                 type: 'date',

@@ -465,6 +465,7 @@ export default function AdminPortal() {
                 ['postal_code', 'Postal Code'],
             ],
             'Application for Migration Certificate': [
+                ['Registration_Number', 'Registration Number'],
                 ['admission_year', 'Year of Admission'],
                 ['Campus_of_admission', 'Campus of Admission'],
                 ['last_examination_passed', 'Last Examination Details'],
