@@ -625,7 +625,7 @@ export const FORM_CONFIGS = {
             },
             {
                 name: 'degreeRecieved',
-                label: 'Have you received your Degree Certificate ?',
+                label: 'Have you received your Degree Certificate?',
                 type: 'radio',
                 options: ['Yes', 'No'],
                 required: true
