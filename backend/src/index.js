@@ -394,9 +394,9 @@ async function sendDocumentDispatchedEmail(env, application, programme = null, t
                 greeting: `Sai Ram!<br><br>Dear ${application.applicant_name},`,
                 content,
                 details: [
-                    { label: 'Application ID', value: application.id },
-                    ...(application.reg_no ? [{ label: 'Registered Number', value: application.reg_no }] : []),
                     { label: 'Form Type', value: application.form_type },
+                    { label: 'Application ID', value: application.id },
+                    { label: 'Registered Number', value: application.reg_no || 'N/A' },
                     { label: 'Campus', value: application.campus },
                     ...(programme ? [{ label: 'Programme', value: programme }] : []),
                     ...(appliedOn ? [{ label: 'Applied On', value: appliedOn }] : []),
