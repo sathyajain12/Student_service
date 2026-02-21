@@ -2,6 +2,13 @@ import { getGoogleAuth, sendEmail } from './google-api';
 
 const ADMIN_EMAIL = 'saisathyajain@sssihl.edu.in';
 
+const CAMPUS_CONTACTS = {
+    'Prashanti Nilayam Campus': { phone: '08555-287235', email: 'officeofdirector.psn@sssihl.edu.in' },
+    'Anantapur Campus':         { phone: '08554-272567 / 272996', email: 'officeofdirector.atp@sssihl.edu.in' },
+    'Brindavan Campus':         { phone: '080-28452329', email: 'officeofdirector.brn@sssihl.edu.in' },
+    'Nandigiri Campus':         { phone: '08156-250188 / 250186', email: 'officeofdirector.ndg@sssihl.edu.in' },
+};
+
 // Custom error class for file validation failures (returns 400 instead of 500)
 class FileValidationError extends Error {
     constructor(message) {
@@ -1070,6 +1077,15 @@ function generateStudentEmailHTML(verification, isApproved, portalUrl) {
         })
         : 'N/A';
 
+    const campusContact = CAMPUS_CONTACTS[verification.campus];
+    const campusContactHtml = (!isApproved && isDuplicateGradeCard && campusContact)
+        ? `<li style="list-style:none; margin-top:8px; padding:10px 12px; background:#eff6ff; border-radius:6px; color:#1e40af;">
+               <strong>${verification.campus} Office</strong><br>
+               <span style="font-size:13px;">Phone: ${campusContact.phone}</span><br>
+               <span style="font-size:13px;">Email: <a href="mailto:${campusContact.email}" style="color:#2563eb;">${campusContact.email}</a></span>
+           </li>`
+        : '';
+
     let nextSteps = `
         <ul style="margin: 0; padding-left: 20px; color: #1e40af; font-size: 14px; line-height: 1.8;">
             ${isApproved
@@ -1080,7 +1096,8 @@ function generateStudentEmailHTML(verification, isApproved, portalUrl) {
                        <li>You will receive further updates via email</li>`)
             : (isDuplicateGradeCard
                 ? `<li><strong>Your original grade card is available at the ${verification.campus || 'campus'} office</strong></li>
-                       <li>Please contact the campus office to collect your grade card</li>`
+                       <li>Please contact the campus office to collect your grade card</li>
+                       ${campusContactHtml}`
                 : `<li>For queries or clarifications, please contact: <a href="mailto:coeoffice@sssihl.edu.in" style="color: #2563eb; text-decoration: none;">coeoffice@sssihl.edu.in</a></li>`)
         }
         </ul>
