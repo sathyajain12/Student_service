@@ -544,7 +544,7 @@ export default function AdminPortal() {
       <div class="info-item"><label>Registration Number</label><span>${app.reg_no || 'N/A'}</span></div>
       <div class="info-item"><label>Campus</label><span>${app.campus || 'N/A'}</span></div>
       <div class="info-item"><label>Email Address</label><span>${app.student_email || 'N/A'}</span></div>
-      <div class="info-item"><label>Date of Submission</label><span>${new Date(app.created_at).toLocaleString()}</span></div>
+      <div class="info-item"><label>Date of Submission</label><span>${new Date(app.created_at + 'Z').toLocaleString('en-IN', { timeZone: 'Asia/Kolkata' })}</span></div>
     </div>
   </div>
 
@@ -1173,7 +1173,7 @@ export default function AdminPortal() {
                                 </div>
                                 <div style={styles.detailCard}>
                                     <p style={styles.detailLabel}>Submitted</p>
-                                    <p style={styles.detailValue}>{new Date(app.created_at).toLocaleString()}</p>
+                                    <p style={styles.detailValue}>{new Date(app.created_at + 'Z').toLocaleString('en-IN', { timeZone: 'Asia/Kolkata' })}</p>
                                 </div>
                             </div>
                         </div>
@@ -1634,7 +1634,7 @@ export default function AdminPortal() {
                                                 <td style={styles.td}>
                                                     <span style={getStatusStyle(app.status)}>{app.status}</span>
                                                 </td>
-                                                <td style={styles.td}>{new Date(app.created_at).toLocaleDateString()}</td>
+                                                <td style={styles.td}>{new Date(app.created_at + 'Z').toLocaleDateString('en-IN', { timeZone: 'Asia/Kolkata' })}</td>
                                                 <td style={styles.td}>
                                                     <button onClick={() => fetchAppDetails(app.id)} style={styles.button}>
                                                         View

@@ -241,7 +241,7 @@ export default function StatusTracker({ onBack }) {
                                     <FileText size={16} /> {application.form_type}
                                 </div>
                                 <div style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '0.9rem', color: 'var(--text-muted)' }}>
-                                    <Calendar size={16} /> Submitted on {new Date(application.created_at).toLocaleDateString()}
+                                    <Calendar size={16} /> Submitted on {new Date(application.created_at + 'Z').toLocaleDateString('en-IN', { timeZone: 'Asia/Kolkata' })}
                                 </div>
                             </div>
                         </div>
@@ -260,7 +260,7 @@ export default function StatusTracker({ onBack }) {
                                 {getStatusLabel(application.status)}
                             </div>
                             <p style={{ fontSize: '0.85rem', color: 'var(--text-muted)', marginTop: '12px' }}>
-                                Last updated: {new Date(application.updated_at).toLocaleString()}
+                                Last updated: {new Date(application.updated_at + 'Z').toLocaleString('en-IN', { timeZone: 'Asia/Kolkata' })}
                             </p>
                         </div>
                     </div>
@@ -310,7 +310,7 @@ export default function StatusTracker({ onBack }) {
                                                 )}
                                                 {stage.date && (
                                                     <p style={{ fontSize: '0.7rem', color: 'var(--text-muted)', marginTop: '4px' }}>
-                                                        {new Date(stage.date).toLocaleDateString()}
+                                                        {new Date(stage.date + 'Z').toLocaleDateString('en-IN', { timeZone: 'Asia/Kolkata' })}
                                                     </p>
                                                 )}
                                             </div>
@@ -671,7 +671,7 @@ export default function StatusTracker({ onBack }) {
                                                     marginTop: '4px'
                                                 }}>
                                                     {(doc.file_size / 1024).toFixed(1)} KB •
-                                                    Uploaded {new Date(doc.created_at).toLocaleDateString()}
+                                                    Uploaded {new Date(doc.created_at + 'Z').toLocaleDateString('en-IN', { timeZone: 'Asia/Kolkata' })}
                                                 </p>
                                             </div>
                                         </div>
