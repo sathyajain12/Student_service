@@ -214,6 +214,7 @@ export default function AdminPortal() {
     const [username, setUsername] = useState('');
     const [password, setPassword] = useState('');
     const [loginError, setLoginError] = useState('');
+    const [showPassword, setShowPassword] = useState(false);
     const [loading, setLoading] = useState(false);
 
     const [stats, setStats] = useState(null);
@@ -989,94 +990,127 @@ export default function AdminPortal() {
     // Login Screen
     if (!isLoggedIn) {
         const inputStyle = {
-            display: 'block', width: '100%', height: '48px',
-            paddingLeft: '44px', paddingRight: '16px',
-            border: '1px solid #e2e8f0', borderRadius: '10px',
+            display: 'block', width: '100%', height: '52px',
+            paddingLeft: '46px', paddingRight: '16px',
+            border: '1px solid #e2e8f0', borderRadius: '8px',
             background: 'white', color: '#0F172A',
             fontSize: '0.95rem', outline: 'none',
-            boxSizing: 'border-box', fontFamily: 'inherit'
+            boxSizing: 'border-box', fontFamily: 'inherit',
+            transition: 'border-color 0.2s, box-shadow 0.2s'
         };
         return (
             <>
                 <style>{`
-                    .login-input:focus { border-color: #4F46E5 !important; box-shadow: 0 0 0 3px rgba(79,70,229,0.12); }
-                    .login-submit:hover { opacity: 0.92; box-shadow: 0 8px 25px rgba(79,70,229,0.4) !important; }
-                    .login-submit:active { transform: scale(0.98); }
+                    .login-input:focus { border-color: #ec5b13 !important; box-shadow: 0 0 0 3px rgba(236,91,19,0.12); }
+                    .login-submit:hover:not(:disabled) { transform: translateY(-2px); box-shadow: 0 8px 25px rgba(236,91,19,0.35) !important; }
+                    .login-submit:active:not(:disabled) { transform: translateY(0); }
+                    .login-help:hover { color: #ec5b13 !important; }
                     @media (max-width: 1024px) { .login-brand-panel { display: none !important; } .login-form-panel { width: 100% !important; } }
                 `}</style>
-                <main style={{ display: 'flex', height: '100vh', overflow: 'hidden', fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif' }}>
+                <main style={{ display: 'flex', height: '100vh', overflow: 'hidden', fontFamily: '"Public Sans", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif' }}>
 
                     {/* Left brand panel */}
                     <section className="login-brand-panel" style={{ width: '60%', background: '#0F172A', position: 'relative', display: 'flex', flexDirection: 'column', justifyContent: 'space-between', padding: '48px', overflow: 'hidden' }}>
                         {/* Grid dot overlay */}
                         <div style={{ position: 'absolute', inset: 0, backgroundImage: 'radial-gradient(circle at 2px 2px, rgba(255,255,255,0.05) 1px, transparent 0)', backgroundSize: '40px 40px', pointerEvents: 'none' }} />
-                        {/* Glow blob */}
-                        <div style={{ position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%,-50%)', width: '500px', height: '500px', background: 'rgba(79,70,229,0.18)', borderRadius: '50%', filter: 'blur(120px)', pointerEvents: 'none' }} />
+                        {/* Top-left orange orb */}
+                        <div style={{ position: 'absolute', top: '-10%', left: '-10%', width: '400px', height: '400px', background: '#ec5b13', borderRadius: '50%', filter: 'blur(80px)', opacity: 0.4, pointerEvents: 'none' }} />
+                        {/* Bottom-right orange orb */}
+                        <div style={{ position: 'absolute', bottom: '-5%', right: '5%', width: '300px', height: '300px', background: '#b84209', borderRadius: '50%', filter: 'blur(80px)', opacity: 0.4, pointerEvents: 'none' }} />
 
                         {/* Top: logo + name */}
                         <div style={{ display: 'flex', alignItems: 'center', gap: '12px', position: 'relative', zIndex: 1 }}>
-                            <img src="/logo.png" alt="SSSIHL Logo" style={{ height: '44px', width: '44px', objectFit: 'contain' }} />
+                            <div style={{ background: '#ec5b13', padding: '8px', borderRadius: '8px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                                <img src="/logo.png" alt="SSSIHL Logo" style={{ height: '28px', width: '28px', objectFit: 'contain' }} />
+                            </div>
                             <span style={{ color: 'white', fontWeight: 700, fontSize: '1.1rem', letterSpacing: '-0.01em' }}>Examination Services Admin</span>
                         </div>
 
                         {/* Middle: headline */}
                         <div style={{ position: 'relative', zIndex: 1, maxWidth: '480px' }}>
-                            <h1 style={{ color: 'white', fontSize: '3rem', fontWeight: 800, lineHeight: 1.2, margin: 0 }}>
-                                Student Service<br />Admin
+                            <h1 style={{ color: 'white', fontSize: '3.75rem', fontWeight: 900, lineHeight: 1.1, margin: 0, letterSpacing: '-0.03em' }}>
+                                Student Service <br />
+                                <span style={{ color: '#ec5b13' }}>Admin</span>
                             </h1>
                         </div>
 
+                        {/* Bottom: copyright */}
+                        <div style={{ display: 'flex', gap: '24px', position: 'relative', zIndex: 1 }}>
+                            <span style={{ color: '#64748b', fontSize: '0.8rem' }}>© 2025 SSSIHL Examination Services</span>
+                        </div>
                     </section>
 
                     {/* Right login panel */}
-                    <section className="login-form-panel" style={{ width: '40%', display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#F8FAFC', padding: '48px' }}>
-                        <div style={{ width: '100%', maxWidth: '380px' }}>
+                    <section className="login-form-panel" style={{ width: '40%', display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center', background: '#F8FAFC', padding: '48px 64px', overflowY: 'auto' }}>
+                        <div style={{ width: '100%', maxWidth: '440px' }}>
 
-                            {/* Logo icon box */}
-                            <div style={{ width: '52px', height: '52px', background: '#EEF2FF', borderRadius: '14px', display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: '28px' }}>
-                                <img src="/logo.png" alt="Logo" style={{ height: '32px', width: '32px', objectFit: 'contain' }} />
+                            {/* Header */}
+                            <div style={{ marginBottom: '40px' }}>
+                                <h2 style={{ fontSize: '1.9rem', fontWeight: 700, color: '#0F172A', margin: '0 0 8px 0', letterSpacing: '-0.02em' }}>Welcome Back</h2>
+                                <p style={{ color: '#64748b', fontSize: '0.95rem', margin: 0 }}>Sign in to your admin dashboard</p>
                             </div>
 
-                            <h2 style={{ fontSize: '1.75rem', fontWeight: 800, color: '#0F172A', margin: '0 0 8px 0', letterSpacing: '-0.02em' }}>Welcome Back</h2>
-                            <p style={{ color: '#64748b', fontSize: '0.9rem', margin: '0 0 36px 0' }}>Sign in to your admin dashboard</p>
-
-                            <form onSubmit={handleLogin} style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+                            <form onSubmit={handleLogin} style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
                                 {/* Username */}
-                                <div style={{ position: 'relative' }}>
-                                    <div style={{ position: 'absolute', top: '50%', left: '14px', transform: 'translateY(-50%)', pointerEvents: 'none' }}>
-                                        <svg width="18" height="18" fill="none" stroke="#94a3b8" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" viewBox="0 0 24 24">
-                                            <path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2" /><circle cx="12" cy="7" r="4" />
-                                        </svg>
+                                <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+                                    <label style={{ fontSize: '0.875rem', fontWeight: 600, color: '#0F172A' }}>Username or Email</label>
+                                    <div style={{ position: 'relative' }}>
+                                        <div style={{ position: 'absolute', top: '50%', left: '14px', transform: 'translateY(-50%)', pointerEvents: 'none' }}>
+                                            <svg width="18" height="18" fill="none" stroke="#94a3b8" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" viewBox="0 0 24 24">
+                                                <path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2" /><circle cx="12" cy="7" r="4" />
+                                            </svg>
+                                        </div>
+                                        <input
+                                            className="login-input"
+                                            type="text"
+                                            value={username}
+                                            onChange={(e) => setUsername(e.target.value)}
+                                            style={inputStyle}
+                                            placeholder="Enter your admin username"
+                                            required
+                                            autoComplete="username"
+                                        />
                                     </div>
-                                    <input
-                                        className="login-input"
-                                        type="text"
-                                        value={username}
-                                        onChange={(e) => setUsername(e.target.value)}
-                                        style={inputStyle}
-                                        placeholder="Username"
-                                        required
-                                        autoComplete="username"
-                                    />
                                 </div>
 
                                 {/* Password */}
-                                <div style={{ position: 'relative' }}>
-                                    <div style={{ position: 'absolute', top: '50%', left: '14px', transform: 'translateY(-50%)', pointerEvents: 'none' }}>
-                                        <svg width="18" height="18" fill="none" stroke="#94a3b8" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" viewBox="0 0 24 24">
-                                            <rect x="3" y="11" width="18" height="11" rx="2" ry="2" /><path d="M7 11V7a5 5 0 0110 0v4" />
-                                        </svg>
+                                <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+                                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                                        <label style={{ fontSize: '0.875rem', fontWeight: 600, color: '#0F172A' }}>Password</label>
                                     </div>
-                                    <input
-                                        className="login-input"
-                                        type="password"
-                                        value={password}
-                                        onChange={(e) => setPassword(e.target.value)}
-                                        style={inputStyle}
-                                        placeholder="Password"
-                                        required
-                                        autoComplete="current-password"
-                                    />
+                                    <div style={{ position: 'relative' }}>
+                                        <div style={{ position: 'absolute', top: '50%', left: '14px', transform: 'translateY(-50%)', pointerEvents: 'none' }}>
+                                            <svg width="18" height="18" fill="none" stroke="#94a3b8" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" viewBox="0 0 24 24">
+                                                <rect x="3" y="11" width="18" height="11" rx="2" ry="2" /><path d="M7 11V7a5 5 0 0110 0v4" />
+                                            </svg>
+                                        </div>
+                                        <input
+                                            className="login-input"
+                                            type={showPassword ? 'text' : 'password'}
+                                            value={password}
+                                            onChange={(e) => setPassword(e.target.value)}
+                                            style={{ ...inputStyle, paddingRight: '46px' }}
+                                            placeholder="••••••••"
+                                            required
+                                            autoComplete="current-password"
+                                        />
+                                        {/* Show/hide toggle */}
+                                        <button
+                                            type="button"
+                                            onClick={() => setShowPassword(p => !p)}
+                                            style={{ position: 'absolute', top: '50%', right: '14px', transform: 'translateY(-50%)', background: 'none', border: 'none', cursor: 'pointer', padding: 0, color: '#94a3b8', display: 'flex', alignItems: 'center' }}
+                                        >
+                                            {showPassword ? (
+                                                <svg width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" viewBox="0 0 24 24">
+                                                    <path d="M17.94 17.94A10.07 10.07 0 0112 20c-7 0-11-8-11-8a18.45 18.45 0 015.06-5.94"/><path d="M9.9 4.24A9.12 9.12 0 0112 4c7 0 11 8 11 8a18.5 18.5 0 01-2.16 3.19"/><line x1="1" y1="1" x2="23" y2="23"/>
+                                                </svg>
+                                            ) : (
+                                                <svg width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" viewBox="0 0 24 24">
+                                                    <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/>
+                                                </svg>
+                                            )}
+                                        </button>
+                                    </div>
                                 </div>
 
                                 {loginError && (
@@ -1088,20 +1122,36 @@ export default function AdminPortal() {
                                     disabled={loading}
                                     className="login-submit"
                                     style={{
-                                        width: '100%', height: '48px', marginTop: '4px',
-                                        background: 'linear-gradient(to right, #4F46E5, #7C3AED)',
+                                        width: '100%', height: '52px', marginTop: '4px',
+                                        background: 'linear-gradient(135deg, #ec5b13 0%, #b84209 100%)',
                                         color: 'white', fontWeight: 700, fontSize: '1rem',
-                                        border: 'none', borderRadius: '10px',
+                                        border: 'none', borderRadius: '8px',
                                         cursor: loading ? 'not-allowed' : 'pointer',
                                         opacity: loading ? 0.7 : 1,
-                                        boxShadow: '0 4px 15px rgba(79,70,229,0.3)',
+                                        boxShadow: '0 4px 15px rgba(236,91,19,0.25)',
                                         transition: 'all 0.2s ease',
-                                        fontFamily: 'inherit'
+                                        fontFamily: 'inherit',
+                                        display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px'
                                     }}
                                 >
-                                    {loading ? 'Signing in...' : 'Sign In'}
+                                    <span>{loading ? 'Signing in...' : 'Sign In'}</span>
+                                    {!loading && (
+                                        <svg width="18" height="18" fill="none" stroke="white" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" viewBox="0 0 24 24">
+                                            <path d="M15 3h4a2 2 0 012 2v14a2 2 0 01-2 2h-4"/><polyline points="10 17 15 12 10 7"/><line x1="15" y1="12" x2="3" y2="12"/>
+                                        </svg>
+                                    )}
                                 </button>
                             </form>
+
+                            {/* Help link */}
+                            <div style={{ marginTop: '40px', textAlign: 'center' }}>
+                                <button type="button" className="login-help" style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#64748b', fontSize: '0.875rem', fontWeight: 500, fontFamily: 'inherit', display: 'inline-flex', alignItems: 'center', gap: '6px', transition: 'color 0.2s' }}>
+                                    <svg width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" viewBox="0 0 24 24">
+                                        <circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 015.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/>
+                                    </svg>
+                                    Need help with your account?
+                                </button>
+                            </div>
                         </div>
                     </section>
                 </main>
