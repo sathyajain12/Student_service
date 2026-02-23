@@ -1057,8 +1057,8 @@ async function sendDirectorNotification(env, request, appId, formType, applicant
                 details: [
                     { label: 'Form Type',             value: escapeHtml(formType) },
                     { label: 'Application ID',         value: escapeHtml(appId) },
-                    { label: 'Existing Name',          value: escapeHtml(applicantName) },
-                    { label: 'Name to be Changed To',  value: escapeHtml(nameChangeDetails?.changed_name || 'N/A') },
+                    { label: 'Former Name',          value: escapeHtml(applicantName) },
+                    { label: 'Changed Name as per the Gazette notification',  value: escapeHtml(nameChangeDetails?.changed_name || 'N/A') },
                     { label: "Father's Name",          value: escapeHtml(nameChangeDetails?.Father_name || 'N/A') },
                     { label: 'Registered Number',      value: escapeHtml(regNo || 'N/A') },
                     { label: 'Campus',                 value: escapeHtml(campus) },
@@ -1983,9 +1983,7 @@ async function handleDirectorCommentPage(url, env, corsHeaders) {
 
     <!-- Header -->
     <div class="text-center mb-8">
-        <img src="https://student-service.pages.dev/Examinations_Service.png" alt="SSSIHL" class="w-auto h-12 mx-auto mb-4">
-        <h1 class="text-base font-bold text-slate-800 tracking-wide">SRI SATHYA SAI INSTITUTE OF HIGHER LEARNING</h1>
-        <p class="text-xs text-slate-500 mt-1 tracking-widest uppercase">Office of the Controller of Examinations</p>
+        <img src="https://student-service.pages.dev/Examinations_Service.png" alt="SSSIHL" class="w-auto h-24 mx-auto">
     </div>
 
     <!-- Card -->
