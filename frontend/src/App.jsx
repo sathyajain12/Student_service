@@ -12,6 +12,38 @@ function App() {
   const [isLoading, setIsLoading] = useState(true);
   const [view, setView] = useState('portal'); // 'portal' | 'instructions' | 'form' | 'status' | 'admin'
   const [currentFormId, setCurrentFormId] = useState(null);
+  const [deliveryPreference, setDeliveryPreference] = useState(null);
+
+  // Helper: navigate to a view and push a browser history entry
+  const navigateTo = (newView, newFormId = null, newPref = null) => {
+    const hashMap = { portal: '', instructions: '#instructions', form: '#form', status: '#status' };
+    window.history.pushState(
+      { view: newView, currentFormId: newFormId, deliveryPreference: newPref },
+      '',
+      hashMap[newView] ?? ''
+    );
+    setView(newView);
+    setCurrentFormId(newFormId);
+    setDeliveryPreference(newPref);
+  };
+
+  // Restore state when browser back/forward is pressed
+  useEffect(() => {
+    const handlePopState = (e) => {
+      const s = e.state;
+      if (s?.view) {
+        setView(s.view);
+        setCurrentFormId(s.currentFormId ?? null);
+        setDeliveryPreference(s.deliveryPreference ?? null);
+      } else {
+        setView('portal');
+        setCurrentFormId(null);
+        setDeliveryPreference(null);
+      }
+    };
+    window.addEventListener('popstate', handlePopState);
+    return () => window.removeEventListener('popstate', handlePopState);
+  }, []);
 
   useEffect(() => {
     // Check if URL is /admin
@@ -23,10 +55,14 @@ function App() {
 
     // Check if URL has #track hash (from email link)
     if (window.location.hash.startsWith('#track')) {
+      window.history.replaceState({ view: 'status', currentFormId: null, deliveryPreference: null }, '', window.location.hash);
       setView('status');
       setIsLoading(false);
       return;
     }
+
+    // Default: portal — seed history state so back works from first page
+    window.history.replaceState({ view: 'portal', currentFormId: null, deliveryPreference: null }, '', '');
 
     const timer = setTimeout(() => {
       setIsLoading(false);
@@ -38,28 +74,22 @@ function App() {
     window.scrollTo(0, 0);
   }, [view]);
 
-  const [deliveryPreference, setDeliveryPreference] = useState(null);
   const selectedConfig = FORM_CONFIGS[currentFormId];
 
   const handleSelectForm = (id) => {
-    setCurrentFormId(id);
-    setView('instructions');
+    navigateTo('instructions', id, null);
   };
 
   const handleProceedToForm = (pref) => {
-    setDeliveryPreference(pref || null);
-    setView('form');
+    navigateTo('form', currentFormId, pref || null);
   };
 
   const handleBackToPortal = () => {
-    setCurrentFormId(null);
-    setDeliveryPreference(null);
-    setView('portal');
+    navigateTo('portal', null, null);
   };
 
   const handleBackToInstructions = () => {
-    setDeliveryPreference(null);
-    setView('instructions');
+    navigateTo('instructions', currentFormId, null);
   };
 
   // Admin portal (no loading screen)
@@ -76,7 +106,7 @@ function App() {
           {view === 'portal' && (
             <Portal
               onSelectForm={handleSelectForm}
-              onTrackStatus={() => setView('status')}
+              onTrackStatus={() => navigateTo('status', null, null)}
             />
           )}
 
@@ -106,7 +136,7 @@ function App() {
                   <FormBuilder
                     config={selectedConfig}
                     onCancel={handleBackToInstructions}
-                    onTrackStatus={() => setView('status')}
+                    onTrackStatus={() => navigateTo('status', null, null)}
                     hiddenData={deliveryPreference ? { deliveryPreference } : null}
                   />
                 ) : (
