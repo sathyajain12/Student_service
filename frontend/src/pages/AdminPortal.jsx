@@ -232,6 +232,7 @@ export default function AdminPortal() {
     const [dispatchAppId, setDispatchAppId] = useState(null);
     const dispatchTrackingRef = useRef(null);
     const [searchQuery, setSearchQuery] = useState('');
+    const [currentPage, setCurrentPage] = useState(1);
 
     const showToast = (message, type = 'success') => {
         setToast({ message, type });
@@ -256,6 +257,8 @@ export default function AdminPortal() {
 
         return () => clearInterval(interval);
     }, [isLoggedIn]);
+
+    useEffect(() => { setCurrentPage(1); }, [searchQuery]);
 
     const handleLogin = async (e) => {
         e.preventDefault();
@@ -1600,6 +1603,11 @@ export default function AdminPortal() {
                                 );
                             });
 
+                            const PAGE_SIZE = 10;
+                            const totalPages = Math.max(1, Math.ceil(filteredApplications.length / PAGE_SIZE));
+                            const safePage = Math.min(currentPage, totalPages);
+                            const pagedApplications = filteredApplications.slice((safePage - 1) * PAGE_SIZE, safePage * PAGE_SIZE);
+
                             const thStyle = { padding: '12px 20px', textAlign: 'left', fontSize: '0.72rem', fontWeight: 700, color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.05em', borderBottom: '1px solid #e2e8f0', background: '#f8fafc', whiteSpace: 'nowrap' };
                             const tdStyle = { padding: '14px 20px', fontSize: '0.875rem', color: '#334155', borderBottom: '1px solid #f1f5f9' };
 
@@ -1619,7 +1627,7 @@ export default function AdminPortal() {
                                                 </tr>
                                             </thead>
                                             <tbody>
-                                                {filteredApplications.map((app) => (
+                                                {pagedApplications.map((app) => (
                                                     <tr key={app.id} className="dash-row">
                                                         <td style={{ ...tdStyle, fontFamily: 'monospace', fontSize: '0.78rem', color: '#64748b' }}>{app.id}</td>
                                                         <td style={{ ...tdStyle, maxWidth: '200px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', fontWeight: 500 }}>{app.form_type}</td>
@@ -1650,10 +1658,27 @@ export default function AdminPortal() {
                                         )}
                                     </div>
                                     {applications.length > 0 && (
-                                        <div style={{ padding: '12px 24px', background: '#f8fafc', borderTop: '1px solid #e2e8f0' }}>
+                                        <div style={{ padding: '12px 24px', background: '#f8fafc', borderTop: '1px solid #e2e8f0', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
                                             <p style={{ fontSize: '0.75rem', color: '#94a3b8', margin: 0, fontWeight: 500 }}>
-                                                Showing {filteredApplications.length} of {applications.length} applications
+                                                Showing {filteredApplications.length === 0 ? 0 : (safePage - 1) * PAGE_SIZE + 1}–{Math.min(safePage * PAGE_SIZE, filteredApplications.length)} of {filteredApplications.length} applications
                                             </p>
+                                            {totalPages > 1 && (
+                                                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                                                    <button
+                                                        onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+                                                        disabled={safePage === 1}
+                                                        style={{ padding: '5px 12px', fontSize: '0.78rem', fontWeight: 600, background: 'white', border: '1px solid #e2e8f0', borderRadius: '6px', cursor: safePage === 1 ? 'not-allowed' : 'pointer', color: safePage === 1 ? '#cbd5e1' : '#334155', fontFamily: 'inherit' }}
+                                                    >← Prev</button>
+                                                    <span style={{ fontSize: '0.78rem', color: '#64748b', fontWeight: 500, minWidth: '80px', textAlign: 'center' }}>
+                                                        Page {safePage} of {totalPages}
+                                                    </span>
+                                                    <button
+                                                        onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
+                                                        disabled={safePage === totalPages}
+                                                        style={{ padding: '5px 12px', fontSize: '0.78rem', fontWeight: 600, background: 'white', border: '1px solid #e2e8f0', borderRadius: '6px', cursor: safePage === totalPages ? 'not-allowed' : 'pointer', color: safePage === totalPages ? '#cbd5e1' : '#334155', fontFamily: 'inherit' }}
+                                                    >Next →</button>
+                                                </div>
+                                            )}
                                         </div>
                                     )}
                                 </>
