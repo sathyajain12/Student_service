@@ -352,7 +352,7 @@ export const FORM_CONFIGS = {
         fields: [
             {
                 name: 'applicantName',
-                label: 'Candidate Name',
+                label: 'Former Name',
                 type: 'text',
                 required: true
             },
