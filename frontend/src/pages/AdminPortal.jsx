@@ -1046,7 +1046,7 @@ export default function AdminPortal() {
                                     alt="Examination Services"
                                     style={{ maxWidth: '100%', height: 'auto', objectFit: 'contain', display: 'block', marginBottom: '16px' }}
                                 />
-                                <p style={{ color: '#64748b', fontSize: '0.95rem', margin: 0 }}>Sign in to your admin dashboard</p>
+                                <p style={{ color: '#64748b', fontSize: '0.95rem', margin: 0, textAlign: 'center' }}>Sign in to your admin dashboard</p>
                             </div>
 
                             <form onSubmit={handleLogin} style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
