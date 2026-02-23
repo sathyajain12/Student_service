@@ -1044,7 +1044,7 @@ export default function AdminPortal() {
                                 <img
                                     src="/Examinations_Service.png"
                                     alt="Examination Services"
-                                    style={{ height: '80px', width: 'auto', objectFit: 'contain', display: 'block', marginBottom: '16px' }}
+                                    style={{ maxWidth: '100%', height: 'auto', objectFit: 'contain', display: 'block', marginBottom: '16px' }}
                                 />
                                 <p style={{ color: '#64748b', fontSize: '0.95rem', margin: 0 }}>Sign in to your admin dashboard</p>
                             </div>
