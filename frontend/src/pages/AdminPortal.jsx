@@ -202,6 +202,12 @@ const getStatusStyle = (status) => {
             return { ...baseStyle, background: '#0ea5e9', color: '#ffffff' };
         case 'REJECTED':
             return { ...baseStyle, background: '#ef4444', color: '#ffffff' };
+        case 'DIRECTOR_COMMENTED':
+            return { ...baseStyle, background: '#7c3aed', color: '#ffffff' };
+        case 'AWAITING_DIRECTOR':
+            return { ...baseStyle, background: '#8b5cf6', color: '#ffffff' };
+        case 'DIRECTOR_APPROVED':
+            return { ...baseStyle, background: '#0284c7', color: '#ffffff' };
         case 'PENDING':
         default:
             return { ...baseStyle, background: '#f59e0b', color: '#ffffff' };
@@ -1258,6 +1264,12 @@ export default function AdminPortal() {
                                         <div><p style={detailLabelStyle}>Campus</p><p style={detailValueStyle}>{app.campus}</p></div>
                                         <div><p style={detailLabelStyle}>Submitted On</p><p style={detailValueStyle}>{new Date(app.created_at + 'Z').toLocaleString('en-IN', { timeZone: 'Asia/Kolkata' })}</p></div>
                                     </div>
+                                    {app.director_comment && (
+                                        <div style={{ margin: '0 20px 20px 20px', background: '#faf5ff', border: '1px solid #e9d5ff', borderRadius: '10px', padding: '16px' }}>
+                                            <p style={{ fontSize: '0.72rem', fontWeight: 700, color: '#7c3aed', margin: '0 0 8px 0', textTransform: 'uppercase', letterSpacing: '0.06em' }}>Director's Comments</p>
+                                            <p style={{ fontSize: '0.9rem', color: '#4c1d95', margin: 0, lineHeight: 1.7 }}>{app.director_comment}</p>
+                                        </div>
+                                    )}
                                 </div>
 
                                 {/* Documents */}
@@ -1606,7 +1618,9 @@ export default function AdminPortal() {
                             { label: 'Approved',   value: 'APPROVED',   count: stats?.approved,   color: '#10b981' },
                             { label: 'Dispatched', value: 'DISPATCHED', count: stats?.dispatched, color: '#0ea5e9' },
                             { label: 'Completed',  value: 'COMPLETED',  count: stats?.completed,  color: '#10b981' },
-                            { label: 'Rejected',   value: 'REJECTED',   count: stats?.rejected,   color: '#ef4444' },
+                            { label: 'Rejected',          value: 'REJECTED',          count: stats?.rejected,   color: '#ef4444' },
+                            { label: 'Dir. Comments',     value: 'DIRECTOR_COMMENTED', count: null,              color: '#7c3aed' },
+                            { label: 'Awaiting Director', value: 'AWAITING_DIRECTOR',  count: null,              color: '#8b5cf6' },
                         ].map(tab => (
                             <button key={tab.value} onClick={() => setStatusFilter(tab.value)}
                                 style={{

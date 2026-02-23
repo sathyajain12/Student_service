@@ -632,7 +632,7 @@ export const FORM_CONFIGS = {
             },
             {
                 name: 'universityInstitute',
-                label: 'The University / Institute to which the candidate proposes to join ',
+                label: 'The University / Institute which you propose to join ',
                 type: 'text',
                 required: true
             },

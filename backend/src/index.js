@@ -61,6 +61,14 @@ export default {
                 return await handleApproval(url, env, corsHeaders);
             }
 
+            if (url.pathname === '/director-comment' && request.method === 'GET') {
+                return await handleDirectorCommentPage(url, env, corsHeaders);
+            }
+
+            if (url.pathname === '/director-comment' && request.method === 'POST') {
+                return await handleDirectorCommentSubmit(request, env, corsHeaders);
+            }
+
             if (url.pathname === '/submit-to-coe' && request.method === 'POST') {
                 return await handleSubmitToCOE(request, env, corsHeaders);
             }
@@ -1022,10 +1030,34 @@ async function sendDirectorNotification(env, request, appId, formType, applicant
             timeZone: 'Asia/Kolkata'
         });
 
-        await sendEmail(accessToken, {
-            to: directorEmail,
-            subject: `Clearance Required: ${formType} - ${appId}`,
-            htmlBody: renderEmailTemplate({
+        const isNameChange = formType === 'Application for Registration of Student Name change in the Institute Records';
+
+        const emailSubject = isNameChange
+            ? `For Your Kind Attention: ${formType} - ${appId}`
+            : `Clearance Required: ${formType} - ${appId}`;
+
+        const emailBody = isNameChange
+            ? renderEmailTemplate({
+                title: 'For Your Kind Attention',
+                greeting: 'Dear Madam / Sir,<br><br>Sairam!<br><br>Greetings from the Examinations Section, SSSIHL.',
+                content: `This is to bring to your kind notice that <strong>${escapeHtml(applicantName)}</strong> has submitted an application for registration of name change in the Institute records. This is for your kind information.<br><br>If you are in agreement with the above, kindly click the <strong>Proceed</strong> button below so that the Examination Section may process the application. Alternatively, if you have any concerns, you may record your comments by clicking the <strong>Submit Comments</strong> button.`,
+                details: [
+                    { label: 'Form Type', value: escapeHtml(formType) },
+                    { label: 'Application ID', value: escapeHtml(appId) },
+                    { label: 'Applicant Name', value: escapeHtml(applicantName) },
+                    { label: 'Registered Number', value: escapeHtml(regNo || 'N/A') },
+                    { label: 'Applicant Email', value: escapeHtml(email) },
+                    { label: 'Campus', value: escapeHtml(campus) },
+                    ...(programme ? [{ label: 'Programme', value: escapeHtml(programme) }] : []),
+                    { label: 'Submission Date', value: submissionDate },
+                ],
+                importantNote: '',
+                actionButtons: [
+                    { label: '✓ Proceed', link: `${url.origin}/approve?id=${appId}&role=Director&action=Approve`, color: '#10b981' },
+                    { label: '✎ Submit Comments', link: `${url.origin}/director-comment?id=${appId}`, color: '#f59e0b' }
+                ]
+            })
+            : renderEmailTemplate({
                 title: 'Clearance Required',
                 greeting: 'Dear Madam / Sir,<br><br>Sairam!<br><br>Greetings from the Examinations Section, SSSIHL.',
                 content: `An <strong>${escapeHtml(formType)}</strong> has been submitted and requires your clearance for further processing.`,
@@ -1043,13 +1075,18 @@ async function sendDirectorNotification(env, request, appId, formType, applicant
                 importantNote: `
                         <p style="margin: 0; font-weight: 700;">⚠️ Important Note</p>
                         <p style="margin: 8px 0 0 0;">Request you to please verify the availability of the original grade card in the campus office before processing this application.</p>
-                        <p style="margin: 8px 0 0 0;"><strong>If the grade card is available at the campus office and the student has not collected it yet, please reject this application. The student will be notified to contact the campus office to collect her / his original grade card.</p>
+                        <p style="margin: 8px 0 0 0;"><strong>If the grade card is available at the campus office and the student has not collected it yet, please reject this application. The student will be notified to contact the campus office to collect her / his original grade card.</strong></p>
                     `,
                 actionButtons: [
                     { label: '✓ Clear Application', link: `${url.origin}/approve?id=${appId}&role=Director&action=Approve`, color: '#10b981' },
                     { label: '✗ Reject', link: `${url.origin}/approve?id=${appId}&role=Director&action=Reject`, color: '#ef4444' }
                 ]
-            }),
+            });
+
+        await sendEmail(accessToken, {
+            to: directorEmail,
+            subject: emailSubject,
+            htmlBody: emailBody,
             attachments: []
         });
         console.log(`Director email sent to ${directorEmail} for app ${appId}`);
@@ -1865,6 +1902,136 @@ async function handleMigration(formData, request, env, corsHeaders) {
     return new Response(JSON.stringify({ success: true, appId }), {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' }
     });
+}
+
+async function handleDirectorCommentPage(url, env, corsHeaders) {
+    const id = url.searchParams.get('id');
+    if (!id) return new Response('Missing application ID', { status: 400, headers: corsHeaders });
+
+    const app = await env.DB.prepare(
+        'SELECT id, applicant_name, form_type, campus, status FROM applications WHERE id = ?'
+    ).bind(id).first();
+
+    if (!app) return new Response('Application not found', { status: 404, headers: corsHeaders });
+
+    const alreadyActed = app.status !== 'AWAITING_DIRECTOR';
+    const pageHtml = `<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Submit Comments - SSSIHL Examination Services</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Outfit:wght@700;800&display=swap" rel="stylesheet">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'Inter', sans-serif; background: radial-gradient(at 0% 0%, rgba(245,158,11,0.08) 0, transparent 50%), #f1f5f9; min-height: 100vh; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 40px 20px; }
+        .header { text-align: center; margin-bottom: 32px; }
+        .logo { width: 80px; height: 80px; margin: 0 auto 16px; background: white; border-radius: 50%; display: flex; align-items: center; justify-content: center; box-shadow: 0 10px 25px -5px rgba(15,23,42,0.15); }
+        .logo img { width: 64px; height: 64px; border-radius: 50%; }
+        .university-name { font-family: 'Outfit', sans-serif; font-size: 1.3rem; font-weight: 700; color: #1e293b; margin-bottom: 4px; }
+        .university-subtitle { font-size: 0.9rem; color: #64748b; }
+        .card { background: rgba(255,255,255,0.9); backdrop-filter: blur(16px); border: 1px solid rgba(15,23,42,0.08); border-radius: 20px; padding: 40px; max-width: 560px; width: 100%; box-shadow: 0 10px 25px -5px rgba(15,23,42,0.08); }
+        .icon { width: 72px; height: 72px; border-radius: 50%; background: #fef3c7; display: flex; align-items: center; justify-content: center; margin: 0 auto 24px; font-size: 36px; }
+        h1 { font-family: 'Outfit', sans-serif; color: #0f172a; font-size: 1.7rem; font-weight: 700; margin-bottom: 10px; text-align: center; }
+        .subtitle { color: #64748b; font-size: 0.95rem; margin-bottom: 28px; text-align: center; line-height: 1.6; }
+        .details { background: #f8fafc; border-radius: 12px; padding: 20px; margin-bottom: 24px; }
+        .detail-row { display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid #e2e8f0; font-size: 0.9rem; }
+        .detail-row:last-child { border-bottom: none; }
+        .detail-label { color: #64748b; font-weight: 500; }
+        .detail-value { color: #0f172a; font-weight: 600; text-align: right; max-width: 60%; }
+        label { display: block; font-size: 0.875rem; font-weight: 600; color: #0f172a; margin-bottom: 8px; }
+        textarea { width: 100%; border: 1px solid #e2e8f0; border-radius: 10px; padding: 14px; font-family: 'Inter', sans-serif; font-size: 0.9rem; color: #0f172a; resize: vertical; min-height: 130px; outline: none; transition: border-color 0.2s, box-shadow 0.2s; }
+        textarea:focus { border-color: #f59e0b; box-shadow: 0 0 0 3px rgba(245,158,11,0.12); }
+        button[type="submit"] { width: 100%; margin-top: 16px; padding: 14px; background: #f59e0b; color: white; border: none; border-radius: 10px; font-family: 'Inter', sans-serif; font-size: 1rem; font-weight: 700; cursor: pointer; transition: background 0.2s, transform 0.1s; }
+        button[type="submit"]:hover { background: #d97706; transform: translateY(-1px); }
+        button[type="submit"]:active { transform: translateY(0); }
+        .already-acted { text-align: center; padding: 20px 0; color: #64748b; font-size: 1rem; }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <div class="logo"><img src="https://student-service.pages.dev/logo.png" alt="SSSIHL"></div>
+        <div class="university-name">Sri Sathya Sai Institute of Higher Learning</div>
+        <div class="university-subtitle">Office of the Controller of Examinations</div>
+    </div>
+    <div class="card">
+        ${alreadyActed
+            ? `<div class="already-acted"><div class="icon">ℹ️</div><h1 style="font-size:1.4rem">Already Submitted</h1><p style="margin-top:12px">This application has already been acted upon. No further action is required.</p></div>`
+            : `<div class="icon">✍️</div>
+               <h1>Submit Comments</h1>
+               <p class="subtitle">Please record your concerns below. The Examination Section will review your comments and take appropriate action.</p>
+               <div class="details">
+                   <div class="detail-row"><span class="detail-label">Application ID</span><span class="detail-value">${escapeHtml(app.id)}</span></div>
+                   <div class="detail-row"><span class="detail-label">Applicant Name</span><span class="detail-value">${escapeHtml(app.applicant_name)}</span></div>
+                   <div class="detail-row"><span class="detail-label">Form Type</span><span class="detail-value">${escapeHtml(app.form_type)}</span></div>
+                   <div class="detail-row"><span class="detail-label">Campus</span><span class="detail-value">${escapeHtml(app.campus)}</span></div>
+               </div>
+               <form method="POST" action="/director-comment">
+                   <input type="hidden" name="id" value="${escapeHtml(app.id)}">
+                   <label for="comment">Your Comments</label>
+                   <textarea id="comment" name="comment" required placeholder="Please describe your concerns or observations regarding this name change application..."></textarea>
+                   <button type="submit">Submit Comments to Examination Section</button>
+               </form>`
+        }
+    </div>
+</body>
+</html>`;
+
+    return new Response(pageHtml, { headers: { 'Content-Type': 'text/html; charset=utf-8' } });
+}
+
+async function handleDirectorCommentSubmit(request, env, corsHeaders) {
+    const formData = await request.formData();
+    const id = (formData.get('id') || '').trim();
+    const comment = (formData.get('comment') || '').trim();
+
+    if (!id || !comment) return new Response('Missing required fields', { status: 400, headers: corsHeaders });
+
+    const app = await env.DB.prepare('SELECT * FROM applications WHERE id = ?').bind(id).first();
+
+    if (!app || app.status !== 'AWAITING_DIRECTOR') {
+        const html = `<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"><title>Already Submitted</title></head><body style="font-family:sans-serif;display:flex;align-items:center;justify-content:center;min-height:100vh;background:#f1f5f9;"><div style="text-align:center;background:white;border-radius:16px;padding:40px;max-width:480px;"><h2 style="color:#0f172a;">Already Acted Upon</h2><p style="color:#64748b;margin-top:12px;">This application has already been processed. No further action is needed.</p></div></body></html>`;
+        return new Response(html, { headers: { 'Content-Type': 'text/html; charset=utf-8' } });
+    }
+
+    await env.DB.prepare(
+        `UPDATE applications SET status = 'DIRECTOR_COMMENTED', director_status = 'COMMENTED', director_comment = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?`
+    ).bind(comment, id).run();
+
+    try {
+        await sendAdminNotification(env, id, app.form_type, app.applicant_name, app.student_email);
+    } catch (e) {
+        console.error('Failed to send admin notification after director comment:', e);
+    }
+
+    const successHtml = `<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Comments Submitted - SSSIHL</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Outfit:wght@700;800&display=swap" rel="stylesheet">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'Inter', sans-serif; background: #f1f5f9; min-height: 100vh; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 40px 20px; }
+        .card { background: white; border-radius: 20px; padding: 48px 40px; max-width: 500px; width: 100%; text-align: center; box-shadow: 0 10px 25px -5px rgba(15,23,42,0.08); }
+        .icon { width: 80px; height: 80px; border-radius: 50%; background: #fef3c7; display: flex; align-items: center; justify-content: center; margin: 0 auto 24px; font-size: 40px; }
+        h1 { font-family: 'Outfit', sans-serif; color: #0f172a; font-size: 1.8rem; margin-bottom: 12px; }
+        p { color: #64748b; font-size: 0.95rem; line-height: 1.7; }
+        .app-id { display: inline-block; margin-top: 20px; background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 8px 16px; font-size: 0.85rem; color: #64748b; font-family: monospace; }
+    </style>
+</head>
+<body>
+    <div class="card">
+        <div class="icon">✅</div>
+        <h1>Comments Submitted</h1>
+        <p>Thank you. Your comments have been successfully submitted to the Examination Section for review. They will take appropriate action and get back to you if needed.</p>
+        <div class="app-id">Application ID: ${escapeHtml(id)}</div>
+    </div>
+</body>
+</html>`;
+
+    return new Response(successHtml, { headers: { 'Content-Type': 'text/html; charset=utf-8' } });
 }
 
 async function handleApproval(url, env, corsHeaders) {
