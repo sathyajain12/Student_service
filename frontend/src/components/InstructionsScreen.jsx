@@ -314,9 +314,12 @@ export default function InstructionsScreen({ config, onProceed, onCancel }) {
                                         {/* Hard Copy: address card + envelope notes */}
                                         {hardCopy && (
                                             <div style={{ marginBottom: softCopy ? '20px' : '0' }}>
-                                                <p style={{ color: 'var(--text-main)', fontSize: '0.95rem', fontWeight: '500', lineHeight: '1.6', margin: '0 0 16px 0', textAlign: 'justify' }}>
-                                                    {instruction.addressText}
-                                                </p>
+                                                <div style={{ display: 'flex', alignItems: 'flex-start', gap: '10px', margin: '0 0 16px 0' }}>
+                                                    <div style={{ width: '7px', height: '7px', borderRadius: '50%', background: 'var(--accent)', flexShrink: 0, marginTop: '6px' }} />
+                                                    <p style={{ color: 'var(--text-main)', fontSize: '0.95rem', fontWeight: '500', lineHeight: '1.6', margin: 0, textAlign: 'justify' }}>
+                                                        {instruction.addressText}
+                                                    </p>
+                                                </div>
                                                 <div style={{
                                                     background: 'linear-gradient(145deg, #ffffff 0%, #f8fafc 100%)',
                                                     border: '1px solid #e2e8f0', borderRadius: '16px', padding: '24px',
