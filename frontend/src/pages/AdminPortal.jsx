@@ -988,46 +988,158 @@ export default function AdminPortal() {
 
     // Login Screen
     if (!isLoggedIn) {
+        const inputStyle = {
+            display: 'block', width: '100%', height: '48px',
+            paddingLeft: '44px', paddingRight: '16px',
+            border: '1px solid #e2e8f0', borderRadius: '10px',
+            background: 'white', color: '#0F172A',
+            fontSize: '0.95rem', outline: 'none',
+            boxSizing: 'border-box', fontFamily: 'inherit'
+        };
+        const glassCard = {
+            background: 'rgba(255,255,255,0.1)',
+            backdropFilter: 'blur(8px)',
+            WebkitBackdropFilter: 'blur(8px)',
+            border: '1px solid rgba(255,255,255,0.2)',
+            borderRadius: '16px',
+            padding: '24px'
+        };
         return (
-            <div style={{ ...styles.page, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                <div style={styles.loginCard}>
-                    <h2 style={{ ...styles.title, textAlign: 'center', marginBottom: '32px' }}>Admin Login</h2>
+            <>
+                <style>{`
+                    @keyframes floating {
+                        0%   { transform: translateY(0px); }
+                        50%  { transform: translateY(-12px); }
+                        100% { transform: translateY(0px); }
+                    }
+                    .stat-float-1 { animation: floating 6s ease-in-out infinite; }
+                    .stat-float-2 { animation: floating 8s ease-in-out infinite 1s; }
+                    .stat-float-3 { animation: floating 7s ease-in-out infinite 0.5s; }
+                    .login-input:focus { border-color: #4F46E5 !important; box-shadow: 0 0 0 3px rgba(79,70,229,0.12); }
+                    .login-submit:hover { opacity: 0.92; box-shadow: 0 8px 25px rgba(79,70,229,0.4) !important; }
+                    .login-submit:active { transform: scale(0.98); }
+                    @media (max-width: 1024px) { .login-brand-panel { display: none !important; } .login-form-panel { width: 100% !important; } }
+                `}</style>
+                <main style={{ display: 'flex', height: '100vh', overflow: 'hidden', fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif' }}>
 
-                    <form onSubmit={handleLogin}>
-                        <div style={{ marginBottom: '20px' }}>
-                            <label style={styles.label}>Username</label>
-                            <input
-                                type="text"
-                                value={username}
-                                onChange={(e) => setUsername(e.target.value)}
-                                style={styles.input}
-                                placeholder="Enter username"
-                                required
-                            />
+                    {/* Left brand panel */}
+                    <section className="login-brand-panel" style={{ width: '60%', background: '#0F172A', position: 'relative', display: 'flex', flexDirection: 'column', justifyContent: 'space-between', padding: '48px', overflow: 'hidden' }}>
+                        {/* Grid dot overlay */}
+                        <div style={{ position: 'absolute', inset: 0, backgroundImage: 'radial-gradient(circle at 2px 2px, rgba(255,255,255,0.05) 1px, transparent 0)', backgroundSize: '40px 40px', pointerEvents: 'none' }} />
+                        {/* Glow blob */}
+                        <div style={{ position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%,-50%)', width: '500px', height: '500px', background: 'rgba(79,70,229,0.18)', borderRadius: '50%', filter: 'blur(120px)', pointerEvents: 'none' }} />
+
+                        {/* Top: logo + name */}
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '12px', position: 'relative', zIndex: 1 }}>
+                            <img src="/logo.png" alt="SSSIHL Logo" style={{ height: '44px', width: '44px', objectFit: 'contain' }} />
+                            <span style={{ color: 'white', fontWeight: 700, fontSize: '1.1rem', letterSpacing: '-0.01em' }}>Examination Services Admin</span>
                         </div>
 
-                        <div style={{ marginBottom: '20px' }}>
-                            <label style={styles.label}>Password</label>
-                            <input
-                                type="password"
-                                value={password}
-                                onChange={(e) => setPassword(e.target.value)}
-                                style={styles.input}
-                                placeholder="Enter password"
-                                required
-                            />
+                        {/* Middle: headline */}
+                        <div style={{ position: 'relative', zIndex: 1, maxWidth: '480px' }}>
+                            <h1 style={{ color: 'white', fontSize: '3rem', fontWeight: 800, lineHeight: 1.2, marginBottom: '16px', margin: '0 0 16px 0' }}>
+                                Student Service<br />Admin
+                            </h1>
+                            <p style={{ color: '#94a3b8', fontSize: '1.05rem', lineHeight: 1.7, margin: 0 }}>
+                                Centralized management for student success, course tracking, and institutional reporting.
+                            </p>
                         </div>
 
-                        {loginError && (
-                            <p style={{ color: '#ef4444', fontSize: '14px', textAlign: 'center', marginBottom: '16px' }}>{loginError}</p>
-                        )}
+                        {/* Bottom: floating stat cards */}
+                        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '20px', position: 'relative', zIndex: 1 }}>
+                            <div className="stat-float-1" style={glassCard}>
+                                <p style={{ color: '#cbd5e1', fontSize: '0.7rem', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.08em', margin: '0 0 6px 0' }}>Pending</p>
+                                <h3 style={{ color: 'white', fontSize: '2rem', fontWeight: 800, margin: 0 }}>{stats?.pending ?? '—'}</h3>
+                            </div>
+                            <div className="stat-float-2" style={glassCard}>
+                                <p style={{ color: '#cbd5e1', fontSize: '0.7rem', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.08em', margin: '0 0 6px 0' }}>Completed</p>
+                                <h3 style={{ color: 'white', fontSize: '2rem', fontWeight: 800, margin: 0 }}>{stats?.completed ?? '—'}</h3>
+                            </div>
+                            <div className="stat-float-3" style={glassCard}>
+                                <p style={{ color: '#cbd5e1', fontSize: '0.7rem', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.08em', margin: '0 0 6px 0' }}>Total Applications</p>
+                                <h3 style={{ color: 'white', fontSize: '2rem', fontWeight: 800, margin: 0 }}>{stats?.total ?? '—'}</h3>
+                            </div>
+                        </div>
+                    </section>
 
-                        <button type="submit" disabled={loading} style={{ ...styles.button, width: '100%', padding: '14px' }}>
-                            {loading ? 'Logging in...' : 'Login'}
-                        </button>
-                    </form>
-                </div>
-            </div>
+                    {/* Right login panel */}
+                    <section className="login-form-panel" style={{ width: '40%', display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#F8FAFC', padding: '48px' }}>
+                        <div style={{ width: '100%', maxWidth: '380px' }}>
+
+                            {/* Logo icon box */}
+                            <div style={{ width: '52px', height: '52px', background: '#EEF2FF', borderRadius: '14px', display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: '28px' }}>
+                                <img src="/logo.png" alt="Logo" style={{ height: '32px', width: '32px', objectFit: 'contain' }} />
+                            </div>
+
+                            <h2 style={{ fontSize: '1.75rem', fontWeight: 800, color: '#0F172A', margin: '0 0 8px 0', letterSpacing: '-0.02em' }}>Welcome Back</h2>
+                            <p style={{ color: '#64748b', fontSize: '0.9rem', margin: '0 0 36px 0' }}>Sign in to your admin dashboard</p>
+
+                            <form onSubmit={handleLogin} style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+                                {/* Username */}
+                                <div style={{ position: 'relative' }}>
+                                    <div style={{ position: 'absolute', top: '50%', left: '14px', transform: 'translateY(-50%)', pointerEvents: 'none' }}>
+                                        <svg width="18" height="18" fill="none" stroke="#94a3b8" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" viewBox="0 0 24 24">
+                                            <path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2" /><circle cx="12" cy="7" r="4" />
+                                        </svg>
+                                    </div>
+                                    <input
+                                        className="login-input"
+                                        type="text"
+                                        value={username}
+                                        onChange={(e) => setUsername(e.target.value)}
+                                        style={inputStyle}
+                                        placeholder="Username"
+                                        required
+                                        autoComplete="username"
+                                    />
+                                </div>
+
+                                {/* Password */}
+                                <div style={{ position: 'relative' }}>
+                                    <div style={{ position: 'absolute', top: '50%', left: '14px', transform: 'translateY(-50%)', pointerEvents: 'none' }}>
+                                        <svg width="18" height="18" fill="none" stroke="#94a3b8" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" viewBox="0 0 24 24">
+                                            <rect x="3" y="11" width="18" height="11" rx="2" ry="2" /><path d="M7 11V7a5 5 0 0110 0v4" />
+                                        </svg>
+                                    </div>
+                                    <input
+                                        className="login-input"
+                                        type="password"
+                                        value={password}
+                                        onChange={(e) => setPassword(e.target.value)}
+                                        style={inputStyle}
+                                        placeholder="Password"
+                                        required
+                                        autoComplete="current-password"
+                                    />
+                                </div>
+
+                                {loginError && (
+                                    <p style={{ color: '#ef4444', fontSize: '0.85rem', textAlign: 'center', margin: 0 }}>{loginError}</p>
+                                )}
+
+                                <button
+                                    type="submit"
+                                    disabled={loading}
+                                    className="login-submit"
+                                    style={{
+                                        width: '100%', height: '48px', marginTop: '4px',
+                                        background: 'linear-gradient(to right, #4F46E5, #7C3AED)',
+                                        color: 'white', fontWeight: 700, fontSize: '1rem',
+                                        border: 'none', borderRadius: '10px',
+                                        cursor: loading ? 'not-allowed' : 'pointer',
+                                        opacity: loading ? 0.7 : 1,
+                                        boxShadow: '0 4px 15px rgba(79,70,229,0.3)',
+                                        transition: 'all 0.2s ease',
+                                        fontFamily: 'inherit'
+                                    }}
+                                >
+                                    {loading ? 'Signing in...' : 'Sign In'}
+                                </button>
+                            </form>
+                        </div>
+                    </section>
+                </main>
+            </>
         );
     }
 
