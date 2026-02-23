@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { LogOut, FileText, Download, Users, Clock, CheckCircle, XCircle, ArrowLeft, RefreshCw, Upload, Trash2, X, AlertTriangle, Info, Search } from 'lucide-react';
+import { LogOut, FileText, Download, Users, Clock, CheckCircle, XCircle, ArrowLeft, RefreshCw, Upload, Trash2, X, AlertTriangle, Search } from 'lucide-react';
 
 const API_URL = import.meta.env.VITE_BACKEND_URL || 'http://localhost:8787';
 
@@ -1164,345 +1164,171 @@ export default function AdminPortal() {
             ? <CheckCircle size={16} />
             : app.status === 'REJECTED' ? <XCircle size={16} /> : <Clock size={16} />;
 
+        const detailLabelStyle = { fontSize: '0.7rem', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.06em', color: '#94a3b8', margin: '0 0 4px 0' };
+        const detailValueStyle = { fontSize: '0.9rem', fontWeight: 600, color: '#0F172A', margin: 0, lineHeight: 1.4 };
+        const sidebarBtnBase = { width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', padding: '11px 16px', borderRadius: '8px', cursor: 'pointer', fontWeight: 600, fontSize: '0.875rem', fontFamily: 'inherit', border: 'none', transition: 'all 0.15s ease' };
+        const fileRowStyle = { display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '14px 16px', borderRadius: '8px', border: '1px solid #f1f5f9', marginBottom: '8px', gap: '12px' };
+        const downloadBtnStyle = { display: 'flex', alignItems: 'center', gap: '6px', padding: '6px 14px', background: 'white', color: '#334155', border: '1px solid #e2e8f0', borderRadius: '6px', cursor: 'pointer', fontSize: '0.8rem', fontWeight: 600, fontFamily: 'inherit', flexShrink: 0 };
+
         return (
             <>
                 <style>{`
-                    @keyframes slideInRight {
-                        from { transform: translateX(100%); opacity: 0; }
-                        to { transform: translateX(0); opacity: 1; }
-                    }
-                    @keyframes fadeIn {
-                        from { opacity: 0; }
-                        to { opacity: 1; }
-                    }
-                    @keyframes scaleIn {
-                        from { transform: scale(0.95); opacity: 0; }
-                        to { transform: scale(1); opacity: 1; }
-                    }
-
-                    .btn-complete:hover {
-                        filter: brightness(1.1);
-                        transform: translateY(-2px);
-                        box-shadow: 0 4px 12px rgba(16, 185, 129, 0.35);
-                    }
-
-                    .btn-upload:hover {
-                        filter: brightness(1.1);
-                        transform: translateY(-2px);
-                        box-shadow: 0 4px 12px rgba(59, 130, 246, 0.35);
-                    }
-
-                    .btn-delete:hover {
-                        background: rgba(239, 68, 68, 0.1) !important;
-                        border-color: #ef4444 !important;
-                        transform: translateY(-2px);
-                        box-shadow: 0 4px 12px rgba(239, 68, 68, 0.2);
-                    }
-
-                    .btn-download:hover {
-                        background: #eff6ff !important;
-                        border-color: #2563eb !important;
-                        transform: translateY(-1px);
-                        box-shadow: 0 2px 8px rgba(37, 99, 235, 0.15);
-                    }
-
-                    .btn-back:hover {
-                        color: #2563eb !important;
-                    }
-
-                    .btn-complete, .btn-upload, .btn-delete, .btn-download, .btn-back {
-                        transition: all 0.2s ease;
-                    }
-
-                    .btn-complete:active, .btn-upload:active, .btn-delete:active, .btn-download:active {
-                        transform: translateY(0);
-                    }
+                    .btn-complete, .btn-upload, .btn-delete, .btn-download, .btn-back, .det-dl-btn { transition: all 0.2s ease; }
+                    .btn-complete:hover:not(:disabled) { filter: brightness(1.08); transform: translateY(-1px); }
+                    .btn-upload:hover:not(:disabled) { filter: brightness(1.08); transform: translateY(-1px); }
+                    .btn-delete:hover { background: rgba(239,68,68,0.08) !important; border-color: #ef4444 !important; }
+                    .det-dl-btn:hover { background: #f8fafc !important; border-color: #94a3b8 !important; }
+                    .btn-back-det:hover { color: #0F172A !important; }
+                    .btn-back-det { transition: color 0.15s ease; }
+                    .detail-pdf-btn:hover { background: #1e293b !important; }
+                    .detail-pdf-btn { transition: background 0.15s ease; }
+                    @media (max-width: 900px) { .det-grid { grid-template-columns: 1fr !important; } }
                 `}</style>
                 <ToastNotification />
                 <ConfirmationModal />
                 <DispatchModal />
-                <div style={styles.page}>
-                    <div style={styles.container}>
-                        <button className="btn-back" onClick={() => { setSelectedApp(null); setAppDetails(null); }} style={styles.backButton}>
-                            <ArrowLeft size={18} /> Back to Applications
-                        </button>
 
-                        {/* Header Card: Title + Status + ID */}
-                        <div style={{
-                            ...styles.card,
-                            marginBottom: '20px',
-                            display: 'flex',
-                            alignItems: 'center',
-                            justifyContent: 'space-between',
-                            flexWrap: 'wrap',
-                            gap: '16px'
-                        }}>
-                            <div>
-                                <h2 style={{ ...styles.title, marginBottom: '6px', fontSize: '22px' }}>
-                                    {app.form_type}
-                                </h2>
-                                <p style={{ color: '#64748b', margin: 0, fontSize: '13px', fontFamily: 'monospace' }}>
-                                    ID: {app.id}
-                                </p>
+                <div style={{ minHeight: '100vh', background: '#F8FAFC', fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif' }}>
+
+                    {/* Minimal sticky top bar */}
+                    <div style={{ position: 'sticky', top: 0, zIndex: 40, background: 'white', borderBottom: '1px solid #e2e8f0', padding: '0 32px', height: '64px', display: 'flex', alignItems: 'center', gap: '16px' }}>
+                        <img src="/logo.png" alt="Logo" style={{ height: '36px', width: '36px', objectFit: 'contain' }} />
+                        <div style={{ width: '1px', height: '22px', background: '#e2e8f0' }} />
+                        <button className="btn-back-det" onClick={() => { setSelectedApp(null); setAppDetails(null); }} style={{ display: 'flex', alignItems: 'center', gap: '6px', background: 'none', border: 'none', cursor: 'pointer', color: '#64748b', fontSize: '0.875rem', fontWeight: 600, padding: 0, fontFamily: 'inherit' }}>
+                            <ArrowLeft size={15} /> Back to Applications
+                        </button>
+                    </div>
+
+                    <div style={{ maxWidth: '1200px', margin: '0 auto', padding: '32px 24px' }}>
+
+                        {/* Breadcrumb + Title */}
+                        <div style={{ marginBottom: '28px' }}>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '10px' }}>
+                                <span style={{ color: '#94a3b8', fontSize: '0.82rem' }}>Applications</span>
+                                <span style={{ color: '#cbd5e1' }}>›</span>
+                                <span style={{ color: '#64748b', fontSize: '0.82rem', fontWeight: 600 }}>Request Details</span>
                             </div>
-                            <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-                                <button
-                                    onClick={() => generatePDF(app, appDetails)}
-                                    style={{
-                                        padding: '8px 16px',
-                                        background: 'linear-gradient(135deg, #1e3a5f 0%, #2563eb 100%)',
-                                        color: '#ffffff',
-                                        border: 'none',
-                                        borderRadius: '8px',
-                                        cursor: 'pointer',
-                                        fontWeight: '600',
-                                        fontSize: '13px',
-                                        display: 'flex',
-                                        alignItems: 'center',
-                                        gap: '6px'
-                                    }}
-                                >
+                            <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', flexWrap: 'wrap', gap: '16px' }}>
+                                <div>
+                                    <h1 style={{ fontSize: '1.6rem', fontWeight: 800, color: '#0F172A', margin: '0 0 10px 0', letterSpacing: '-0.02em' }}>{app.form_type}</h1>
+                                    <div style={{ display: 'flex', alignItems: 'center', gap: '10px', flexWrap: 'wrap' }}>
+                                        <span style={{ ...getStatusStyle(app.status), display: 'inline-flex', alignItems: 'center', gap: '4px' }}>{statusIcon} {app.status}</span>
+                                        <span style={{ color: '#cbd5e1' }}>•</span>
+                                        <span style={{ color: '#64748b', fontSize: '0.82rem', fontFamily: 'monospace' }}>ID: {app.id}</span>
+                                        <span style={{ color: '#cbd5e1' }}>•</span>
+                                        <span style={{ color: '#64748b', fontSize: '0.82rem' }}>Submitted: {new Date(app.created_at + 'Z').toLocaleDateString('en-IN', { timeZone: 'Asia/Kolkata' })}</span>
+                                    </div>
+                                </div>
+                                <button className="detail-pdf-btn" onClick={() => generatePDF(app, appDetails)} style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '10px 20px', background: '#0F172A', color: 'white', border: 'none', borderRadius: '8px', cursor: 'pointer', fontWeight: 600, fontSize: '0.875rem', fontFamily: 'inherit' }}>
                                     <Download size={15} /> Download PDF
                                 </button>
-                                <span style={{
-                                    ...getStatusStyle(app.status),
-                                    padding: '8px 16px',
-                                    fontSize: '13px',
-                                    display: 'flex',
-                                    alignItems: 'center',
-                                    gap: '6px'
-                                }}>
-                                    {statusIcon} {app.status}
-                                </span>
                             </div>
                         </div>
 
-                        {/* Applicant Information */}
-                        <div style={{ ...styles.card, marginBottom: '20px' }}>
-                            <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '20px', paddingBottom: '16px', borderBottom: '1px solid rgba(15, 23, 42, 0.08)' }}>
-                                <Users size={20} color="#3b82f6" />
-                                <h3 style={{ margin: 0, fontSize: '16px', color: '#0f172a', fontWeight: '700' }}>Applicant Information</h3>
-                            </div>
-                            <div style={styles.detailGrid}>
-                                <div style={styles.detailCard}>
-                                    <p style={styles.detailLabel}>Full Name</p>
-                                    <p style={styles.detailValue}>{app.applicant_name}</p>
-                                </div>
-                                <div style={styles.detailCard}>
-                                    <p style={styles.detailLabel}>Email</p>
-                                    <p style={styles.detailValue}>{app.student_email}</p>
-                                </div>
-                                <div style={styles.detailCard}>
-                                    <p style={styles.detailLabel}>Registration No</p>
-                                    <p style={styles.detailValue}>{app.reg_no || 'N/A'}</p>
-                                </div>
-                                <div style={styles.detailCard}>
-                                    <p style={styles.detailLabel}>Campus</p>
-                                    <p style={styles.detailValue}>{app.campus}</p>
-                                </div>
-                                <div style={styles.detailCard}>
-                                    <p style={styles.detailLabel}>Submitted</p>
-                                    <p style={styles.detailValue}>{new Date(app.created_at + 'Z').toLocaleString('en-IN', { timeZone: 'Asia/Kolkata' })}</p>
-                                </div>
-                            </div>
-                        </div>
+                        {/* 2-column grid */}
+                        <div className="det-grid" style={{ display: 'grid', gridTemplateColumns: '1fr 320px', gap: '24px', alignItems: 'start' }}>
 
-                        {/* Actions Card */}
-                        <div style={{ ...styles.card, marginBottom: '20px' }}>
-                            <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '20px', paddingBottom: '16px', borderBottom: '1px solid rgba(15, 23, 42, 0.08)' }}>
-                                <Info size={20} color="#8b5cf6" />
-                                <h3 style={{ margin: 0, fontSize: '16px', color: '#0f172a', fontWeight: '700' }}>Actions</h3>
-                            </div>
+                            {/* Left column */}
+                            <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
 
-                            {/* Mark as Completed - only show for APPROVED or PENDING status */}
-                            {(app.status === 'APPROVED' || app.status === 'PENDING') && (
-                                <div style={{ marginBottom: '16px', padding: '20px', background: 'rgba(16, 185, 129, 0.06)', borderRadius: '12px', border: '1px solid rgba(16, 185, 129, 0.2)' }}>
-                                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '16px' }}>
-                                        <div>
-                                            <h4 style={{ color: '#10b981', margin: 0, marginBottom: '4px', fontSize: '14px', fontWeight: '700' }}>Ready to Complete?</h4>
-                                            <p style={{ color: '#64748b', margin: 0, fontSize: '13px' }}>Mark this application as completed and dispatched</p>
+                                {/* Applicant Information */}
+                                <div style={{ background: 'white', borderRadius: '12px', border: '1px solid #e2e8f0', overflow: 'hidden', boxShadow: '0 1px 3px rgba(0,0,0,0.05)' }}>
+                                    <div style={{ padding: '14px 20px', borderBottom: '1px solid #e2e8f0', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                                        <Users size={16} color="#4F46E5" />
+                                        <h2 style={{ fontSize: '0.9rem', fontWeight: 700, color: '#0F172A', margin: 0 }}>Applicant Information</h2>
+                                    </div>
+                                    <div style={{ padding: '20px', display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: '20px' }}>
+                                        <div><p style={detailLabelStyle}>Full Name</p><p style={detailValueStyle}>{app.applicant_name}</p></div>
+                                        <div><p style={detailLabelStyle}>Email Address</p><p style={{ ...detailValueStyle, wordBreak: 'break-all' }}>{app.student_email}</p></div>
+                                        <div><p style={detailLabelStyle}>Registration No</p><p style={{ ...detailValueStyle, fontFamily: 'monospace' }}>{app.reg_no || 'N/A'}</p></div>
+                                        <div><p style={detailLabelStyle}>Campus</p><p style={detailValueStyle}>{app.campus}</p></div>
+                                        <div><p style={detailLabelStyle}>Submitted On</p><p style={detailValueStyle}>{new Date(app.created_at + 'Z').toLocaleString('en-IN', { timeZone: 'Asia/Kolkata' })}</p></div>
+                                    </div>
+                                </div>
+
+                                {/* Documents */}
+                                <div style={{ background: 'white', borderRadius: '12px', border: '1px solid #e2e8f0', overflow: 'hidden', boxShadow: '0 1px 3px rgba(0,0,0,0.05)' }}>
+                                    <div style={{ padding: '14px 20px', borderBottom: '1px solid #e2e8f0', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                                            <FileText size={16} color="#f59e0b" />
+                                            <h2 style={{ fontSize: '0.9rem', fontWeight: 700, color: '#0F172A', margin: 0 }}>Documents</h2>
                                         </div>
-                                        <button
-                                            className="btn-complete"
-                                            onClick={() => markAsCompleted(app.id)}
-                                            style={{
-                                                padding: '10px 20px',
-                                                background: 'linear-gradient(135deg, #10b981 0%, #059669 100%)',
-                                                color: '#ffffff',
-                                                border: 'none',
-                                                borderRadius: '8px',
-                                                cursor: 'pointer',
-                                                fontWeight: '600',
-                                                fontSize: '13px',
-                                                display: 'flex',
-                                                alignItems: 'center',
-                                                gap: '8px'
-                                            }}
-                                        >
-                                            <CheckCircle size={16} /> Mark as Completed
+                                        {appDetails.files && <span style={{ fontSize: '0.72rem', color: '#94a3b8', fontWeight: 600 }}>{(appDetails.files.length + (appDetails.responseDocuments?.length || 0))} FILES</span>}
+                                    </div>
+                                    <div style={{ padding: '20px' }}>
+                                        {appDetails.responseDocuments && appDetails.responseDocuments.length > 0 && (
+                                            <div style={{ marginBottom: '20px' }}>
+                                                <p style={{ fontSize: '0.7rem', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.06em', color: '#10b981', margin: '0 0 10px 0' }}>Response Documents — Admin Uploaded</p>
+                                                {appDetails.responseDocuments.map((file) => (
+                                                    <div key={file.id} style={{ ...fileRowStyle, borderLeft: '3px solid #10b981' }}>
+                                                        <div style={{ display: 'flex', alignItems: 'center', gap: '12px', minWidth: 0 }}>
+                                                            <div style={{ background: 'rgba(16,185,129,0.08)', padding: '8px', borderRadius: '6px', flexShrink: 0 }}><FileText size={16} color="#10b981" /></div>
+                                                            <div style={{ minWidth: 0 }}>
+                                                                <p style={{ color: '#0F172A', margin: 0, fontWeight: 600, fontSize: '0.875rem', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{file.file_name}</p>
+                                                                <p style={{ color: '#94a3b8', margin: 0, fontSize: '0.75rem' }}>{file.file_type} · {(file.file_size / 1024).toFixed(1)} KB · {file.uploaded_by || 'Admin'}</p>
+                                                            </div>
+                                                        </div>
+                                                        <button className="det-dl-btn" onClick={() => downloadFile(file.id, file.file_name)} style={downloadBtnStyle}><Download size={14} /> Download</button>
+                                                    </div>
+                                                ))}
+                                            </div>
+                                        )}
+                                        <p style={{ fontSize: '0.7rem', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.06em', color: '#8b5cf6', margin: '0 0 10px 0' }}>Student Submitted Files</p>
+                                        {appDetails.files && appDetails.files.length > 0 ? appDetails.files.map((file) => (
+                                            <div key={file.id} style={{ ...fileRowStyle, borderLeft: '3px solid #a78bfa' }}>
+                                                <div style={{ display: 'flex', alignItems: 'center', gap: '12px', minWidth: 0 }}>
+                                                    <div style={{ background: 'rgba(139,92,246,0.08)', padding: '8px', borderRadius: '6px', flexShrink: 0 }}><FileText size={16} color="#8b5cf6" /></div>
+                                                    <div style={{ minWidth: 0 }}>
+                                                        <p style={{ color: '#0F172A', margin: 0, fontWeight: 600, fontSize: '0.875rem', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{file.file_name}</p>
+                                                        <p style={{ color: '#94a3b8', margin: 0, fontSize: '0.75rem' }}>{file.file_type} · {(file.file_size / 1024).toFixed(1)} KB</p>
+                                                    </div>
+                                                </div>
+                                                <button className="det-dl-btn" onClick={() => downloadFile(file.id, file.file_name)} style={downloadBtnStyle}><Download size={14} /> Download</button>
+                                            </div>
+                                        )) : <p style={{ color: '#94a3b8', fontSize: '0.875rem', margin: 0 }}>No files attached</p>}
+                                    </div>
+                                </div>
+                            </div>
+
+                            {/* Right sidebar: Administrative Control */}
+                            <div style={{ display: 'flex', flexDirection: 'column', gap: '16px', position: 'sticky', top: '80px' }}>
+                                <div style={{ background: 'white', borderRadius: '12px', border: '1px solid #e2e8f0', overflow: 'hidden', boxShadow: '0 1px 3px rgba(0,0,0,0.05)' }}>
+                                    <div style={{ padding: '14px 20px', borderBottom: '1px solid #e2e8f0' }}>
+                                        <h3 style={{ fontSize: '0.9rem', fontWeight: 700, color: '#0F172A', margin: 0 }}>Administrative Control</h3>
+                                    </div>
+                                    <div style={{ padding: '16px', display: 'flex', flexDirection: 'column', gap: '8px' }}>
+
+                                        {/* Mark as Completed */}
+                                        {(app.status === 'APPROVED' || app.status === 'PENDING') && (
+                                            <button className="btn-complete" onClick={() => markAsCompleted(app.id)} style={{ ...sidebarBtnBase, background: '#10b981', color: 'white' }}>
+                                                <CheckCircle size={16} /> Mark as Completed
+                                            </button>
+                                        )}
+
+                                        {/* Notify Dispatched */}
+                                        {app.status === 'COMPLETED' && (
+                                            <button onClick={() => notifyDispatched(app.id)} style={{ ...sidebarBtnBase, background: '#0ea5e9', color: 'white' }}>
+                                                &#9993; Notify: Document Dispatched
+                                            </button>
+                                        )}
+
+                                        {/* Upload Response */}
+                                        <label className="btn-upload" style={{ ...sidebarBtnBase, background: '#4F46E5', color: 'white', cursor: uploading ? 'not-allowed' : 'pointer', opacity: uploading ? 0.6 : 1 }}>
+                                            <Upload size={16} /> {uploading ? 'Uploading...' : 'Upload Response Document'}
+                                            <input type="file" accept=".pdf,.jpg,.jpeg,.png" onChange={(e) => handleFileSelect(e, app.id)} style={{ display: 'none' }} disabled={uploading} />
+                                        </label>
+                                        {uploadError && <p style={{ color: '#ef4444', fontSize: '0.8rem', margin: 0 }}>{uploadError}</p>}
+                                        {uploadSuccess && <p style={{ color: '#10b981', fontSize: '0.8rem', margin: 0 }}>Uploaded successfully!</p>}
+
+                                        <hr style={{ border: 'none', borderTop: '1px solid #f1f5f9', margin: '4px 0' }} />
+
+                                        {/* Delete */}
+                                        <button className="btn-delete" onClick={() => deleteApplication(app.id)} style={{ ...sidebarBtnBase, background: 'white', color: '#dc2626', border: '1px solid #fca5a5' }}>
+                                            <Trash2 size={16} /> Delete Application
                                         </button>
                                     </div>
                                 </div>
-                            )}
-
-                            {/* Notify Document Dispatched - only show for COMPLETED status */}
-                            {app.status === 'COMPLETED' && (
-                                <div style={{ marginBottom: '16px', padding: '20px', background: 'rgba(14, 165, 233, 0.06)', borderRadius: '12px', border: '1px solid rgba(14, 165, 233, 0.2)' }}>
-                                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '16px' }}>
-                                        <div>
-                                            <h4 style={{ color: '#0ea5e9', margin: 0, marginBottom: '4px', fontSize: '14px', fontWeight: '700' }}>Document Ready?</h4>
-                                            <p style={{ color: '#64748b', margin: 0, fontSize: '13px' }}>Notify the student that their document has been dispatched</p>
-                                        </div>
-                                        <button
-                                            onClick={() => notifyDispatched(app.id)}
-                                            style={{
-                                                padding: '10px 20px',
-                                                background: 'linear-gradient(135deg, #0ea5e9 0%, #0284c7 100%)',
-                                                color: '#ffffff',
-                                                border: 'none',
-                                                borderRadius: '8px',
-                                                cursor: 'pointer',
-                                                fontWeight: '600',
-                                                fontSize: '13px',
-                                                display: 'flex',
-                                                alignItems: 'center',
-                                                gap: '8px'
-                                            }}
-                                        >
-                                            &#9993; Notify: Document Dispatched
-                                        </button>
-                                    </div>
-                                </div>
-                            )}
-
-                            {/* Upload Response Document */}
-                            <div style={{ marginBottom: '16px', padding: '20px', background: 'rgba(59, 130, 246, 0.06)', borderRadius: '12px', border: '1px solid rgba(59, 130, 246, 0.2)' }}>
-                                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '16px' }}>
-                                    <div>
-                                        <h4 style={{ color: '#3b82f6', margin: 0, marginBottom: '4px', fontSize: '14px', fontWeight: '700' }}>Upload Response Document</h4>
-                                        <p style={{ color: '#64748b', margin: 0, fontSize: '13px' }}>Upload the completed certificate or document</p>
-                                    </div>
-                                    <label className="btn-upload" style={{
-                                        padding: '10px 20px',
-                                        background: 'linear-gradient(135deg, #3b82f6 0%, #2563eb 100%)',
-                                        color: '#ffffff',
-                                        border: 'none',
-                                        borderRadius: '8px',
-                                        cursor: uploading ? 'not-allowed' : 'pointer',
-                                        fontWeight: '600',
-                                        fontSize: '13px',
-                                        display: 'flex',
-                                        alignItems: 'center',
-                                        gap: '8px',
-                                        opacity: uploading ? 0.6 : 1
-                                    }}>
-                                        <Upload size={16} />
-                                        {uploading ? 'Uploading...' : 'Choose File'}
-                                        <input
-                                            type="file"
-                                            accept=".pdf,.jpg,.jpeg,.png"
-                                            onChange={(e) => handleFileSelect(e, app.id)}
-                                            style={{ display: 'none' }}
-                                            disabled={uploading}
-                                        />
-                                    </label>
-                                </div>
-                                {uploadError && (
-                                    <p style={{ color: '#ef4444', fontSize: '13px', marginTop: '10px', marginBottom: 0 }}>{uploadError}</p>
-                                )}
-                                {uploadSuccess && (
-                                    <p style={{ color: '#10b981', fontSize: '13px', marginTop: '10px', marginBottom: 0 }}>Document uploaded successfully!</p>
-                                )}
                             </div>
-
-                            {/* Delete Application */}
-                            <div style={{ padding: '20px', background: 'rgba(239, 68, 68, 0.04)', borderRadius: '12px', border: '1px solid rgba(239, 68, 68, 0.15)' }}>
-                                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '16px' }}>
-                                    <div>
-                                        <h4 style={{ color: '#dc2626', margin: 0, marginBottom: '4px', fontSize: '14px', fontWeight: '700' }}>Danger Zone</h4>
-                                        <p style={{ color: '#64748b', margin: 0, fontSize: '13px' }}>Permanently delete this application and all files</p>
-                                    </div>
-                                    <button
-                                        className="btn-delete"
-                                        onClick={() => deleteApplication(app.id)}
-                                        style={{
-                                            padding: '10px 20px',
-                                            background: 'transparent',
-                                            color: '#dc2626',
-                                            border: '1.5px solid #fca5a5',
-                                            borderRadius: '8px',
-                                            cursor: 'pointer',
-                                            fontWeight: '600',
-                                            fontSize: '13px',
-                                            display: 'flex',
-                                            alignItems: 'center',
-                                            gap: '8px'
-                                        }}
-                                    >
-                                        <Trash2 size={16} /> Delete Application
-                                    </button>
-                                </div>
-                            </div>
-                        </div>
-
-                        {/* Documents Card */}
-                        <div style={styles.card}>
-                            <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '20px', paddingBottom: '16px', borderBottom: '1px solid rgba(15, 23, 42, 0.08)' }}>
-                                <FileText size={20} color="#f59e0b" />
-                                <h3 style={{ margin: 0, fontSize: '16px', color: '#0f172a', fontWeight: '700' }}>Documents</h3>
-                            </div>
-
-                            {/* Response Documents - Admin Uploaded */}
-                            {appDetails.responseDocuments && appDetails.responseDocuments.length > 0 && (
-                                <div style={{ marginBottom: '24px' }}>
-                                    <p style={{ color: '#10b981', fontSize: '12px', fontWeight: '700', textTransform: 'uppercase', letterSpacing: '0.5px', marginBottom: '12px' }}>
-                                        Response Documents (Uploaded by Admin)
-                                    </p>
-                                    {appDetails.responseDocuments.map((file) => (
-                                        <div key={file.id} style={{ ...styles.fileRow, borderLeft: '4px solid #10b981' }}>
-                                            <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-                                                <FileText style={{ color: '#10b981' }} size={20} />
-                                                <div>
-                                                    <p style={{ color: '#0f172a', margin: 0, fontWeight: '500', fontSize: '14px' }}>{file.file_name}</p>
-                                                    <p style={{ color: '#64748b', margin: 0, fontSize: '12px' }}>
-                                                        {file.file_type} • {(file.file_size / 1024).toFixed(1)} KB • Uploaded by: {file.uploaded_by || 'Admin'}
-                                                    </p>
-                                                </div>
-                                            </div>
-                                            <button className="btn-download" onClick={() => downloadFile(file.id, file.file_name)} style={styles.button}>
-                                                <Download size={16} style={{ marginRight: '6px' }} /> Download
-                                            </button>
-                                        </div>
-                                    ))}
-                                </div>
-                            )}
-
-                            {/* Student Uploaded Files */}
-                            <p style={{ color: '#8b5cf6', fontSize: '12px', fontWeight: '700', textTransform: 'uppercase', letterSpacing: '0.5px', marginBottom: '12px' }}>
-                                Student Submitted Files
-                            </p>
-                            {appDetails.files && appDetails.files.length > 0 ? (
-                                <div>
-                                    {appDetails.files.map((file) => (
-                                        <div key={file.id} style={{ ...styles.fileRow, borderLeft: '4px solid #a78bfa' }}>
-                                            <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-                                                <FileText style={{ color: '#a78bfa' }} size={20} />
-                                                <div>
-                                                    <p style={{ color: '#0f172a', margin: 0, fontWeight: '500', fontSize: '14px' }}>{file.file_name}</p>
-                                                    <p style={{ color: '#64748b', margin: 0, fontSize: '12px' }}>
-                                                        {file.file_type} • {(file.file_size / 1024).toFixed(1)} KB
-                                                    </p>
-                                                </div>
-                                            </div>
-                                            <button className="btn-download" onClick={() => downloadFile(file.id, file.file_name)} style={styles.button}>
-                                                <Download size={16} style={{ marginRight: '6px' }} /> Download
-                                            </button>
-                                        </div>
-                                    ))}
-                                </div>
-                            ) : (
-                                <p style={{ color: '#64748b', fontSize: '14px' }}>No files attached</p>
-                            )}
                         </div>
                     </div>
                 </div>
