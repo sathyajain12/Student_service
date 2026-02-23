@@ -3,6 +3,8 @@ import { LogOut, FileText, Download, Users, Clock, CheckCircle, XCircle, ArrowLe
 
 const API_URL = import.meta.env.VITE_BACKEND_URL || 'http://localhost:8787';
 
+const escapeHtml = (str) => String(str ?? '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#x27;');
+
 // Styles
 const styles = {
     page: {
@@ -487,22 +489,22 @@ export default function AdminPortal() {
         const fieldDefs = FORM_FIELD_LABELS[app.form_type] || [];
         const formFieldRows = fieldDefs
             .filter(([key]) => fd[key] !== null && fd[key] !== undefined && fd[key] !== '')
-            .map(([key, label]) => `<tr><td style="font-weight:600;width:40%">${label}</td><td>${fd[key]}</td></tr>`)
+            .map(([key, label]) => `<tr><td style="font-weight:600;width:40%">${escapeHtml(label)}</td><td>${escapeHtml(fd[key])}</td></tr>`)
             .join('');
 
         const fileListRows = files.map(f =>
-            `<tr><td>${f.file_name}</td><td>${f.file_type}</td><td>${(f.file_size / 1024).toFixed(1)} KB</td></tr>`
+            `<tr><td>${escapeHtml(f.file_name)}</td><td>${escapeHtml(f.file_type)}</td><td>${(f.file_size / 1024).toFixed(1)} KB</td></tr>`
         ).join('');
 
         const responseListRows = responseDocuments.map(f =>
-            `<tr><td>${f.file_name}</td><td>${f.file_type}</td><td>${(f.file_size / 1024).toFixed(1)} KB</td><td>${f.uploaded_by || 'Admin'}</td></tr>`
+            `<tr><td>${escapeHtml(f.file_name)}</td><td>${escapeHtml(f.file_type)}</td><td>${(f.file_size / 1024).toFixed(1)} KB</td><td>${escapeHtml(f.uploaded_by || 'Admin')}</td></tr>`
         ).join('');
 
         const html = `<!DOCTYPE html>
 <html>
 <head>
   <meta charset="UTF-8">
-  <title>Application – ${app.id}</title>
+  <title>Application – ${escapeHtml(app.id)}</title>
   <style>
     * { box-sizing: border-box; margin: 0; padding: 0; }
     body { font-family: Arial, sans-serif; font-size: 13px; color: #0f172a; padding: 32px; }
@@ -532,19 +534,19 @@ export default function AdminPortal() {
       <div class="sub-institute">Office of the Controller of Examinations</div>
     </div>
     <div style="text-align:right">
-      <div class="form-title">${app.form_type}</div>
-      <div class="app-id">App ID: ${app.id}</div>
-      <span class="status-badge">${app.status}</span>
+      <div class="form-title">${escapeHtml(app.form_type)}</div>
+      <div class="app-id">App ID: ${escapeHtml(app.id)}</div>
+      <span class="status-badge">${escapeHtml(app.status)}</span>
     </div>
   </div>
 
   <div class="section">
     <div class="section-title">Applicant Information</div>
     <div class="info-grid">
-      <div class="info-item"><label>Full Name</label><span>${app.applicant_name || 'N/A'}</span></div>
-      <div class="info-item"><label>Registration Number</label><span>${app.reg_no || 'N/A'}</span></div>
-      <div class="info-item"><label>Campus</label><span>${app.campus || 'N/A'}</span></div>
-      <div class="info-item"><label>Email Address</label><span>${app.student_email || 'N/A'}</span></div>
+      <div class="info-item"><label>Full Name</label><span>${escapeHtml(app.applicant_name || 'N/A')}</span></div>
+      <div class="info-item"><label>Registration Number</label><span>${escapeHtml(app.reg_no || 'N/A')}</span></div>
+      <div class="info-item"><label>Campus</label><span>${escapeHtml(app.campus || 'N/A')}</span></div>
+      <div class="info-item"><label>Email Address</label><span>${escapeHtml(app.student_email || 'N/A')}</span></div>
       <div class="info-item"><label>Date of Submission</label><span>${new Date(app.created_at + 'Z').toLocaleString('en-IN', { timeZone: 'Asia/Kolkata' })}</span></div>
     </div>
   </div>

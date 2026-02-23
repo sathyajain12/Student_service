@@ -9,6 +9,15 @@ const CAMPUS_CONTACTS = {
     'Nandigiri Campus':         { phone: '08156-250188 / 250186', email: 'officeofdirector.ndg@sssihl.edu.in' },
 };
 
+function escapeHtml(str) {
+    return String(str ?? '')
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#x27;');
+}
+
 // Custom error class for file validation failures (returns 400 instead of 500)
 class FileValidationError extends Error {
     constructor(message) {
@@ -391,17 +400,17 @@ async function sendDocumentDispatchedEmail(env, application, programme = null, t
             }
             const htmlBody = renderEmailTemplate({
                 title: 'Document Dispatched',
-                greeting: `Sai Ram!<br><br>Dear ${application.applicant_name},`,
+                greeting: `Sai Ram!<br><br>Dear ${escapeHtml(application.applicant_name)},`,
                 content,
                 details: [
-                    { label: 'Form Type', value: application.form_type },
-                    { label: 'Application ID', value: application.id },
-                    { label: 'Registered Number', value: application.reg_no || 'N/A' },
-                    { label: 'Campus', value: application.campus },
-                    ...(programme ? [{ label: 'Programme', value: programme }] : []),
+                    { label: 'Form Type', value: escapeHtml(application.form_type) },
+                    { label: 'Application ID', value: escapeHtml(application.id) },
+                    { label: 'Registered Number', value: escapeHtml(application.reg_no || 'N/A') },
+                    { label: 'Campus', value: escapeHtml(application.campus) },
+                    ...(programme ? [{ label: 'Programme', value: escapeHtml(programme) }] : []),
                     ...(appliedOn ? [{ label: 'Applied On', value: appliedOn }] : []),
                     { label: 'Dispatched On', value: dispatchedOn },
-                    ...(trackingNumber ? [{ label: 'Postal Tracking Number', value: trackingNumber }] : [])
+                    ...(trackingNumber ? [{ label: 'Postal Tracking Number', value: escapeHtml(trackingNumber) }] : [])
                 ],
                 importantNote
             });
@@ -817,7 +826,7 @@ function renderEmailTemplate({ title, greeting, content, details = [], actionBut
     const detailRows = details.map(detail => `
         <tr>
             <td style="padding: 12px 0; border-bottom: 1px solid #e2e8f0;">
-                <span style="display: block; font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; color: #64748b; margin-bottom: 4px;">${detail.label}</span>
+                <span style="display: block; font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; color: #64748b; margin-bottom: 4px;">${escapeHtml(detail.label)}</span>
                 <span style="display: block; font-size: 14px; font-weight: 500; color: #1e293b;">${detail.value}</span>
             </td>
         </tr>
@@ -945,10 +954,10 @@ async function sendAdminNotification(env, appId, formType, applicantName, email)
                 greeting: 'Sai Ram!',
                 content: 'A new application has been submitted through the portal and is ready for review.',
                 details: [
-                    { label: 'Application ID', value: appId },
-                    { label: 'Form Type', value: formType },
-                    { label: 'Applicant', value: applicantName },
-                    { label: 'Email', value: email },
+                    { label: 'Application ID', value: escapeHtml(appId) },
+                    { label: 'Form Type', value: escapeHtml(formType) },
+                    { label: 'Applicant', value: escapeHtml(applicantName) },
+                    { label: 'Email', value: escapeHtml(email) },
                     { label: 'Submitted On', value: new Date().toLocaleString() }
                 ],
                 actionButtons: [
@@ -1015,16 +1024,16 @@ async function sendDirectorNotification(env, request, appId, formType, applicant
             htmlBody: renderEmailTemplate({
                 title: 'Clearance Required',
                 greeting: 'Dear Madam / Sir,<br><br>Sairam!<br><br>Greetings from the Examinations Section, SSSIHL.',
-                content: `An <strong>${formType}</strong> has been submitted and requires your clearance for further processing.`,
+                content: `An <strong>${escapeHtml(formType)}</strong> has been submitted and requires your clearance for further processing.`,
                 details: [
-                    { label: 'Form Type', value: formType },
-                    { label: 'Application ID', value: appId },
-                    { label: 'Applicant Name', value: applicantName },
-                    { label: 'Registered Number', value: regNo || 'N/A' },
-                    { label: 'Applicant Email', value: email },
-                    { label: 'Campus', value: campus },
-                    ...(programme ? [{ label: 'Programme', value: programme }] : []),
-                    { label: 'Semester', value: semester || 'N/A' },
+                    { label: 'Form Type', value: escapeHtml(formType) },
+                    { label: 'Application ID', value: escapeHtml(appId) },
+                    { label: 'Applicant Name', value: escapeHtml(applicantName) },
+                    { label: 'Registered Number', value: escapeHtml(regNo || 'N/A') },
+                    { label: 'Applicant Email', value: escapeHtml(email) },
+                    { label: 'Campus', value: escapeHtml(campus) },
+                    ...(programme ? [{ label: 'Programme', value: escapeHtml(programme) }] : []),
+                    { label: 'Semester', value: escapeHtml(semester || 'N/A') },
                     { label: 'Submission Date', value: submissionDate },
                 ],
                 importantNote: `
@@ -1080,7 +1089,7 @@ function generateStudentEmailHTML(verification, isApproved, portalUrl) {
     const campusContact = CAMPUS_CONTACTS[verification.campus];
     const campusContactHtml = (!isApproved && isDuplicateGradeCard && campusContact)
         ? `<li style="list-style:none; margin-top:8px; padding:10px 12px; background:#eff6ff; border-radius:6px; color:#1e40af;">
-               <strong>${verification.campus} Office</strong><br>
+               <strong>${escapeHtml(verification.campus)} Office</strong><br>
                <span style="font-size:13px;">Phone: ${campusContact.phone}</span><br>
                <span style="font-size:13px;">Email: <a href="mailto:${campusContact.email}" style="color:#2563eb;">${campusContact.email}</a></span>
            </li>`
@@ -1095,7 +1104,7 @@ function generateStudentEmailHTML(verification, isApproved, portalUrl) {
                 : `<li>Your request is being processed by the Examination Department</li>
                        <li>You will receive further updates via email</li>`)
             : (isDuplicateGradeCard
-                ? `<li><strong>Your original grade card is available at the ${verification.campus || 'campus'} office</strong></li>
+                ? `<li><strong>Your original grade card is available at the ${escapeHtml(verification.campus || 'campus')} office</strong></li>
                        <li>Please contact the campus office to collect your grade card</li>
                        ${campusContactHtml}`
                 : `<li>For queries or clarifications, please contact: <a href="mailto:coeoffice@sssihl.edu.in" style="color: #2563eb; text-decoration: none;">coeoffice@sssihl.edu.in</a></li>`)
@@ -1105,16 +1114,16 @@ function generateStudentEmailHTML(verification, isApproved, portalUrl) {
 
     return renderEmailTemplate({
         title: heading,
-        greeting: `Dear ${verification.applicant_name},<br><br>Sairam!<br><br>Greetings from the Examinations Section, SSSIHL.`,
+        greeting: `Dear ${escapeHtml(verification.applicant_name)},<br><br>Sairam!<br><br>Greetings from the Examinations Section, SSSIHL.`,
         content: content,
         details: [
-            { label: 'Form Type', value: verification.form_type },
-            { label: 'Application ID', value: verification.id },
-            { label: 'Applicant Name', value: verification.applicant_name },
-            {label: 'Registered Number', value: verification.reg_no || 'N/A' },
-            { label: 'Campus', value: verification.campus },
-            ...(verification.programme ? [{ label: 'Programme', value: verification.programme }] : []),
-            ...(verification.semester ? [{ label: 'Semester', value: verification.semester }] : []),
+            { label: 'Form Type', value: escapeHtml(verification.form_type) },
+            { label: 'Application ID', value: escapeHtml(verification.id) },
+            { label: 'Applicant Name', value: escapeHtml(verification.applicant_name) },
+            {label: 'Registered Number', value: escapeHtml(verification.reg_no || 'N/A') },
+            { label: 'Campus', value: escapeHtml(verification.campus) },
+            ...(verification.programme ? [{ label: 'Programme', value: escapeHtml(verification.programme) }] : []),
+            ...(verification.semester ? [{ label: 'Semester', value: escapeHtml(verification.semester) }] : []),
             { label: 'Submitted On', value: submissionDate },
             { label: 'Status', value: `<span style="color: ${statusColor}; font-weight: 700;">${statusText}</span>` }
         ],
@@ -1175,12 +1184,12 @@ function generateStudentConfirmationHTML(appId, formType, applicantName, email, 
             subtext: 'Please save this ID for tracking your application'
         },
         details: [
-            { label: 'Applicant Name', value: applicantName },
-            { label: 'Email', value: email },
-            { label: 'Form Type', value: formType },
-            { label: 'Campus', value: campus },
-            ...(programme ? [{ label: 'Programme', value: programme }] : []),
-            ...(semester ? [{ label: 'Semester', value: semester }] : []),
+            { label: 'Applicant Name', value: escapeHtml(applicantName) },
+            { label: 'Email', value: escapeHtml(email) },
+            { label: 'Form Type', value: escapeHtml(formType) },
+            { label: 'Campus', value: escapeHtml(campus) },
+            ...(programme ? [{ label: 'Programme', value: escapeHtml(programme) }] : []),
+            ...(semester ? [{ label: 'Semester', value: escapeHtml(semester) }] : []),
             { label: 'Submitted On', value: submissionDate }
         ],
         importantNote: `
@@ -1246,20 +1255,20 @@ async function sendDirectorSoughtConfirmationEmail(env, appId, formType, applica
 
         const htmlBody = renderEmailTemplate({
             title: 'Application Sent for Clearance',
-            greeting: `Dear ${applicantName},<br><br>Sairam!<br><br>Greetings from the Examinations Section, SSSIHL.`,
+            greeting: `Dear ${escapeHtml(applicantName)},<br><br>Sairam!<br><br>Greetings from the Examinations Section, SSSIHL.`,
             content: `Your application requires clearance from the Director of the campus where you studied. It has been automatically forwarded for review.`,
             highlight: {
                 label: 'Your Application ID',
-                value: appId,
+                value: escapeHtml(appId),
                 subtext: 'Use this ID to track status updates'
             },
             details: [
-                { label: 'Form Type', value: formType },
-                { label: 'Applicant Name', value: applicantName },
-                ...(regNo ? [{ label: 'Registered Number', value: regNo }] : []),
-                { label: 'Campus', value: campus },
-                ...(programme ? [{ label: 'Programme', value: programme }] : []),
-                ...(semester ? [{ label: 'Semester', value: semester }] : []),
+                { label: 'Form Type', value: escapeHtml(formType) },
+                { label: 'Applicant Name', value: escapeHtml(applicantName) },
+                ...(regNo ? [{ label: 'Registered Number', value: escapeHtml(regNo) }] : []),
+                { label: 'Campus', value: escapeHtml(campus) },
+                ...(programme ? [{ label: 'Programme', value: escapeHtml(programme) }] : []),
+                ...(semester ? [{ label: 'Semester', value: escapeHtml(semester) }] : []),
                 { label: 'Submitted On', value: submissionDate }
             ],
             importantNote: `
@@ -2222,34 +2231,34 @@ async function handleApproval(url, env, corsHeaders) {
 
         <div class="detail-row">
             <span class="detail-label">Form Type</span>
-            <span class="detail-value">${verification?.form_type || 'N/A'}</span>
+            <span class="detail-value">${escapeHtml(verification?.form_type || 'N/A')}</span>
         </div>
         <div class="details">
             <div class="detail-row">
                 <span class="detail-label">Application ID</span>
-                <span class="detail-value">${id}</span>
+                <span class="detail-value">${escapeHtml(id)}</span>
             </div>
             <div class="detail-row">
                 <span class="detail-label">Applicant Name</span>
-                <span class="detail-value">${verification?.applicant_name || 'N/A'}</span>
+                <span class="detail-value">${escapeHtml(verification?.applicant_name || 'N/A')}</span>
             </div>
             <div class="detail-row">
                 <span class="detail-label">Registered Number</span>
-                <span class="detail-value">${verification?.reg_no || 'N/A'}</span>
+                <span class="detail-value">${escapeHtml(verification?.reg_no || 'N/A')}</span>
             </div>
             <div class="detail-row">
                 <span class="detail-label">Campus</span>
-                <span class="detail-value">${verification?.campus || 'N/A'}</span>
+                <span class="detail-value">${escapeHtml(verification?.campus || 'N/A')}</span>
             </div>
-            
+
             <div class="detail-row">
                 <span class="detail-label">Programme</span>
-                <span class="detail-value">${verification?.programme || 'N/A'}</span>
+                <span class="detail-value">${escapeHtml(verification?.programme || 'N/A')}</span>
             </div>
 
             <div class="detail-row">
                 <span class="detail-label">Semester</span>
-                <span class="detail-value">${verification?.semester || 'N/A'}</span>
+                <span class="detail-value">${escapeHtml(verification?.semester || 'N/A')}</span>
             </div>
           
             <div class="detail-row">
@@ -2275,7 +2284,11 @@ async function handleApproval(url, env, corsHeaders) {
 </html>`;
 
         return new Response(html, {
-            headers: { ...corsHeaders, 'Content-Type': 'text/html' }
+            headers: {
+                ...corsHeaders,
+                'Content-Type': 'text/html',
+                'Content-Security-Policy': "default-src 'none'; style-src 'unsafe-inline';"
+            }
         });
     } catch (error) {
         console.error('Error in handleApproval:', error);
