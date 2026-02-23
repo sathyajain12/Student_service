@@ -1037,27 +1037,39 @@ export default function AdminPortal() {
 
                         {/* Middle: headline */}
                         <div style={{ position: 'relative', zIndex: 1, maxWidth: '480px' }}>
-                            <h1 style={{ color: 'white', fontSize: '3rem', fontWeight: 800, lineHeight: 1.2, marginBottom: '16px', margin: '0 0 16px 0' }}>
+                            <h1 style={{ color: 'white', fontSize: '3rem', fontWeight: 800, lineHeight: 1.2, margin: 0 }}>
                                 Student Service<br />Admin
                             </h1>
-                            <p style={{ color: '#94a3b8', fontSize: '1.05rem', lineHeight: 1.7, margin: 0 }}>
-                                Centralized management for student success, course tracking, and institutional reporting.
-                            </p>
                         </div>
 
-                        {/* Bottom: floating stat cards */}
+                        {/* Bottom: floating feature cards */}
                         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '20px', position: 'relative', zIndex: 1 }}>
                             <div className="stat-float-1" style={glassCard}>
-                                <p style={{ color: '#cbd5e1', fontSize: '0.7rem', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.08em', margin: '0 0 6px 0' }}>Pending</p>
-                                <h3 style={{ color: 'white', fontSize: '2rem', fontWeight: 800, margin: 0 }}>{stats?.pending ?? '—'}</h3>
+                                <div style={{ width: '36px', height: '36px', background: 'rgba(255,255,255,0.12)', borderRadius: '10px', display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: '14px' }}>
+                                    <svg width="20" height="20" fill="none" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" viewBox="0 0 24 24">
+                                        <path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/>
+                                    </svg>
+                                </div>
+                                <p style={{ color: 'white', fontSize: '0.95rem', fontWeight: 700, margin: '0 0 6px 0' }}>Application Tracking</p>
+                                <p style={{ color: '#94a3b8', fontSize: '0.78rem', margin: 0, lineHeight: 1.5 }}>Monitor student requests in real time</p>
                             </div>
                             <div className="stat-float-2" style={glassCard}>
-                                <p style={{ color: '#cbd5e1', fontSize: '0.7rem', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.08em', margin: '0 0 6px 0' }}>Completed</p>
-                                <h3 style={{ color: 'white', fontSize: '2rem', fontWeight: 800, margin: 0 }}>{stats?.completed ?? '—'}</h3>
+                                <div style={{ width: '36px', height: '36px', background: 'rgba(255,255,255,0.12)', borderRadius: '10px', display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: '14px' }}>
+                                    <svg width="20" height="20" fill="none" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" viewBox="0 0 24 24">
+                                        <path d="M22 11.08V12a10 10 0 11-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/>
+                                    </svg>
+                                </div>
+                                <p style={{ color: 'white', fontSize: '0.95rem', fontWeight: 700, margin: '0 0 6px 0' }}>Status Management</p>
+                                <p style={{ color: '#94a3b8', fontSize: '0.78rem', margin: 0, lineHeight: 1.5 }}>Approve, reject &amp; dispatch instantly</p>
                             </div>
                             <div className="stat-float-3" style={glassCard}>
-                                <p style={{ color: '#cbd5e1', fontSize: '0.7rem', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.08em', margin: '0 0 6px 0' }}>Total Applications</p>
-                                <h3 style={{ color: 'white', fontSize: '2rem', fontWeight: 800, margin: 0 }}>{stats?.total ?? '—'}</h3>
+                                <div style={{ width: '36px', height: '36px', background: 'rgba(255,255,255,0.12)', borderRadius: '10px', display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: '14px' }}>
+                                    <svg width="20" height="20" fill="none" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" viewBox="0 0 24 24">
+                                        <path d="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 01-3.46 0"/>
+                                    </svg>
+                                </div>
+                                <p style={{ color: 'white', fontSize: '0.95rem', fontWeight: 700, margin: '0 0 6px 0' }}>Email Notifications</p>
+                                <p style={{ color: '#94a3b8', fontSize: '0.78rem', margin: 0, lineHeight: 1.5 }}>Automated alerts at every stage</p>
                             </div>
                         </div>
                     </section>
