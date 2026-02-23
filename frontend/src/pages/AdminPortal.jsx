@@ -1024,23 +1024,8 @@ export default function AdminPortal() {
                             <span style={{ color: 'white', fontWeight: 700, fontSize: '1.35rem', letterSpacing: '-0.01em' }}>Examination Services Admin</span>
                         </div>
 
-                        {/* Middle: decorative image + headline */}
-                        <div style={{ position: 'relative', zIndex: 1, display: 'flex', flexDirection: 'column', gap: '32px' }}>
-                            {/* Decorative hero image */}
-                            <div style={{ display: 'flex', justifyContent: 'center' }}>
-                                <img
-                                    src="/Examinations_Service.png"
-                                    alt="Examination Services"
-                                    style={{
-                                        height: '160px',
-                                        width: 'auto',
-                                        objectFit: 'contain',
-                                        filter: 'drop-shadow(0 0 32px rgba(236,91,19,0.55)) drop-shadow(0 0 8px rgba(236,91,19,0.3))',
-                                        opacity: 0.92
-                                    }}
-                                />
-                            </div>
-                            {/* Headline */}
+                        {/* Middle: headline */}
+                        <div style={{ position: 'relative', zIndex: 1, maxWidth: '480px' }}>
                             <h1 style={{ color: 'white', fontSize: '3.75rem', fontWeight: 900, lineHeight: 1.1, margin: 0, letterSpacing: '-0.03em' }}>
                                 Student Service <br />
                                 <span style={{ color: '#ec5b13' }}>Admin</span>
