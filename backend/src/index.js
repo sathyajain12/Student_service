@@ -1340,7 +1340,7 @@ async function sendStudentOnHoldEmail(env, appId, formType, applicantName, stude
         const htmlBody = renderEmailTemplate({
             title: 'Application on Hold',
             greeting: `Dear ${escapeHtml(applicantName)},<br><br>Sairam!<br><br>Greetings from the Examinations Section, SSSIHL.`,
-            content: `We wish to inform you that your application for <strong>${escapeHtml(formType)}</strong> has been placed <strong>on hold</strong> following a review by the Campus Director.<br><br>You are requested to kindly contact the Examination Section at the earliest for further information and guidance regarding your application.`,
+            content: `We wish to inform you that your <strong>${escapeHtml(formType)}</strong> has been placed <strong>on hold</strong> following a review by the Campus Director.<br><br>You are requested to kindly contact the Examination Section at the earliest for further information and guidance regarding your application.`,
             details: [
                 { label: 'Application ID', value: escapeHtml(appId) },
                 { label: 'Form Type',      value: escapeHtml(formType) },
