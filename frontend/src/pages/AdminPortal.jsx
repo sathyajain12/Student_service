@@ -1006,6 +1006,12 @@ export default function AdminPortal() {
                     .login-submit:active:not(:disabled) { transform: translateY(0); }
                     .login-help:hover { color: #ec5b13 !important; }
                     @media (max-width: 1024px) { .login-brand-panel { display: none !important; } .login-form-panel { width: 100% !important; } }
+                    @keyframes orb-breathe {
+                        0%, 100% { transform: scale(1);    opacity: 0.4; }
+                        50%       { transform: scale(1.18); opacity: 0.58; }
+                    }
+                    .login-orb-1 { animation: orb-breathe 6s ease-in-out infinite; }
+                    .login-orb-2 { animation: orb-breathe 8s ease-in-out infinite 2s; }
                 `}</style>
                 <main style={{ display: 'flex', height: '100vh', overflow: 'hidden', fontFamily: '"Public Sans", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif' }}>
 
@@ -1014,9 +1020,9 @@ export default function AdminPortal() {
                         {/* Grid dot overlay */}
                         <div style={{ position: 'absolute', inset: 0, backgroundImage: 'radial-gradient(circle at 2px 2px, rgba(255,255,255,0.05) 1px, transparent 0)', backgroundSize: '40px 40px', pointerEvents: 'none' }} />
                         {/* Top-left orange orb */}
-                        <div style={{ position: 'absolute', top: '-10%', left: '-10%', width: '400px', height: '400px', background: '#ec5b13', borderRadius: '50%', filter: 'blur(80px)', opacity: 0.4, pointerEvents: 'none' }} />
+                        <div className="login-orb-1" style={{ position: 'absolute', top: '-10%', left: '-10%', width: '400px', height: '400px', background: '#ec5b13', borderRadius: '50%', filter: 'blur(80px)', opacity: 0.4, pointerEvents: 'none' }} />
                         {/* Bottom-right orange orb */}
-                        <div style={{ position: 'absolute', bottom: '-5%', right: '5%', width: '300px', height: '300px', background: '#b84209', borderRadius: '50%', filter: 'blur(80px)', opacity: 0.4, pointerEvents: 'none' }} />
+                        <div className="login-orb-2" style={{ position: 'absolute', bottom: '-5%', right: '5%', width: '300px', height: '300px', background: '#b84209', borderRadius: '50%', filter: 'blur(80px)', opacity: 0.4, pointerEvents: 'none' }} />
 
                         {/* Spacer (keeps headline vertically centred) */}
                         <div style={{ height: '52px', position: 'relative', zIndex: 1 }} />
