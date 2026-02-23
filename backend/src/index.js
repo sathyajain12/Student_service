@@ -1032,6 +1032,19 @@ async function sendDirectorNotification(env, request, appId, formType, applicant
 
         const isNameChange = formType === 'Application for Registration of Student Name change in the Institute Records';
 
+        let nameChangeDetails = null;
+        if (isNameChange) {
+            try {
+                nameChangeDetails = await env.DB.prepare(
+                    `SELECT changed_name, Father_name, Period_of_Study, Mobile_Number,
+                            address_line1, address_line2, city, state_province, country, postal_code
+                     FROM form_name_change WHERE application_id = ?`
+                ).bind(appId).first();
+            } catch (e) {
+                console.error('Failed to fetch name change details for director email:', e);
+            }
+        }
+
         const emailSubject = isNameChange
             ? `For Your Kind Attention: ${formType} - ${appId}`
             : `Clearance Required: ${formType} - ${appId}`;
@@ -1042,14 +1055,18 @@ async function sendDirectorNotification(env, request, appId, formType, applicant
                 greeting: 'Dear Madam / Sir,<br><br>Sairam!<br><br>Greetings from the Examinations Section, SSSIHL.',
                 content: `This is to bring to your kind notice that <strong>${escapeHtml(applicantName)}</strong> has submitted an application for registration of name change in the Institute records. This is for your kind information.<br><br>If you are in agreement with the above, kindly click the <strong>Proceed</strong> button below so that the Examination Section may process the application. Alternatively, if you have any concerns, you may record your comments by clicking the <strong>Submit Comments</strong> button.`,
                 details: [
-                    { label: 'Form Type', value: escapeHtml(formType) },
-                    { label: 'Application ID', value: escapeHtml(appId) },
-                    { label: 'Applicant Name', value: escapeHtml(applicantName) },
-                    { label: 'Registered Number', value: escapeHtml(regNo || 'N/A') },
-                    { label: 'Applicant Email', value: escapeHtml(email) },
-                    { label: 'Campus', value: escapeHtml(campus) },
+                    { label: 'Form Type',             value: escapeHtml(formType) },
+                    { label: 'Application ID',         value: escapeHtml(appId) },
+                    { label: 'Existing Name',          value: escapeHtml(applicantName) },
+                    { label: 'Name to be Changed To',  value: escapeHtml(nameChangeDetails?.changed_name || 'N/A') },
+                    { label: "Father's Name",          value: escapeHtml(nameChangeDetails?.Father_name || 'N/A') },
+                    { label: 'Registered Number',      value: escapeHtml(regNo || 'N/A') },
+                    { label: 'Campus',                 value: escapeHtml(campus) },
                     ...(programme ? [{ label: 'Programme', value: escapeHtml(programme) }] : []),
-                    { label: 'Submission Date', value: submissionDate },
+                    { label: 'Period of Study',        value: escapeHtml(nameChangeDetails?.Period_of_Study || 'N/A') },
+                    { label: 'Mobile Number',          value: escapeHtml(nameChangeDetails?.Mobile_Number || 'N/A') },
+                    { label: 'Applicant Email',        value: escapeHtml(email) },
+                    { label: 'Submission Date',        value: submissionDate },
                 ],
                 importantNote: '',
                 actionButtons: [
