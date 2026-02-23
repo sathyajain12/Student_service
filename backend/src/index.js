@@ -1331,6 +1331,40 @@ async function sendDirectorSoughtConfirmationEmail(env, appId, formType, applica
     }
 }
 
+async function sendStudentOnHoldEmail(env, appId, formType, applicantName, studentEmail, campus) {
+    try {
+        const accessToken = await getGoogleAuth(env);
+        const submissionDate = new Date().toLocaleString('en-IN', {
+            dateStyle: 'long', timeStyle: 'short', timeZone: 'Asia/Kolkata'
+        });
+        const htmlBody = renderEmailTemplate({
+            title: 'Application on Hold',
+            greeting: `Dear ${escapeHtml(applicantName)},<br><br>Sairam!<br><br>Greetings from the Examinations Section, SSSIHL.`,
+            content: `We wish to inform you that your application for <strong>${escapeHtml(formType)}</strong> has been placed <strong>on hold</strong> following a review by the Campus Director.<br><br>You are requested to kindly contact the Examination Section at the earliest for further information and guidance regarding your application.`,
+            details: [
+                { label: 'Application ID', value: escapeHtml(appId) },
+                { label: 'Form Type',      value: escapeHtml(formType) },
+                { label: 'Applicant Name', value: escapeHtml(applicantName) },
+                { label: 'Campus',         value: escapeHtml(campus) },
+                { label: 'Status',         value: '<span style="color:#7c3aed;font-weight:700;">ON HOLD</span>' },
+                { label: 'Date',           value: submissionDate },
+            ],
+            importantNote: `<p style="margin:0;">For queries or clarifications, please contact: <a href="mailto:coeoffice@sssihl.edu.in" style="color:#2563eb;text-decoration:none;">coeoffice@sssihl.edu.in</a></p>`,
+            actionButtons: [
+                { label: 'Track Application Status', link: `https://student-service.pages.dev/#track=${escapeHtml(appId)}` }
+            ]
+        });
+        await sendEmail(accessToken, {
+            to: studentEmail,
+            subject: `Application on Hold - ${formType} - ${appId}`,
+            htmlBody
+        });
+        console.log(`Student on-hold email sent to ${studentEmail} for app ${appId}`);
+    } catch (e) {
+        console.error('Failed to send student on-hold email:', e);
+    }
+}
+
 
 // ==================== FORM HANDLERS ====================
 
@@ -2003,6 +2037,8 @@ async function handleDirectorCommentSubmit(request, env, corsHeaders) {
     } catch (e) {
         console.error('Failed to send admin notification after director comment:', e);
     }
+
+    await sendStudentOnHoldEmail(env, id, app.form_type, app.applicant_name, app.student_email, app.campus);
 
     const successHtml = `<!DOCTYPE html>
 <html lang="en">
