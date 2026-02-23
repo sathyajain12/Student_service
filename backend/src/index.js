@@ -2612,7 +2612,7 @@ async function handleSubmitToCOE(request, env, corsHeaders) {
         }
 
         await env.DB.prepare(
-            `UPDATE applications SET status = 'PENDING', updated_at = CURRENT_TIMESTAMP WHERE id = ?`
+            `UPDATE applications SET status = 'APPROVED', updated_at = CURRENT_TIMESTAMP WHERE id = ?`
         ).bind(appId).run();
 
         await sendAdminNotification(env, appId, app.form_type, app.applicant_name, app.student_email);

@@ -119,13 +119,22 @@ export default function StatusTracker({ onBack }) {
 
     const getStatusLabel = (status) => {
         switch (status) {
-            case 'AWAITING_DIRECTOR': return 'Awaiting Director Approval';
-            case 'DIRECTOR_APPROVED': return 'Director Approved - Submit to COE';
-            default: return status;
+            case 'PENDING':             return 'Pending Review';
+            case 'AWAITING_DIRECTOR':   return 'Awaiting Director Approval';
+            case 'DIRECTOR_APPROVED':   return 'Director Approved — Submit to COE';
+            case 'DIRECTOR_COMMENTED':  return 'On Hold — Director Commented';
+            case 'APPROVED':            return 'Under Process';
+            case 'COMPLETED':           return 'Completed';
+            case 'DISPATCHED':          return 'Dispatched';
+            case 'REJECTED':            return 'Rejected';
+            default:                    return status;
         }
     };
 
     const getStatusDetails = (app) => {
+        const s = app.status;
+        const coeSubmitted = ['APPROVED', 'COMPLETED', 'DISPATCHED'].includes(s);
+
         const stages = [
             { id: 'submitted', label: 'Submitted', status: 'COMPLETED', icon: FileText, date: app.created_at },
         ];
@@ -134,35 +143,47 @@ export default function StatusTracker({ onBack }) {
             stages.push({
                 id: 'director',
                 label: 'Director Approval',
-                status: app.director_status === 'APPROVED' ? 'COMPLETED' : (app.director_status === 'REJECTED' ? 'REJECTED' : 'PENDING'),
+                status: app.director_status === 'APPROVED' ? 'COMPLETED' : 'PENDING',
                 icon: User,
-                date: app.director_status !== 'PENDING' ? app.updated_at : null
+                date: app.director_status === 'APPROVED' ? app.updated_at : null
             });
 
-            const coeSubmitted = app.status !== 'AWAITING_DIRECTOR' && app.status !== 'DIRECTOR_APPROVED';
+            // Only show Submitted to COE + Under-Process after student has clicked Submit to COE
+            if (coeSubmitted) {
+                stages.push({
+                    id: 'coe-submission',
+                    label: 'Submitted to COE',
+                    status: 'COMPLETED',
+                    icon: Send,
+                    date: null
+                });
+                stages.push({
+                    id: 'controller',
+                    label: 'Under-Process',
+                    status: ['COMPLETED', 'DISPATCHED'].includes(s) ? 'COMPLETED' : 'IN_PROGRESS',
+                    icon: CheckCircle2,
+                    date: null
+                });
+            }
+        } else {
+            // Non-director apps: Under-Process always visible
             stages.push({
-                id: 'coe-submission',
-                label: 'Submitted to COE',
-                status: coeSubmitted ? 'COMPLETED' : 'PENDING',
-                icon: Send,
-                date: null
+                id: 'controller',
+                label: 'Under-Process',
+                status: ['COMPLETED', 'DISPATCHED'].includes(s) ? 'COMPLETED' : (s === 'APPROVED' ? 'IN_PROGRESS' : 'PENDING'),
+                icon: CheckCircle2
             });
         }
 
-        stages.push({
-            id: 'controller',
-            label: 'Under-Process',
-            status: app.controller_status === 'APPROVED' ? 'COMPLETED' : (app.controller_status === 'REJECTED' ? 'REJECTED' : 'PENDING'),
-            icon: CheckCircle2,
-            date: app.controller_status !== 'PENDING' ? app.updated_at : null
-        });
+        // Completed — only show once admin marks completed
+        if (['COMPLETED', 'DISPATCHED'].includes(s)) {
+            stages.push({ id: 'complete', label: 'Completed', status: 'COMPLETED', icon: Clock });
+        }
 
-        stages.push({
-            id: 'complete',
-            label: 'Completed',
-            status: app.status === 'COMPLETED' ? 'COMPLETED' : (app.status === 'REJECTED' ? 'REJECTED' : (app.status === 'APPROVED' ? 'IN_PROGRESS' : 'PENDING')),
-            icon: Clock
-        });
+        // Dispatched — only show after admin dispatches
+        if (s === 'DISPATCHED') {
+            stages.push({ id: 'dispatched', label: 'Dispatched', status: 'COMPLETED', icon: Send });
+        }
 
         return stages;
     };
