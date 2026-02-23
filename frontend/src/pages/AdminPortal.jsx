@@ -1019,11 +1019,9 @@ export default function AdminPortal() {
                         <div style={{ position: 'absolute', bottom: '-5%', right: '5%', width: '300px', height: '300px', background: '#b84209', borderRadius: '50%', filter: 'blur(80px)', opacity: 0.4, pointerEvents: 'none' }} />
 
                         {/* Top: logo + name */}
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '12px', position: 'relative', zIndex: 1 }}>
-                            <div style={{ background: '#ec5b13', padding: '8px', borderRadius: '8px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                                <img src="/logo.png" alt="SSSIHL Logo" style={{ height: '28px', width: '28px', objectFit: 'contain' }} />
-                            </div>
-                            <span style={{ color: 'white', fontWeight: 700, fontSize: '1.1rem', letterSpacing: '-0.01em' }}>Examination Services Admin</span>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '16px', position: 'relative', zIndex: 1 }}>
+                            <img src="/logo.png" alt="SSSIHL Logo" style={{ height: '52px', width: '52px', objectFit: 'contain' }} />
+                            <span style={{ color: 'white', fontWeight: 700, fontSize: '1.35rem', letterSpacing: '-0.01em' }}>Examination Services Admin</span>
                         </div>
 
                         {/* Middle: headline */}
@@ -1558,8 +1556,9 @@ export default function AdminPortal() {
                 }
 
                 .btn-refresh:hover:not(:disabled) {
-                    background: rgba(59, 130, 246, 0.3) !important;
-                    transform: translateY(-1px);
+                    background: rgba(255,255,255,0.08) !important;
+                    color: #e2e8f0 !important;
+                    border-color: rgba(255,255,255,0.22) !important;
                 }
 
                 .btn-refresh:active:not(:disabled) {
@@ -1571,12 +1570,24 @@ export default function AdminPortal() {
                 }
 
                 .btn-logout:hover {
-                    background: rgba(239, 68, 68, 0.3) !important;
+                    background: rgba(255,255,255,0.08) !important;
+                    color: #e2e8f0 !important;
+                    border-color: rgba(255,255,255,0.22) !important;
                     transform: translateY(-1px);
                 }
 
                 .btn-logout:active {
                     transform: translateY(0);
+                }
+
+                .nav-search:focus {
+                    background: rgba(255,255,255,0.1) !important;
+                    border-color: rgba(255,255,255,0.25) !important;
+                }
+                .nav-search::placeholder { color: #475569; }
+
+                .dash-row:hover td {
+                    background: #f8fafc;
                 }
 
                 .btn-modal-cancel {
@@ -1601,198 +1612,228 @@ export default function AdminPortal() {
                     transform: translateY(0);
                 }
             `}</style>
-            <div style={styles.page}>
-                <div style={styles.container}>
-                {/* Header */}
-                <div style={styles.header}>
-                    <h1 style={styles.title}>Admin Dashboard</h1>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
-                        <button
-                            className="btn-refresh"
-                            onClick={handleManualRefresh}
-                            disabled={isRefreshing}
-                            style={{
-                                padding: '10px 20px',
-                                background: 'rgba(59, 130, 246, 0.2)',
-                                color: '#3b82f6',
-                                border: 'none',
-                                borderRadius: '8px',
-                                cursor: isRefreshing ? 'not-allowed' : 'pointer',
-                                display: 'flex',
-                                alignItems: 'center',
-                                gap: '8px',
-                                fontSize: '14px',
-                                opacity: isRefreshing ? 0.6 : 1
-                            }}
-                        >
-                            <RefreshCw size={18} style={{ animation: isRefreshing ? 'spin 1s linear infinite' : 'none' }} />
-                            {isRefreshing ? 'Refreshing...' : 'Refresh'}
-                        </button>
-                        {lastUpdated && (
-                            <span style={{ color: '#64748b', fontSize: '12px' }}>
-                                Last updated: {lastUpdated.toLocaleTimeString()}
-                            </span>
-                        )}
-                        <button className="btn-logout" onClick={handleLogout} style={styles.logoutButton}>
-                            <LogOut size={18} /> Logout
-                        </button>
-                    </div>
+            {/* Fixed Navbar */}
+            <header style={{
+                position: 'fixed', top: 0, left: 0, right: 0, zIndex: 50,
+                height: '72px', background: '#0F172A',
+                borderBottom: '1px solid #1e293b',
+                display: 'flex', alignItems: 'center', padding: '0 32px', gap: '24px',
+                fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif'
+            }}>
+                {/* Logo + name */}
+                <div style={{ display: 'flex', alignItems: 'center', gap: '12px', flexShrink: 0 }}>
+                    <img src="/logo.png" alt="Logo" style={{ height: '38px', width: '38px', objectFit: 'contain' }} />
+                    <span style={{ color: 'white', fontWeight: 700, fontSize: '0.95rem', whiteSpace: 'nowrap' }}>Examination Services Admin</span>
                 </div>
 
-                {/* Stats Cards */}
-                {stats && (
-                    <div style={styles.statsGrid}>
-                        <div style={styles.statCard}>
-                            <div style={{ ...styles.statIcon, background: 'rgba(59, 130, 246, 0.2)' }}>
-                                <Users style={{ color: '#3b82f6' }} size={24} />
-                            </div>
-                            <div>
-                                <p style={styles.statLabel}>Total Applications</p>
-                                <p style={styles.statValue}>{stats.total}</p>
-                            </div>
-                        </div>
+                {/* Search box */}
+                <div style={{ flex: 1, maxWidth: '460px', margin: '0 auto', position: 'relative' }}>
+                    <Search size={15} style={{ position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)', color: '#64748b', pointerEvents: 'none' }} />
+                    <input
+                        className="nav-search"
+                        type="text"
+                        value={searchQuery}
+                        onChange={(e) => setSearchQuery(e.target.value)}
+                        placeholder="Search applications by name, ID, campus..."
+                        style={{
+                            width: '100%', height: '40px',
+                            paddingLeft: '38px', paddingRight: searchQuery ? '36px' : '14px',
+                            background: 'rgba(255,255,255,0.07)',
+                            border: '1px solid rgba(255,255,255,0.1)',
+                            borderRadius: '8px',
+                            color: 'white', fontSize: '0.85rem',
+                            outline: 'none', boxSizing: 'border-box',
+                            fontFamily: 'inherit'
+                        }}
+                    />
+                    {searchQuery && (
+                        <button onClick={() => setSearchQuery('')} style={{ position: 'absolute', right: '10px', top: '50%', transform: 'translateY(-50%)', background: 'none', border: 'none', cursor: 'pointer', color: '#64748b', display: 'flex', alignItems: 'center', padding: 0 }}>
+                            <X size={13} />
+                        </button>
+                    )}
+                </div>
 
-                        <div style={styles.statCard}>
-                            <div style={{ ...styles.statIcon, background: 'rgba(245, 158, 11, 0.2)' }}>
-                                <Clock style={{ color: '#f59e0b' }} size={24} />
-                            </div>
-                            <div>
-                                <p style={styles.statLabel}>Pending</p>
-                                <p style={styles.statValue}>{stats.pending}</p>
-                            </div>
-                        </div>
+                {/* Right controls */}
+                <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginLeft: 'auto', flexShrink: 0 }}>
+                    {lastUpdated && (
+                        <span style={{ color: '#475569', fontSize: '0.75rem', whiteSpace: 'nowrap' }}>
+                            Updated {lastUpdated.toLocaleTimeString()}
+                        </span>
+                    )}
+                    <button
+                        className="btn-refresh"
+                        onClick={handleManualRefresh}
+                        disabled={isRefreshing}
+                        style={{
+                            display: 'flex', alignItems: 'center', gap: '6px',
+                            padding: '7px 14px',
+                            background: 'transparent',
+                            color: '#94a3b8',
+                            border: '1px solid rgba(255,255,255,0.12)',
+                            borderRadius: '8px',
+                            cursor: isRefreshing ? 'not-allowed' : 'pointer',
+                            fontSize: '0.8rem', fontWeight: 500,
+                            opacity: isRefreshing ? 0.5 : 1,
+                            fontFamily: 'inherit', transition: 'all 0.15s ease'
+                        }}
+                    >
+                        <RefreshCw size={14} style={{ animation: isRefreshing ? 'spin 1s linear infinite' : 'none' }} />
+                        {isRefreshing ? 'Refreshing...' : 'Refresh'}
+                    </button>
+                    <button
+                        className="btn-logout"
+                        onClick={handleLogout}
+                        style={{
+                            display: 'flex', alignItems: 'center', gap: '6px',
+                            padding: '7px 14px',
+                            background: 'transparent',
+                            color: '#94a3b8',
+                            border: '1px solid rgba(255,255,255,0.12)',
+                            borderRadius: '8px',
+                            cursor: 'pointer',
+                            fontSize: '0.8rem', fontWeight: 500,
+                            fontFamily: 'inherit', transition: 'all 0.15s ease'
+                        }}
+                    >
+                        <LogOut size={14} /> Logout
+                    </button>
+                </div>
+            </header>
 
-                        <div style={styles.statCard}>
-                            <div style={{ ...styles.statIcon, background: 'rgba(16, 185, 129, 0.2)' }}>
-                                <CheckCircle style={{ color: '#10b981' }} size={24} />
-                            </div>
-                            <div>
-                                <p style={styles.statLabel}>Approved</p>
-                                <p style={styles.statValue}>{stats.approved}</p>
-                            </div>
-                        </div>
+            {/* Main content */}
+            <div style={{ paddingTop: '72px', minHeight: '100vh', background: '#F8FAFC', fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif' }}>
+                <div style={{ maxWidth: '1200px', margin: '0 auto', padding: '32px 24px' }}>
 
-                        <div style={styles.statCard}>
-                            <div style={{ ...styles.statIcon, background: 'rgba(239, 68, 68, 0.2)' }}>
-                                <XCircle style={{ color: '#ef4444' }} size={24} />
-                            </div>
-                            <div>
-                                <p style={styles.statLabel}>Rejected</p>
-                                <p style={styles.statValue}>{stats.rejected}</p>
-                            </div>
-                        </div>
+                    {/* Welcome */}
+                    <div style={{ marginBottom: '28px' }}>
+                        <h2 style={{ fontSize: '1.65rem', fontWeight: 800, color: '#0F172A', margin: '0 0 6px 0', letterSpacing: '-0.02em' }}>Dashboard Overview</h2>
+                        <p style={{ color: '#64748b', margin: 0, fontSize: '0.9rem' }}>Welcome back. Here's what needs your attention today.</p>
                     </div>
-                )}
 
-                {/* Applications Table */}
-                <div style={styles.card}>
-                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '20px', flexWrap: 'wrap', gap: '12px' }}>
-                        <h2 style={{ color: '#0f172a', margin: 0 }}>Recent Applications</h2>
-                        <div style={{ position: 'relative', minWidth: '280px', flex: '0 1 360px' }}>
-                            <Search size={16} style={{ position: 'absolute', left: '14px', top: '50%', transform: 'translateY(-50%)', color: '#94a3b8' }} />
-                            <input
-                                type="text"
-                                value={searchQuery}
-                                onChange={(e) => setSearchQuery(e.target.value)}
-                                placeholder="Search by name, ID, form type, campus..."
-                                style={{
-                                    ...styles.input,
-                                    paddingLeft: '40px',
-                                    paddingRight: searchQuery ? '36px' : '16px',
-                                    fontSize: '13px',
-                                    padding: '10px 16px 10px 40px',
-                                    borderRadius: '10px'
-                                }}
-                            />
-                            {searchQuery && (
-                                <button
-                                    onClick={() => setSearchQuery('')}
-                                    style={{
-                                        position: 'absolute',
-                                        right: '10px',
-                                        top: '50%',
-                                        transform: 'translateY(-50%)',
-                                        background: 'none',
-                                        border: 'none',
-                                        cursor: 'pointer',
-                                        padding: '2px',
-                                        color: '#94a3b8',
-                                        display: 'flex',
-                                        alignItems: 'center'
-                                    }}
-                                >
-                                    <X size={14} />
-                                </button>
+                    {/* Stat cards */}
+                    {stats && (
+                        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '16px', marginBottom: '28px' }}>
+                            <div style={{ background: 'white', padding: '24px', borderRadius: '12px', border: '1px solid #e2e8f0', boxShadow: '0 1px 3px rgba(0,0,0,0.05)' }}>
+                                <div style={{ background: 'rgba(79,70,229,0.08)', padding: '10px', borderRadius: '10px', display: 'inline-flex', marginBottom: '16px' }}>
+                                    <Users size={20} color="#4F46E5" />
+                                </div>
+                                <p style={{ fontSize: '0.75rem', fontWeight: 600, color: '#64748b', margin: '0 0 4px 0', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Total Applications</p>
+                                <p style={{ fontSize: '2rem', fontWeight: 800, color: '#0F172A', margin: 0, lineHeight: 1 }}>{stats.total}</p>
+                            </div>
+                            <div style={{ background: 'white', padding: '24px', borderRadius: '12px', border: '1px solid #e2e8f0', boxShadow: '0 1px 3px rgba(0,0,0,0.05)' }}>
+                                <div style={{ background: 'rgba(245,158,11,0.08)', padding: '10px', borderRadius: '10px', display: 'inline-flex', marginBottom: '16px' }}>
+                                    <Clock size={20} color="#f59e0b" />
+                                </div>
+                                <p style={{ fontSize: '0.75rem', fontWeight: 600, color: '#64748b', margin: '0 0 4px 0', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Pending Review</p>
+                                <p style={{ fontSize: '2rem', fontWeight: 800, color: '#0F172A', margin: 0, lineHeight: 1 }}>{stats.pending}</p>
+                            </div>
+                            <div style={{ background: 'white', padding: '24px', borderRadius: '12px', border: '1px solid #e2e8f0', boxShadow: '0 1px 3px rgba(0,0,0,0.05)' }}>
+                                <div style={{ background: 'rgba(16,185,129,0.08)', padding: '10px', borderRadius: '10px', display: 'inline-flex', marginBottom: '16px' }}>
+                                    <CheckCircle size={20} color="#10b981" />
+                                </div>
+                                <p style={{ fontSize: '0.75rem', fontWeight: 600, color: '#64748b', margin: '0 0 4px 0', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Approved</p>
+                                <p style={{ fontSize: '2rem', fontWeight: 800, color: '#0F172A', margin: 0, lineHeight: 1 }}>{stats.approved}</p>
+                            </div>
+                            <div style={{ background: 'white', padding: '24px', borderRadius: '12px', border: '1px solid #e2e8f0', boxShadow: '0 1px 3px rgba(0,0,0,0.05)' }}>
+                                <div style={{ background: 'rgba(239,68,68,0.08)', padding: '10px', borderRadius: '10px', display: 'inline-flex', marginBottom: '16px' }}>
+                                    <XCircle size={20} color="#ef4444" />
+                                </div>
+                                <p style={{ fontSize: '0.75rem', fontWeight: 600, color: '#64748b', margin: '0 0 4px 0', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Rejected</p>
+                                <p style={{ fontSize: '2rem', fontWeight: 800, color: '#0F172A', margin: 0, lineHeight: 1 }}>{stats.rejected}</p>
+                            </div>
+                        </div>
+                    )}
+
+                    {/* Applications Table */}
+                    <div style={{ background: 'white', borderRadius: '12px', border: '1px solid #e2e8f0', boxShadow: '0 1px 3px rgba(0,0,0,0.05)', overflow: 'hidden' }}>
+                        <div style={{ padding: '18px 24px', borderBottom: '1px solid #e2e8f0', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                            <h3 style={{ fontSize: '1rem', fontWeight: 700, color: '#0F172A', margin: 0 }}>Recent Applications</h3>
+                            {applications.length > 0 && (
+                                <span style={{ fontSize: '0.8rem', color: '#94a3b8', fontWeight: 500 }}>{applications.length} total</span>
                             )}
                         </div>
+
+                        {(() => {
+                            const filteredApplications = applications.filter(app => {
+                                if (!searchQuery.trim()) return true;
+                                const query = searchQuery.toLowerCase();
+                                return (
+                                    app.id?.toLowerCase().includes(query) ||
+                                    app.applicant_name?.toLowerCase().includes(query) ||
+                                    app.form_type?.toLowerCase().includes(query) ||
+                                    app.campus?.toLowerCase().includes(query) ||
+                                    app.student_email?.toLowerCase().includes(query) ||
+                                    app.status?.toLowerCase().includes(query)
+                                );
+                            });
+
+                            const thStyle = { padding: '12px 20px', textAlign: 'left', fontSize: '0.72rem', fontWeight: 700, color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.05em', borderBottom: '1px solid #e2e8f0', background: '#f8fafc', whiteSpace: 'nowrap' };
+                            const tdStyle = { padding: '14px 20px', fontSize: '0.875rem', color: '#334155', borderBottom: '1px solid #f1f5f9' };
+
+                            return (
+                                <>
+                                    <div style={{ overflowX: 'auto' }}>
+                                        <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+                                            <thead>
+                                                <tr>
+                                                    <th style={thStyle}>ID</th>
+                                                    <th style={thStyle}>Form Type</th>
+                                                    <th style={thStyle}>Applicant</th>
+                                                    <th style={thStyle}>Campus</th>
+                                                    <th style={thStyle}>Status</th>
+                                                    <th style={thStyle}>Date</th>
+                                                    <th style={thStyle}>Action</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                                {filteredApplications.map((app) => (
+                                                    <tr key={app.id} className="dash-row">
+                                                        <td style={{ ...tdStyle, fontFamily: 'monospace', fontSize: '0.78rem', color: '#64748b' }}>{app.id}</td>
+                                                        <td style={{ ...tdStyle, maxWidth: '200px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', fontWeight: 500 }}>{app.form_type}</td>
+                                                        <td style={{ ...tdStyle, fontWeight: 600, color: '#0F172A' }}>{app.applicant_name}</td>
+                                                        <td style={tdStyle}>{app.campus}</td>
+                                                        <td style={tdStyle}><span style={getStatusStyle(app.status)}>{app.status}</span></td>
+                                                        <td style={{ ...tdStyle, color: '#64748b' }}>{new Date(app.created_at + 'Z').toLocaleDateString('en-IN', { timeZone: 'Asia/Kolkata' })}</td>
+                                                        <td style={tdStyle}>
+                                                            <button
+                                                                onClick={() => fetchAppDetails(app.id)}
+                                                                style={{ padding: '6px 14px', background: 'white', color: '#334155', border: '1px solid #e2e8f0', borderRadius: '6px', cursor: 'pointer', fontSize: '0.8rem', fontWeight: 600, fontFamily: 'inherit', transition: 'all 0.15s ease' }}
+                                                                onMouseEnter={e => { e.currentTarget.style.background = '#f8fafc'; e.currentTarget.style.borderColor = '#94a3b8'; }}
+                                                                onMouseLeave={e => { e.currentTarget.style.background = 'white'; e.currentTarget.style.borderColor = '#e2e8f0'; }}
+                                                            >
+                                                                View
+                                                            </button>
+                                                        </td>
+                                                    </tr>
+                                                ))}
+                                            </tbody>
+                                        </table>
+
+                                        {applications.length === 0 && (
+                                            <p style={{ textAlign: 'center', padding: '48px', color: '#94a3b8', fontSize: '0.9rem' }}>No applications found</p>
+                                        )}
+                                        {applications.length > 0 && filteredApplications.length === 0 && (
+                                            <p style={{ textAlign: 'center', padding: '48px', color: '#94a3b8', fontSize: '0.9rem' }}>No applications match "{searchQuery}"</p>
+                                        )}
+                                    </div>
+                                    {applications.length > 0 && (
+                                        <div style={{ padding: '12px 24px', background: '#f8fafc', borderTop: '1px solid #e2e8f0' }}>
+                                            <p style={{ fontSize: '0.75rem', color: '#94a3b8', margin: 0, fontWeight: 500 }}>
+                                                Showing {filteredApplications.length} of {applications.length} applications
+                                            </p>
+                                        </div>
+                                    )}
+                                </>
+                            );
+                        })()}
                     </div>
 
-                    {(() => {
-                        const filteredApplications = applications.filter(app => {
-                            if (!searchQuery.trim()) return true;
-                            const query = searchQuery.toLowerCase();
-                            return (
-                                app.id?.toLowerCase().includes(query) ||
-                                app.applicant_name?.toLowerCase().includes(query) ||
-                                app.form_type?.toLowerCase().includes(query) ||
-                                app.campus?.toLowerCase().includes(query) ||
-                                app.student_email?.toLowerCase().includes(query) ||
-                                app.status?.toLowerCase().includes(query)
-                            );
-                        });
-
-                        return (
-                            <div style={{ overflowX: 'auto' }}>
-                                <table style={styles.table}>
-                                    <thead>
-                                        <tr>
-                                            <th style={styles.th}>ID</th>
-                                            <th style={styles.th}>Form Type</th>
-                                            <th style={styles.th}>Applicant</th>
-                                            <th style={styles.th}>Campus</th>
-                                            <th style={styles.th}>Status</th>
-                                            <th style={styles.th}>Date</th>
-                                            <th style={styles.th}>Action</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody>
-                                        {filteredApplications.map((app) => (
-                                            <tr key={app.id} style={{ cursor: 'pointer' }}>
-                                                <td style={{ ...styles.td, fontFamily: 'monospace', fontSize: '12px' }}>{app.id}</td>
-                                                <td style={{ ...styles.td, maxWidth: '200px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{app.form_type}</td>
-                                                <td style={styles.td}>{app.applicant_name}</td>
-                                                <td style={styles.td}>{app.campus}</td>
-                                                <td style={styles.td}>
-                                                    <span style={getStatusStyle(app.status)}>{app.status}</span>
-                                                </td>
-                                                <td style={styles.td}>{new Date(app.created_at + 'Z').toLocaleDateString('en-IN', { timeZone: 'Asia/Kolkata' })}</td>
-                                                <td style={styles.td}>
-                                                    <button onClick={() => fetchAppDetails(app.id)} style={styles.button}>
-                                                        View
-                                                    </button>
-                                                </td>
-                                            </tr>
-                                        ))}
-                                    </tbody>
-                                </table>
-
-                                {applications.length === 0 && (
-                                    <p style={{ textAlign: 'center', padding: '40px', color: '#64748b' }}>
-                                        No applications found
-                                    </p>
-                                )}
-
-                                {applications.length > 0 && filteredApplications.length === 0 && (
-                                    <p style={{ textAlign: 'center', padding: '40px', color: '#64748b' }}>
-                                        No applications match "{searchQuery}"
-                                    </p>
-                                )}
-                            </div>
-                        );
-                    })()}
+                    {/* Footer */}
+                    <div style={{ marginTop: '32px', paddingTop: '20px', borderTop: '1px solid #e2e8f0', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '8px' }}>
+                        <p style={{ color: '#94a3b8', fontSize: '0.8rem', margin: 0 }}>© 2025 SSSIHL Examination Services. All rights reserved.</p>
+                    </div>
                 </div>
             </div>
-        </div>
         </>
     );
 }
