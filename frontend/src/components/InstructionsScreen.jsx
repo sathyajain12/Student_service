@@ -365,9 +365,10 @@ export default function InstructionsScreen({ config, onProceed, onCancel }) {
                                                     </div>
                                                 </div>
                                                 {instruction.envelopeNotes?.map((note, i) => (
-                                                    <p key={i} style={{ color: 'var(--text-main)', fontSize: '0.9rem', lineHeight: '1.6', margin: '0 0 6px 0', paddingLeft: '4px' }}>
-                                                        {note}
-                                                    </p>
+                                                    <div key={i} style={{ display: 'flex', alignItems: 'flex-start', gap: '10px', margin: '0 0 8px 0' }}>
+                                                        <div style={{ width: '7px', height: '7px', borderRadius: '50%', background: 'var(--accent)', flexShrink: 0, marginTop: '6px' }} />
+                                                        <p style={{ color: 'var(--text-main)', fontSize: '0.9rem', lineHeight: '1.6', margin: 0 }}>{note}</p>
+                                                    </div>
                                                 ))}
                                             </div>
                                         )}
