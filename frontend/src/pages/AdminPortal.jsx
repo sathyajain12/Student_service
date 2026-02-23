@@ -233,6 +233,8 @@ export default function AdminPortal() {
     const dispatchTrackingRef = useRef(null);
     const [searchQuery, setSearchQuery] = useState('');
     const [currentPage, setCurrentPage] = useState(1);
+    const [statusFilter, setStatusFilter] = useState('ALL');
+    const [campusFilter, setCampusFilter] = useState('ALL');
 
     const showToast = (message, type = 'success') => {
         setToast({ message, type });
@@ -259,6 +261,8 @@ export default function AdminPortal() {
     }, [isLoggedIn]);
 
     useEffect(() => { setCurrentPage(1); }, [searchQuery]);
+    useEffect(() => { setCurrentPage(1); }, [statusFilter]);
+    useEffect(() => { setCurrentPage(1); }, [campusFilter]);
 
     const handleLogin = async (e) => {
         e.preventDefault();
@@ -1577,31 +1581,89 @@ export default function AdminPortal() {
                                 <p style={{ fontSize: '0.75rem', fontWeight: 600, color: '#64748b', margin: '0 0 4px 0', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Rejected</p>
                                 <p style={{ fontSize: '2rem', fontWeight: 800, color: '#0F172A', margin: 0, lineHeight: 1 }}>{stats.rejected}</p>
                             </div>
+                            <div style={{ background: 'white', padding: '24px', borderRadius: '12px', border: '1px solid #e2e8f0', boxShadow: '0 1px 3px rgba(0,0,0,0.05)' }}>
+                                <div style={{ background: 'rgba(14,165,233,0.08)', padding: '10px', borderRadius: '10px', display: 'inline-flex', marginBottom: '16px' }}>
+                                    <svg width="20" height="20" fill="none" stroke="#0ea5e9" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" viewBox="0 0 24 24"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
+                                </div>
+                                <p style={{ fontSize: '0.75rem', fontWeight: 600, color: '#64748b', margin: '0 0 4px 0', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Dispatched</p>
+                                <p style={{ fontSize: '2rem', fontWeight: 800, color: '#0F172A', margin: 0, lineHeight: 1 }}>{stats.dispatched ?? 0}</p>
+                            </div>
+                            <div style={{ background: 'white', padding: '24px', borderRadius: '12px', border: '1px solid #e2e8f0', boxShadow: '0 1px 3px rgba(0,0,0,0.05)' }}>
+                                <div style={{ background: 'rgba(16,185,129,0.08)', padding: '10px', borderRadius: '10px', display: 'inline-flex', marginBottom: '16px' }}>
+                                    <svg width="20" height="20" fill="none" stroke="#10b981" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>
+                                </div>
+                                <p style={{ fontSize: '0.75rem', fontWeight: 600, color: '#64748b', margin: '0 0 4px 0', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Completed</p>
+                                <p style={{ fontSize: '2rem', fontWeight: 800, color: '#0F172A', margin: 0, lineHeight: 1 }}>{stats.completed ?? 0}</p>
+                            </div>
                         </div>
                     )}
+
+                    {/* Status filter tabs */}
+                    <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap', marginBottom: '20px' }}>
+                        {[
+                            { label: 'All',        value: 'ALL',        count: stats?.total,      color: '#4F46E5' },
+                            { label: 'Pending',    value: 'PENDING',    count: stats?.pending,    color: '#f59e0b' },
+                            { label: 'Approved',   value: 'APPROVED',   count: stats?.approved,   color: '#10b981' },
+                            { label: 'Dispatched', value: 'DISPATCHED', count: stats?.dispatched, color: '#0ea5e9' },
+                            { label: 'Completed',  value: 'COMPLETED',  count: stats?.completed,  color: '#10b981' },
+                            { label: 'Rejected',   value: 'REJECTED',   count: stats?.rejected,   color: '#ef4444' },
+                        ].map(tab => (
+                            <button key={tab.value} onClick={() => setStatusFilter(tab.value)}
+                                style={{
+                                    padding: '6px 14px', borderRadius: '999px', fontSize: '0.8rem', fontWeight: 600,
+                                    border: statusFilter === tab.value ? `1.5px solid ${tab.color}` : '1.5px solid #e2e8f0',
+                                    background: statusFilter === tab.value ? tab.color : 'white',
+                                    color: statusFilter === tab.value ? 'white' : '#64748b',
+                                    cursor: 'pointer', fontFamily: 'inherit', transition: 'all 0.15s',
+                                    display: 'flex', alignItems: 'center', gap: '6px'
+                                }}>
+                                {tab.label}
+                                {tab.count != null && (
+                                    <span style={{ background: statusFilter === tab.value ? 'rgba(255,255,255,0.25)' : '#f1f5f9', borderRadius: '999px', padding: '1px 7px', fontSize: '0.72rem' }}>
+                                        {tab.count}
+                                    </span>
+                                )}
+                            </button>
+                        ))}
+                    </div>
 
                     {/* Applications Table */}
                     <div style={{ background: 'white', borderRadius: '12px', border: '1px solid #e2e8f0', boxShadow: '0 1px 3px rgba(0,0,0,0.05)', overflow: 'hidden' }}>
                         <div style={{ padding: '18px 24px', borderBottom: '1px solid #e2e8f0', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
                             <h3 style={{ fontSize: '1rem', fontWeight: 700, color: '#0F172A', margin: 0 }}>Recent Applications</h3>
-                            {applications.length > 0 && (
-                                <span style={{ fontSize: '0.8rem', color: '#94a3b8', fontWeight: 500 }}>{applications.length} total</span>
-                            )}
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                                {(() => {
+                                    const campuses = [...new Set(applications.map(a => a.campus).filter(Boolean))].sort();
+                                    return (
+                                        <select value={campusFilter} onChange={e => { setCampusFilter(e.target.value); setCurrentPage(1); }}
+                                            style={{ fontSize: '0.8rem', border: '1px solid #e2e8f0', borderRadius: '6px', padding: '5px 10px', color: '#334155', background: 'white', fontFamily: 'inherit', cursor: 'pointer' }}>
+                                            <option value="ALL">All Campuses</option>
+                                            {campuses.map(c => <option key={c} value={c}>{c}</option>)}
+                                        </select>
+                                    );
+                                })()}
+                                {applications.length > 0 && (
+                                    <span style={{ fontSize: '0.8rem', color: '#94a3b8', fontWeight: 500 }}>{applications.length} total</span>
+                                )}
+                            </div>
                         </div>
 
                         {(() => {
-                            const filteredApplications = applications.filter(app => {
-                                if (!searchQuery.trim()) return true;
-                                const query = searchQuery.toLowerCase();
-                                return (
-                                    app.id?.toLowerCase().includes(query) ||
-                                    app.applicant_name?.toLowerCase().includes(query) ||
-                                    app.form_type?.toLowerCase().includes(query) ||
-                                    app.campus?.toLowerCase().includes(query) ||
-                                    app.student_email?.toLowerCase().includes(query) ||
-                                    app.status?.toLowerCase().includes(query)
-                                );
-                            });
+                            const filteredApplications = applications
+                                .filter(app => {
+                                    if (!searchQuery.trim()) return true;
+                                    const query = searchQuery.toLowerCase();
+                                    return (
+                                        app.id?.toLowerCase().includes(query) ||
+                                        app.applicant_name?.toLowerCase().includes(query) ||
+                                        app.form_type?.toLowerCase().includes(query) ||
+                                        app.campus?.toLowerCase().includes(query) ||
+                                        app.student_email?.toLowerCase().includes(query) ||
+                                        app.status?.toLowerCase().includes(query)
+                                    );
+                                })
+                                .filter(app => statusFilter === 'ALL' || app.status === statusFilter)
+                                .filter(app => campusFilter === 'ALL' || app.campus === campusFilter);
 
                             const PAGE_SIZE = 10;
                             const totalPages = Math.max(1, Math.ceil(filteredApplications.length / PAGE_SIZE));

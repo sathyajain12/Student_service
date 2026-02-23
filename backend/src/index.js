@@ -316,10 +316,12 @@ async function handleGetStats(request, env, corsHeaders) {
         });
     }
 
-    const total = await env.DB.prepare('SELECT COUNT(*) as count FROM applications').first();
-    const pending = await env.DB.prepare("SELECT COUNT(*) as count FROM applications WHERE status = 'PENDING'").first();
-    const approved = await env.DB.prepare("SELECT COUNT(*) as count FROM applications WHERE status IN ('APPROVED', 'COMPLETED')").first();
-    const rejected = await env.DB.prepare("SELECT COUNT(*) as count FROM applications WHERE status = 'REJECTED'").first();
+    const total      = await env.DB.prepare('SELECT COUNT(*) as count FROM applications').first();
+    const pending    = await env.DB.prepare("SELECT COUNT(*) as count FROM applications WHERE status = 'PENDING'").first();
+    const approved   = await env.DB.prepare("SELECT COUNT(*) as count FROM applications WHERE status = 'APPROVED'").first();
+    const dispatched = await env.DB.prepare("SELECT COUNT(*) as count FROM applications WHERE status = 'DISPATCHED'").first();
+    const completed  = await env.DB.prepare("SELECT COUNT(*) as count FROM applications WHERE status = 'COMPLETED'").first();
+    const rejected   = await env.DB.prepare("SELECT COUNT(*) as count FROM applications WHERE status = 'REJECTED'").first();
 
     const byFormType = await env.DB.prepare(
         'SELECT form_type, COUNT(*) as count FROM applications GROUP BY form_type'
@@ -329,6 +331,8 @@ async function handleGetStats(request, env, corsHeaders) {
         total: total.count,
         pending: pending.count,
         approved: approved.count,
+        dispatched: dispatched.count,
+        completed: completed.count,
         rejected: rejected.count,
         byFormType: byFormType.results
     }), {
