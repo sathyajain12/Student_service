@@ -1018,11 +1018,8 @@ export default function AdminPortal() {
                         {/* Bottom-right orange orb */}
                         <div style={{ position: 'absolute', bottom: '-5%', right: '5%', width: '300px', height: '300px', background: '#b84209', borderRadius: '50%', filter: 'blur(80px)', opacity: 0.4, pointerEvents: 'none' }} />
 
-                        {/* Top: logo + name */}
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '16px', position: 'relative', zIndex: 1 }}>
-                            <img src="/logo.png" alt="SSSIHL Logo" style={{ height: '52px', width: '52px', objectFit: 'contain' }} />
-                            <span style={{ color: 'white', fontWeight: 700, fontSize: '1.35rem', letterSpacing: '-0.01em' }}>Examination Services Admin</span>
-                        </div>
+                        {/* Spacer (keeps headline vertically centred) */}
+                        <div style={{ height: '52px', position: 'relative', zIndex: 1 }} />
 
                         {/* Middle: headline */}
                         <div style={{ position: 'relative', zIndex: 1, maxWidth: '480px' }}>
@@ -1044,7 +1041,11 @@ export default function AdminPortal() {
 
                             {/* Header */}
                             <div style={{ marginBottom: '40px' }}>
-                                <h2 style={{ fontSize: '1.9rem', fontWeight: 700, color: '#0F172A', margin: '0 0 8px 0', letterSpacing: '-0.02em' }}>Welcome Back</h2>
+                                <img
+                                    src="/Examinations_Service.png"
+                                    alt="Examination Services"
+                                    style={{ height: '80px', width: 'auto', objectFit: 'contain', display: 'block', marginBottom: '16px' }}
+                                />
                                 <p style={{ color: '#64748b', fontSize: '0.95rem', margin: 0 }}>Sign in to your admin dashboard</p>
                             </div>
 
