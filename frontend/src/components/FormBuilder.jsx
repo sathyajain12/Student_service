@@ -742,7 +742,7 @@ export default function FormBuilder({ config, onSubmit, onCancel, onTrackStatus,
                                                     e.currentTarget.style.background = 'rgba(37, 99, 235, 0.08)';
                                                 }}
                                             >
-                                                <Plus size={18} /> Add Another Paper
+                                                <Plus size={18} /> Add Another Course
                                             </button>
                                         </div>
                                     ) : (
