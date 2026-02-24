@@ -1046,22 +1046,22 @@ async function sendDirectorNotification(env, request, appId, formType, applicant
         }
 
         const emailSubject = isNameChange
-            ? `For Your Kind Attention: ${formType} - ${appId}`
+            ? `For Your Information: ${formType} - ${appId}`
             : `Clearance Required: ${formType} - ${appId}`;
 
         const emailBody = isNameChange
             ? renderEmailTemplate({
-                title: 'For Your Kind Attention',
+                title: 'For Your Information',
                 greeting: 'Dear Madam / Sir,<br><br>Sairam!<br><br>Greetings from the Examinations Section, SSSIHL.',
-                content: `This is to bring to your kind notice that <strong>${escapeHtml(applicantName)}</strong> has submitted an application for registration of name change in the Institute records. This is for your kind information.<br><br>If you are in agreement with the above, kindly click the <strong>Proceed</strong> button below so that the Examination Section may process the application. Alternatively, if you have any concerns, you may record your comments by clicking the <strong>Submit Comments</strong> button.`,
+                content: `This is to bring to your notice that<strong>${escapeHtml(applicantName)}</strong> has submitted an application for registration of name change in the Institute records. This is for your kind information.<br><br>If you are in agreement with the above, kindly click the <strong>Proceed</strong> button below so that the Examination Section may process the application. Alternatively, if you have any concerns, you may record your comments by clicking the <strong>Submit Comments</strong> button.`,
                 details: [
-                    { label: 'Form Type',             value: escapeHtml(formType) },
-                    { label: 'Application ID',         value: escapeHtml(appId) },
-                    { label: 'Former Name',          value: escapeHtml(applicantName) },
-                    { label: 'Changed Name as per the Gazette notification',  value: escapeHtml(nameChangeDetails?.changed_name || 'N/A') },
-                    { label: "Father's Name",          value: escapeHtml(nameChangeDetails?.Father_name || 'N/A') },
-                    { label: 'Registered Number',      value: escapeHtml(regNo || 'N/A') },
-                    { label: 'Campus',                 value: escapeHtml(campus) },
+                    { label: 'Form Type',value: escapeHtml(formType) },
+                    { label: 'Application ID',value: escapeHtml(appId) },
+                    { label: 'Former Name',value: escapeHtml(applicantName) },
+                    { label: 'Changed Name as per the Gazette notification',value: escapeHtml(nameChangeDetails?.changed_name || 'N/A') },
+                    { label: "Father's Name",value: escapeHtml(nameChangeDetails?.Father_name || 'N/A') },
+                    { label: 'Registered Number',value: escapeHtml(regNo || 'N/A') },
+                    { label: 'Campus',value: escapeHtml(campus) },
                     ...(programme ? [{ label: 'Programme', value: escapeHtml(programme) }] : []),
                     { label: 'Period of Study',        value: escapeHtml(nameChangeDetails?.Period_of_Study || 'N/A') },
                     { label: 'Mobile Number',          value: escapeHtml(nameChangeDetails?.Mobile_Number || 'N/A') },
@@ -1918,12 +1918,13 @@ async function handleMigration(formData, request, env, corsHeaders) {
 
     await env.DB.prepare(
         `INSERT INTO form_migration_certificate
-         (application_id, student_name, Mobile_Number, email, Registration_Number, admission_year, Campus_of_admission,
+         (application_id, student_name, date_of_birth, Mobile_Number, email, Registration_Number, admission_year, Campus_of_admission,
           last_examination_passed, degree_recieved, university_to_migrate, address_line1, address_line2, country, state_province, city, postal_code, delivery_preference)
-         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
     ).bind(
         appId,
         formData.get('applicantName') || '',
+        formData.get('dateOfBirth') || '',
         formData.get('mobile') || '',
         formData.get('email') || '',
         formData.get('lastExamRegNo') || '',

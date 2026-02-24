@@ -210,6 +210,7 @@ CREATE TABLE form_on_request_degree (
 CREATE TABLE form_migration_certificate (
   application_id TEXT PRIMARY KEY REFERENCES applications(id),
   student_name TEXT,
+  date_of_birth TEXT,
   Mobile_Number numeric(10),
   email TEXT,
   Registration_Number TEXT,

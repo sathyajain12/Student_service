@@ -599,6 +599,12 @@ export const FORM_CONFIGS = {
                 required: true
             },
             {
+                name: 'dateOfBirth',
+                label: 'Date of Birth',
+                type: 'date',
+                required: true
+            },
+            {
                 name: 'yearofAdmission',
                 label: 'Year of Admission',
                 type: 'date',
