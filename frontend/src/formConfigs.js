@@ -192,9 +192,9 @@ export const FORM_CONFIGS = {
         needsDirectorApproval: true,
         title: 'Application for Supplementary Examinations Registration',
         instructions: [
-            'This form is for students who need to appear for supplementary examinations.',
-            'Ensure you have the correct Paper Code(s) and Paper Title(s).',
-            'Select the appropriate semester for which you are applying.',
+            'Ensure you have the correct Course Code(s) and Course Title.',
+            'If unable to repeat on medical grounds, inform the Director and Controller of Examinations in advance.',
+            'Failure to inform in advance may result in forfeiture of candidature for the next examination.'
 
 
         ],
@@ -228,12 +228,12 @@ export const FORM_CONFIGS = {
             { name: 'postalCode', label: 'Postal Code', type: 'text', required: true },
             {
                 type: 'heading',
-                label: 'Paper Details',
+                label: 'Course Details',
                 name: 'heading2'
             },
             {
                 type: 'paperTable',
-                label: 'Papers for Supplementary Examination',
+                label: 'Courses for Supplementary Examination',
                 name: 'paperDetails',
                 required: true
             },
@@ -444,7 +444,7 @@ export const FORM_CONFIGS = {
         title: 'Application for repeating examinations registration (CIE and ESE)',
         description: 'FOR THOSE WHO HAVE EXHAUSTED SUPPLEMENTARY EXAMINATION CHANCES',
         instructions: [
-            'Ensure you have the correct Paper Code(s) and Paper Title(s).',
+            'Ensure you have the correct Course Code(s) and Course Title.',
             'If unable to repeat on medical grounds, inform the Director and Controller of Examinations in advance.',
             'Failure to inform in advance may result in forfeiture of candidature for the next examination.'
         ],

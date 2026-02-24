@@ -620,7 +620,7 @@ export default function FormBuilder({ config, onSubmit, onCancel, onTrackStatus,
                                                             borderBottom: '1px solid var(--glass-border)',
                                                             textTransform: 'uppercase',
                                                             letterSpacing: '0.03em'
-                                                        }}>Paper Code</th>
+                                                        }}>Course Code</th>
                                                         <th style={{
                                                             padding: '14px 16px',
                                                             textAlign: 'left',
@@ -630,7 +630,7 @@ export default function FormBuilder({ config, onSubmit, onCancel, onTrackStatus,
                                                             borderBottom: '1px solid var(--glass-border)',
                                                             textTransform: 'uppercase',
                                                             letterSpacing: '0.03em'
-                                                        }}>Paper Title</th>
+                                                        }}>Course Title</th>
                                                         <th style={{
                                                             padding: '14px 16px',
                                                             textAlign: 'left',
