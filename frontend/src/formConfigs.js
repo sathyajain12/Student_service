@@ -441,7 +441,7 @@ export const FORM_CONFIGS = {
     },
     'repeat-paper': {
         needsDirectorApproval: true,
-        title: 'Application for repeating examinations registration (CIE and ESE)',
+        title: 'Application for Repeating Examinations Registration (CIE and ESE)',
         description: 'FOR THOSE WHO HAVE EXHAUSTED SUPPLEMENTARY EXAMINATION CHANCES',
         instructions: [
             'Ensure you have the correct Course Code(s) and Course Title.',
@@ -480,7 +480,7 @@ export const FORM_CONFIGS = {
 
             {
                 type: 'heading',
-                label: 'List of Course(s) for which Candidate intends to repeat the paper.',
+                label: 'Course Details',
                 name: 'heading2'
             },
             {

@@ -1030,7 +1030,10 @@ async function sendDirectorNotification(env, request, appId, formType, applicant
             timeZone: 'Asia/Kolkata'
         });
 
-        const isNameChange = formType === 'Application for Registration of Student Name change in the Institute Records';
+        const isNameChange    = formType === 'Application for Registration of Student Name change in the Institute Records';
+        const isSupplementary = formType === 'Application for End-Semester Supplementary Examinations Registration';
+        const isRepeatPaper   = formType === 'Application for repeating a paper for supplementary examinations (CIE and ESE)';
+        const useNewFlow      = isNameChange || isSupplementary || isRepeatPaper;
 
         let nameChangeDetails = null;
         if (isNameChange) {
@@ -1045,8 +1048,20 @@ async function sendDirectorNotification(env, request, appId, formType, applicant
             }
         }
 
-        const emailSubject = isNameChange
-            ? `For Your Information: ${formType} - ${appId}`
+        let examDetails = null;
+        if (isSupplementary || isRepeatPaper) {
+            try {
+                const table = isSupplementary ? 'form_supplementary_exam' : 'form_repeat_paper';
+                examDetails = await env.DB.prepare(
+                    `SELECT Period_of_Study, Semester, paper_codes, paper_titles FROM ${table} WHERE application_id = ?`
+                ).bind(appId).first();
+            } catch (e) {
+                console.error('Failed to fetch exam details for director email:', e);
+            }
+        }
+
+        const emailSubject = useNewFlow
+            ? `For Your Kind Attention: ${formType} - ${appId}`
             : `Clearance Required: ${formType} - ${appId}`;
 
         const emailBody = isNameChange
@@ -1071,6 +1086,31 @@ async function sendDirectorNotification(env, request, appId, formType, applicant
                 importantNote: '',
                 actionButtons: [
                     { label: '✓ Proceed', link: `${url.origin}/approve?id=${appId}&role=Director&action=Approve`, color: '#10b981' },
+                    { label: '✎ Submit Comments', link: `${url.origin}/director-comment?id=${appId}`, color: '#f59e0b' }
+                ]
+            })
+            : (isSupplementary || isRepeatPaper)
+            ? renderEmailTemplate({
+                title: 'For Your Kind Attention',
+                greeting: 'Dear Madam / Sir,<br><br>Sairam!<br><br>Greetings from the Examinations Section, SSSIHL.',
+                content: `This is to bring to your kind notice that <strong>${escapeHtml(applicantName)}</strong> has submitted an <strong>${escapeHtml(formType)}</strong>. This is for your information.<br><br>If you are in agreement, kindly click the <strong>Proceed</strong> button so that the Examination Section may process the application. If you have any concerns, please record your comments by clicking <strong>Submit Comments</strong>.`,
+                details: [
+                    { label: 'Form Type',         value: escapeHtml(formType) },
+                    { label: 'Application ID',    value: escapeHtml(appId) },
+                    { label: 'Applicant Name',    value: escapeHtml(applicantName) },
+                    { label: 'Registered Number', value: escapeHtml(regNo || 'N/A') },
+                    { label: 'Campus',            value: escapeHtml(campus) },
+                    ...(programme ? [{ label: 'Programme', value: escapeHtml(programme) }] : []),
+                    { label: 'Period of Study',   value: escapeHtml(examDetails?.Period_of_Study || 'N/A') },
+                    { label: 'Semester',          value: escapeHtml(examDetails?.Semester || semester || 'N/A') },
+                    { label: 'Paper Codes',       value: escapeHtml(examDetails?.paper_codes || 'N/A') },
+                    { label: 'Paper Titles',      value: escapeHtml(examDetails?.paper_titles || 'N/A') },
+                    { label: 'Applicant Email',   value: escapeHtml(email) },
+                    { label: 'Submission Date',   value: submissionDate },
+                ],
+                importantNote: '',
+                actionButtons: [
+                    { label: '✓ Proceed',         link: `${url.origin}/approve?id=${appId}&role=Director&action=Approve`, color: '#10b981' },
                     { label: '✎ Submit Comments', link: `${url.origin}/director-comment?id=${appId}`, color: '#f59e0b' }
                 ]
             })
