@@ -1432,9 +1432,9 @@ async function handleDuplicateGradeCard(formData, request, env, corsHeaders) {
 
     // 1. Save to main applications table
     await env.DB.prepare(
-        `INSERT INTO applications (id, student_email, form_type, applicant_name, reg_no, campus, status)
-         VALUES (?, ?, ?, ?, ?, ?, ?)`
-    ).bind(appId, email, formType, applicantName, regNo, campus, isSeekingDirectorApproval ? 'AWAITING_DIRECTOR' : 'PENDING').run();
+        `INSERT INTO applications (id, student_email, form_type, applicant_name, reg_no, abc_apaar_id, campus, status)
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?)`
+    ).bind(appId, email, formType, applicantName, regNo, formData.get('abcApaarId') || '', campus, isSeekingDirectorApproval ? 'AWAITING_DIRECTOR' : 'PENDING').run();
 
     // 2. Save to form-specific table
     await env.DB.prepare(
@@ -1494,9 +1494,9 @@ async function handleCGPAConversion(formData, request, env, corsHeaders) {
     const appId = generateAppId('CGPA');
 
     await env.DB.prepare(
-        `INSERT INTO applications (id, student_email, form_type, applicant_name, reg_no, campus)
-         VALUES (?, ?, ?, ?, ?, ?)`
-    ).bind(appId, email, formType, applicantName, regNo, campus).run();
+        `INSERT INTO applications (id, student_email, form_type, applicant_name, reg_no, abc_apaar_id, campus)
+         VALUES (?, ?, ?, ?, ?, ?, ?)`
+    ).bind(appId, email, formType, applicantName, regNo, formData.get('abcApaarId') || '', campus).run();
 
     await env.DB.prepare(
         `INSERT INTO form_cgpa_conversion
@@ -1548,9 +1548,9 @@ async function handleSupplementaryExam(formData, request, env, corsHeaders) {
     const appId = generateAppId('SE');
 
     await env.DB.prepare(
-        `INSERT INTO applications (id, student_email, form_type, applicant_name, reg_no, campus, status)
-         VALUES (?, ?, ?, ?, ?, ?, ?)`
-    ).bind(appId, email, formType, applicantName, regNo, campus, isSeekingDirectorApproval ? 'AWAITING_DIRECTOR' : 'PENDING').run();
+        `INSERT INTO applications (id, student_email, form_type, applicant_name, reg_no, abc_apaar_id, campus, status)
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?)`
+    ).bind(appId, email, formType, applicantName, regNo, formData.get('abcApaarId') || '', campus, isSeekingDirectorApproval ? 'AWAITING_DIRECTOR' : 'PENDING').run();
 
     // Parse paper details JSON and format for storage
     const paperDetailsJson = formData.get('paperDetails') || '[]';
@@ -1622,9 +1622,9 @@ async function handleRepeatPaper(formData, request, env, corsHeaders) {
     const appId = generateAppId('RP');
 
     await env.DB.prepare(
-        `INSERT INTO applications (id, student_email, form_type, applicant_name, reg_no, campus, status)
-         VALUES (?, ?, ?, ?, ?, ?, ?)`
-    ).bind(appId, email, formType, applicantName, regNo, campus, isSeekingDirectorApproval ? 'AWAITING_DIRECTOR' : 'PENDING').run();
+        `INSERT INTO applications (id, student_email, form_type, applicant_name, reg_no, abc_apaar_id, campus, status)
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?)`
+    ).bind(appId, email, formType, applicantName, regNo, formData.get('abcApaarId') || '', campus, isSeekingDirectorApproval ? 'AWAITING_DIRECTOR' : 'PENDING').run();
 
     // Parse paper details JSON and format for storage
     const paperDetailsJson = formData.get('paperDetails') || '[]';
@@ -1693,9 +1693,9 @@ async function handleDuplicateDegree(formData, request, env, corsHeaders) {
     const appId = generateAppId('DD');
 
     await env.DB.prepare(
-        `INSERT INTO applications (id, student_email, form_type, applicant_name, reg_no, campus)
-         VALUES (?, ?, ?, ?, ?, ?)`
-    ).bind(appId, email, formType, applicantName, regNo, campus).run();
+        `INSERT INTO applications (id, student_email, form_type, applicant_name, reg_no, abc_apaar_id, campus)
+         VALUES (?, ?, ?, ?, ?, ?, ?)`
+    ).bind(appId, email, formType, applicantName, regNo, formData.get('abcApaarId') || '', campus).run();
 
     await env.DB.prepare(
         `INSERT INTO form_duplicate_degree
@@ -1749,9 +1749,9 @@ async function handleNameChange(formData, request, env, corsHeaders) {
     const appId = generateAppId('NC');
 
     await env.DB.prepare(
-        `INSERT INTO applications (id, student_email, form_type, applicant_name, reg_no, campus, status)
-         VALUES (?, ?, ?, ?, ?, ?, ?)`
-    ).bind(appId, email, formType, applicantName, regNo, campus, isSeekingDirectorApproval ? 'AWAITING_DIRECTOR' : 'PENDING').run();
+        `INSERT INTO applications (id, student_email, form_type, applicant_name, reg_no, abc_apaar_id, campus, status)
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?)`
+    ).bind(appId, email, formType, applicantName, regNo, formData.get('abcApaarId') || '', campus, isSeekingDirectorApproval ? 'AWAITING_DIRECTOR' : 'PENDING').run();
 
     await env.DB.prepare(
         `INSERT INTO form_name_change
@@ -1809,9 +1809,9 @@ async function handleRetotaling(formData, request, env, corsHeaders) {
     const periodOfExam = formData.get('examMonthYear') || '';
 
     await env.DB.prepare(
-        `INSERT INTO applications (id, student_email, form_type, applicant_name, reg_no, campus)
-         VALUES (?, ?, ?, ?, ?, ?)`
-    ).bind(appId, email, formType, applicantName, regNo, campus).run();
+        `INSERT INTO applications (id, student_email, form_type, applicant_name, reg_no, abc_apaar_id, campus)
+         VALUES (?, ?, ?, ?, ?, ?, ?)`
+    ).bind(appId, email, formType, applicantName, regNo, formData.get('abcApaarId') || '', campus).run();
 
     await env.DB.prepare(
         `INSERT INTO form_retotaling
@@ -1862,9 +1862,9 @@ async function handleOnRequestDegree(formData, request, env, corsHeaders) {
     const appId = generateAppId('ORD');
 
     await env.DB.prepare(
-        `INSERT INTO applications (id, student_email, form_type, applicant_name, reg_no, campus)
-         VALUES (?, ?, ?, ?, ?, ?)`
-    ).bind(appId, email, formType, applicantName, regNo, campus).run();
+        `INSERT INTO applications (id, student_email, form_type, applicant_name, reg_no, abc_apaar_id, campus)
+         VALUES (?, ?, ?, ?, ?, ?, ?)`
+    ).bind(appId, email, formType, applicantName, regNo, formData.get('abcApaarId') || '', campus).run();
 
     await env.DB.prepare(
         `INSERT INTO form_on_request_degree
@@ -1912,9 +1912,9 @@ async function handleMigration(formData, request, env, corsHeaders) {
     const regNo = formData.get('lastExamRegNo') || '';
 
     await env.DB.prepare(
-        `INSERT INTO applications (id, student_email, form_type, applicant_name, reg_no, campus)
-         VALUES (?, ?, ?, ?, ?, ?)`
-    ).bind(appId, email, formType, applicantName, regNo, campus).run();
+        `INSERT INTO applications (id, student_email, form_type, applicant_name, reg_no, abc_apaar_id, campus)
+         VALUES (?, ?, ?, ?, ?, ?, ?)`
+    ).bind(appId, email, formType, applicantName, regNo, formData.get('abcApaarId') || '', campus).run();
 
     await env.DB.prepare(
         `INSERT INTO form_migration_certificate

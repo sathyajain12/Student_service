@@ -7,6 +7,7 @@ CREATE TABLE applications (
   form_type TEXT NOT NULL,
   applicant_name TEXT,
   reg_no TEXT,
+  abc_apaar_id TEXT,
   campus TEXT,
   status TEXT DEFAULT 'PENDING',
   director_status TEXT DEFAULT 'PENDING',

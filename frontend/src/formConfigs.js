@@ -35,6 +35,7 @@ const PROGRAMME_OPTIONS = [
 const COMMON_ACADEMIC_FIELDS = [
     { name: 'applicantName', label: 'Candidate Name', type: 'text', required: true },
     { name: 'regNo', label: 'Registered Number', type: 'number', required: true },
+    { name: 'abcApaarId', label: 'ABC / APAAR ID', type: 'number', required: false },
     { name: 'campus', label: 'Campus', type: 'select', options: ['Prashanti Nilayam Campus', 'Anantapur Campus', 'Brindavan Campus', 'Nandigiri Campus'], required: true },
     { name: 'program', label: 'Academic Programme', type: 'select', options: PROGRAMME_OPTIONS, required: true },
     { name: 'mobile', label: 'Mobile Number', type: 'number', required: true },
@@ -90,6 +91,7 @@ export const FORM_CONFIGS = {
         fields: [
             { name: 'applicantName', label: 'Candidate Name', type: 'text', required: true },
             { name: 'regNo', label: 'Registered Number', type: 'number', required: true },
+            { name: 'abcApaarId', label: 'ABC / APAAR ID', type: 'number', required: false },
             { name: 'campus', label: 'Campus', type: 'select', options: ['Prashanti Nilayam Campus', 'Anantapur Campus', 'Brindavan Campus', 'Nandigiri Campus'], required: true },
             { name: 'program', label: 'Academic Programme', type: 'select', options: PROGRAMME_OPTIONS, required: true },
             { name: 'periodOfStudy', label: 'Period of Study', type: 'daterange', required: true, placeholder: 'e.g., June 2019 - March 2022' },
@@ -125,6 +127,7 @@ export const FORM_CONFIGS = {
         ],
         fields: [{ name: 'applicantName', label: 'Candidate Name', type: 'text', required: true },
         { name: 'regNo', label: 'Registered Number', type: 'number', required: true },
+        { name: 'abcApaarId', label: 'ABC / APAAR ID', type: 'number', required: false },
         { name: 'campus', label: 'Campus', type: 'select', options: ['Prashanti Nilayam Campus', 'Anantapur Campus', 'Brindavan Campus', 'Nandigiri Campus'], required: true },
         { name: 'program', label: 'Academic Programme', type: 'select', options: PROGRAMME_OPTIONS, required: true },
         {
@@ -204,6 +207,7 @@ export const FORM_CONFIGS = {
             },
             { name: 'applicantName', label: 'Candidate Name', type: 'text', required: true },
             { name: 'regNo', label: 'Registered Number', type: 'number', required: true },
+            { name: 'abcApaarId', label: 'ABC / APAAR ID', type: 'number', required: false },
             { name: 'campus', label: 'Campus', type: 'select', options: ['Prashanti Nilayam Campus', 'Anantapur Campus', 'Brindavan Campus', 'Nandigiri Campus'], required: true },
             { name: 'program', label: 'Academic Programme', type: 'select', options: PROGRAMME_OPTIONS, required: true },
             {
@@ -267,6 +271,7 @@ export const FORM_CONFIGS = {
         fields: [
             { name: 'applicantName', label: 'Candidate Name', type: 'text', required: true },
             { name: 'regNo', label: 'Registered Number', type: 'number', required: true },
+            { name: 'abcApaarId', label: 'ABC / APAAR ID', type: 'number', required: false },
             { name: 'campus', label: 'Campus', type: 'select', options: ['Prashanti Nilayam Campus', 'Anantapur Campus', 'Brindavan Campus', 'Nandigiri Campus'], required: true },
             { name: 'program', label: 'Academic Programme', type: 'select', options: PROGRAMME_OPTIONS, required: true },
             {
@@ -375,6 +380,12 @@ export const FORM_CONFIGS = {
                 required: true
             },
             {
+                name: 'abcApaarId',
+                label: 'ABC / APAAR ID',
+                type: 'number',
+                required: false
+            },
+            {
                 name: 'campus',
                 label: 'Campus',
                 type: 'select',
@@ -446,6 +457,7 @@ export const FORM_CONFIGS = {
             },
             { name: 'applicantName', label: 'Candidate Name', type: 'text', required: true },
             { name: 'regNo', label: 'Registered Number', type: 'number', required: true },
+            { name: 'abcApaarId', label: 'ABC / APAAR ID', type: 'number', required: false },
             { name: 'campus', label: 'Campus', type: 'select', options: ['Prashanti Nilayam Campus', 'Anantapur Campus', 'Brindavan Campus', 'Nandigiri Campus'], required: true },
             { name: 'program', label: 'Academic Programme', type: 'select', options: PROGRAMME_OPTIONS, required: true },
             {
@@ -622,6 +634,12 @@ export const FORM_CONFIGS = {
                 label: 'Last Examination Registered Number',
                 type: 'text',
                 required: true
+            },
+            {
+                name: 'abcApaarId',
+                label: 'ABC / APAAR ID',
+                type: 'number',
+                required: false
             },
             {
                 name: 'lastExamDate',
