@@ -355,30 +355,6 @@ export default function StatusTracker({ onBack }) {
                         </div>
                     </div>
 
-                    {/* Director On-Hold Comment Banner */}
-                    {application.status === 'DIRECTOR_COMMENTED' && (
-                        <div style={{
-                            marginTop: '30px',
-                            padding: '24px 28px',
-                            borderRadius: '16px',
-                            background: 'rgba(217, 119, 6, 0.07)',
-                            border: '1.5px solid rgba(217, 119, 6, 0.35)',
-                            display: 'flex',
-                            gap: '16px',
-                            alignItems: 'flex-start'
-                        }}>
-                            <PauseCircle size={28} style={{ color: '#d97706', flexShrink: 0, marginTop: '2px' }} />
-                            <div>
-                                <h4 style={{ fontSize: '1rem', fontWeight: '700', color: '#92400e', margin: '0 0 6px 0' }}>
-                                    Application On Hold — Director's Remarks
-                                </h4>
-                                <p style={{ fontSize: '0.95rem', color: '#78350f', margin: 0, lineHeight: 1.7, whiteSpace: 'pre-wrap' }}>
-                                    {application.director_comment || 'The Director has placed your application on hold. Please check your email for further instructions.'}
-                                </p>
-                            </div>
-                        </div>
-                    )}
-
                     {/* Submit to COE button - shown when director has approved */}
                     {application.needs_director_approval && application.status === 'DIRECTOR_APPROVED' && (
                         <div className="glass-card" style={{
