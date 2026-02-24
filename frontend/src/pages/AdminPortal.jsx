@@ -1048,10 +1048,7 @@ export default function AdminPortal() {
                             </h1>
                         </div>
 
-                        {/* Bottom: copyright */}
-                        <div style={{ display: 'flex', gap: '24px', position: 'relative', zIndex: 1 }}>
-                            <span style={{ color: '#64748b', fontSize: '0.8rem' }}>© 2025 SSSIHL Examination Services</span>
-                        </div>
+                        
                     </section>
 
                     {/* Right login panel */}
@@ -1762,10 +1759,8 @@ export default function AdminPortal() {
                         })()}
                     </div>
 
-                    {/* Footer */}
-                    <div style={{ marginTop: '32px', paddingTop: '20px', borderTop: '1px solid #e2e8f0', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '8px' }}>
-                        <p style={{ color: '#94a3b8', fontSize: '0.8rem', margin: 0 }}>© 2025 SSSIHL Examination Services. All rights reserved.</p>
-                    </div>
+                   
+                    
                 </div>
             </div>
         </>
