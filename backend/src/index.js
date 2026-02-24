@@ -248,10 +248,10 @@ async function handleGetApplication(id, request, env, corsHeaders) {
     const formTableMap = {
         'Application for Duplicate Grade Card': 'form_duplicate_grade_card',
         'Application for CGPA to Percentage Conversion': 'form_cgpa_conversion',
-        'Application for End-Semester Supplementary Examinations Registration': 'form_supplementary_exam',
+        'Application for Supplementary Examinations Registration': 'form_supplementary_exam',
         'Application for Duplicate Degree Certificate': 'form_duplicate_degree',
         'Application for Registration of Student Name change in the Institute Records': 'form_name_change',
-        'Application for repeating a paper for supplementary examinations (CIE and ESE)': 'form_repeat_paper',
+        'Application for Repeating Examinations Registration (CIE and ESE)': 'form_repeat_paper',
         'Application for Re-Totalling of Marks': 'form_retotaling',
         'Application for On-Request Degree Certificate': 'form_on_request_degree',
         'Application for Migration Certificate': 'form_migration_certificate',
@@ -480,8 +480,8 @@ async function handleNotifyDispatched(request, env, corsHeaders) {
         // Fetch programme from form-specific table if available
         const dispatchFormTableMap = {
             'Application for Duplicate Grade Card': 'form_duplicate_grade_card',
-            'Application for End-Semester Supplementary Examinations Registration': 'form_supplementary_exam',
-            'Application for repeating a paper for supplementary examinations (CIE and ESE)': 'form_repeat_paper',
+            'Application for Supplementary Examinations Registration': 'form_supplementary_exam',
+            'Application for Repeating Examinations Registration (CIE and ESE)': 'form_repeat_paper',
             'Application for Duplicate Degree Certificate': 'form_duplicate_degree',
             'Application for CGPA to Percentage Conversion Certificate': 'form_cgpa_conversion',
             'Application for Re-totaling of Marks': 'form_retotaling',
@@ -640,10 +640,10 @@ async function handleDeleteApplication(id, request, env, corsHeaders) {
         const formTableMap = {
             'Application for Duplicate Grade Card': 'form_duplicate_grade_card',
             'Application for CGPA to Marks Conversion': 'form_cgpa_conversion',
-            'Application for End-Semester Supplementary Examinations Registration': 'form_supplementary_exam',
+            'Application for Supplementary Examinations Registration': 'form_supplementary_exam',
             'Application for Duplicate Degree Certificate': 'form_duplicate_degree',
             'Application for Registration of Student Name change in the Institute Records': 'form_name_change',
-            'Application for repeating a paper for supplementary examinations (CIE and ESE)': 'form_repeat_paper',
+            'Application for Repeating Examinations Registration (CIE and ESE)': 'form_repeat_paper',
             'Application for Re-Totalling of Marks': 'form_retotaling',
             'Application for On-Request Degree Certificate': 'form_on_request_degree',
             'Application for Migration Certificate': 'form_migration_certificate',
@@ -1003,9 +1003,9 @@ function getDirectorEmail(campus) {
 function shouldNotifyDirector(formType) {
     const forms = [
         'Application for Duplicate Grade Card',
-        'Application for End-Semester Supplementary Examinations Registration',
+        'Application for Supplementary Examinations Registration',
         'Application for Registration of Student Name change in the Institute Records',
-        'Application for repeating a paper for supplementary examinations (CIE and ESE)',
+        'Application for Repeating Examinations Registration (CIE and ESE)',
     ];
     return forms.includes(formType);
 }
@@ -1031,8 +1031,8 @@ async function sendDirectorNotification(env, request, appId, formType, applicant
         });
 
         const isNameChange    = formType === 'Application for Registration of Student Name change in the Institute Records';
-        const isSupplementary = formType === 'Application for End-Semester Supplementary Examinations Registration';
-        const isRepeatPaper   = formType === 'Application for repeating a paper for supplementary examinations (CIE and ESE)';
+        const isSupplementary = formType === 'Application for Supplementary Examinations Registration';
+        const isRepeatPaper   = formType === 'Application for Repeating Examinations Registration (CIE and ESE)';
         const useNewFlow      = isNameChange || isSupplementary || isRepeatPaper;
 
         let nameChangeDetails = null;
@@ -1435,13 +1435,13 @@ async function handleSubmission(request, env, corsHeaders) {
             return await handleDuplicateGradeCard(formData, request, env, corsHeaders);
         case 'Application for CGPA to Marks Conversion':
             return await handleCGPAConversion(formData, request, env, corsHeaders);
-        case 'Application for End-Semester Supplementary Examinations Registration':
+        case 'Application for Supplementary Examinations Registration':
             return await handleSupplementaryExam(formData, request, env, corsHeaders);
         case 'Application for Duplicate Degree Certificate':
             return await handleDuplicateDegree(formData, request, env, corsHeaders);
         case 'Application for Registration of Student Name change in the Institute Records':
             return await handleNameChange(formData, request, env, corsHeaders);
-        case 'Application for repeating a paper for supplementary examinations (CIE and ESE)':
+        case 'Application for Repeating Examinations Registration (CIE and ESE)':
             return await handleRepeatPaper(formData, request, env, corsHeaders);
         case 'Application for Re-Totalling of Marks':
             return await handleRetotaling(formData, request, env, corsHeaders);
@@ -2195,8 +2195,8 @@ async function handleApproval(url, env, corsHeaders) {
         // Fetch programme and semester from the form-specific table
         const approvalFormTableMap = {
             'Application for Duplicate Grade Card': 'form_duplicate_grade_card',
-            'Application for End-Semester Supplementary Examinations Registration': 'form_supplementary_exam',
-            'Application for repeating a paper for supplementary examinations (CIE and ESE)': 'form_repeat_paper',
+            'Application for Supplementary Examinations Registration': 'form_supplementary_exam',
+            'Application for Repeating Examinations Registration (CIE and ESE)': 'form_repeat_paper',
         };
         const approvalFormTable = approvalFormTableMap[verification?.form_type];
         if (approvalFormTable) {
@@ -2707,10 +2707,10 @@ async function handleStatusRequest(url, env, corsHeaders) {
         const formTableMap = {
             'Application for Duplicate Grade Card': 'form_duplicate_grade_card',
             'Application for CGPA to Percentage Conversion': 'form_cgpa_conversion',
-            'Application for End-Semester Supplementary Examinations Registration': 'form_supplementary_exam',
+            'Application for Supplementary Examinations Registration': 'form_supplementary_exam',
             'Application for Duplicate Degree Certificate': 'form_duplicate_degree',
             'Application for Registration of Student Name change in the Institute Records': 'form_name_change',
-            'Application for repeating a paper for supplementary examinations (CIE and ESE)': 'form_repeat_paper',
+            'Application for Repeating Examinations Registration (CIE and ESE)': 'form_repeat_paper',
             'Application for Re-Totalling of Marks': 'form_retotaling',
             'Application for On-Request Degree Certificate': 'form_on_request_degree',
             'Application for Migration Certificate': 'form_migration_certificate',
