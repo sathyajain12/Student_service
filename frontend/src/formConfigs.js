@@ -190,7 +190,7 @@ export const FORM_CONFIGS = {
     },
     'supplementary-exam': {
         needsDirectorApproval: true,
-        title: 'Application for End-Semester Supplementary Examinations Registration',
+        title: 'Application for Supplementary Examinations Registration',
         instructions: [
             'This form is for students who need to appear for supplementary examinations.',
             'Ensure you have the correct Paper Code(s) and Paper Title(s).',
@@ -441,7 +441,7 @@ export const FORM_CONFIGS = {
     },
     'repeat-paper': {
         needsDirectorApproval: true,
-        title: 'Application for repeating a paper for supplementary examinations (CIE and ESE)',
+        title: 'Application for repeating examinations registration (CIE and ESE)',
         description: 'FOR THOSE WHO HAVE EXHAUSTED SUPPLEMENTARY EXAMINATION CHANCES',
         instructions: [
             'Ensure you have the correct Paper Code(s) and Paper Title(s).',
@@ -480,12 +480,12 @@ export const FORM_CONFIGS = {
 
             {
                 type: 'heading',
-                label: 'List of Paper(s) for which Candidate intends to repeat the paper.',
+                label: 'List of Course(s) for which Candidate intends to repeat the paper.',
                 name: 'heading2'
             },
             {
                 type: 'paperTable',
-                label: 'Papers to Repeat',
+                label: 'Courses to Repeat',
                 name: 'paperDetails',
                 required: true
             },

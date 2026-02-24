@@ -468,7 +468,10 @@ export default function FormBuilder({ config, onSubmit, onCancel, onTrackStatus,
                                             borderRadius: '14px',
                                             border: formData[field.name] ? '2px solid var(--accent)' : '2px solid var(--glass-border)',
                                             background: formData[field.name] ? 'rgba(37, 99, 235, 0.05)' : 'white',
-                                            transition: 'all 0.2s ease'
+                                            transition: 'all 0.2s ease',
+                                            textTransform: 'none',
+                                            letterSpacing: 'normal',
+                                            fontWeight: 'normal'
                                         }}>
                                             <input
                                                 type="checkbox"
@@ -655,7 +658,7 @@ export default function FormBuilder({ config, onSubmit, onCancel, onTrackStatus,
                                                                     onChange={(e) => handlePaperTableChange(field.name, rowIndex, 'paperCode', e.target.value)}
                                                                     className="form-input"
                                                                     style={{ width: '100%', padding: '10px 12px' }}
-                                                                    placeholder="e.g., CS101"
+                                                                    placeholder="e.g., UPOL-201"
                                                                     required={field.required && rowIndex === 0}
                                                                 />
                                                             </td>
@@ -666,7 +669,7 @@ export default function FormBuilder({ config, onSubmit, onCancel, onTrackStatus,
                                                                     onChange={(e) => handlePaperTableChange(field.name, rowIndex, 'paperTitle', e.target.value)}
                                                                     className="form-input"
                                                                     style={{ width: '100%', padding: '10px 12px' }}
-                                                                    placeholder="e.g., Data Structures"
+                                                                    placeholder="e.g., Elements of Government"
                                                                     required={field.required && rowIndex === 0}
                                                                 />
                                                             </td>
