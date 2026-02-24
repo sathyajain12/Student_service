@@ -17,10 +17,10 @@ import {
 const FORMS = [
   { id: 'duplicate-grade-card', title: 'Application for Duplicate Grade Card', Icon: FileText, category: 'Academic', desc: 'Apply for loss or damage of grade cards.' },
   { id: 'cgpa-conversion', title: 'Application for CGPA to Percentage Conversion', Icon: BarChart3, category: 'Academic', desc: 'Convert CGPA to percentage marks.' },
-  { id: 'supplementary-exam', title: 'Application for End-Semester Supplementary Examinations Registration', Icon: PenTool, category: 'Exam', desc: 'Register for backlog papers.' },
+  { id: 'supplementary-exam', title: 'Application for Supplementary Examinations Registration', Icon: PenTool, category: 'Exam', desc: 'Register for backlog papers.' },
   { id: 'duplicate-degree', title: 'Application for Duplicate Degree Certificate', Icon: GraduationCap, category: 'Degree', desc: 'Replace lost degree certificates.' },
   { id: 'name-change', title: 'Application for Registration of Student Name change in the Institute Records', Icon: UserCircle, category: 'Records', desc: 'Update your official name.' },
-  { id: 'repeat-paper', title: 'Application for repeating a paper for supplementary examinations(CIE and ESE) Registration', Icon: RotateCcw, category: 'Exam', desc: 'Repeat CIE and ESE papers.' },
+  { id: 'repeat-paper', title: 'Application for Repeating Examinations Registration (CIE and ESE)', Icon: RotateCcw, category: 'Exam', desc: 'Repeat CIE and ESE papers.' },
   { id: 'retotaling', title: 'Application for Re-Totalling of Marks', Icon: Hash, category: 'Exam', desc: 'Verify your marks total.' },
   { id: 'on-request-degree', title: 'Application for On-Request Degree Certificate', Icon: ScrollText, category: 'Degree', desc: 'Early degree issuance.' },
   { id: 'migration', title: 'Application for Migration Certificate', Icon: Send, category: 'Transfer', desc: 'Transfer to another university.' },
