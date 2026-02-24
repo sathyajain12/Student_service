@@ -13,7 +13,8 @@ import {
     ChevronRight,
     X,
     Download,
-    Send
+    Send,
+    PauseCircle
 } from 'lucide-react';
 
 export default function StatusTracker({ onBack }) {
@@ -119,15 +120,15 @@ export default function StatusTracker({ onBack }) {
 
     const getStatusLabel = (status) => {
         switch (status) {
-            case 'PENDING':             return 'Pending Review';
-            case 'AWAITING_DIRECTOR':   return 'Awaiting Director Approval';
-            case 'DIRECTOR_APPROVED':   return 'Director Approved — Submit to COE';
-            case 'DIRECTOR_COMMENTED':  return 'On Hold — Director Commented';
-            case 'APPROVED':            return 'Under Process';
-            case 'COMPLETED':           return 'Completed';
-            case 'DISPATCHED':          return 'Dispatched';
-            case 'REJECTED':            return 'Rejected';
-            default:                    return status;
+            case 'PENDING': return 'Pending Review';
+            case 'AWAITING_DIRECTOR': return 'Awaiting Director Approval';
+            case 'DIRECTOR_APPROVED': return 'Director Approved — Submit to COE';
+            case 'DIRECTOR_COMMENTED': return 'On Hold — Director Commented';
+            case 'APPROVED': return 'Under Process';
+            case 'COMPLETED': return 'Completed';
+            case 'DISPATCHED': return 'Dispatched';
+            case 'REJECTED': return 'Rejected';
+            default: return status;
         }
     };
 
@@ -140,12 +141,14 @@ export default function StatusTracker({ onBack }) {
         ];
 
         if (app.needs_director_approval) {
+            const isOnHold = app.status === 'DIRECTOR_COMMENTED';
             stages.push({
                 id: 'director',
                 label: 'Director Approval',
-                status: app.director_status === 'APPROVED' ? 'COMPLETED' : 'PENDING',
-                icon: User,
-                date: app.director_status === 'APPROVED' ? app.updated_at : null
+                status: app.director_status === 'APPROVED' ? 'COMPLETED' : isOnHold ? 'ON_HOLD' : 'PENDING',
+                icon: isOnHold ? PauseCircle : User,
+                date: app.director_status === 'APPROVED' ? app.updated_at : null,
+                comment: isOnHold ? app.director_comment : null
             });
 
             // Only show Submitted to COE + Under-Process after student has clicked Submit to COE
@@ -296,6 +299,7 @@ export default function StatusTracker({ onBack }) {
                                 const isRejected = stage.status === 'REJECTED';
                                 const isInProgress = stage.status === 'IN_PROGRESS';
                                 const isPending = stage.status === 'PENDING';
+                                const isOnHold = stage.status === 'ON_HOLD';
 
                                 return (
                                     <div key={stage.id} style={{ display: 'flex', alignItems: 'flex-start', minWidth: '140px' }}>
@@ -307,26 +311,26 @@ export default function StatusTracker({ onBack }) {
                                                 display: 'flex',
                                                 alignItems: 'center',
                                                 justifyContent: 'center',
-                                                background: isCompleted ? 'var(--success)' : isRejected ? 'var(--error)' : isInProgress ? 'var(--accent)' : 'white',
+                                                background: isCompleted ? 'var(--success)' : isRejected ? 'var(--error)' : isInProgress ? 'var(--accent)' : isOnHold ? '#d97706' : 'white',
                                                 border: isPending ? '3px solid #cbd5e1' : 'none',
-                                                color: (isCompleted || isRejected || isInProgress) ? 'white' : '#cbd5e1',
+                                                color: (isCompleted || isRejected || isInProgress || isOnHold) ? 'white' : '#cbd5e1',
                                                 zIndex: 1,
-                                                boxShadow: (isCompleted || isInProgress) ? '0 4px 12px rgba(0,0,0,0.15)' : 'none'
+                                                boxShadow: (isCompleted || isInProgress || isOnHold) ? '0 4px 12px rgba(0,0,0,0.15)' : 'none'
                                             }}>
-                                                {isCompleted ? <CheckCircle2 size={26} /> : isRejected ? <X size={26} /> : <Icon size={26} />}
+                                                {isCompleted ? <CheckCircle2 size={26} /> : isRejected ? <X size={26} /> : isOnHold ? <PauseCircle size={26} /> : <Icon size={26} />}
                                             </div>
                                             <div style={{ marginTop: '15px', maxWidth: '120px' }}>
                                                 <h5 style={{
                                                     fontSize: '0.9rem',
-                                                    color: isPending ? 'var(--text-muted)' : 'var(--text-main)',
+                                                    color: isPending ? 'var(--text-muted)' : isOnHold ? '#d97706' : 'var(--text-main)',
                                                     fontWeight: isPending ? '500' : '700',
                                                     marginBottom: '6px'
                                                 }}>
                                                     {stage.label}
                                                 </h5>
                                                 {stage.id !== 'submitted' && (
-                                                    <p style={{ fontSize: '0.75rem', color: isCompleted ? 'var(--success)' : isRejected ? 'var(--error)' : isInProgress ? 'var(--accent)' : 'var(--text-muted)' }}>
-                                                        {isCompleted ? 'Approved' : isRejected ? 'Rejected' : isInProgress ? 'In Progress' : 'Pending'}
+                                                    <p style={{ fontSize: '0.75rem', color: isCompleted ? 'var(--success)' : isRejected ? 'var(--error)' : isInProgress ? 'var(--accent)' : isOnHold ? '#d97706' : 'var(--text-muted)', fontWeight: isOnHold ? '700' : 'normal' }}>
+                                                        {isCompleted ? 'Approved' : isRejected ? 'Rejected' : isInProgress ? 'In Progress' : isOnHold ? 'On Hold' : 'Pending'}
                                                     </p>
                                                 )}
                                                 {stage.date && (
@@ -340,7 +344,7 @@ export default function StatusTracker({ onBack }) {
                                             <div style={{
                                                 height: '3px',
                                                 width: '60px',
-                                                background: isCompleted ? 'var(--success)' : '#e2e8f0',
+                                                background: isCompleted ? 'var(--success)' : isOnHold ? '#d97706' : '#e2e8f0',
                                                 marginTop: '24px',
                                                 flexShrink: 0
                                             }}></div>
@@ -350,6 +354,30 @@ export default function StatusTracker({ onBack }) {
                             })}
                         </div>
                     </div>
+
+                    {/* Director On-Hold Comment Banner */}
+                    {application.status === 'DIRECTOR_COMMENTED' && (
+                        <div style={{
+                            marginTop: '30px',
+                            padding: '24px 28px',
+                            borderRadius: '16px',
+                            background: 'rgba(217, 119, 6, 0.07)',
+                            border: '1.5px solid rgba(217, 119, 6, 0.35)',
+                            display: 'flex',
+                            gap: '16px',
+                            alignItems: 'flex-start'
+                        }}>
+                            <PauseCircle size={28} style={{ color: '#d97706', flexShrink: 0, marginTop: '2px' }} />
+                            <div>
+                                <h4 style={{ fontSize: '1rem', fontWeight: '700', color: '#92400e', margin: '0 0 6px 0' }}>
+                                    Application On Hold — Director's Remarks
+                                </h4>
+                                <p style={{ fontSize: '0.95rem', color: '#78350f', margin: 0, lineHeight: 1.7, whiteSpace: 'pre-wrap' }}>
+                                    {application.director_comment || 'The Director has placed your application on hold. Please check your email for further instructions.'}
+                                </p>
+                            </div>
+                        </div>
+                    )}
 
                     {/* Submit to COE button - shown when director has approved */}
                     {application.needs_director_approval && application.status === 'DIRECTOR_APPROVED' && (

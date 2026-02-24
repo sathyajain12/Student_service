@@ -4,9 +4,9 @@ const ADMIN_EMAIL = 'saisathyajain@sssihl.edu.in';
 
 const CAMPUS_CONTACTS = {
     'Prashanti Nilayam Campus': { phone: '08555-287235', email: 'officeofdirector.psn@sssihl.edu.in' },
-    'Anantapur Campus':         { phone: '08554-272567 / 272996', email: 'officeofdirector.atp@sssihl.edu.in' },
-    'Brindavan Campus':         { phone: '080-28452329', email: 'officeofdirector.brn@sssihl.edu.in' },
-    'Nandigiri Campus':         { phone: '08156-250188 / 250186', email: 'officeofdirector.ndg@sssihl.edu.in' },
+    'Anantapur Campus': { phone: '08554-272567 / 272996', email: 'officeofdirector.atp@sssihl.edu.in' },
+    'Brindavan Campus': { phone: '080-28452329', email: 'officeofdirector.brn@sssihl.edu.in' },
+    'Nandigiri Campus': { phone: '08156-250188 / 250186', email: 'officeofdirector.ndg@sssihl.edu.in' },
 };
 
 function escapeHtml(str) {
@@ -324,12 +324,12 @@ async function handleGetStats(request, env, corsHeaders) {
         });
     }
 
-    const total      = await env.DB.prepare('SELECT COUNT(*) as count FROM applications').first();
-    const pending    = await env.DB.prepare("SELECT COUNT(*) as count FROM applications WHERE status = 'PENDING'").first();
-    const approved   = await env.DB.prepare("SELECT COUNT(*) as count FROM applications WHERE status = 'APPROVED'").first();
+    const total = await env.DB.prepare('SELECT COUNT(*) as count FROM applications').first();
+    const pending = await env.DB.prepare("SELECT COUNT(*) as count FROM applications WHERE status = 'PENDING'").first();
+    const approved = await env.DB.prepare("SELECT COUNT(*) as count FROM applications WHERE status = 'APPROVED'").first();
     const dispatched = await env.DB.prepare("SELECT COUNT(*) as count FROM applications WHERE status = 'DISPATCHED'").first();
-    const completed  = await env.DB.prepare("SELECT COUNT(*) as count FROM applications WHERE status = 'COMPLETED'").first();
-    const rejected   = await env.DB.prepare("SELECT COUNT(*) as count FROM applications WHERE status = 'REJECTED'").first();
+    const completed = await env.DB.prepare("SELECT COUNT(*) as count FROM applications WHERE status = 'COMPLETED'").first();
+    const rejected = await env.DB.prepare("SELECT COUNT(*) as count FROM applications WHERE status = 'REJECTED'").first();
 
     const byFormType = await env.DB.prepare(
         'SELECT form_type, COUNT(*) as count FROM applications GROUP BY form_type'
@@ -1030,10 +1030,10 @@ async function sendDirectorNotification(env, request, appId, formType, applicant
             timeZone: 'Asia/Kolkata'
         });
 
-        const isNameChange    = formType === 'Application for Registration of Student Name change in the Institute Records';
+        const isNameChange = formType === 'Application for Registration of Student Name change in the Institute Records';
         const isSupplementary = formType === 'Application for Supplementary Examinations Registration';
-        const isRepeatPaper   = formType === 'Application for Repeating Examinations Registration (CIE and ESE)';
-        const useNewFlow      = isNameChange || isSupplementary || isRepeatPaper;
+        const isRepeatPaper = formType === 'Application for Repeating Examinations Registration (CIE and ESE)';
+        const useNewFlow = isNameChange || isSupplementary || isRepeatPaper;
 
         let nameChangeDetails = null;
         if (isNameChange) {
@@ -1070,18 +1070,18 @@ async function sendDirectorNotification(env, request, appId, formType, applicant
                 greeting: 'Dear Madam / Sir,<br><br>Sairam!<br><br>Greetings from the Examinations Section, SSSIHL.',
                 content: `This is to bring to your notice that<strong>${escapeHtml(applicantName)}</strong> has submitted an application for registration of name change in the Institute records. This is for your kind information.<br><br>If you are in agreement with the above, kindly click the <strong>Proceed</strong> button below so that the Examination Section may process the application. Alternatively, if you have any concerns, you may record your comments by clicking the <strong>Submit Comments</strong> button.`,
                 details: [
-                    { label: 'Form Type',value: escapeHtml(formType) },
-                    { label: 'Application ID',value: escapeHtml(appId) },
-                    { label: 'Former Name',value: escapeHtml(applicantName) },
-                    { label: 'Changed Name as per the Gazette notification',value: escapeHtml(nameChangeDetails?.changed_name || 'N/A') },
-                    { label: "Father's Name",value: escapeHtml(nameChangeDetails?.Father_name || 'N/A') },
-                    { label: 'Registered Number',value: escapeHtml(regNo || 'N/A') },
-                    { label: 'Campus',value: escapeHtml(campus) },
+                    { label: 'Form Type', value: escapeHtml(formType) },
+                    { label: 'Application ID', value: escapeHtml(appId) },
+                    { label: 'Former Name', value: escapeHtml(applicantName) },
+                    { label: 'Changed Name as per the Gazette notification', value: escapeHtml(nameChangeDetails?.changed_name || 'N/A') },
+                    { label: "Father's Name", value: escapeHtml(nameChangeDetails?.Father_name || 'N/A') },
+                    { label: 'Registered Number', value: escapeHtml(regNo || 'N/A') },
+                    { label: 'Campus', value: escapeHtml(campus) },
                     ...(programme ? [{ label: 'Programme', value: escapeHtml(programme) }] : []),
-                    { label: 'Period of Study',        value: escapeHtml(nameChangeDetails?.Period_of_Study || 'N/A') },
-                    { label: 'Mobile Number',          value: escapeHtml(nameChangeDetails?.Mobile_Number || 'N/A') },
-                    { label: 'Applicant Email',        value: escapeHtml(email) },
-                    { label: 'Submission Date',        value: submissionDate },
+                    { label: 'Period of Study', value: escapeHtml(nameChangeDetails?.Period_of_Study || 'N/A') },
+                    { label: 'Mobile Number', value: escapeHtml(nameChangeDetails?.Mobile_Number || 'N/A') },
+                    { label: 'Applicant Email', value: escapeHtml(email) },
+                    { label: 'Submission Date', value: submissionDate },
                 ],
                 importantNote: '',
                 actionButtons: [
@@ -1090,55 +1090,55 @@ async function sendDirectorNotification(env, request, appId, formType, applicant
                 ]
             })
             : (isSupplementary || isRepeatPaper)
-            ? renderEmailTemplate({
-                title: 'For Your Kind Attention',
-                greeting: 'Dear Madam / Sir,<br><br>Sairam!<br><br>Greetings from the Examinations Section, SSSIHL.',
-                content: `This is to bring to your kind notice that <strong>${escapeHtml(applicantName)}</strong> has submitted an <strong>${escapeHtml(formType)}</strong>. This is for your information.<br><br>If you are in agreement, kindly click the <strong>Proceed</strong> button so that the Examination Section may process the application. If you have any concerns, please record your comments by clicking <strong>Submit Comments</strong>.`,
-                details: [
-                    { label: 'Form Type',         value: escapeHtml(formType) },
-                    { label: 'Application ID',    value: escapeHtml(appId) },
-                    { label: 'Applicant Name',    value: escapeHtml(applicantName) },
-                    { label: 'Registered Number', value: escapeHtml(regNo || 'N/A') },
-                    { label: 'Campus',            value: escapeHtml(campus) },
-                    ...(programme ? [{ label: 'Programme', value: escapeHtml(programme) }] : []),
-                    { label: 'Period of Study',   value: escapeHtml(examDetails?.Period_of_Study || 'N/A') },
-                    { label: 'Semester',          value: escapeHtml(examDetails?.Semester || semester || 'N/A') },
-                    { label: 'Paper Codes',       value: escapeHtml(examDetails?.paper_codes || 'N/A') },
-                    { label: 'Paper Titles',      value: escapeHtml(examDetails?.paper_titles || 'N/A') },
-                    { label: 'Applicant Email',   value: escapeHtml(email) },
-                    { label: 'Submission Date',   value: submissionDate },
-                ],
-                importantNote: '',
-                actionButtons: [
-                    { label: '✓ Proceed',         link: `${url.origin}/approve?id=${appId}&role=Director&action=Approve`, color: '#10b981' },
-                    { label: '✎ Submit Comments', link: `${url.origin}/director-comment?id=${appId}`, color: '#f59e0b' }
-                ]
-            })
-            : renderEmailTemplate({
-                title: 'Clearance Required',
-                greeting: 'Dear Madam / Sir,<br><br>Sairam!<br><br>Greetings from the Examinations Section, SSSIHL.',
-                content: `An <strong>${escapeHtml(formType)}</strong> has been submitted and requires your clearance for further processing.`,
-                details: [
-                    { label: 'Form Type', value: escapeHtml(formType) },
-                    { label: 'Application ID', value: escapeHtml(appId) },
-                    { label: 'Applicant Name', value: escapeHtml(applicantName) },
-                    { label: 'Registered Number', value: escapeHtml(regNo || 'N/A') },
-                    { label: 'Applicant Email', value: escapeHtml(email) },
-                    { label: 'Campus', value: escapeHtml(campus) },
-                    ...(programme ? [{ label: 'Programme', value: escapeHtml(programme) }] : []),
-                    { label: 'Semester', value: escapeHtml(semester || 'N/A') },
-                    { label: 'Submission Date', value: submissionDate },
-                ],
-                importantNote: `
+                ? renderEmailTemplate({
+                    title: 'For Your Kind Attention',
+                    greeting: 'Dear Madam / Sir,<br><br>Sairam!<br><br>Greetings from the Examinations Section, SSSIHL.',
+                    content: `This is to bring to your kind notice that <strong>${escapeHtml(applicantName)}</strong> has submitted an <strong>${escapeHtml(formType)}</strong>. This is for your information.<br><br>If you are in agreement, kindly click the <strong>Proceed</strong> button so that the Examination Section may process the application. If you have any concerns, please record your comments by clicking <strong>Submit Comments</strong>.`,
+                    details: [
+                        { label: 'Form Type', value: escapeHtml(formType) },
+                        { label: 'Application ID', value: escapeHtml(appId) },
+                        { label: 'Applicant Name', value: escapeHtml(applicantName) },
+                        { label: 'Registered Number', value: escapeHtml(regNo || 'N/A') },
+                        { label: 'Campus', value: escapeHtml(campus) },
+                        ...(programme ? [{ label: 'Programme', value: escapeHtml(programme) }] : []),
+                        { label: 'Period of Study', value: escapeHtml(examDetails?.Period_of_Study || 'N/A') },
+                        { label: 'Semester', value: escapeHtml(examDetails?.Semester || semester || 'N/A') },
+                        { label: 'Paper Codes', value: escapeHtml(examDetails?.paper_codes || 'N/A') },
+                        { label: 'Paper Titles', value: escapeHtml(examDetails?.paper_titles || 'N/A') },
+                        { label: 'Applicant Email', value: escapeHtml(email) },
+                        { label: 'Submission Date', value: submissionDate },
+                    ],
+                    importantNote: '',
+                    actionButtons: [
+                        { label: '✓ Proceed', link: `${url.origin}/approve?id=${appId}&role=Director&action=Approve`, color: '#10b981' },
+                        { label: '✎ Submit Comments', link: `${url.origin}/director-comment?id=${appId}`, color: '#f59e0b' }
+                    ]
+                })
+                : renderEmailTemplate({
+                    title: 'Clearance Required',
+                    greeting: 'Dear Madam / Sir,<br><br>Sairam!<br><br>Greetings from the Examinations Section, SSSIHL.',
+                    content: `An <strong>${escapeHtml(formType)}</strong> has been submitted and requires your clearance for further processing.`,
+                    details: [
+                        { label: 'Form Type', value: escapeHtml(formType) },
+                        { label: 'Application ID', value: escapeHtml(appId) },
+                        { label: 'Applicant Name', value: escapeHtml(applicantName) },
+                        { label: 'Registered Number', value: escapeHtml(regNo || 'N/A') },
+                        { label: 'Applicant Email', value: escapeHtml(email) },
+                        { label: 'Campus', value: escapeHtml(campus) },
+                        ...(programme ? [{ label: 'Programme', value: escapeHtml(programme) }] : []),
+                        { label: 'Semester', value: escapeHtml(semester || 'N/A') },
+                        { label: 'Submission Date', value: submissionDate },
+                    ],
+                    importantNote: `
                         <p style="margin: 0; font-weight: 700;">⚠️ Important Note</p>
                         <p style="margin: 8px 0 0 0;">Request you to please verify the availability of the original grade card in the campus office before processing this application.</p>
                         <p style="margin: 8px 0 0 0;"><strong>If the grade card is available at the campus office and the student has not collected it yet, please reject this application. The student will be notified to contact the campus office to collect her / his original grade card.</strong></p>
                     `,
-                actionButtons: [
-                    { label: '✓ Clear Application', link: `${url.origin}/approve?id=${appId}&role=Director&action=Approve`, color: '#10b981' },
-                    { label: '✗ Reject', link: `${url.origin}/approve?id=${appId}&role=Director&action=Reject`, color: '#ef4444' }
-                ]
-            });
+                    actionButtons: [
+                        { label: '✓ Clear Application', link: `${url.origin}/approve?id=${appId}&role=Director&action=Approve`, color: '#10b981' },
+                        { label: '✗ Reject', link: `${url.origin}/approve?id=${appId}&role=Director&action=Reject`, color: '#ef4444' }
+                    ]
+                });
 
         await sendEmail(accessToken, {
             to: directorEmail,
@@ -1218,7 +1218,7 @@ function generateStudentEmailHTML(verification, isApproved, portalUrl) {
             { label: 'Form Type', value: escapeHtml(verification.form_type) },
             { label: 'Application ID', value: escapeHtml(verification.id) },
             { label: 'Applicant Name', value: escapeHtml(verification.applicant_name) },
-            {label: 'Registered Number', value: escapeHtml(verification.reg_no || 'N/A') },
+            { label: 'Registered Number', value: escapeHtml(verification.reg_no || 'N/A') },
             { label: 'Campus', value: escapeHtml(verification.campus) },
             ...(verification.programme ? [{ label: 'Programme', value: escapeHtml(verification.programme) }] : []),
             ...(verification.semester ? [{ label: 'Semester', value: escapeHtml(verification.semester) }] : []),
@@ -1400,11 +1400,11 @@ async function sendStudentOnHoldEmail(env, appId, formType, applicantName, stude
             content: `Your <strong>${escapeHtml(formType)}</strong> has been placed <strong>on hold</strong> following a review by the Campus Director.<br><br>You are requested to kindly contact the Examination Section at the earliest for further information and guidance regarding your application.`,
             details: [
                 { label: 'Application ID', value: escapeHtml(appId) },
-                { label: 'Form Type',      value: escapeHtml(formType) },
+                { label: 'Form Type', value: escapeHtml(formType) },
                 { label: 'Applicant Name', value: escapeHtml(applicantName) },
-                { label: 'Campus',         value: escapeHtml(campus) },
-                { label: 'Status',         value: '<span style="color:#7c3aed;font-weight:700;">ON HOLD</span>' },
-                { label: 'Date',           value: submissionDate },
+                { label: 'Campus', value: escapeHtml(campus) },
+                { label: 'Status', value: '<span style="color:#7c3aed;font-weight:700;">ON HOLD</span>' },
+                { label: 'Date', value: submissionDate },
             ],
             importantNote: `<p style="margin:0;">For queries or clarifications, please contact: <a href="mailto:coeoffice@sssihl.edu.in" style="color:#2563eb;text-decoration:none;">coeoffice@sssihl.edu.in</a></p>`,
             actionButtons: [
@@ -2678,7 +2678,7 @@ async function handleStatusRequest(url, env, corsHeaders) {
 
     try {
         const app = await env.DB.prepare(
-            `SELECT id, student_email, form_type, applicant_name, reg_no, campus, status, director_status, controller_status, created_at, updated_at
+            `SELECT id, student_email, form_type, applicant_name, reg_no, campus, status, director_status, director_comment, controller_status, created_at, updated_at
              FROM applications WHERE id = ?`
         ).bind(id).first();
 
