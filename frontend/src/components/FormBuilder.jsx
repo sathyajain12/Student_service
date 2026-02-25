@@ -159,8 +159,44 @@ export default function FormBuilder({ config, onSubmit, onCancel, onTrackStatus,
         });
     };
 
+    const validateForm = () => {
+        const missing = [];
+
+        for (const field of (config.fields || [])) {
+            if (!field.required) continue;
+            if (['heading', 'separator'].includes(field.type)) continue;
+
+            if (field.type === 'daterange') {
+                const range = dateRanges[field.name];
+                if (!range?.start || !range?.end) missing.push(field.label);
+            } else if (field.type === 'singleCheckbox') {
+                if (!formData[field.name]) missing.push(field.label.split('\n')[0].trim());
+            } else if (field.type === 'paperTable') {
+                const rows = paperTables[field.name] || [];
+                const hasValidRow = rows.some(r => r.paperCode?.trim() && r.paperTitle?.trim());
+                if (!hasValidRow) missing.push(field.label);
+            } else {
+                const val = formData[field.name];
+                if (!val || String(val).trim() === '') missing.push(field.label);
+            }
+        }
+
+        for (const file of (config.files || [])) {
+            if (file.required && !files[file.name]) missing.push(file.label);
+        }
+
+        return missing;
+    };
+
     const handleSubmit = async (e) => {
         e.preventDefault();
+
+        const missing = validateForm();
+        if (missing.length > 0) {
+            alert(`⚠️ Please fill in all mandatory fields before submitting.\n\nThe following required field${missing.length > 1 ? 's are' : ' is'} empty:\n\n${missing.map(f => `• ${f}`).join('\n')}`);
+            return;
+        }
+
         setLoading(true);
         setStatus({ type: 'info', message: 'Securing your application...' });
 
@@ -203,6 +239,13 @@ export default function FormBuilder({ config, onSubmit, onCancel, onTrackStatus,
 
     const handleSeekDirectorApproval = async (e) => {
         e.preventDefault();
+
+        const missing = validateForm();
+        if (missing.length > 0) {
+            alert(`⚠️ Please fill in all mandatory fields before submitting.\n\nThe following required field${missing.length > 1 ? 's are' : ' is'} empty:\n\n${missing.map(f => `• ${f}`).join('\n')}`);
+            return;
+        }
+
         setLoading(true);
         setStatus({ type: 'info', message: 'Sending your application to the Director for approval...' });
 
