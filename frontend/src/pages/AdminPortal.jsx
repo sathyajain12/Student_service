@@ -1216,6 +1216,28 @@ export default function AdminPortal() {
 
         const detailLabelStyle = { fontSize: '0.7rem', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.06em', color: '#94a3b8', margin: '0 0 4px 0' };
         const detailValueStyle = { fontSize: '0.9rem', fontWeight: 600, color: '#0F172A', margin: 0, lineHeight: 1.4 };
+
+        const formatFieldKey = (key) =>
+            key.replace(/_/g, ' ').replace(/([A-Z])/g, ' $1').trim()
+               .replace(/\b\w/g, c => c.toUpperCase());
+
+        const formatFieldValue = (value) => {
+            if (value === null || value === undefined || value === '') return '—';
+            try {
+                const parsed = JSON.parse(value);
+                if (Array.isArray(parsed)) {
+                    return parsed.map((item) =>
+                        typeof item === 'object'
+                            ? Object.entries(item).map(([k, v]) => `${formatFieldKey(k)}: ${v}`).join(' | ')
+                            : item
+                    ).join('\n');
+                }
+                return String(value);
+            } catch {
+                return String(value);
+            }
+        };
+
         const sidebarBtnBase = { width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', padding: '11px 16px', borderRadius: '8px', cursor: 'pointer', fontWeight: 600, fontSize: '0.875rem', fontFamily: 'inherit', border: 'none', transition: 'all 0.15s ease' };
         const fileRowStyle = { display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '14px 16px', borderRadius: '8px', border: '1px solid #f1f5f9', marginBottom: '8px', gap: '12px' };
         const downloadBtnStyle = { display: 'flex', alignItems: 'center', gap: '6px', padding: '6px 14px', background: 'white', color: '#334155', border: '1px solid #e2e8f0', borderRadius: '6px', cursor: 'pointer', fontSize: '0.8rem', fontWeight: 600, fontFamily: 'inherit', flexShrink: 0 };
@@ -1294,6 +1316,33 @@ export default function AdminPortal() {
                                         <div><p style={detailLabelStyle}>Campus</p><p style={detailValueStyle}>{app.campus}</p></div>
                                         <div><p style={detailLabelStyle}>Submitted On</p><p style={detailValueStyle}>{new Date(app.created_at + 'Z').toLocaleString('en-IN', { timeZone: 'Asia/Kolkata' })}</p></div>
                                     </div>
+                                    {appDetails.formData && Object.keys(appDetails.formData).length > 0 && (() => {
+                                        const SKIP = new Set(['id', 'application_id', 'created_at']);
+                                        const entries = Object.entries(appDetails.formData).filter(([k, v]) => !SKIP.has(k) && v !== null && v !== '');
+                                        if (entries.length === 0) return null;
+                                        return (
+                                            <>
+                                                <div style={{ margin: '0 20px', borderTop: '1px solid #f1f5f9', paddingTop: '16px', marginBottom: '4px' }}>
+                                                    <p style={{ fontSize: '0.72rem', fontWeight: 700, color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.06em', margin: '0 0 12px 0' }}>Form Details</p>
+                                                </div>
+                                                <div style={{ padding: '0 20px 20px 20px', display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '16px' }}>
+                                                    {entries.map(([key, value]) => {
+                                                        const formatted = formatFieldValue(value);
+                                                        const isMultiLine = formatted.includes('\n');
+                                                        return (
+                                                            <div key={key} style={isMultiLine ? { gridColumn: '1 / -1' } : {}}>
+                                                                <p style={detailLabelStyle}>{formatFieldKey(key)}</p>
+                                                                {isMultiLine
+                                                                    ? <pre style={{ ...detailValueStyle, fontFamily: 'inherit', whiteSpace: 'pre-wrap', margin: 0 }}>{formatted}</pre>
+                                                                    : <p style={detailValueStyle}>{formatted}</p>
+                                                                }
+                                                            </div>
+                                                        );
+                                                    })}
+                                                </div>
+                                            </>
+                                        );
+                                    })()}
                                     {app.director_comment && (
                                         <div style={{ margin: '0 20px 20px 20px', background: '#faf5ff', border: '1px solid #e9d5ff', borderRadius: '10px', padding: '16px' }}>
                                             <p style={{ fontSize: '0.72rem', fontWeight: 700, color: '#7c3aed', margin: '0 0 8px 0', textTransform: 'uppercase', letterSpacing: '0.06em' }}>Director's Comments</p>
