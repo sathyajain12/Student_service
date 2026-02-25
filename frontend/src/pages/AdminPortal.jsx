@@ -1217,7 +1217,9 @@ export default function AdminPortal() {
         const detailLabelStyle = { fontSize: '0.7rem', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.06em', color: '#94a3b8', margin: '0 0 4px 0' };
         const detailValueStyle = { fontSize: '0.9rem', fontWeight: 600, color: '#0F172A', margin: 0, lineHeight: 1.4 };
 
+        const FIELD_LABEL_OVERRIDES = { paper_codes: 'Course Code(s)', paper_titles: 'Course Title(s)' };
         const formatFieldKey = (key) =>
+            FIELD_LABEL_OVERRIDES[key] ||
             key.replace(/_/g, ' ').replace(/([A-Z])/g, ' $1').trim()
                .replace(/\b\w/g, c => c.toUpperCase());
 
@@ -1317,7 +1319,15 @@ export default function AdminPortal() {
                                         <div><p style={detailLabelStyle}>Submitted On</p><p style={detailValueStyle}>{new Date(app.created_at + 'Z').toLocaleString('en-IN', { timeZone: 'Asia/Kolkata' })}</p></div>
                                     </div>
                                     {appDetails.formData && Object.keys(appDetails.formData).length > 0 && (() => {
-                                        const SKIP = new Set(['id', 'application_id', 'created_at']);
+                                        const SKIP = new Set([
+                                            'id', 'application_id', 'created_at',
+                                            // Already shown in the basic info grid above
+                                            'student_name', 'applicant_name', 'student_email', 'email',
+                                            'reg_no', 'registration_number', 'campus',
+                                            // Internal status fields (not student-entered data)
+                                            'director_approval_status', 'controller_approval_status',
+                                            'director_status', 'controller_status', 'status',
+                                        ]);
                                         const entries = Object.entries(appDetails.formData).filter(([k, v]) => !SKIP.has(k) && v !== null && v !== '');
                                         if (entries.length === 0) return null;
                                         return (
