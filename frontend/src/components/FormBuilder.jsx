@@ -164,18 +164,17 @@ export default function FormBuilder({ config, onSubmit, onCancel, onTrackStatus,
 
         for (const field of (config.fields || [])) {
             if (!field.required) continue;
-            if (['heading', 'separator'].includes(field.type)) continue;
+            if (['heading', 'separator', 'paragraph'].includes(field.type)) continue;
 
-            if (field.type === 'daterange') {
-                const range = dateRanges[field.name];
-                if (!range?.start || !range?.end) missing.push(field.label);
-            } else if (field.type === 'singleCheckbox') {
+            if (field.type === 'singleCheckbox') {
                 if (!formData[field.name]) missing.push(field.label.split('\n')[0].trim());
             } else if (field.type === 'paperTable') {
                 const rows = paperTables[field.name] || [];
                 const hasValidRow = rows.some(r => r.paperCode?.trim() && r.paperTitle?.trim());
                 if (!hasValidRow) missing.push(field.label);
             } else {
+                // Covers text, number, email, textarea, select, countrySelect, stateSelect,
+                // radio, date, daterange (formData is set when both dates are picked), monthyear, conditionalSelect
                 const val = formData[field.name];
                 if (!val || String(val).trim() === '') missing.push(field.label);
             }
