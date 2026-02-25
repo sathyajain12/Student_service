@@ -123,7 +123,7 @@ export default function StatusTracker({ onBack }) {
             case 'PENDING': return 'Pending Review';
             case 'AWAITING_DIRECTOR': return 'Awaiting Director Approval';
             case 'DIRECTOR_APPROVED': return 'Director Approved — Submit to COE';
-            case 'DIRECTOR_COMMENTED': return 'On Hold — Director Commented';
+            case 'DIRECTOR_COMMENTED': return 'On Hold';
             case 'APPROVED': return 'Under Process';
             case 'COMPLETED': return 'Completed';
             case 'DISPATCHED': return 'Dispatched';
@@ -142,13 +142,15 @@ export default function StatusTracker({ onBack }) {
 
         if (app.needs_director_approval) {
             const isOnHold = app.status === 'DIRECTOR_COMMENTED';
+            const isResolved = app.director_status === 'RESOLVED';
             stages.push({
                 id: 'director',
                 label: 'Director Approval',
-                status: app.director_status === 'APPROVED' ? 'COMPLETED' : isOnHold ? 'ON_HOLD' : 'PENDING',
+                status: (app.director_status === 'APPROVED' || isResolved) ? 'COMPLETED' : isOnHold ? 'ON_HOLD' : 'PENDING',
                 icon: isOnHold ? PauseCircle : User,
-                date: app.director_status === 'APPROVED' ? app.updated_at : null,
-                comment: isOnHold ? app.director_comment : null
+                date: (app.director_status === 'APPROVED' || isResolved) ? app.updated_at : null,
+                comment: isOnHold ? app.director_comment : null,
+                resolvedByAdmin: isResolved
             });
 
             // Only show Submitted to COE + Under-Process after student has clicked Submit to COE
@@ -330,7 +332,7 @@ export default function StatusTracker({ onBack }) {
                                                 </h5>
                                                 {stage.id !== 'submitted' && (
                                                     <p style={{ fontSize: '0.75rem', color: isCompleted ? 'var(--success)' : isRejected ? 'var(--error)' : isInProgress ? 'var(--accent)' : isOnHold ? '#d97706' : 'var(--text-muted)', fontWeight: isOnHold ? '700' : 'normal' }}>
-                                                        {isCompleted ? 'Approved' : isRejected ? 'Rejected' : isInProgress ? 'In Progress' : isOnHold ? 'On Hold' : 'Pending'}
+                                                        {isCompleted ? (stage.resolvedByAdmin ? 'Resolved' : 'Approved') : isRejected ? 'Rejected' : isInProgress ? 'In Progress' : isOnHold ? 'On Hold' : 'Pending'}
                                                     </p>
                                                 )}
                                                 {stage.date && (

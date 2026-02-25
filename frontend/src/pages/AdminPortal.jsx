@@ -663,6 +663,39 @@ export default function AdminPortal() {
         }
     };
 
+    const resolveHold = (applicationId) => {
+        setConfirmModal({
+            title: 'Resolve On Hold',
+            message: 'This will move the application back to "Under Process" and send the student an email. Are you sure?',
+            confirmText: 'Yes, Resolve & Proceed',
+            confirmColor: '#7c3aed',
+            confirmGradient: 'linear-gradient(135deg, #7c3aed 0%, #6d28d9 100%)',
+            onConfirm: () => { setConfirmModal(null); doResolveHold(applicationId); }
+        });
+    };
+
+    const doResolveHold = async (applicationId) => {
+        try {
+            const response = await fetch(`${API_URL}/admin/resolve-hold`, {
+                method: 'POST',
+                headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' },
+                body: JSON.stringify({ applicationId })
+            });
+            const data = await response.json();
+            if (response.ok) {
+                showToast('Hold resolved — application is now Under Process!', 'success');
+                fetchAppDetails(applicationId);
+                fetchStats();
+                fetchApplications();
+            } else {
+                showToast('Error: ' + (data.error || 'Failed to resolve hold'), 'error');
+            }
+        } catch (err) {
+            console.error('Failed to resolve hold:', err);
+            showToast('Failed to resolve hold. Please try again.', 'error');
+        }
+    };
+
     const notifyDispatched = (applicationId) => {
         setDispatchAppId(applicationId);
         if (dispatchTrackingRef.current) dispatchTrackingRef.current.value = '';
@@ -1320,6 +1353,13 @@ export default function AdminPortal() {
                                         <h3 style={{ fontSize: '0.9rem', fontWeight: 700, color: '#0F172A', margin: 0 }}>Administrative Control</h3>
                                     </div>
                                     <div style={{ padding: '16px', display: 'flex', flexDirection: 'column', gap: '8px' }}>
+
+                                        {/* Resolve & Proceed — only when On Hold */}
+                                        {app.status === 'DIRECTOR_COMMENTED' && (
+                                            <button onClick={() => resolveHold(app.id)} style={{ ...sidebarBtnBase, background: '#7c3aed', color: 'white' }}>
+                                                &#10003; Resolve &amp; Proceed
+                                            </button>
+                                        )}
 
                                         {/* Mark as Completed */}
                                         {(app.status === 'APPROVED' || app.status === 'PENDING') && (

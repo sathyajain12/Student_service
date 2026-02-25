@@ -110,6 +110,10 @@ export default {
                 return await handleMarkCompleted(request, env, corsHeaders);
             }
 
+            if (url.pathname === '/admin/resolve-hold' && request.method === 'POST') {
+                return await handleResolveHold(request, env, corsHeaders);
+            }
+
             if (url.pathname === '/admin/notify-dispatched' && request.method === 'POST') {
                 return await handleNotifyDispatched(request, env, corsHeaders);
             }
@@ -383,6 +387,38 @@ async function handleMarkCompleted(request, env, corsHeaders) {
             status: 500,
             headers: { ...corsHeaders, 'Content-Type': 'application/json' }
         });
+    }
+}
+
+async function handleResolveHold(request, env, corsHeaders) {
+    const admin = await verifyAdminToken(request, env);
+    if (!admin) return new Response(JSON.stringify({ error: 'Unauthorized' }), { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+
+    try {
+        const { applicationId } = await request.json();
+        if (!applicationId) return new Response(JSON.stringify({ error: 'Application ID is required' }), { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+
+        const application = await env.DB.prepare(
+            `SELECT id, form_type, applicant_name, student_email, campus, status FROM applications WHERE id = ?`
+        ).bind(applicationId).first();
+
+        if (!application) return new Response(JSON.stringify({ error: 'Application not found' }), { status: 404, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+
+        if (application.status !== 'DIRECTOR_COMMENTED') return new Response(JSON.stringify({ error: 'Application is not currently on hold' }), { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+
+        await env.DB.prepare(
+            `UPDATE applications SET status = 'APPROVED', director_status = 'RESOLVED', updated_at = CURRENT_TIMESTAMP WHERE id = ?`
+        ).bind(applicationId).run();
+
+        console.log(`Application ${applicationId} hold resolved by admin ${admin.username}`);
+        await sendStudentResolvedEmail(env, application.id, application.form_type, application.applicant_name, application.student_email, application.campus);
+
+        return new Response(JSON.stringify({ success: true, message: 'Hold resolved — application moved to APPROVED' }), {
+            headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+        });
+    } catch (error) {
+        console.error('Error resolving hold:', error);
+        return new Response(JSON.stringify({ error: error.message }), { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
     }
 }
 
@@ -1419,6 +1455,32 @@ async function sendStudentOnHoldEmail(env, appId, formType, applicantName, stude
         console.log(`Student on-hold email sent to ${studentEmail} for app ${appId}`);
     } catch (e) {
         console.error('Failed to send student on-hold email:', e);
+    }
+}
+
+async function sendStudentResolvedEmail(env, appId, formType, applicantName, studentEmail, campus) {
+    try {
+        const accessToken = await getGoogleAuth(env);
+        const resolvedOn = new Date().toLocaleString('en-IN', { dateStyle: 'long', timeStyle: 'short', timeZone: 'Asia/Kolkata' });
+        const htmlBody = renderEmailTemplate({
+            title: 'Application Back on Track',
+            greeting: `Dear ${escapeHtml(applicantName)},<br><br>Sairam!<br><br>Greetings from the Examinations Section, SSSIHL.`,
+            content: `We are pleased to inform you that the hold placed on your <strong>${escapeHtml(formType)}</strong> has been resolved by the Examinations Section.<br><br>Your application is now <strong>under process</strong> and will be handled in due course. You do not need to take any further action at this time.`,
+            details: [
+                { label: 'Application ID', value: escapeHtml(appId) },
+                { label: 'Form Type', value: escapeHtml(formType) },
+                { label: 'Applicant Name', value: escapeHtml(applicantName) },
+                { label: 'Campus', value: escapeHtml(campus) },
+                { label: 'Status', value: '<span style="color:#059669;font-weight:700;">UNDER PROCESS</span>' },
+                { label: 'Resolved On', value: resolvedOn },
+            ],
+            importantNote: `<p style="margin:0;">If you have any queries, please contact: <a href="mailto:coeoffice@sssihl.edu.in" style="color:#2563eb;text-decoration:none;">coeoffice@sssihl.edu.in</a></p>`,
+            actionButtons: [{ label: 'Track Application Status', link: `https://student-service.pages.dev/#track=${escapeHtml(appId)}` }]
+        });
+        await sendEmail(accessToken, { to: studentEmail, subject: `Application Resolved & Under Process - ${formType} - ${appId}`, htmlBody });
+        console.log(`Student resolved email sent to ${studentEmail} for app ${appId}`);
+    } catch (e) {
+        console.error('Failed to send student resolved email:', e);
     }
 }
 
