@@ -412,6 +412,7 @@ async function handleResolveHold(request, env, corsHeaders) {
 
         console.log(`Application ${applicationId} hold resolved by admin ${admin.username}`);
         await sendStudentResolvedEmail(env, application.id, application.form_type, application.applicant_name, application.student_email, application.campus);
+        await sendDirectorResolvedEmail(env, application.id, application.form_type, application.applicant_name, application.campus);
 
         return new Response(JSON.stringify({ success: true, message: 'Hold resolved — application moved to APPROVED' }), {
             headers: { ...corsHeaders, 'Content-Type': 'application/json' }
@@ -1465,7 +1466,7 @@ async function sendStudentResolvedEmail(env, appId, formType, applicantName, stu
         const htmlBody = renderEmailTemplate({
             title: 'Application Back on Track',
             greeting: `Dear ${escapeHtml(applicantName)},<br><br>Sairam!<br><br>Greetings from the Examinations Section, SSSIHL.`,
-            content: `We are pleased to inform you that the hold placed on your <strong>${escapeHtml(formType)}</strong> has been resolved by the Examinations Section.<br><br>Your application is now <strong>under process</strong> and will be handled in due course. You do not need to take any further action at this time.`,
+            content: `We are pleased to inform you that the hold placed on your <strong>${escapeHtml(formType)}</strong> has been resolved by the Examinations Section.<br><br>Your application is now <strong>under process</strong> and will be handled in due course.`,
             details: [
                 { label: 'Application ID', value: escapeHtml(appId) },
                 { label: 'Form Type', value: escapeHtml(formType) },
@@ -1481,6 +1482,32 @@ async function sendStudentResolvedEmail(env, appId, formType, applicantName, stu
         console.log(`Student resolved email sent to ${studentEmail} for app ${appId}`);
     } catch (e) {
         console.error('Failed to send student resolved email:', e);
+    }
+}
+
+async function sendDirectorResolvedEmail(env, appId, formType, applicantName, campus) {
+    try {
+        const accessToken = await getGoogleAuth(env);
+        const directorEmail = getDirectorEmail(campus);
+        const resolvedOn = new Date().toLocaleString('en-IN', { dateStyle: 'long', timeStyle: 'short', timeZone: 'Asia/Kolkata' });
+        const htmlBody = renderEmailTemplate({
+            title: 'Application Hold Resolved',
+            greeting: 'Dear Madam / Sir,<br><br>Sairam!<br><br>Greetings from the Examinations Section, SSSIHL.',
+            content: `This is to inform you that the hold you placed on the application of <strong>${escapeHtml(applicantName)}</strong> has been reviewed and resolved by the Examinations Section. The application is now under process.`,
+            details: [
+                { label: 'Application ID', value: escapeHtml(appId) },
+                { label: 'Form Type', value: escapeHtml(formType) },
+                { label: 'Applicant Name', value: escapeHtml(applicantName) },
+                { label: 'Campus', value: escapeHtml(campus) },
+                { label: 'Resolved On', value: resolvedOn },
+            ],
+            importantNote: '',
+            actionButtons: []
+        });
+        await sendEmail(accessToken, { to: directorEmail, subject: `Application Hold Resolved - ${formType} - ${appId}`, htmlBody });
+        console.log(`Director resolved email sent to ${directorEmail} for app ${appId}`);
+    } catch (e) {
+        console.error('Failed to send director resolved email:', e);
     }
 }
 
