@@ -1743,7 +1743,7 @@ async function handleCGPAConversion(formData, request, env, corsHeaders) {
     await env.DB.prepare(
         `INSERT INTO form_cgpa_conversion
          (application_id, student_name, address_line1, address_line2, country, state_province, city, postal_code, Mobile_Number, Registration_Number,
-          cgpa_marks_equivalence, Period_of_Study, graduation_year, CGPA)
+          Programme, Period_of_Study, graduation_year, CGPA)
          VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
     ).bind(
         appId,
@@ -1756,7 +1756,7 @@ async function handleCGPAConversion(formData, request, env, corsHeaders) {
         formData.get('postalCode') || '',
         formData.get('mobile') || '',
         formData.get('regNo') || '',
-        formData.get('cgpaMarksEquivalence') || '',
+        formData.get('program') || '',
         formData.get('periodOfStudy') || '',
         formData.get('monthOfPassing') || '',
         parseFloat(formData.get('cgpa')) || 0.0
@@ -1769,8 +1769,8 @@ async function handleCGPAConversion(formData, request, env, corsHeaders) {
     }
 
     await sendAdminNotification(env, appId, formType, applicantName, email);
-    await sendDirectorNotification(env, request, appId, formType, applicantName, email, campus, null, regNo, formData.get('cgpaMarksEquivalence') || null);
-    await sendStudentConfirmationEmail(env, appId, formType, applicantName, email, campus, formData.get('cgpaMarksEquivalence') || null, formData.get('semester') || null);
+    await sendDirectorNotification(env, request, appId, formType, applicantName, email, campus, null, regNo, formData.get('program') || null);
+    await sendStudentConfirmationEmail(env, appId, formType, applicantName, email, campus, formData.get('program') || null, formData.get('semester') || null);
 
     return new Response(JSON.stringify({ success: true, appId }), {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' }
