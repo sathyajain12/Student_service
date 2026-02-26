@@ -570,19 +570,22 @@ export const FORM_CONFIGS = {
             'Candidates applying for the Degree Certificate for Postgraduate degrees such as M.A. / M.Sc. / M.B.A. / M.B.A. (Fin.) / M.F.M. / M.Tech. / B.Ed. / M.Ed. should upload the soft copy of the Qualifying Degree Pass Certificate.',
         ],
         fields: [
-            {
-                type: 'heading',
-                label: 'Candidate Details',
-                name: 'heading1'
-            },
-            ...COMMON_ACADEMIC_FIELDS,
-            {
-                name: 'degreeAppliedFor',
-                label: 'Degree Applied For',
-                type: 'select',
-                options: ['Undergraduate Degree', 'Postgraduate Degree', 'Professional Degree', 'PhD'],
-                required: true
-            },
+            { type: 'heading', label: 'Candidate Details', name: 'heading1' },
+            { name: 'applicantName', label: 'Candidate Name', type: 'text', required: true },
+            { name: 'regNo', label: 'Registered Number', type: 'number', required: true },
+            { name: 'abcApaarId', label: 'ABC / APAAR ID', type: 'number', required: false },
+            { name: 'campus', label: 'Campus', type: 'select', options: ['Prashanti Nilayam Campus', 'Anantapur Campus', 'Brindavan Campus', 'Nandigiri Campus'], required: true },
+            { name: 'degreeAppliedFor', label: 'Degree Applied For', type: 'select', options: ['Undergraduate Degree', 'Postgraduate Degree', 'Professional Degree', 'PhD'], required: true },
+            { name: 'program', label: 'Academic Programme', type: 'select', options: PROGRAMME_OPTIONS, required: true },
+            { name: 'mobile', label: 'Mobile Number', type: 'number', required: true },
+            { name: 'email', label: 'Email Address', type: 'email', required: true },
+            { type: 'heading', label: 'Permanent Address', name: 'addressHeading' },
+            { name: 'addressLine1', label: 'Address Line 1', type: 'text', required: true },
+            { name: 'addressLine2', label: 'Address Line 2', type: 'text', required: false },
+            { name: 'country', label: 'Country', type: 'countrySelect', required: true },
+            { name: 'stateProvince', label: 'State/Province/Region', type: 'stateSelect', required: true },
+            { name: 'city', label: 'City', type: 'text', required: true },
+            { name: 'postalCode', label: 'Postal Code', type: 'text', required: true },
         ],
 
         files: [
