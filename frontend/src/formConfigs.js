@@ -131,7 +131,7 @@ export const FORM_CONFIGS = {
                     'The name of the applicant, along with the complete postal address, including the town / city, PIN code, district and state must be clearly written or typed on the envelope.',
                     'Students of foreign nationality may affix appropriate postage for an envelope weighing 100-120 g.'
                 ],
-                softCopyDesc: 'View CGPA / GPA Conversion Formula',
+                softCopyDesc: 'Calculate your equivalent percentage',
                 softCopyContent: 'cgpaFormula'
             },
         ],

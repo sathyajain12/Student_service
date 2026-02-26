@@ -108,6 +108,9 @@ export default function InstructionsScreen({ config, onProceed, onCancel }) {
 
     const hasDeliveryOptions = config.instructions?.some(i => i?.type === 'deliveryOptions');
     const proceedDisabled = hasDeliveryOptions && !hardCopy && !softCopy;
+    const deliveryOptionsInstruction = config.instructions?.find(i => i?.type === 'deliveryOptions');
+    const isCgpaCalculator = deliveryOptionsInstruction?.softCopyContent === 'cgpaFormula';
+    const hideProceedButton = isCgpaCalculator && softCopy && !hardCopy;
 
     return (
         <div className="animate-fade-in">
@@ -339,7 +342,7 @@ export default function InstructionsScreen({ config, onProceed, onCancel }) {
                                         <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', marginBottom: '20px' }}>
                                             {[
                                                 { id: 'hardCopy', label: 'Hard Copy', desc: instruction.hardCopyDesc || 'Certificate dispatched by Speed Post', checked: hardCopy, setter: setHardCopy },
-                                                { id: 'softCopy', label: 'Soft Copy', desc: instruction.softCopyDesc || 'Download from DigiLocker', checked: softCopy, setter: setSoftCopy }
+                                                { id: 'softCopy', label: isCgpaCalculator ? 'Calculate' : 'Soft Copy', desc: instruction.softCopyDesc || 'Download from DigiLocker', checked: softCopy, setter: setSoftCopy }
                                             ].map(({ id, label, desc, checked, setter }) => (
                                                 <label key={id} style={{
                                                     display: 'flex', alignItems: 'center', gap: '12px', cursor: 'pointer',
@@ -429,90 +432,8 @@ export default function InstructionsScreen({ config, onProceed, onCancel }) {
                                                     background: 'rgba(37, 99, 235, 0.04)',
                                                     border: '1px solid rgba(37, 99, 235, 0.2)'
                                                 }}>
-                                                    {/* 5-Point Scale Section */}
-                                                    <p style={{ fontWeight: '700', fontSize: '0.95rem', color: 'var(--accent)', margin: '0 0 10px 0' }}>
-                                                        For GPA / CGPA on a 5-Point Scale
-                                                    </p>
-                                                    <p style={{ fontSize: '0.85rem', color: 'var(--text-muted)', margin: '0 0 14px 0', lineHeight: '1.5' }}>
-                                                        Fix the relevant range from the tables below, then apply the formula:
-                                                    </p>
-                                                    {/* Formula */}
-                                                    <div style={{ textAlign: 'center', margin: '0 0 20px 0', fontSize: '1rem', color: 'var(--text-main)', fontWeight: '500' }}>
-                                                        <span style={{ verticalAlign: 'middle' }}>L% + </span>
-                                                        <span style={{ display: 'inline-block', verticalAlign: 'middle', margin: '0 4px' }}>
-                                                            <span style={{ display: 'block', borderBottom: '1.5px solid var(--text-main)', textAlign: 'center', padding: '0 6px 2px 6px', fontSize: '0.95rem' }}>H% – L%</span>
-                                                            <span style={{ display: 'block', textAlign: 'center', padding: '2px 6px 0 6px', fontSize: '0.95rem' }}>UP – LP</span>
-                                                        </span>
-                                                        <span style={{ verticalAlign: 'middle' }}> × (CGPA / GPA in question – LP)</span>
-                                                    </div>
-                                                    {/* Conversion Tables */}
-                                                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px', marginBottom: '20px' }}>
-                                                        {[
-                                                            {
-                                                                title: 'Table 1',
-                                                                note: 'Science & M.Tech programmes',
-                                                                rows: [
-                                                                    ['4.50', '5.00', '75', '100'],
-                                                                    ['3.50', '4.50', '60', '75'],
-                                                                    ['2.50', '3.50', '50', '60'],
-                                                                    ['2.00', '2.50', '40', '50'],
-                                                                ]
-                                                            },
-                                                            {
-                                                                title: 'Table 2',
-                                                                note: 'Arts, Management, Commerce, M.B.A., B.Ed. & Music',
-                                                                rows: [
-                                                                    ['4.50', '5.00', '70', '100'],
-                                                                    ['3.50', '4.50', '60', '70'],
-                                                                    ['2.50', '3.50', '50', '60'],
-                                                                    ['2.00', '2.50', '40', '50'],
-                                                                ]
-                                                            }
-                                                        ].map(({ title, note, rows }) => (
-                                                            <div key={title} style={{ background: '#fff', border: '1px solid var(--glass-border)', borderRadius: '10px', overflow: 'hidden' }}>
-                                                                <div style={{ background: 'rgba(37, 99, 235, 0.08)', padding: '8px 12px', borderBottom: '1px solid var(--glass-border)' }}>
-                                                                    <p style={{ fontWeight: '700', fontSize: '0.82rem', color: 'var(--accent)', margin: '0 0 2px 0' }}>{title}</p>
-                                                                    <p style={{ fontSize: '0.72rem', color: 'var(--text-muted)', margin: 0, lineHeight: '1.3' }}>{note}</p>
-                                                                </div>
-                                                                <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.8rem' }}>
-                                                                    <thead>
-                                                                        <tr style={{ background: '#f8fafc' }}>
-                                                                            <th colSpan={2} style={{ padding: '6px 8px', textAlign: 'center', color: 'var(--text-muted)', fontWeight: '600', borderBottom: '1px solid var(--glass-border)', fontSize: '0.75rem' }}>CGPA/GPA Range</th>
-                                                                            <th colSpan={2} style={{ padding: '6px 8px', textAlign: 'center', color: 'var(--text-muted)', fontWeight: '600', borderBottom: '1px solid var(--glass-border)', fontSize: '0.75rem' }}>Equivalent %</th>
-                                                                        </tr>
-                                                                        <tr style={{ background: '#f8fafc' }}>
-                                                                            {['LP', 'UP', 'L%', 'H%'].map(h => (
-                                                                                <th key={h} style={{ padding: '4px 8px', textAlign: 'center', color: 'var(--text-muted)', fontWeight: '600', borderBottom: '1px solid var(--glass-border)', fontSize: '0.73rem' }}>{h}</th>
-                                                                            ))}
-                                                                        </tr>
-                                                                    </thead>
-                                                                    <tbody>
-                                                                        {rows.map(([lp, up, lperc, hperc], i) => (
-                                                                            <tr key={i} style={{ borderBottom: i < rows.length - 1 ? '1px solid var(--glass-border)' : 'none' }}>
-                                                                                {[lp, up, lperc, hperc].map((val, j) => (
-                                                                                    <td key={j} style={{ padding: '6px 8px', textAlign: 'center', color: 'var(--text-main)', fontWeight: j >= 2 ? '600' : '400' }}>{val}</td>
-                                                                                ))}
-                                                                            </tr>
-                                                                        ))}
-                                                                    </tbody>
-                                                                </table>
-                                                            </div>
-                                                        ))}
-                                                    </div>
-                                                    {/* 10-Point Scale Section */}
-                                                    <div style={{ borderTop: '1px solid var(--glass-border)', paddingTop: '16px', marginBottom: '0' }}>
-                                                        <p style={{ fontWeight: '700', fontSize: '0.95rem', color: 'var(--accent)', margin: '0 0 8px 0' }}>
-                                                            For GPA / CGPA on a 10-Point Scale
-                                                        </p>
-                                                        <p style={{ fontSize: '0.9rem', color: 'var(--text-main)', margin: '0 0 6px 0', lineHeight: '1.6' }}>
-                                                            Equivalent Percentage of Marks = GPA / CGPA × 10
-                                                        </p>
-                                                        <p style={{ fontSize: '0.85rem', color: 'var(--text-muted)', margin: 0, lineHeight: '1.6' }}>
-                                                            e.g., GPA of 7.2 is equivalent to 72%, GPA of 6.3 is equivalent to 63%
-                                                        </p>
-                                                    </div>
                                                     {/* Calculator Section — modernized two-zone card */}
-                                                    <div style={{ background: 'linear-gradient(135deg, #2563eb, #7c3aed)', borderRadius: '20px', padding: '2px', marginTop: '20px' }}>
+                                                    <div style={{ background: 'linear-gradient(135deg, #2563eb, #7c3aed)', borderRadius: '20px', padding: '2px' }}>
                                                         <div style={{ background: '#fff', borderRadius: '18px', overflow: 'hidden' }}>
                                                             {/* Dark header zone */}
                                                             <div style={{ background: 'linear-gradient(135deg, #0f172a 0%, #1e3a5f 100%)', padding: '24px' }}>
@@ -614,6 +535,90 @@ export default function InstructionsScreen({ config, onProceed, onCancel }) {
                                                             </div>
                                                         </div>
                                                     </div>
+                                                    {/* 5-Point Scale Section */}
+                                                    <div style={{ borderTop: '1px solid var(--glass-border)', paddingTop: '20px', marginTop: '20px' }}>
+                                                        <p style={{ fontWeight: '700', fontSize: '0.95rem', color: 'var(--accent)', margin: '0 0 10px 0' }}>
+                                                            For GPA / CGPA on a 5-Point Scale
+                                                        </p>
+                                                        <p style={{ fontSize: '0.85rem', color: 'var(--text-muted)', margin: '0 0 14px 0', lineHeight: '1.5' }}>
+                                                            Fix the relevant range from the tables below, then apply the formula:
+                                                        </p>
+                                                        {/* Formula */}
+                                                        <div style={{ textAlign: 'center', margin: '0 0 20px 0', fontSize: '1rem', color: 'var(--text-main)', fontWeight: '500' }}>
+                                                            <span style={{ verticalAlign: 'middle' }}>L% + </span>
+                                                            <span style={{ display: 'inline-block', verticalAlign: 'middle', margin: '0 4px' }}>
+                                                                <span style={{ display: 'block', borderBottom: '1.5px solid var(--text-main)', textAlign: 'center', padding: '0 6px 2px 6px', fontSize: '0.95rem' }}>H% – L%</span>
+                                                                <span style={{ display: 'block', textAlign: 'center', padding: '2px 6px 0 6px', fontSize: '0.95rem' }}>UP – LP</span>
+                                                            </span>
+                                                            <span style={{ verticalAlign: 'middle' }}> × (CGPA / GPA in question – LP)</span>
+                                                        </div>
+                                                        {/* Conversion Tables */}
+                                                        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px', marginBottom: '20px' }}>
+                                                            {[
+                                                                {
+                                                                    title: 'Table 1',
+                                                                    note: 'Science & M.Tech programmes',
+                                                                    rows: [
+                                                                        ['4.50', '5.00', '75', '100'],
+                                                                        ['3.50', '4.50', '60', '75'],
+                                                                        ['2.50', '3.50', '50', '60'],
+                                                                        ['2.00', '2.50', '40', '50'],
+                                                                    ]
+                                                                },
+                                                                {
+                                                                    title: 'Table 2',
+                                                                    note: 'Arts, Management, Commerce, M.B.A., B.Ed. & Music',
+                                                                    rows: [
+                                                                        ['4.50', '5.00', '70', '100'],
+                                                                        ['3.50', '4.50', '60', '70'],
+                                                                        ['2.50', '3.50', '50', '60'],
+                                                                        ['2.00', '2.50', '40', '50'],
+                                                                    ]
+                                                                }
+                                                            ].map(({ title, note, rows }) => (
+                                                                <div key={title} style={{ background: '#fff', border: '1px solid var(--glass-border)', borderRadius: '10px', overflow: 'hidden' }}>
+                                                                    <div style={{ background: 'rgba(37, 99, 235, 0.08)', padding: '8px 12px', borderBottom: '1px solid var(--glass-border)' }}>
+                                                                        <p style={{ fontWeight: '700', fontSize: '0.82rem', color: 'var(--accent)', margin: '0 0 2px 0' }}>{title}</p>
+                                                                        <p style={{ fontSize: '0.72rem', color: 'var(--text-muted)', margin: 0, lineHeight: '1.3' }}>{note}</p>
+                                                                    </div>
+                                                                    <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.8rem' }}>
+                                                                        <thead>
+                                                                            <tr style={{ background: '#f8fafc' }}>
+                                                                                <th colSpan={2} style={{ padding: '6px 8px', textAlign: 'center', color: 'var(--text-muted)', fontWeight: '600', borderBottom: '1px solid var(--glass-border)', fontSize: '0.75rem' }}>CGPA/GPA Range</th>
+                                                                                <th colSpan={2} style={{ padding: '6px 8px', textAlign: 'center', color: 'var(--text-muted)', fontWeight: '600', borderBottom: '1px solid var(--glass-border)', fontSize: '0.75rem' }}>Equivalent %</th>
+                                                                            </tr>
+                                                                            <tr style={{ background: '#f8fafc' }}>
+                                                                                {['LP', 'UP', 'L%', 'H%'].map(h => (
+                                                                                    <th key={h} style={{ padding: '4px 8px', textAlign: 'center', color: 'var(--text-muted)', fontWeight: '600', borderBottom: '1px solid var(--glass-border)', fontSize: '0.73rem' }}>{h}</th>
+                                                                                ))}
+                                                                            </tr>
+                                                                        </thead>
+                                                                        <tbody>
+                                                                            {rows.map(([lp, up, lperc, hperc], i) => (
+                                                                                <tr key={i} style={{ borderBottom: i < rows.length - 1 ? '1px solid var(--glass-border)' : 'none' }}>
+                                                                                    {[lp, up, lperc, hperc].map((val, j) => (
+                                                                                        <td key={j} style={{ padding: '6px 8px', textAlign: 'center', color: 'var(--text-main)', fontWeight: j >= 2 ? '600' : '400' }}>{val}</td>
+                                                                                    ))}
+                                                                                </tr>
+                                                                            ))}
+                                                                        </tbody>
+                                                                    </table>
+                                                                </div>
+                                                            ))}
+                                                        </div>
+                                                        {/* 10-Point Scale Section */}
+                                                        <div style={{ borderTop: '1px solid var(--glass-border)', paddingTop: '16px' }}>
+                                                            <p style={{ fontWeight: '700', fontSize: '0.95rem', color: 'var(--accent)', margin: '0 0 8px 0' }}>
+                                                                For GPA / CGPA on a 10-Point Scale
+                                                            </p>
+                                                            <p style={{ fontSize: '0.9rem', color: 'var(--text-main)', margin: '0 0 6px 0', lineHeight: '1.6' }}>
+                                                                Equivalent Percentage of Marks = GPA / CGPA × 10
+                                                            </p>
+                                                            <p style={{ fontSize: '0.85rem', color: 'var(--text-muted)', margin: 0, lineHeight: '1.6' }}>
+                                                                e.g., GPA of 7.2 is equivalent to 72%, GPA of 6.3 is equivalent to 63%
+                                                            </p>
+                                                        </div>
+                                                    </div>
                                                 </div>
                                             ) : (
                                                 <div style={{
@@ -665,30 +670,34 @@ export default function InstructionsScreen({ config, onProceed, onCancel }) {
             </div>
 
             <div style={{ display: 'flex', gap: '15px' }}>
-                <button
-                    onClick={() => {
-                        const pref = hardCopy && softCopy ? 'Both Hard Copy and Soft Copy'
+                {!hideProceedButton && (
+                    <button
+                        onClick={() => {
+                            const pref = isCgpaCalculator
+                                ? (hardCopy ? 'Hard Copy' : null)
+                                : (hardCopy && softCopy ? 'Both Hard Copy and Soft Copy'
                                    : hardCopy ? 'Hard Copy'
                                    : softCopy ? 'Soft Copy'
-                                   : null;
-                        onProceed(pref);
-                    }}
-                    disabled={proceedDisabled}
-                    className="btn-primary"
-                    style={{
-                        flexGrow: 1,
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                        gap: '10px',
-                        opacity: proceedDisabled ? 0.5 : 1,
-                        cursor: proceedDisabled ? 'not-allowed' : 'pointer'
-                    }}
-                >
-                    <CheckCircle2 size={18} />
-                    I Understand, Proceed to Form
-                    <ArrowRight size={18} />
-                </button>
+                                   : null);
+                            onProceed(pref);
+                        }}
+                        disabled={proceedDisabled}
+                        className="btn-primary"
+                        style={{
+                            flexGrow: 1,
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            gap: '10px',
+                            opacity: proceedDisabled ? 0.5 : 1,
+                            cursor: proceedDisabled ? 'not-allowed' : 'pointer'
+                        }}
+                    >
+                        <CheckCircle2 size={18} />
+                        I Understand, Proceed to Form
+                        <ArrowRight size={18} />
+                    </button>
+                )}
                 <button onClick={onCancel} className="btn-secondary">
                     Cancel
                 </button>
