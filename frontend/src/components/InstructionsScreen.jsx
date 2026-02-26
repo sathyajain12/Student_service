@@ -511,69 +511,108 @@ export default function InstructionsScreen({ config, onProceed, onCancel }) {
                                                             e.g., GPA of 7.2 is equivalent to 72%, GPA of 6.3 is equivalent to 63%
                                                         </p>
                                                     </div>
-                                                    {/* Calculator Section */}
-                                                    <div style={{ borderTop: '1px solid var(--glass-border)', paddingTop: '16px', marginTop: '16px' }}>
-                                                        <p style={{ fontWeight: '700', fontSize: '0.95rem', color: 'var(--accent)', margin: '0 0 14px 0' }}>
-                                                            Calculate Your Equivalent Percentage
-                                                        </p>
-                                                        {/* Scale toggle */}
-                                                        <div style={{ display: 'flex', gap: '8px', marginBottom: '14px' }}>
-                                                            {[{ val: '10', label: '10-Point Scale' }, { val: '5', label: '5-Point Scale' }].map(({ val, label }) => (
-                                                                <button key={val} onClick={() => { setCalcScale(val); setCalcCgpa(''); }}
-                                                                    style={{
-                                                                        padding: '7px 16px', borderRadius: '20px', fontSize: '0.85rem', fontWeight: '600', cursor: 'pointer', border: 'none',
-                                                                        background: calcScale === val ? 'var(--accent)' : 'rgba(37, 99, 235, 0.08)',
-                                                                        color: calcScale === val ? '#fff' : 'var(--accent)',
-                                                                        transition: 'all 0.2s'
-                                                                    }}>
-                                                                    {label}
-                                                                </button>
-                                                            ))}
-                                                        </div>
-                                                        {/* Programme type (5-point only) */}
-                                                        {calcScale === '5' && (
-                                                            <div style={{ display: 'flex', gap: '8px', marginBottom: '14px', flexWrap: 'wrap' }}>
-                                                                {[{ val: '1', label: 'Science & M.Tech (Table 1)' }, { val: '2', label: 'Arts, Management & Others (Table 2)' }].map(({ val, label }) => (
-                                                                    <button key={val} onClick={() => setCalcTable(val)}
-                                                                        style={{
-                                                                            padding: '7px 14px', borderRadius: '20px', fontSize: '0.82rem', fontWeight: '600', cursor: 'pointer', border: 'none',
-                                                                            background: calcTable === val ? 'var(--accent)' : 'rgba(37, 99, 235, 0.08)',
-                                                                            color: calcTable === val ? '#fff' : 'var(--accent)',
-                                                                            transition: 'all 0.2s'
-                                                                        }}>
-                                                                        {label}
-                                                                    </button>
-                                                                ))}
+                                                    {/* Calculator Section — modernized two-zone card */}
+                                                    <div style={{ background: 'linear-gradient(135deg, #2563eb, #7c3aed)', borderRadius: '20px', padding: '2px', marginTop: '20px' }}>
+                                                        <div style={{ background: '#fff', borderRadius: '18px', overflow: 'hidden' }}>
+                                                            {/* Dark header zone */}
+                                                            <div style={{ background: 'linear-gradient(135deg, #0f172a 0%, #1e3a5f 100%)', padding: '24px' }}>
+                                                                <p style={{ fontSize: '0.68rem', fontWeight: '700', color: 'rgba(255,255,255,0.4)', textTransform: 'uppercase', letterSpacing: '0.12em', margin: '0 0 14px 0' }}>
+                                                                    GPA / CGPA Calculator
+                                                                </p>
+                                                                {/* Display screen */}
+                                                                <div style={{
+                                                                    background: 'rgba(0,0,0,0.35)', border: '1px solid rgba(255,255,255,0.08)',
+                                                                    borderRadius: '12px', padding: '16px 20px', minHeight: '80px',
+                                                                    display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'flex-end',
+                                                                    marginBottom: '16px'
+                                                                }}>
+                                                                    {calcResult ? (
+                                                                        calcResult.error ? (
+                                                                            <p style={{ color: '#f87171', fontSize: '0.875rem', margin: 0, fontWeight: '500', textAlign: 'right', fontFamily: 'monospace' }}>{calcResult.error}</p>
+                                                                        ) : (
+                                                                            <>
+                                                                                <p style={{ fontSize: '2.5rem', fontWeight: '800', color: '#fff', margin: 0, fontFamily: 'monospace', lineHeight: 1 }}>{calcResult.result}%</p>
+                                                                                <p style={{ fontSize: '0.72rem', color: 'rgba(255,255,255,0.45)', margin: '6px 0 0 0', fontFamily: 'monospace', textAlign: 'right' }}>{calcResult.formulaStr}</p>
+                                                                            </>
+                                                                        )
+                                                                    ) : (
+                                                                        <p style={{ fontSize: '2.2rem', fontWeight: '300', color: 'rgba(255,255,255,0.18)', margin: 0, fontFamily: 'monospace' }}>—.—%</p>
+                                                                    )}
+                                                                </div>
+                                                                {/* Sliding segmented control */}
+                                                                <div style={{ position: 'relative', display: 'flex', background: 'rgba(255,255,255,0.08)', borderRadius: '10px', padding: '3px' }}>
+                                                                    <div style={{
+                                                                        position: 'absolute', top: '3px',
+                                                                        left: calcScale === '10' ? '3px' : 'calc(50% + 1.5px)',
+                                                                        width: 'calc(50% - 4.5px)', height: 'calc(100% - 6px)',
+                                                                        background: 'rgba(255,255,255,0.15)', borderRadius: '8px',
+                                                                        boxShadow: '0 1px 4px rgba(0,0,0,0.3)',
+                                                                        transition: 'left 0.25s cubic-bezier(0.4,0,0.2,1)'
+                                                                    }} />
+                                                                    {[{ val: '10', label: '10-Point Scale' }, { val: '5', label: '5-Point Scale' }].map(({ val, label }) => (
+                                                                        <button key={val} onClick={() => { setCalcScale(val); setCalcCgpa(''); }}
+                                                                            style={{
+                                                                                flex: 1, padding: '8px', border: 'none', background: 'transparent',
+                                                                                fontSize: '0.82rem', fontWeight: calcScale === val ? '700' : '600',
+                                                                                color: calcScale === val ? '#fff' : 'rgba(255,255,255,0.45)',
+                                                                                cursor: 'pointer', position: 'relative', zIndex: 1,
+                                                                                borderRadius: '8px', transition: 'color 0.25s ease'
+                                                                            }}>
+                                                                            {label}
+                                                                        </button>
+                                                                    ))}
+                                                                </div>
                                                             </div>
-                                                        )}
-                                                        {/* CGPA input */}
-                                                        <input
-                                                            type="number"
-                                                            value={calcCgpa}
-                                                            onChange={e => setCalcCgpa(e.target.value)}
-                                                            placeholder={calcScale === '10' ? 'Enter GPA / CGPA (0 – 10)' : 'Enter GPA / CGPA (2.00 – 5.00)'}
-                                                            min="0"
-                                                            max={calcScale === '10' ? '10' : '5'}
-                                                            step="0.01"
-                                                            style={{
-                                                                width: '100%', padding: '10px 14px', borderRadius: '10px', fontSize: '0.95rem',
-                                                                border: '1.5px solid var(--glass-border)', background: '#fff',
-                                                                color: 'var(--text-main)', outline: 'none', boxSizing: 'border-box', marginBottom: '12px'
-                                                            }}
-                                                        />
-                                                        {/* Result */}
-                                                        {calcResult && (
-                                                            calcResult.error ? (
-                                                                <div style={{ padding: '12px 14px', borderRadius: '10px', background: 'rgba(239, 68, 68, 0.06)', border: '1px solid rgba(239, 68, 68, 0.25)' }}>
-                                                                    <p style={{ color: '#dc2626', fontSize: '0.875rem', margin: 0, fontWeight: '500' }}>{calcResult.error}</p>
+                                                            {/* White content zone */}
+                                                            <div style={{ padding: '20px' }}>
+                                                                {/* Programme type chips (5-point only) */}
+                                                                {calcScale === '5' && (
+                                                                    <div style={{ marginBottom: '18px' }}>
+                                                                        <p style={{ fontSize: '0.7rem', fontWeight: '700', color: '#94a3b8', textTransform: 'uppercase', letterSpacing: '0.08em', margin: '0 0 10px 0' }}>
+                                                                            Programme Type
+                                                                        </p>
+                                                                        <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap' }}>
+                                                                            {[
+                                                                                { val: '1', label: 'Science & M.Tech', sub: 'Table 1' },
+                                                                                { val: '2', label: 'Arts & Management', sub: 'Table 2' }
+                                                                            ].map(({ val, label, sub }) => (
+                                                                                <button key={val} onClick={() => setCalcTable(val)} style={{
+                                                                                    padding: '8px 14px', borderRadius: '10px', cursor: 'pointer', textAlign: 'left',
+                                                                                    border: `2px solid ${calcTable === val ? 'var(--accent)' : '#e2e8f0'}`,
+                                                                                    background: calcTable === val ? 'rgba(37,99,235,0.06)' : '#fff',
+                                                                                    transition: 'all 0.2s'
+                                                                                }}>
+                                                                                    <p style={{ fontSize: '0.82rem', fontWeight: '700', color: calcTable === val ? 'var(--accent)' : 'var(--text-main)', margin: 0 }}>{label}</p>
+                                                                                    <p style={{ fontSize: '0.72rem', color: calcTable === val ? 'var(--accent)' : 'var(--text-muted)', margin: 0, opacity: 0.8 }}>{sub}</p>
+                                                                                </button>
+                                                                            ))}
+                                                                        </div>
+                                                                    </div>
+                                                                )}
+                                                                {/* GPA input */}
+                                                                <div>
+                                                                    <p style={{ fontSize: '0.7rem', fontWeight: '700', color: '#94a3b8', textTransform: 'uppercase', letterSpacing: '0.08em', margin: '0 0 8px 0' }}>
+                                                                        GPA / CGPA
+                                                                    </p>
+                                                                    <input
+                                                                        type="number"
+                                                                        value={calcCgpa}
+                                                                        onChange={e => setCalcCgpa(e.target.value)}
+                                                                        placeholder={calcScale === '10' ? '0.00 – 10.00' : '2.00 – 5.00'}
+                                                                        min="0"
+                                                                        max={calcScale === '10' ? '10' : '5'}
+                                                                        step="0.01"
+                                                                        style={{
+                                                                            width: '100%', padding: '14px 16px', borderRadius: '12px',
+                                                                            fontSize: '1.5rem', fontWeight: '600', fontFamily: 'monospace',
+                                                                            border: '2px solid #e2e8f0', background: '#f8fafc',
+                                                                            color: 'var(--text-main)', outline: 'none',
+                                                                            boxSizing: 'border-box', letterSpacing: '0.05em'
+                                                                        }}
+                                                                    />
                                                                 </div>
-                                                            ) : (
-                                                                <div style={{ padding: '14px 16px', borderRadius: '10px', background: 'rgba(37, 99, 235, 0.06)', border: '1px solid rgba(37, 99, 235, 0.25)', textAlign: 'center' }}>
-                                                                    <p style={{ fontSize: '2rem', fontWeight: '800', color: 'var(--accent)', margin: '0 0 4px 0', lineHeight: 1 }}>{calcResult.result}%</p>
-                                                                    <p style={{ fontSize: '0.8rem', color: 'var(--text-muted)', margin: 0, fontFamily: 'monospace' }}>{calcResult.formulaStr}</p>
-                                                                </div>
-                                                            )
-                                                        )}
+                                                            </div>
+                                                        </div>
                                                     </div>
                                                 </div>
                                             ) : (
