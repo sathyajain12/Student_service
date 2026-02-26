@@ -1,6 +1,5 @@
 import { getGoogleAuth, sendEmail } from './google-api';
-
-const ADMIN_EMAIL = 'saisathyajain@sssihl.edu.in';
+import { SignJWT, jwtVerify } from 'jose';
 
 const CAMPUS_CONTACTS = {
     'Prashanti Nilayam Campus': { phone: '08555-287235', email: 'officeofdirector.psn@sssihl.edu.in' },
@@ -36,106 +35,178 @@ function generateAppId(prefix) {
     return `${prefix}${yy}${mm}${dd}${random}`;
 }
 
+// CORS headers — respects ALLOWED_ORIGIN env var
+function getCorsHeaders(env) {
+    return {
+        'Access-Control-Allow-Origin': env?.ALLOWED_ORIGIN || '*',
+        'Access-Control-Allow-Methods': 'GET, POST, DELETE, OPTIONS',
+        'Access-Control-Allow-Headers': 'Content-Type, Authorization',
+    };
+}
+
+// Security headers added to every response
+const SECURITY_HEADERS = {
+    'X-Content-Type-Options': 'nosniff',
+    'X-Frame-Options': 'DENY',
+    'Referrer-Policy': 'strict-origin-when-cross-origin',
+    'Permissions-Policy': 'camera=(), microphone=(), geolocation=()',
+    'Strict-Transport-Security': 'max-age=31536000; includeSubDomains',
+};
+
+function addSecurityHeaders(response) {
+    const newHeaders = new Headers(response.headers);
+    for (const [k, v] of Object.entries(SECURITY_HEADERS)) newHeaders.set(k, v);
+    return new Response(response.body, { status: response.status, headers: newHeaders });
+}
+
+// In-memory rate limiter (per-worker-instance)
+// For global rate limiting across all edge nodes, use Cloudflare WAF Rate Limiting rules.
+const rateLimitMap = new Map();
+function checkRateLimit(ip, limit = 10, windowMs = 60000) {
+    const now = Date.now();
+    const times = (rateLimitMap.get(ip) || []).filter(t => now - t < windowMs);
+    times.push(now);
+    rateLimitMap.set(ip, times);
+    return times.length <= limit;
+}
+
+// PBKDF2-SHA256 password hashing (100,000 iterations + random salt)
+async function hashPassword(password) {
+    const salt = crypto.getRandomValues(new Uint8Array(16));
+    const keyMaterial = await crypto.subtle.importKey('raw', new TextEncoder().encode(password), 'PBKDF2', false, ['deriveBits']);
+    const bits = await crypto.subtle.deriveBits({ name: 'PBKDF2', hash: 'SHA-256', salt, iterations: 100000 }, keyMaterial, 256);
+    const hash = Array.from(new Uint8Array(bits)).map(b => b.toString(16).padStart(2, '0')).join('');
+    const saltHex = Array.from(salt).map(b => b.toString(16).padStart(2, '0')).join('');
+    return { salt: saltHex, hash };
+}
+
+async function verifyPassword(password, saltHex, hashHex) {
+    const salt = new Uint8Array(saltHex.match(/.{2}/g).map(b => parseInt(b, 16)));
+    const keyMaterial = await crypto.subtle.importKey('raw', new TextEncoder().encode(password), 'PBKDF2', false, ['deriveBits']);
+    const bits = await crypto.subtle.deriveBits({ name: 'PBKDF2', hash: 'SHA-256', salt, iterations: 100000 }, keyMaterial, 256);
+    const hash = Array.from(new Uint8Array(bits)).map(b => b.toString(16).padStart(2, '0')).join('');
+    return hash === hashHex;
+}
+
+// HMAC-SHA256 helper (for CSRF tokens)
+async function hmacSign(secret, message) {
+    const key = await crypto.subtle.importKey('raw', new TextEncoder().encode(secret), { name: 'HMAC', hash: 'SHA-256' }, false, ['sign']);
+    const sig = await crypto.subtle.sign('HMAC', key, new TextEncoder().encode(message));
+    return Array.from(new Uint8Array(sig)).map(b => b.toString(16).padStart(2, '0')).join('');
+}
+
+async function hmacVerify(secret, message, sigHex) {
+    const expected = await hmacSign(secret, message);
+    return expected === sigHex;
+}
+
 export default {
     async fetch(request, env) {
         const url = new URL(request.url);
-
-        // CORS Headers
-        const corsHeaders = {
-            'Access-Control-Allow-Origin': '*',
-            'Access-Control-Allow-Methods': 'GET, POST, DELETE, OPTIONS',
-            'Access-Control-Allow-Headers': 'Content-Type, Authorization',
-        };
+        const corsHeaders = getCorsHeaders(env);
 
         if (request.method === 'OPTIONS') {
-            return new Response(null, { headers: corsHeaders });
+            return addSecurityHeaders(new Response(null, { headers: corsHeaders }));
         }
 
-        try {
-            // Public routes
-            if (url.pathname === '/submit' && request.method === 'POST') {
-                return await handleSubmission(request, env, corsHeaders);
-            }
-
-            if (url.pathname === '/approve' && request.method === 'GET') {
-                return await handleApproval(url, env, corsHeaders);
-            }
-
-            if (url.pathname === '/director-comment' && request.method === 'GET') {
-                return await handleDirectorCommentPage(url, env, corsHeaders);
-            }
-
-            if (url.pathname === '/director-comment' && request.method === 'POST') {
-                return await handleDirectorCommentSubmit(request, env, corsHeaders);
-            }
-
-            if (url.pathname === '/submit-to-coe' && request.method === 'POST') {
-                return await handleSubmitToCOE(request, env, corsHeaders);
-            }
-
-            if (url.pathname === '/status' && request.method === 'GET') {
-                return await handleStatusRequest(url, env, corsHeaders);
-            }
-
-            // Public download for students (response documents only)
-            if (url.pathname.startsWith('/download/') && request.method === 'GET') {
-                const fileId = url.pathname.split('/').pop();
-                return await handlePublicDownload(fileId, url, env, corsHeaders);
-            }
-
-            // Admin routes
-            if (url.pathname === '/admin/login' && request.method === 'POST') {
-                return await handleAdminLogin(request, env, corsHeaders);
-            }
-
-            if (url.pathname === '/admin/applications' && request.method === 'GET') {
-                return await handleGetApplications(request, env, corsHeaders);
-            }
-
-            if (url.pathname.startsWith('/admin/application/') && request.method === 'GET') {
-                const id = url.pathname.split('/').pop();
-                return await handleGetApplication(id, request, env, corsHeaders);
-            }
-
-            if (url.pathname.startsWith('/admin/file/') && request.method === 'GET') {
-                const fileId = url.pathname.split('/').pop();
-                return await handleGetFile(fileId, request, env, corsHeaders);
-            }
-
-            if (url.pathname === '/admin/stats' && request.method === 'GET') {
-                return await handleGetStats(request, env, corsHeaders);
-            }
-
-            if (url.pathname === '/admin/complete' && request.method === 'POST') {
-                return await handleMarkCompleted(request, env, corsHeaders);
-            }
-
-            if (url.pathname === '/admin/resolve-hold' && request.method === 'POST') {
-                return await handleResolveHold(request, env, corsHeaders);
-            }
-
-            if (url.pathname === '/admin/notify-dispatched' && request.method === 'POST') {
-                return await handleNotifyDispatched(request, env, corsHeaders);
-            }
-
-            if (url.pathname === '/admin/upload-response' && request.method === 'POST') {
-                return await handleUploadResponse(request, env, corsHeaders);
-            }
-
-            if (url.pathname.startsWith('/admin/application/') && request.method === 'DELETE') {
-                const id = url.pathname.split('/').pop();
-                return await handleDeleteApplication(id, request, env, corsHeaders);
-            }
-
-            return new Response('Not Found', { status: 404, headers: corsHeaders });
-        } catch (error) {
-            console.error(error);
-            const status = error instanceof FileValidationError ? 400 : 500;
-            return new Response(JSON.stringify({ error: error.message }), {
-                status: status,
-                headers: { ...corsHeaders, 'Content-Type': 'application/json' }
-            });
+        // Rate limiting — 10 req/min per IP (in-memory, per worker instance)
+        const ip = request.headers.get('CF-Connecting-IP') || 'unknown';
+        if (!checkRateLimit(ip)) {
+            return addSecurityHeaders(new Response(JSON.stringify({ error: 'Too many requests' }), {
+                status: 429,
+                headers: { ...corsHeaders, 'Retry-After': '60', 'Content-Type': 'application/json' }
+            }));
         }
+
+        const response = await (async () => {
+            try {
+                // Public routes
+                if (url.pathname === '/submit' && request.method === 'POST') {
+                    return await handleSubmission(request, env, corsHeaders);
+                }
+
+                if (url.pathname === '/approve' && request.method === 'GET') {
+                    return await handleApproval(url, env, corsHeaders);
+                }
+
+                if (url.pathname === '/director-comment' && request.method === 'GET') {
+                    return await handleDirectorCommentPage(url, env, corsHeaders);
+                }
+
+                if (url.pathname === '/director-comment' && request.method === 'POST') {
+                    return await handleDirectorCommentSubmit(request, env, corsHeaders);
+                }
+
+                if (url.pathname === '/submit-to-coe' && request.method === 'POST') {
+                    return await handleSubmitToCOE(request, env, corsHeaders);
+                }
+
+                if (url.pathname === '/status' && request.method === 'GET') {
+                    return await handleStatusRequest(url, env, corsHeaders);
+                }
+
+                // Public download for students (response documents only)
+                if (url.pathname.startsWith('/download/') && request.method === 'GET') {
+                    const fileId = url.pathname.split('/').pop();
+                    return await handlePublicDownload(fileId, url, env, corsHeaders);
+                }
+
+                // Admin routes
+                if (url.pathname === '/admin/login' && request.method === 'POST') {
+                    return await handleAdminLogin(request, env, corsHeaders);
+                }
+
+                if (url.pathname === '/admin/applications' && request.method === 'GET') {
+                    return await handleGetApplications(request, env, corsHeaders);
+                }
+
+                if (url.pathname.startsWith('/admin/application/') && request.method === 'GET') {
+                    const id = url.pathname.split('/').pop();
+                    return await handleGetApplication(id, request, env, corsHeaders);
+                }
+
+                if (url.pathname.startsWith('/admin/file/') && request.method === 'GET') {
+                    const fileId = url.pathname.split('/').pop();
+                    return await handleGetFile(fileId, request, env, corsHeaders);
+                }
+
+                if (url.pathname === '/admin/stats' && request.method === 'GET') {
+                    return await handleGetStats(request, env, corsHeaders);
+                }
+
+                if (url.pathname === '/admin/complete' && request.method === 'POST') {
+                    return await handleMarkCompleted(request, env, corsHeaders);
+                }
+
+                if (url.pathname === '/admin/resolve-hold' && request.method === 'POST') {
+                    return await handleResolveHold(request, env, corsHeaders);
+                }
+
+                if (url.pathname === '/admin/notify-dispatched' && request.method === 'POST') {
+                    return await handleNotifyDispatched(request, env, corsHeaders);
+                }
+
+                if (url.pathname === '/admin/upload-response' && request.method === 'POST') {
+                    return await handleUploadResponse(request, env, corsHeaders);
+                }
+
+                if (url.pathname.startsWith('/admin/application/') && request.method === 'DELETE') {
+                    const id = url.pathname.split('/').pop();
+                    return await handleDeleteApplication(id, request, env, corsHeaders);
+                }
+
+                return new Response('Not Found', { status: 404, headers: corsHeaders });
+            } catch (error) {
+                console.error(error);
+                const status = error instanceof FileValidationError ? 400 : 500;
+                return new Response(JSON.stringify({ error: error.message }), {
+                    status: status,
+                    headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+                });
+            }
+        })();
+
+        return addSecurityHeaders(response);
     }
 };
 
@@ -143,41 +214,27 @@ export default {
 
 async function verifyAdminToken(request, env) {
     const authHeader = request.headers.get('Authorization');
-    if (!authHeader || !authHeader.startsWith('Bearer ')) {
-        return null;
-    }
+    if (!authHeader || !authHeader.startsWith('Bearer ')) return null;
     const token = authHeader.substring(7);
-
-    // Simple token verification (token is username:timestamp hashed)
     try {
-        const [username, timestamp] = atob(token).split(':');
+        const secret = new TextEncoder().encode(env.JWT_SECRET);
+        const { payload } = await jwtVerify(token, secret);
         const admin = await env.DB.prepare(
             'SELECT * FROM admin_users WHERE username = ?'
-        ).bind(username).first();
-
-        // Token valid for 24 hours
-        if (admin && (Date.now() - parseInt(timestamp)) < 86400000) {
-            return admin;
-        }
+        ).bind(payload.username).first();
+        return admin || null;
     } catch (e) {
         return null;
     }
-    return null;
 }
 
 async function handleAdminLogin(request, env, corsHeaders) {
     const { username, password } = await request.json();
 
-    // Simple password hash (in production, use bcrypt or similar)
-    const encoder = new TextEncoder();
-    const data = encoder.encode(password);
-    const hashBuffer = await crypto.subtle.digest('SHA-256', data);
-    const hashArray = Array.from(new Uint8Array(hashBuffer));
-    const passwordHash = hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
-
+    // Fetch admin by username (need salt + hash)
     const admin = await env.DB.prepare(
-        'SELECT * FROM admin_users WHERE username = ? AND password_hash = ?'
-    ).bind(username, passwordHash).first();
+        'SELECT * FROM admin_users WHERE username = ?'
+    ).bind(username).first();
 
     if (!admin) {
         return new Response(JSON.stringify({ error: 'Invalid credentials' }), {
@@ -186,8 +243,40 @@ async function handleAdminLogin(request, env, corsHeaders) {
         });
     }
 
-    // Create simple token
-    const token = btoa(`${username}:${Date.now()}`);
+    let passwordValid = false;
+
+    if (admin.salt) {
+        // Modern path: PBKDF2 verification
+        passwordValid = await verifyPassword(password, admin.salt, admin.password_hash);
+    } else {
+        // Legacy path: unsalted SHA-256 — verify and transparently migrate to PBKDF2
+        const encoder = new TextEncoder();
+        const hashBuffer = await crypto.subtle.digest('SHA-256', encoder.encode(password));
+        const legacyHash = Array.from(new Uint8Array(hashBuffer)).map(b => b.toString(16).padStart(2, '0')).join('');
+        if (legacyHash === admin.password_hash) {
+            passwordValid = true;
+            // Migrate: re-hash with PBKDF2 and store salt
+            const { salt, hash } = await hashPassword(password);
+            await env.DB.prepare(
+                'UPDATE admin_users SET password_hash = ?, salt = ? WHERE username = ?'
+            ).bind(hash, salt, username).run();
+        }
+    }
+
+    if (!passwordValid) {
+        return new Response(JSON.stringify({ error: 'Invalid credentials' }), {
+            status: 401,
+            headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+        });
+    }
+
+    // Issue signed JWT (24h expiry)
+    const secret = new TextEncoder().encode(env.JWT_SECRET);
+    const token = await new SignJWT({ username })
+        .setProtectedHeader({ alg: 'HS256' })
+        .setIssuedAt()
+        .setExpirationTime('24h')
+        .sign(secret);
 
     return new Response(JSON.stringify({ success: true, token, username: admin.username }), {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' }
@@ -310,11 +399,12 @@ async function handleGetFile(fileId, request, env, corsHeaders) {
         bytes[i] = binaryString.charCodeAt(i);
     }
 
+    const safeFilename = (file.file_name || 'download.pdf').replace(/[^\w\s\-_.()]/g, '_').replace(/\s+/g, ' ').trim();
     return new Response(bytes, {
         headers: {
             ...corsHeaders,
             'Content-Type': file.file_type,
-            'Content-Disposition': `attachment; filename="${file.file_name}"`
+            'Content-Disposition': `attachment; filename="${safeFilename}"`
         }
     });
 }
@@ -715,10 +805,22 @@ async function handleDeleteApplication(id, request, env, corsHeaders) {
 // Handler for public download (students downloading response documents)
 async function handlePublicDownload(fileId, url, env, corsHeaders) {
     const appId = url.searchParams.get('appId');
+    const token = url.searchParams.get('token');
 
     if (!appId) {
         return new Response(JSON.stringify({ error: 'Application ID is required' }), {
             status: 400,
+            headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+        });
+    }
+
+    // Ownership check: if the application has an access_token, require it
+    const appRecord = await env.DB.prepare(
+        'SELECT access_token FROM applications WHERE id = ?'
+    ).bind(appId).first();
+    if (appRecord && appRecord.access_token && appRecord.access_token !== token) {
+        return new Response(JSON.stringify({ error: 'Invalid access token' }), {
+            status: 403,
             headers: { ...corsHeaders, 'Content-Type': 'application/json' }
         });
     }
@@ -742,11 +844,12 @@ async function handlePublicDownload(fileId, url, env, corsHeaders) {
         bytes[i] = binaryString.charCodeAt(i);
     }
 
+    const safeFilename = (file.file_name || 'download.pdf').replace(/[^\w\s\-_.()]/g, '_').replace(/\s+/g, ' ').trim();
     return new Response(bytes, {
         headers: {
             ...corsHeaders,
             'Content-Type': file.file_type,
-            'Content-Disposition': `attachment; filename="${file.file_name}"`
+            'Content-Disposition': `attachment; filename="${safeFilename}"`
         }
     });
 }
@@ -1015,11 +1118,11 @@ async function sendAdminNotification(env, appId, formType, applicantName, email)
             });
 
             await sendEmail(accessToken, {
-                to: ADMIN_EMAIL,
+                to: env.ADMIN_EMAIL,
                 subject: `New Application Received: ${formType} - ${appId}`,
                 htmlBody: htmlBody
             });
-            console.log(`Admin notification sent successfully to ${ADMIN_EMAIL} for app ${appId}`);
+            console.log(`Admin notification sent successfully to ${env.ADMIN_EMAIL} for app ${appId}`);
         } catch (e) {
             console.error('Failed to send admin notification:', e);
         }
@@ -1518,32 +1621,51 @@ async function handleSubmission(request, env, corsHeaders) {
     const formData = await request.formData();
     const formType = formData.get('formType');
 
-    // Route to appropriate handler based on form type
+    let subResult;
     switch (formType) {
         case 'Application for Duplicate Grade Card':
-            return await handleDuplicateGradeCard(formData, request, env, corsHeaders);
+            subResult = await handleDuplicateGradeCard(formData, request, env, corsHeaders); break;
         case 'Application for CGPA to Marks Conversion':
-            return await handleCGPAConversion(formData, request, env, corsHeaders);
+            subResult = await handleCGPAConversion(formData, request, env, corsHeaders); break;
         case 'Application for Supplementary Examinations Registration':
-            return await handleSupplementaryExam(formData, request, env, corsHeaders);
+            subResult = await handleSupplementaryExam(formData, request, env, corsHeaders); break;
         case 'Application for Duplicate Degree Certificate':
-            return await handleDuplicateDegree(formData, request, env, corsHeaders);
+            subResult = await handleDuplicateDegree(formData, request, env, corsHeaders); break;
         case 'Application for Registration of Student Name change in the Institute Records':
-            return await handleNameChange(formData, request, env, corsHeaders);
+            subResult = await handleNameChange(formData, request, env, corsHeaders); break;
         case 'Application for Repeating Examinations Registration (CIE and ESE)':
-            return await handleRepeatPaper(formData, request, env, corsHeaders);
+            subResult = await handleRepeatPaper(formData, request, env, corsHeaders); break;
         case 'Application for Re-Totalling of Marks':
-            return await handleRetotaling(formData, request, env, corsHeaders);
+            subResult = await handleRetotaling(formData, request, env, corsHeaders); break;
         case 'Application for On-Request Degree Certificate':
-            return await handleOnRequestDegree(formData, request, env, corsHeaders);
+            subResult = await handleOnRequestDegree(formData, request, env, corsHeaders); break;
         case 'Application for Migration Certificate':
-            return await handleMigration(formData, request, env, corsHeaders);
+            subResult = await handleMigration(formData, request, env, corsHeaders); break;
         default:
             return new Response(JSON.stringify({ success: false, error: 'Unknown form type' }), {
                 status: 400,
                 headers: { ...corsHeaders, 'Content-Type': 'application/json' }
             });
     }
+
+    // Generate and attach a secure access token for status/download ownership checks
+    if (subResult.ok) {
+        try {
+            const body = await subResult.json();
+            if (body.success && body.appId) {
+                const tokenBytes = crypto.getRandomValues(new Uint8Array(32));
+                const accessToken = Array.from(tokenBytes).map(b => b.toString(16).padStart(2, '0')).join('');
+                await env.DB.prepare('UPDATE applications SET access_token = ? WHERE id = ?')
+                    .bind(accessToken, body.appId).run();
+                return new Response(JSON.stringify({ ...body, accessToken }), {
+                    headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+                });
+            }
+        } catch (e) {
+            console.error('Access token generation failed:', e);
+        }
+    }
+    return subResult;
 }
 
 // Handler for Duplicate Grade Card
@@ -2096,6 +2218,12 @@ async function handleDirectorCommentPage(url, env, corsHeaders) {
     if (!app) return new Response('Application not found', { status: 404, headers: corsHeaders });
 
     const alreadyActed = app.status !== 'AWAITING_DIRECTOR';
+
+    // Generate CSRF token (random nonce + expiry, signed with HMAC-SHA256)
+    const nonce = Array.from(crypto.getRandomValues(new Uint8Array(16))).map(b => b.toString(16).padStart(2, '0')).join('');
+    const exp = Date.now() + 3600000; // 1 hour
+    const csrfPayload = `${nonce}:${exp}`;
+    const csrfSig = await hmacSign(env.CSRF_SECRET || 'fallback-dev-secret', csrfPayload);
     const pageHtml = `<!DOCTYPE html>
 <html lang="en">
 <head>
@@ -2151,6 +2279,8 @@ async function handleDirectorCommentPage(url, env, corsHeaders) {
                <!-- Comment Form -->
                <form method="POST" action="/director-comment">
                    <input type="hidden" name="id" value="${escapeHtml(app.id)}">
+                   <input type="hidden" name="csrf_payload" value="${csrfPayload}">
+                   <input type="hidden" name="csrf_sig" value="${csrfSig}">
                    <label class="block text-sm font-semibold text-slate-800 mb-2" for="comment">Your Comments</label>
                    <textarea
                        id="comment"
@@ -2181,7 +2311,25 @@ async function handleDirectorCommentPage(url, env, corsHeaders) {
 async function handleDirectorCommentSubmit(request, env, corsHeaders) {
     const formData = await request.formData();
     const id = (formData.get('id') || '').trim();
-    const comment = (formData.get('comment') || '').trim();
+    const rawComment = (formData.get('comment') || '').trim();
+    const csrfPayload = (formData.get('csrf_payload') || '').trim();
+    const csrfSig = (formData.get('csrf_sig') || '').trim();
+
+    // Verify CSRF token
+    if (!csrfPayload || !csrfSig) {
+        return new Response('Forbidden — missing CSRF token', { status: 403, headers: corsHeaders });
+    }
+    const [, expStr] = csrfPayload.split(':');
+    if (!expStr || Date.now() > parseInt(expStr)) {
+        return new Response('Forbidden — CSRF token expired', { status: 403, headers: corsHeaders });
+    }
+    const sigValid = await hmacVerify(env.CSRF_SECRET || 'fallback-dev-secret', csrfPayload, csrfSig);
+    if (!sigValid) {
+        return new Response('Forbidden — invalid CSRF token', { status: 403, headers: corsHeaders });
+    }
+
+    // Strip any HTML tags from the comment before storing
+    const comment = rawComment.replace(/<[^>]*>/g, '').trim();
 
     if (!id || !comment) return new Response('Missing required fields', { status: 400, headers: corsHeaders });
 
@@ -2758,6 +2906,8 @@ async function handleSubmitToCOE(request, env, corsHeaders) {
 
 async function handleStatusRequest(url, env, corsHeaders) {
     const id = url.searchParams.get('id');
+    const token = url.searchParams.get('token');
+
     if (!id) {
         return new Response(JSON.stringify({ error: 'Application ID is required' }), {
             status: 400,
@@ -2767,13 +2917,21 @@ async function handleStatusRequest(url, env, corsHeaders) {
 
     try {
         const app = await env.DB.prepare(
-            `SELECT id, student_email, form_type, applicant_name, reg_no, campus, status, director_status, director_comment, controller_status, created_at, updated_at
+            `SELECT id, student_email, form_type, applicant_name, reg_no, campus, status, director_status, director_comment, controller_status, access_token, created_at, updated_at
              FROM applications WHERE id = ?`
         ).bind(id).first();
 
         if (!app) {
             return new Response(JSON.stringify({ error: 'Application not found' }), {
                 status: 404,
+                headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+            });
+        }
+
+        // Ownership check: new applications (with an access_token) require the matching token
+        if (app.access_token && app.access_token !== token) {
+            return new Response(JSON.stringify({ error: 'Invalid access token' }), {
+                status: 403,
                 headers: { ...corsHeaders, 'Content-Type': 'application/json' }
             });
         }

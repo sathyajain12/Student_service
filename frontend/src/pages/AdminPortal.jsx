@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
+import DOMPurify from 'dompurify';
 import { LogOut, FileText, Download, Users, Clock, CheckCircle, XCircle, ArrowLeft, RefreshCw, Upload, Trash2, X, AlertTriangle, Search } from 'lucide-react';
 
 const API_URL = import.meta.env.VITE_BACKEND_URL || 'http://localhost:8787';
@@ -1356,7 +1357,7 @@ export default function AdminPortal() {
                                     {app.director_comment && (
                                         <div style={{ margin: '0 20px 20px 20px', background: '#faf5ff', border: '1px solid #e9d5ff', borderRadius: '10px', padding: '16px' }}>
                                             <p style={{ fontSize: '0.72rem', fontWeight: 700, color: '#7c3aed', margin: '0 0 8px 0', textTransform: 'uppercase', letterSpacing: '0.06em' }}>Director's Comments</p>
-                                            <p style={{ fontSize: '0.9rem', color: '#4c1d95', margin: 0, lineHeight: 1.7 }}>{app.director_comment}</p>
+                                            <p style={{ fontSize: '0.9rem', color: '#4c1d95', margin: 0, lineHeight: 1.7 }}>{DOMPurify.sanitize(app.director_comment)}</p>
                                         </div>
                                     )}
                                 </div>

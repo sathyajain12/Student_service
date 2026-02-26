@@ -225,6 +225,9 @@ export default function FormBuilder({ config, onSubmit, onCancel, onTrackStatus,
 
             if (result.success) {
                 setSubmitted(true);
+                if (result.accessToken) {
+                    localStorage.setItem(`access_token_${result.appId}`, result.accessToken);
+                }
                 setStatus({ type: 'success', message: `Successfully Submitted! Application ID: ${result.appId}` });
             } else {
                 throw new Error(result.error || 'Submission failed');
@@ -275,6 +278,9 @@ export default function FormBuilder({ config, onSubmit, onCancel, onTrackStatus,
 
             if (result.success) {
                 setSubmitted(true);
+                if (result.accessToken) {
+                    localStorage.setItem(`access_token_${result.appId}`, result.accessToken);
+                }
                 setStatus({ type: 'success', message: `Application sent to Director for approval! Your Application ID: ${result.appId}. You will receive an email once the Director responds. After approval, return to the Status Tracker to submit your application to COE.` });
             } else {
                 throw new Error(result.error || 'Submission failed');

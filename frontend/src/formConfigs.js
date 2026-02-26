@@ -562,7 +562,8 @@ export const FORM_CONFIGS = {
             url: 'https://onlinesbi.sbi.bank.in/sbicollect/icollecthome.htm?corpID=350506&categoryName=APP%20on%20Request%20Degree%20Certificate%20Issue'
         },
         instructions: [
-            { type: 'address', text: 'Candidates are required to send a self-addressed, stamped, waterproof envelope (16 × 12 inches in size), affixed with stamps totalling ₹55, to the address mentioned below. The Institute requires this in order to send the degree certificates back to the candidates by post.', details: CONTROLLER_ADDRESS },
+            { type: 'address', text: 'Candidates are required to send a self-addressed, stamped, waterproof envelope (16 × 12 inches in size), affixed with stamps totalling ₹95, to the address mentioned below. The Institute requires this in order to send the degree certificates back to the applicant Speed Post service of India Post.', details: CONTROLLER_ADDRESS },
+            'Kindly mention the word **Convocation** on the envelope for the Institute’s easy reference.',
             'The envelope should state clearly the name and programme of the student. The full and complete postal address must be clearly written or typed on it, including the town/city, PIN code, district and state.',
             'Students of foreign nationality may affix appropriate postage for an envelope weighing 100-120 gms.',
             'Degree certificates will be dispatched by post (in the submitted envelope) to candidates during the first week of December, after the convocation.',

@@ -32,7 +32,9 @@ export default function StatusTracker({ onBack }) {
 
         try {
             const backendUrl = import.meta.env.VITE_BACKEND_URL || 'http://localhost:8787';
-            const response = await fetch(`${backendUrl}/status?id=${id.trim()}`);
+            const token = localStorage.getItem(`access_token_${id.trim()}`);
+            const statusUrl = `${backendUrl}/status?id=${id.trim()}${token ? `&token=${token}` : ''}`;
+            const response = await fetch(statusUrl);
             const result = await response.json();
 
             if (response.ok) {
@@ -67,7 +69,8 @@ export default function StatusTracker({ onBack }) {
     const downloadResponseDocument = async (fileId, fileName, applicationId) => {
         try {
             const backendUrl = import.meta.env.VITE_BACKEND_URL || 'http://localhost:8787';
-            const response = await fetch(`${backendUrl}/download/${fileId}?appId=${applicationId}`);
+            const token = localStorage.getItem(`access_token_${applicationId}`);
+            const response = await fetch(`${backendUrl}/download/${fileId}?appId=${applicationId}${token ? `&token=${token}` : ''}`);
 
             if (!response.ok) {
                 throw new Error('Failed to download file');
@@ -103,7 +106,8 @@ export default function StatusTracker({ onBack }) {
 
             if (result.success) {
                 setCoeSubmitStatus({ type: 'success', message: 'Your application has been successfully submitted to COE for processing!' });
-                const statusResponse = await fetch(`${backendUrl}/status?id=${applicationId}`);
+                const token = localStorage.getItem(`access_token_${applicationId}`);
+                const statusResponse = await fetch(`${backendUrl}/status?id=${applicationId}${token ? `&token=${token}` : ''}`);
                 const updatedApp = await statusResponse.json();
                 if (statusResponse.ok) {
                     setApplication(updatedApp);
