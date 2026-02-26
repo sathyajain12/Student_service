@@ -522,7 +522,7 @@ export default function InstructionsScreen({ config, onProceed, onCancel }) {
                                                             </div>
                                                         )}
                                                         {/* Input */}
-                                                        <div style={{ marginBottom: '16px' }}>
+                                                        <div>
                                                             <p style={{ fontSize: '0.68rem', fontWeight: '700', color: '#94a3b8', textTransform: 'uppercase', letterSpacing: '0.1em', margin: '0 0 8px 0' }}>
                                                                 Average Grade Point
                                                             </p>
@@ -543,16 +543,6 @@ export default function InstructionsScreen({ config, onProceed, onCancel }) {
                                                                 }}
                                                             />
                                                         </div>
-                                                        {/* Calculate button */}
-                                                        <button style={{
-                                                            width: '100%', padding: '16px', borderRadius: '50px', border: 'none',
-                                                            background: 'linear-gradient(135deg, #2563eb, #3b82f6)',
-                                                            color: '#fff', fontSize: '1rem', fontWeight: '700', cursor: 'default',
-                                                            display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px',
-                                                            boxShadow: '0 4px 16px rgba(37,99,235,0.3)'
-                                                        }}>
-                                                            Calculate Final Score <ArrowRight size={18} />
-                                                        </button>
                                                     </div>
                                                     {/* 5-Point Scale Section */}
                                                     <div style={{ borderTop: '1px solid var(--glass-border)', paddingTop: '20px', marginTop: '20px' }}>
