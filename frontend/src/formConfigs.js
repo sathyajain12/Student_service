@@ -121,9 +121,19 @@ export const FORM_CONFIGS = {
         instructions: [
             'As the Institute follows a grading system, grade cards, which are already issued to the students by the Institute-serve as Statement of Marks. No other mark statements are issued. However, if required, a Statement of CGPA Equivalent Percentage of Marks is issued on application to pursue further studies or to seek a job.',
             'No Fee is charged for the issue of a Statement of CGPA Equivalent Percentage of Marks.',
-            { type: 'address', text: 'Applicants are required to send a self-addressed envelope affixed with stamps totalling ₹95, to the address mentioned below. The Institute requires this for dispatch of the statement of conversion of CGPA into equivalent percentage of marks to the applicant by Speed Post service of India Post.', details: CONTROLLER_ADDRESS },
-            'The name of the applicant, along with the complete postal address, including the town / city, PIN code, district and state must be clearly written or typed on the envelope.',            
-            'Students of foreign nationality may affix appropriate postage for an envelope weighing 100-120 g.',
+            {
+                type: 'deliveryOptions',
+                certificateName: 'CGPA Conversion Statement',
+                hardCopyDesc: 'Statement dispatched by Speed Post',
+                addressText: 'Applicants are required to send a self-addressed envelope affixed with stamps totalling ₹95, to the address mentioned below. The Institute requires this for dispatch of the statement of conversion of CGPA into equivalent percentage of marks to the applicant by Speed Post service of India Post.',
+                addressDetails: CONTROLLER_ADDRESS,
+                envelopeNotes: [
+                    'The name of the applicant, along with the complete postal address, including the town / city, PIN code, district and state must be clearly written or typed on the envelope.',
+                    'Students of foreign nationality may affix appropriate postage for an envelope weighing 100-120 g.'
+                ],
+                softCopyDesc: 'View CGPA / GPA Conversion Formula',
+                softCopyContent: 'cgpaFormula'
+            },
         ],
         fields: [{ name: 'applicantName', label: 'Candidate Name', type: 'text', required: true },
         { name: 'regNo', label: 'Registered Number', type: 'number', required: true },
@@ -546,19 +556,10 @@ export const FORM_CONFIGS = {
         },
         description: 'This application is exclusively for candidates who were absent from the convocation ceremony of their respective batch and have not yet received their Degree Certificate. Only such candidates are eligible to submit an application through this portal.',
         instructions: [
-            {
-                type: 'deliveryOptions',
-                certificateName: 'On-Request Degree Certificate',
-                hardCopyDesc: 'Certificate dispatched by Speed Post',
-                addressText: 'Applicants are required to send a self-addressed, cloth-lined waterproof envelope (16 × 12 inches in size), affixed with stamps totalling ₹95, to the address mentioned below. The Institute requires this for dispatch of the On-Request Degree Certificate to the applicant by Speed Post service of India Post.',
-                addressDetails: CONTROLLER_ADDRESS,
-                envelopeNotes: [
-                    'The envelope should state clearly the name and programme of the student. The full and complete postal address must be clearly written or typed on it, including the town / city, PIN code, district and state.',
-                    'Students of foreign nationality may affix appropriate postage for an envelope weighing 100-120 gms.'
-                ],
-                softCopyDesc: 'View CGPA / GPA Conversion Formula',
-                softCopyContent: 'cgpaFormula'
-            },
+
+            { type: 'address', text: 'Applicants are required to send a self-addressed, cloth-lined envelope waterproof (16 × 12 inches in size), affixed with stamps totalling ₹95, to the address mentioned below. The Institute requires this for dispatch of the On-Request Degree Certificate to the applicant by Speed Post service of India Post.', details: CONTROLLER_ADDRESS },
+            'The envelope should state clearly the name and programme of the student. The full and complete postal address must be clearly written or typed on it, including the town / city, PIN code, district and state.',
+            'Students of foreign nationality may affix appropriate postage for an envelope weighing 100-120 gms.',
             'Candidates applying for the Degree Certificate for Undergraduate degrees such as B.A. / B.A. (Hons.) / B.Sc. / B.Sc. (Hons.) / B.Com. (Hons.) / B.P.A. / B.B.M. / B.B.A. and B.C.A. should upload the soft copy of the Original Pass Certificate of the Intermediate or Pre-University Examination issued by the Board.',
             'Candidates applying for the Degree Certificate for Postgraduate degrees such as M.A. / M.Sc. / M.B.A. / M.B.A. (Fin.) / M.F.M. / M.Tech. / B.Ed. / M.Ed. should upload the soft copy of the Qualifying Degree Pass Certificate.',
         ],
