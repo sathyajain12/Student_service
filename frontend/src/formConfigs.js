@@ -78,7 +78,7 @@ export const FORM_CONFIGS = {
             'In the event of loss in transit or misplacement of the Original Grade Card, the candidate is required to lodge a police complaint and obtain an official acknowledgment from the concerned police station. A scanned copy of the police complaint, along with the original acknowledgment, must be uploaded.',
             'An affidavit, sworn before a Notary Public or a First-Class Magistrate, in accordance with the prescribed format, must be uploaded.',
             { type: 'format', text: '**AFFIDAVIT FOR DUPLICATE GRADE CARD**\\n**To be sworn before a Notary Public / First-Class Magistrate**\\n\\nI, _________________________ (Name), son/daughter of _________________________, do hereby solemnly affirm and declare that:\\n\\n1. I am a bonafide student/alumnus of Sri Sathya Sai Institute of Higher Learning, Prasanthi Nilayam.\\n2. The Institute had issued me the Original Grade Card for Semester _______ of Programme _________________________, bearing  Registered Number  _________________________.\\n3. The said Original Grade Card has been lost whilst in my possession despite exercising due care.\\n4. I have applied to the Institute for issuance of a Duplicate Grade Card.\\n5. I hereby undertake that:\\n   - If the Original Grade Card is recovered by me at any time, I shall immediately surrender it to the Institute.\\n   - I shall be solely responsible for any misuse of the lost Original Grade Card.\\n6. The statements made herein are true to the best of my knowledge and belief.\n\nDate:\n\nStudent Signature:\n\n**VERIFICATION**\n\nI, the deponent above named, do hereby solemnly affirm and state that the contents of the above affidavit are true and correct to my knowledge and belief, and that no part of it is false and nothing  has been concealed therein.\nSolemnly affirmed / Sworn on this ______ day of _________________________________ at _________________________________\n\n **Attested and identified by me**\t**Signature of Deponent**\n\n(Signature and Seal of Notary Public / First-Class Magistrate)' },
-            { type: 'address', text: 'Applicants are required to send a self-addressed, cloth-lined envelope (16 × 12 inches in size), affixed with stamps totalling ₹95, to the address mentioned below. The Institute requires this for dispatch of the Duplicate Grade Card to the applicant by Speed Post service of India Post.', details: CONTROLLER_ADDRESS },
+            { type: 'address', text: 'Applicants are required to send a self-addressed, cloth-lined waterproof envelope (16 × 12 inches in size), affixed with stamps totalling ₹95, to the address mentioned below. The Institute requires this for dispatch of the Duplicate Grade Card to the applicant by Speed Post service of India Post.', details: CONTROLLER_ADDRESS },
 
             'The name of the applicant, along with the complete postal address, including the town / city, PIN code, district and state must be clearly written or typed on the envelope.',
             'Students of foreign nationality may affix appropriate postage for an envelope weighing 100-120 g.',
@@ -175,7 +175,7 @@ export const FORM_CONFIGS = {
         { name: 'city', label: 'City', type: 'text', required: true },
         { name: 'postalCode', label: 'Postal Code', type: 'text', required: true },
 
-        
+
         ],
         files: [
 
@@ -251,7 +251,7 @@ export const FORM_CONFIGS = {
             'A press notification, in the prescribed format, must be published in a recognized daily newspaper. A scanned copy of the newspaper cutting must be uploaded.',
             'An affidavit, sworn before a Notary Public or a First-Class Magistrate, in accordance with the prescribed format, must be uploaded.',
             'The applicant must clearly state the reason for the loss of the Original Degree Certificate.',
-            { type: 'address', text: 'Applicants are required to send a self-addressed, cloth-lined envelope (16 × 12 inches in size), affixed with stamps totalling ₹95, to the address mentioned below. The Institute requires this for dispatch of the Duplicate Degree Certificate to the applicant by Speed Post service of India Post.', details: CONTROLLER_ADDRESS },
+            { type: 'address', text: 'Applicants are required to send a self-addressed, cloth-lined waterproof envelope (16 × 12 inches in size), affixed with stamps totalling ₹95, to the address mentioned below. The Institute requires this for dispatch of the Duplicate Degree Certificate to the applicant by Speed Post service of India Post.', details: CONTROLLER_ADDRESS },
             'The name of the applicant, along with the complete postal address, including the town / city, PIN code, district and state must be clearly written or typed on the envelope.',
             'Students of foreign nationality may affix appropriate postage for an envelope weighing 100-120 g.',
             { type: 'format', text: '**FORMAT OF THE NEWSPAPER NOTIFICATION**\n\nNotice is hereby given that the undersigned has lost the Original Degree Certificate pertaining to the _________________________________ Academic Programme, issued by Sri Sathya Sai Institute of Higher Learning. Any person who finds the said certificate is requested to return it to the undersigned without delay. Possession of the certificate despite this public notice shall be deemed unauthorized and unlawful, and the holder shall be liable for any misuse thereof.\n\nName of the Candidate:\nMobile No:\nAddress(with city and state):\n\nDate:' },
@@ -338,7 +338,7 @@ export const FORM_CONFIGS = {
         instructions: [
             'Any change of name must be notified through the Official Gazette of the Government of India as per the prescribed procedure. The Gazette notification shall serve as the primary legal proof of the change of name and shall be valid for all official purposes.',
             'It shall be the sole responsibility of the applicant to ensure that the changed name, as notified in the Official Gazette, is duly reflected and consistently recorded across all previous qualifying examination documents, and that the same has been duly updated by the respective issuing authorities prior to submission.',
-            { type: 'address', text: 'Applicants are required to send a self-addressed, cloth-lined envelope (16 × 12 inches in size), affixed with stamps totalling ₹95, to the address mentioned below. The Institute requires this for dispatch of the updated academic documents reflecting the changed name to the applicant by Speed Post service of India Post.', details: CONTROLLER_ADDRESS },
+            { type: 'address', text: 'Applicants are required to send a self-addressed, cloth-lined waterproof envelope (16 × 12 inches in size), affixed with stamps totalling ₹95, to the address mentioned below. The Institute requires this for dispatch of the updated academic documents reflecting the changed name to the applicant by Speed Post service of India Post.', details: CONTROLLER_ADDRESS },
             { type: 'format', text: '**AFFIDAVIT FOR NAME CHANGE**\\nI, _________________________ (Former Name), son/daughter of _________________________, Registered Number _________________________, do hereby solemnly affirm and declare that:\n\n1. That I was formerly known by the name _________________________ and that I have now changed my name to _________________________ for personal / legal / matrimonial reasons (strike out whichever is not applicable).\n\n2. That the name _________________________ and the name _________________________ both refer to one and the same person, that is, myself, and that I am the sole and same individual in both instances.\n\n3. That all academic records, certificates, and documents issued to me by Sri Sathya Sai Institute of Higher Learning, Prasanthi Nilayam, including my Degree Certificate pertaining to the _________________________________ Academic Programme, stand recorded under my former name _________________________.\n\n4. That I now require my academic records / Degree Certificate to be updated to reflect my changed name _________________________, for the purpose of ___________________________________________________________________________ (state clearly why the name change is required and where the updated document is to be submitted or produced).\n\n5. That I understand and acknowledge that I shall be fully liable for all consequences arising from any false or misleading information provided in this affidavit. I further undertake to indemnify and hold harmless the Institute against any loss, claim, or consequences that may arise due to any improper or fraudulent use of documents issued pursuant to this declaration.\n\nDate:\nStudent Signature:\n\n**VERIFICATION**\n\nI, the deponent above named, do hereby solemnly affirm and state that the contents of Paragraphs 1 to 5 of the above affidavit are true and correct to my knowledge, and that no part of it is false and nothing has been concealed therein.\n\nSolemnly affirmed / Sworn on this ______ day of _________________________________ at _________________________________\n\n**Attested and identified by me**\t\t\t\t**Signature of Deponent**\n(Signature and Seal of Notary Public / First-Class Magistrate)' },
             'The applicant must submit the original academic documents issued by the Institute, such as Grade Cards and Degree Certificate, in hard copy to the Examinations Section. These documents will then be reissued with the new name and sent back to the applicant. In case the applicant has lost any of the original documents, they must apply for duplicate documents before submitting the request for a name change.',
             'Once the application is submitted, the applicant must wait for clearance from the Director of the concerned Campus of the Institute. Only after the Director clears the application will the Examination Section process it further. The applicant can track the status of the application using the Application ID provided at the time of submission.'
@@ -500,7 +500,7 @@ export const FORM_CONFIGS = {
             'This service is for verification of marks totaling in your answer script.',
             'Select whether it is for End-Semester or Supplementary Examinations.',
             'Grade Card upload is optional but recommended.',
-            { type: 'address', text: 'Applicants are required to send a self-addressed envelope affixed with stamps totalling ₹95, to the address mentioned below.', details: CONTROLLER_ADDRESS }
+            { type: 'address', text: 'Applicants are required to send a self-addressed waterproof envelope affixed with stamps totalling ₹95, to the address mentioned below.', details: CONTROLLER_ADDRESS }
         ],
 
         titleLink: {
@@ -557,7 +557,7 @@ export const FORM_CONFIGS = {
         description: 'This application is exclusively for candidates who were absent from the convocation ceremony of their respective batch and have not yet received their Degree Certificate. Only such candidates are eligible to submit an application through this portal.',
         instructions: [
 
-            { type: 'address', text: 'Applicants are required to send a self-addressed, cloth-lined envelope waterproof (16 × 12 inches in size), affixed with stamps totalling ₹95, to the address mentioned below. The Institute requires this for dispatch of the On-Request Degree Certificate to the applicant by Speed Post service of India Post.', details: CONTROLLER_ADDRESS },
+            { type: 'address', text: 'Applicants are required to send a self-addressed, cloth-lined  waterproof envelope  (16 × 12 inches in size), affixed with stamps totalling ₹95, to the address mentioned below. The Institute requires this for dispatch of the On-Request Degree Certificate to the applicant by Speed Post service of India Post.', details: CONTROLLER_ADDRESS },
             'The envelope should state clearly the name and programme of the student. The full and complete postal address must be clearly written or typed on it, including the town / city, PIN code, district and state.',
             'Students of foreign nationality may affix appropriate postage for an envelope weighing 100-120 gms.',
             'Candidates applying for the Degree Certificate for Undergraduate degrees such as B.A. / B.A. (Hons.) / B.Sc. / B.Sc. (Hons.) / B.Com. (Hons.) / B.P.A. / B.B.M. / B.B.A. and B.C.A. should upload the soft copy of the Original Pass Certificate of the Intermediate or Pre-University Examination issued by the Board.',
@@ -594,7 +594,7 @@ export const FORM_CONFIGS = {
             {
                 type: 'deliveryOptions',
                 digilockerUrl: 'https://accounts.digilocker.gov.in/v3/7b9f84c86732efd21cd8076ff06f3fd60b1fbe146732fa57444b03b35f3740a4--en',
-                addressText: 'Send a self-addressed envelope (11 × 5 inches in size), affixed with stamps totalling ₹65, to the address below. The Migration Certificate will be dispatched by Speed Post service of India Post.',
+                addressText: 'Send a self-addressed waterproof envelope (11 × 5 inches in size), affixed with stamps totalling ₹65, to the address below. The Migration Certificate will be dispatched by Speed Post service of India Post.',
                 addressDetails: CONTROLLER_ADDRESS,
                 envelopeNotes: [
                     'The name of the applicant, along with the complete postal address, including the town / city, PIN code, district and state must be clearly written or typed on the envelope.',
@@ -679,7 +679,7 @@ export const FORM_CONFIGS = {
             { name: 'city', label: 'City', type: 'text', required: true },
             { name: 'postalCode', label: 'Postal Code', type: 'text', required: true }
         ],
-        
+
     }
 };
 

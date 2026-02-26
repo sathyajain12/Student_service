@@ -109,9 +109,12 @@ export default {
             return addSecurityHeaders(new Response(null, { headers: corsHeaders }));
         }
 
-        // Rate limiting — 10 req/min per IP (in-memory, per worker instance)
+        // Rate limiting — 10 req/min per IP for public routes; 120 req/min for admin routes
         const ip = request.headers.get('CF-Connecting-IP') || 'unknown';
-        if (!checkRateLimit(ip)) {
+        const isAdminRoute = url.pathname.startsWith('/admin/');
+        const rateLimit = isAdminRoute ? 120 : 10;
+        const rateLimitKey = isAdminRoute ? `admin:${ip}` : ip;
+        if (!checkRateLimit(rateLimitKey, rateLimit)) {
             return addSecurityHeaders(new Response(JSON.stringify({ error: 'Too many requests' }), {
                 status: 429,
                 headers: { ...corsHeaders, 'Retry-After': '60', 'Content-Type': 'application/json' }
