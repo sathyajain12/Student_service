@@ -567,7 +567,7 @@ export const FORM_CONFIGS = {
             'The envelope should state clearly the name and programme of the student. The full and complete postal address must be clearly written or typed on it, including the town/city, PIN code, district and state.',
             'Students of foreign nationality may affix appropriate postage for an envelope weighing 100-120 gms.',
             'Degree certificates will be dispatched by post (in the submitted envelope) to candidates during the first week of December, after the convocation.',
-            'Candidates applying for admission to the convocation for Undergraduate degrees such as B.A. / B.A. (Hons.) / B.Sc. / B.Sc. (Hons.) / B.Com. (Hons.) / B.P.A. / B.B.M. / B.B.A. and B.C.A. should upload only the softcopy of the original pass certificate of Intermediate or Pre-University issued by the Board.',
+            'Candidates applying for admission to the convocation for Undergraduate degrees such as B.A. / B.A. (Hons.) / B.Sc. / B.Sc. (Hons.) / B.Com. (Hons.) / B.P.A. / B.B.M. / B.B.A. and B.C.A. should upload the softcopy of the original pass certificate of Intermediate or Pre-University issued by the Board.',
             'Candidates applying for admission to the convocation for Postgraduate degrees such as M.A. / M.Sc. / M.B.A. / M.B.A. (Fin.) / M.F.M. / M.Tech. / B.Ed. / M.Ed. should upload the softcopy of the qualifying degree pass certificate.',
         ],
         fields: [
