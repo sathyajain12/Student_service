@@ -179,7 +179,7 @@ export default function StatusTracker({ onBack }) {
             stages.push({
                 id: 'controller',
                 label: 'Under-Process',
-                status: ['COMPLETED', 'DISPATCHED'].includes(s) ? 'COMPLETED' : (s === 'APPROVED' ? 'IN_PROGRESS' : 'PENDING'),
+                status: ['COMPLETED', 'DISPATCHED'].includes(s) ? 'COMPLETED' : s === 'REJECTED' ? 'REJECTED' : 'IN_PROGRESS',
                 icon: CheckCircle2
             });
         }
@@ -310,7 +310,7 @@ export default function StatusTracker({ onBack }) {
                                 return (
                                     <div key={stage.id} style={{ display: 'flex', alignItems: 'flex-start', minWidth: '140px' }}>
                                         <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', textAlign: 'center' }}>
-                                            <div style={{
+                                            <div className={isInProgress ? 'animate-processing' : undefined} style={{
                                                 width: '50px',
                                                 height: '50px',
                                                 borderRadius: '50%',
