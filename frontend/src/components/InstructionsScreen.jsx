@@ -463,7 +463,7 @@ export default function InstructionsScreen({ config, onProceed, onCancel }) {
                                                                         </span>
                                                                         <span style={{ fontSize: '1.8rem', fontWeight: '700', color: '#94a3b8' }}>%</span>
                                                                     </div>
-                                                                    <div style={{ display: 'flex', gap: '6px', justifyContent: 'center' }}>
+                                                                    <div style={{ display: 'flex', gap: '6px', justifyContent: 'center', marginBottom: '14px' }}>
                                                                         {[25, 50, 75, 100].map((threshold, i) => {
                                                                             const pct = parseFloat(calcResult.result);
                                                                             const filled = pct >= threshold;
@@ -476,6 +476,14 @@ export default function InstructionsScreen({ config, onProceed, onCancel }) {
                                                                             );
                                                                         })}
                                                                     </div>
+                                                                    <p style={{
+                                                                        fontSize: '0.75rem', color: '#64748b', margin: 0,
+                                                                        fontFamily: 'monospace', lineHeight: '1.5',
+                                                                        background: 'rgba(255,255,255,0.6)', borderRadius: '8px',
+                                                                        padding: '8px 12px', display: 'inline-block'
+                                                                    }}>
+                                                                        {calcResult.formulaStr}
+                                                                    </p>
                                                                 </>
                                                             ) : calcResult?.error ? (
                                                                 <p style={{ color: '#ef4444', fontSize: '0.9rem', fontWeight: '600', margin: '8px 0' }}>{calcResult.error}</p>
