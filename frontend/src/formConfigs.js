@@ -589,7 +589,7 @@ export const FORM_CONFIGS = {
         ],
 
         files: [
-            { name: 'qualifyingCert', label: 'Qualifying Certificate', required: true },
+            { name: 'qualifyingCert', label: 'Previous Qualifying Certificate', required: true },
             { name: 'sbiReceipt', label: 'SBI Collect Receipt', required: true }
         ]
     },
