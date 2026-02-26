@@ -66,18 +66,22 @@ export default function InstructionsScreen({ config, onProceed, onCancel }) {
     const [calcTable, setCalcTable] = useState('1');
 
     const CGPA_TABLES = {
-        '1': { label: 'Science & M.Tech', rows: [
-            { LP: 4.50, UP: 5.00, L: 75, H: 100 },
-            { LP: 3.50, UP: 4.50, L: 60, H: 75 },
-            { LP: 2.50, UP: 3.50, L: 50, H: 60 },
-            { LP: 2.00, UP: 2.50, L: 40, H: 50 },
-        ]},
-        '2': { label: 'Arts, Management, Commerce, M.B.A., B.Ed. & Music', rows: [
-            { LP: 4.50, UP: 5.00, L: 70, H: 100 },
-            { LP: 3.50, UP: 4.50, L: 60, H: 70 },
-            { LP: 2.50, UP: 3.50, L: 50, H: 60 },
-            { LP: 2.00, UP: 2.50, L: 40, H: 50 },
-        ]},
+        '1': {
+            label: 'Science & M.Tech', rows: [
+                { LP: 4.50, UP: 5.00, L: 75, H: 100 },
+                { LP: 3.50, UP: 4.50, L: 60, H: 75 },
+                { LP: 2.50, UP: 3.50, L: 50, H: 60 },
+                { LP: 2.00, UP: 2.50, L: 40, H: 50 },
+            ]
+        },
+        '2': {
+            label: 'Arts, Management, Commerce, M.B.A., B.Ed. & Music', rows: [
+                { LP: 4.50, UP: 5.00, L: 70, H: 100 },
+                { LP: 3.50, UP: 4.50, L: 60, H: 70 },
+                { LP: 2.50, UP: 3.50, L: 50, H: 60 },
+                { LP: 2.00, UP: 2.50, L: 40, H: 50 },
+            ]
+        },
     };
 
     const cgpaVal = parseFloat(calcCgpa);
@@ -532,7 +536,7 @@ export default function InstructionsScreen({ config, onProceed, onCancel }) {
                                                         {/* Input */}
                                                         <div>
                                                             <p style={{ fontSize: '0.68rem', fontWeight: '700', color: '#94a3b8', textTransform: 'uppercase', letterSpacing: '0.1em', margin: '0 0 8px 0' }}>
-                                                                Average Grade Point
+                                                                CGPA / GPA
                                                             </p>
                                                             <input
                                                                 type="number"
@@ -693,9 +697,9 @@ export default function InstructionsScreen({ config, onProceed, onCancel }) {
                             const pref = isCgpaCalculator
                                 ? (hardCopy ? 'Hard Copy' : null)
                                 : (hardCopy && softCopy ? 'Both Hard Copy and Soft Copy'
-                                   : hardCopy ? 'Hard Copy'
-                                   : softCopy ? 'Soft Copy'
-                                   : null);
+                                    : hardCopy ? 'Hard Copy'
+                                        : softCopy ? 'Soft Copy'
+                                            : null);
                             onProceed(pref);
                         }}
                         disabled={proceedDisabled}
