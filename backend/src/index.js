@@ -1088,7 +1088,7 @@ function renderEmailTemplate({ title, greeting, content, details = [], actionBut
     `;
 }
 
-async function sendAdminNotification(env, appId, formType, applicantName, email) {
+async function sendAdminNotification(env, appId, formType, applicantName, email, recipientEmail = null) {
     if (env.GOOGLE_CLIENT_ID && env.GOOGLE_CLIENT_SECRET && env.GOOGLE_REFRESH_TOKEN) {
         try {
             const accessToken = await getGoogleAuth(env);
@@ -1104,12 +1104,12 @@ async function sendAdminNotification(env, appId, formType, applicantName, email)
                     { label: 'Submitted On', value: new Date().toLocaleString() }
                 ],
                 actionButtons: [
-                    { label: 'Login to Admin Portal', link: 'https://student-service.pages.dev/admin/login' }
+                    { label: 'Login to Admin Portal', link: 'https://student-service.pages.dev/admin' }
                 ]
             });
 
             await sendEmail(accessToken, {
-                to: env.ADMIN_EMAIL,
+                to: recipientEmail || env.ADMIN_EMAIL,
                 subject: `New Application Received: ${formType} - ${appId}`,
                 htmlBody: htmlBody
             });
@@ -2133,7 +2133,7 @@ async function handleOnRequestDegree(formData, request, env, corsHeaders) {
         }
     }
 
-    await sendAdminNotification(env, appId, formType, applicantName, email);
+    await sendAdminNotification(env, appId, formType, applicantName, email, 'convocation@sssihl.edu.in');
     await sendStudentConfirmationEmail(env, appId, formType, applicantName, email, campus, formData.get('program') || null, formData.get('semester') || null);
 
     return new Response(JSON.stringify({ success: true, appId }), {
