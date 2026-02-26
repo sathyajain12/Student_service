@@ -1053,36 +1053,30 @@ export default function AdminPortal() {
                     .login-submit:active:not(:disabled) { transform: translateY(0); }
                     .login-help:hover { color: #ec5b13 !important; }
                     @media (max-width: 1024px) { .login-brand-panel { display: none !important; } .login-form-panel { width: 100% !important; } }
-                    @keyframes orb-breathe {
-                        0%, 100% { transform: scale(1);    opacity: 0.4; }
-                        50%       { transform: scale(1.18); opacity: 0.58; }
-                    }
-                    .login-orb-1 { animation: orb-breathe 6s ease-in-out infinite; }
-                    .login-orb-2 { animation: orb-breathe 8s ease-in-out infinite 2s; }
                 `}</style>
                 <main style={{ display: 'flex', height: '100vh', overflow: 'hidden', fontFamily: '"Public Sans", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif' }}>
 
                     {/* Left brand panel */}
-                    <section className="login-brand-panel" style={{ width: '60%', background: '#0F172A', position: 'relative', display: 'flex', flexDirection: 'column', justifyContent: 'space-between', padding: '48px', overflow: 'hidden' }}>
-                        {/* Grid dot overlay */}
-                        <div style={{ position: 'absolute', inset: 0, backgroundImage: 'radial-gradient(circle at 2px 2px, rgba(255,255,255,0.05) 1px, transparent 0)', backgroundSize: '40px 40px', pointerEvents: 'none' }} />
-                        {/* Top-left orange orb */}
-                        <div className="login-orb-1" style={{ position: 'absolute', top: '-10%', left: '-10%', width: '400px', height: '400px', background: '#ec5b13', borderRadius: '50%', filter: 'blur(80px)', opacity: 0.4, pointerEvents: 'none' }} />
-                        {/* Bottom-right orange orb */}
-                        <div className="login-orb-2" style={{ position: 'absolute', bottom: '-5%', right: '5%', width: '300px', height: '300px', background: '#b84209', borderRadius: '50%', filter: 'blur(80px)', opacity: 0.4, pointerEvents: 'none' }} />
+                    <section className="login-brand-panel" style={{ width: '60%', position: 'relative', display: 'flex', flexDirection: 'column', justifyContent: 'flex-end', overflow: 'hidden' }}>
+                        {/* Full-panel image — covers the entire panel */}
+                        <img
+                            src="/SSSIHL-Ad-Block-2020.jpg"
+                            alt="SSSIHL Campus"
+                            style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover', objectPosition: 'center' }}
+                        />
+                        {/* Bottom gradient — darkens only the lower portion so text is readable; upper image is untouched */}
+                        <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(to top, rgba(10,18,35,0.88) 0%, rgba(10,18,35,0.35) 40%, transparent 65%)', pointerEvents: 'none' }} />
 
-                        {/* Spacer (keeps headline vertically centred) */}
-                        <div style={{ height: '52px', position: 'relative', zIndex: 1 }} />
-
-                        {/* Middle: headline */}
-                        <div style={{ position: 'relative', zIndex: 1, maxWidth: '480px' }}>
-                            <h1 style={{ color: 'white', fontSize: '3.75rem', fontWeight: 900, lineHeight: 1.1, margin: 0, letterSpacing: '-0.03em' }}>
-                                Student Service <br />
-                                <span style={{ color: '#ec5b13' }}>Admin</span>
+                        {/* Typography — anchored to the bottom */}
+                        <div style={{ position: 'relative', zIndex: 1, padding: '48px' }}>
+                            <h1 style={{ color: 'white', fontSize: '2.6rem', fontWeight: 900, lineHeight: 1.15, margin: '0 0 10px 0', letterSpacing: '-0.02em', textShadow: '0 2px 16px rgba(0,0,0,0.5)' }}>
+                                Student Service<br />
+                                <span style={{ color: '#ec5b13' }}>Admin Portal</span>
                             </h1>
+                            <p style={{ color: 'rgba(255,255,255,0.8)', fontSize: '0.95rem', margin: 0, fontWeight: 500, textShadow: '0 1px 8px rgba(0,0,0,0.6)', letterSpacing: '0.01em' }}>
+                                Sri Sathya Sai Institute of Higher Learning
+                            </p>
                         </div>
-
-                        
                     </section>
 
                     {/* Right login panel */}
