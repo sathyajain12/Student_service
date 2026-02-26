@@ -129,7 +129,13 @@ export const FORM_CONFIGS = {
         { name: 'regNo', label: 'Registered Number', type: 'number', required: true },
         { name: 'abcApaarId', label: 'ABC / APAAR ID', type: 'number', required: false },
         { name: 'campus', label: 'Campus', type: 'select', options: ['Prashanti Nilayam Campus', 'Anantapur Campus', 'Brindavan Campus', 'Nandigiri Campus'], required: true },
-        { name: 'program', label: 'Academic Programme', type: 'select', options: PROGRAMME_OPTIONS, required: true },
+        {
+            name: 'cgpaMarksEquivalence',
+            label: 'CGPA Marks Equivalent Statement wanted for',
+            type: 'checkbox',
+            options: ['Undergraduate', 'Postgraduate', 'Professional'],
+            required: true
+        },
         {
             name: "periodOfStudy",
             label: "Period of Study",
@@ -165,24 +171,7 @@ export const FORM_CONFIGS = {
         { name: 'city', label: 'City', type: 'text', required: true },
         { name: 'postalCode', label: 'Postal Code', type: 'text', required: true },
 
-
-        {
-            name: 'cgpa',
-            label: 'CGPA',
-            type: 'number',
-            required: true,
-            placeholder: 'Enter your CGPA',
-            step: '0.01',
-            min: '0',
-            max: '10'
-        },
-        {
-            name: 'cgpaMarksEquivalence',
-            label: 'CGPA Marks Equivalent Statement wanted for',
-            type: 'checkbox',
-            options: ['Undergraduate', 'Postgraduate', 'Professional'],
-            required: true
-        }
+        
         ],
         files: [
 

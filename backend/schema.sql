@@ -69,7 +69,7 @@ CREATE TABLE form_cgpa_conversion (
   postal_code TEXT,
   Mobile_Number TEXT,
   Registration_Number TEXT,
-  Programme TEXT,
+  cgpa_marks_equivalence TEXT,
   Period_of_Study TEXT,
   graduation_year TEXT,
   CGPA float
