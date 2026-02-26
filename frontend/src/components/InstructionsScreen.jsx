@@ -442,7 +442,7 @@ export default function InstructionsScreen({ config, onProceed, onCancel }) {
                                                     }}>
                                                         {/* Title */}
                                                         <p style={{ fontSize: '1.25rem', fontWeight: '800', color: '#1e293b', margin: '0 0 20px 0' }}>
-                                                            GPA Calculator
+                                                            CGPA to Percentage Converter
                                                         </p>
                                                         {/* Display */}
                                                         <div style={{
@@ -450,7 +450,7 @@ export default function InstructionsScreen({ config, onProceed, onCancel }) {
                                                             borderRadius: '18px', padding: '24px', textAlign: 'center', marginBottom: '16px'
                                                         }}>
                                                             <p style={{ fontSize: '0.68rem', fontWeight: '700', color: '#94a3b8', textTransform: 'uppercase', letterSpacing: '0.12em', margin: '0 0 10px 0' }}>
-                                                                Current CGPA
+                                                                Equivalent Percentage
                                                             </p>
                                                             {calcResult && !calcResult.error ? (
                                                                 <>
