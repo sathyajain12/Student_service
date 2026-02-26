@@ -59,6 +59,52 @@ export default function InstructionsScreen({ config, onProceed, onCancel }) {
     const instructions = config.instructions || [];
     const [hardCopy, setHardCopy] = useState(false);
     const [softCopy, setSoftCopy] = useState(false);
+    const [calcScale, setCalcScale] = useState('10');
+    const [calcCgpa, setCalcCgpa] = useState('');
+    const [calcTable, setCalcTable] = useState('1');
+
+    const CGPA_TABLES = {
+        '1': { label: 'Science & M.Tech', rows: [
+            { LP: 4.50, UP: 5.00, L: 75, H: 100 },
+            { LP: 3.50, UP: 4.50, L: 60, H: 75 },
+            { LP: 2.50, UP: 3.50, L: 50, H: 60 },
+            { LP: 2.00, UP: 2.50, L: 40, H: 50 },
+        ]},
+        '2': { label: 'Arts, Management, Commerce, M.B.A., B.Ed. & Music', rows: [
+            { LP: 4.50, UP: 5.00, L: 70, H: 100 },
+            { LP: 3.50, UP: 4.50, L: 60, H: 70 },
+            { LP: 2.50, UP: 3.50, L: 50, H: 60 },
+            { LP: 2.00, UP: 2.50, L: 40, H: 50 },
+        ]},
+    };
+
+    const cgpaVal = parseFloat(calcCgpa);
+    let calcResult = null;
+    if (!isNaN(cgpaVal) && calcCgpa !== '') {
+        if (calcScale === '10') {
+            if (cgpaVal < 0 || cgpaVal > 10) {
+                calcResult = { error: 'CGPA must be between 0.00 and 10.00' };
+            } else {
+                const pct = (cgpaVal * 10).toFixed(2);
+                calcResult = { result: pct, formulaStr: `${cgpaVal} × 10 = ${pct}%` };
+            }
+        } else {
+            if (cgpaVal < 2.00 || cgpaVal > 5.00) {
+                calcResult = { error: 'CGPA must be between 2.00 and 5.00 for 5-point scale' };
+            } else {
+                const row = CGPA_TABLES[calcTable].rows.find(r => cgpaVal >= r.LP && cgpaVal <= r.UP);
+                if (!row) {
+                    calcResult = { error: 'Value out of table range' };
+                } else {
+                    const pct = (row.L + ((row.H - row.L) / (row.UP - row.LP)) * (cgpaVal - row.LP)).toFixed(2);
+                    calcResult = {
+                        result: pct,
+                        formulaStr: `${row.L} + ((${row.H} – ${row.L}) / (${row.UP} – ${row.LP})) × (${cgpaVal} – ${row.LP}) = ${pct}%`
+                    };
+                }
+            }
+        }
+    }
 
     const hasDeliveryOptions = config.instructions?.some(i => i?.type === 'deliveryOptions');
     const proceedDisabled = hasDeliveryOptions && !hardCopy && !softCopy;
@@ -454,7 +500,7 @@ export default function InstructionsScreen({ config, onProceed, onCancel }) {
                                                         ))}
                                                     </div>
                                                     {/* 10-Point Scale Section */}
-                                                    <div style={{ borderTop: '1px solid var(--glass-border)', paddingTop: '16px' }}>
+                                                    <div style={{ borderTop: '1px solid var(--glass-border)', paddingTop: '16px', marginBottom: '0' }}>
                                                         <p style={{ fontWeight: '700', fontSize: '0.95rem', color: 'var(--accent)', margin: '0 0 8px 0' }}>
                                                             For GPA / CGPA on a 10-Point Scale
                                                         </p>
@@ -464,6 +510,70 @@ export default function InstructionsScreen({ config, onProceed, onCancel }) {
                                                         <p style={{ fontSize: '0.85rem', color: 'var(--text-muted)', margin: 0, lineHeight: '1.6' }}>
                                                             e.g., GPA of 7.2 is equivalent to 72%, GPA of 6.3 is equivalent to 63%
                                                         </p>
+                                                    </div>
+                                                    {/* Calculator Section */}
+                                                    <div style={{ borderTop: '1px solid var(--glass-border)', paddingTop: '16px', marginTop: '16px' }}>
+                                                        <p style={{ fontWeight: '700', fontSize: '0.95rem', color: 'var(--accent)', margin: '0 0 14px 0' }}>
+                                                            Calculate Your Equivalent Percentage
+                                                        </p>
+                                                        {/* Scale toggle */}
+                                                        <div style={{ display: 'flex', gap: '8px', marginBottom: '14px' }}>
+                                                            {[{ val: '10', label: '10-Point Scale' }, { val: '5', label: '5-Point Scale' }].map(({ val, label }) => (
+                                                                <button key={val} onClick={() => { setCalcScale(val); setCalcCgpa(''); }}
+                                                                    style={{
+                                                                        padding: '7px 16px', borderRadius: '20px', fontSize: '0.85rem', fontWeight: '600', cursor: 'pointer', border: 'none',
+                                                                        background: calcScale === val ? 'var(--accent)' : 'rgba(37, 99, 235, 0.08)',
+                                                                        color: calcScale === val ? '#fff' : 'var(--accent)',
+                                                                        transition: 'all 0.2s'
+                                                                    }}>
+                                                                    {label}
+                                                                </button>
+                                                            ))}
+                                                        </div>
+                                                        {/* Programme type (5-point only) */}
+                                                        {calcScale === '5' && (
+                                                            <div style={{ display: 'flex', gap: '8px', marginBottom: '14px', flexWrap: 'wrap' }}>
+                                                                {[{ val: '1', label: 'Science & M.Tech (Table 1)' }, { val: '2', label: 'Arts, Management & Others (Table 2)' }].map(({ val, label }) => (
+                                                                    <button key={val} onClick={() => setCalcTable(val)}
+                                                                        style={{
+                                                                            padding: '7px 14px', borderRadius: '20px', fontSize: '0.82rem', fontWeight: '600', cursor: 'pointer', border: 'none',
+                                                                            background: calcTable === val ? 'var(--accent)' : 'rgba(37, 99, 235, 0.08)',
+                                                                            color: calcTable === val ? '#fff' : 'var(--accent)',
+                                                                            transition: 'all 0.2s'
+                                                                        }}>
+                                                                        {label}
+                                                                    </button>
+                                                                ))}
+                                                            </div>
+                                                        )}
+                                                        {/* CGPA input */}
+                                                        <input
+                                                            type="number"
+                                                            value={calcCgpa}
+                                                            onChange={e => setCalcCgpa(e.target.value)}
+                                                            placeholder={calcScale === '10' ? 'Enter GPA / CGPA (0 – 10)' : 'Enter GPA / CGPA (2.00 – 5.00)'}
+                                                            min="0"
+                                                            max={calcScale === '10' ? '10' : '5'}
+                                                            step="0.01"
+                                                            style={{
+                                                                width: '100%', padding: '10px 14px', borderRadius: '10px', fontSize: '0.95rem',
+                                                                border: '1.5px solid var(--glass-border)', background: '#fff',
+                                                                color: 'var(--text-main)', outline: 'none', boxSizing: 'border-box', marginBottom: '12px'
+                                                            }}
+                                                        />
+                                                        {/* Result */}
+                                                        {calcResult && (
+                                                            calcResult.error ? (
+                                                                <div style={{ padding: '12px 14px', borderRadius: '10px', background: 'rgba(239, 68, 68, 0.06)', border: '1px solid rgba(239, 68, 68, 0.25)' }}>
+                                                                    <p style={{ color: '#dc2626', fontSize: '0.875rem', margin: 0, fontWeight: '500' }}>{calcResult.error}</p>
+                                                                </div>
+                                                            ) : (
+                                                                <div style={{ padding: '14px 16px', borderRadius: '10px', background: 'rgba(37, 99, 235, 0.06)', border: '1px solid rgba(37, 99, 235, 0.25)', textAlign: 'center' }}>
+                                                                    <p style={{ fontSize: '2rem', fontWeight: '800', color: 'var(--accent)', margin: '0 0 4px 0', lineHeight: 1 }}>{calcResult.result}%</p>
+                                                                    <p style={{ fontSize: '0.8rem', color: 'var(--text-muted)', margin: 0, fontFamily: 'monospace' }}>{calcResult.formulaStr}</p>
+                                                                </div>
+                                                            )
+                                                        )}
                                                     </div>
                                                 </div>
                                             ) : (
