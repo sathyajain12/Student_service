@@ -31,8 +31,7 @@ export async function getGoogleAuth(env) {
 }
 
 export async function sendEmail(accessToken, { to, subject, htmlBody, attachments = [] }) {
-  console.log('Sending email to:', to);
-  console.log('Subject:', subject);
+  console.log('Sending email, subject:', subject);
   console.log('Attachments:', attachments.length);
 
   let message;
@@ -107,6 +106,6 @@ export async function sendEmail(accessToken, { to, subject, htmlBody, attachment
     throw new Error(`Email send failed: ${JSON.stringify(result)}`);
   }
 
-  console.log(`Email sent successfully to ${to} with ${attachments.length} attachments, message ID:`, result.id);
+  console.log(`Email sent successfully (${attachments.length} attachments), message ID:`, result.id);
   return result;
 }

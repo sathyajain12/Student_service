@@ -559,7 +559,7 @@ async function sendDocumentDispatchedEmail(env, application, programme = null, t
                 subject: `Document Dispatched : ${application.form_type} (${application.id})`,
                 htmlBody
             });
-            console.log(`Document dispatched email sent to ${application.student_email} for app ${application.id}`);
+            console.log(`Document dispatched email sent for app ${application.id}`);
         } catch (e) {
             console.error('Failed to send document dispatched email:', e);
             throw e;
@@ -1122,7 +1122,7 @@ async function sendAdminNotification(env, appId, formType, applicantName, email)
                 subject: `New Application Received: ${formType} - ${appId}`,
                 htmlBody: htmlBody
             });
-            console.log(`Admin notification sent successfully to ${env.ADMIN_EMAIL} for app ${appId}`);
+            console.log(`Admin notification sent successfully for app ${appId}`);
         } catch (e) {
             console.error('Failed to send admin notification:', e);
         }
@@ -1286,7 +1286,7 @@ async function sendDirectorNotification(env, request, appId, formType, applicant
             htmlBody: emailBody,
             attachments: []
         });
-        console.log(`Director email sent to ${directorEmail} for app ${appId}`);
+        console.log(`Director email sent for app ${appId}`);
     } catch (e) {
         console.error('Failed to send director notification:', e);
     }
@@ -1397,7 +1397,7 @@ async function sendStudentDecisionEmail(env, verification, isApproved, portalUrl
             htmlBody: htmlBody
         });
 
-        console.log(`Student decision email sent successfully to ${verification.student_email}`);
+        console.log(`Student decision email sent successfully for app ${verification.id}`);
     } catch (error) {
         console.error('Error sending student decision email:', error);
         throw error; // Re-throw to be caught in handleApproval
@@ -1446,7 +1446,7 @@ function generateStudentConfirmationHTML(appId, formType, applicantName, email, 
 }
 
 async function sendStudentConfirmationEmail(env, appId, formType, applicantName, email, campus, programme = null, semester = null) {
-    console.log(`[STUDENT CONFIRMATION] Starting for appId: ${appId}, email: ${email}`);
+    console.log(`[STUDENT CONFIRMATION] Starting for appId: ${appId}`);
 
     // Validate student email exists
     if (!email) {
@@ -1466,14 +1466,14 @@ async function sendStudentConfirmationEmail(env, appId, formType, applicantName,
         console.log('[STUDENT CONFIRMATION] Email content generated');
 
         // Send email
-        console.log(`[STUDENT CONFIRMATION] Sending email to ${email}...`);
+        console.log('[STUDENT CONFIRMATION] Sending email...');
         await sendEmail(accessToken, {
             to: email,
             subject: subject,
             htmlBody: htmlBody
         });
 
-        console.log(`[STUDENT CONFIRMATION] Email sent successfully to ${email} for app ${appId}`);
+        console.log(`[STUDENT CONFIRMATION] Email sent successfully for app ${appId}`);
     } catch (error) {
         console.error('[STUDENT CONFIRMATION] Error:', error);
         console.error('[STUDENT CONFIRMATION] Error message:', error.message);
@@ -1522,7 +1522,7 @@ async function sendDirectorSoughtConfirmationEmail(env, appId, formType, applica
             subject: `Application Sent for Clearance - ${appId}`,
             htmlBody: htmlBody
         });
-        console.log(`Director-sought confirmation email sent to ${email} for app ${appId}`);
+        console.log(`Director-sought confirmation email sent for app ${appId}`);
     } catch (error) {
         console.error('Failed to send director-sought confirmation:', error);
     }
@@ -1556,7 +1556,7 @@ async function sendStudentOnHoldEmail(env, appId, formType, applicantName, stude
             subject: `Application on Hold - ${formType} - ${appId}`,
             htmlBody
         });
-        console.log(`Student on-hold email sent to ${studentEmail} for app ${appId}`);
+        console.log(`Student on-hold email sent for app ${appId}`);
     } catch (e) {
         console.error('Failed to send student on-hold email:', e);
     }
@@ -1582,7 +1582,7 @@ async function sendStudentResolvedEmail(env, appId, formType, applicantName, stu
             actionButtons: [{ label: 'Track Application Status', link: `https://student-service.pages.dev/#track=${escapeHtml(appId)}` }]
         });
         await sendEmail(accessToken, { to: studentEmail, subject: `Application Resolved & Under Process - ${formType} - ${appId}`, htmlBody });
-        console.log(`Student resolved email sent to ${studentEmail} for app ${appId}`);
+        console.log(`Student resolved email sent for app ${appId}`);
     } catch (e) {
         console.error('Failed to send student resolved email:', e);
     }
@@ -1608,7 +1608,7 @@ async function sendDirectorResolvedEmail(env, appId, formType, applicantName, ca
             actionButtons: []
         });
         await sendEmail(accessToken, { to: directorEmail, subject: `Application Hold Resolved - ${formType} - ${appId}`, htmlBody });
-        console.log(`Director resolved email sent to ${directorEmail} for app ${appId}`);
+        console.log(`Director resolved email sent for app ${appId}`);
     } catch (e) {
         console.error('Failed to send director resolved email:', e);
     }
@@ -2456,7 +2456,7 @@ async function handleApproval(url, env, corsHeaders) {
         try {
             const frontendUrl = 'https://student-service.pages.dev';
             await sendStudentDecisionEmail(env, verification, action === 'Approve', frontendUrl);
-            console.log(`Student notification sent to ${verification.student_email}`);
+            console.log(`Student notification sent for app ${id}`);
 
             // If Director approved, notify Admin (COE)
             if (role === 'Director' && action === 'Approve') {

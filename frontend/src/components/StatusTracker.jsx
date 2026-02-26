@@ -150,7 +150,7 @@ export default function StatusTracker({ onBack }) {
             stages.push({
                 id: 'director',
                 label: 'Director Approval',
-                status: (app.director_status === 'APPROVED' || isResolved) ? 'COMPLETED' : isOnHold ? 'ON_HOLD' : 'PENDING',
+                status: (app.director_status === 'APPROVED' || isResolved) ? 'COMPLETED' : isOnHold ? 'ON_HOLD' : 'IN_PROGRESS',
                 icon: isOnHold ? PauseCircle : User,
                 date: (app.director_status === 'APPROVED' || isResolved) ? app.updated_at : null,
                 comment: isOnHold ? app.director_comment : null,
