@@ -2900,7 +2900,6 @@ async function handleSubmitToCOE(request, env, corsHeaders) {
 
 async function handleStatusRequest(url, env, corsHeaders) {
     const id = url.searchParams.get('id');
-    const token = url.searchParams.get('token');
 
     if (!id) {
         return new Response(JSON.stringify({ error: 'Application ID is required' }), {
@@ -2922,13 +2921,8 @@ async function handleStatusRequest(url, env, corsHeaders) {
             });
         }
 
-        // Ownership check: new applications (with an access_token) require the matching token
-        if (app.access_token && app.access_token !== token) {
-            return new Response(JSON.stringify({ error: 'Invalid access token' }), {
-                status: 403,
-                headers: { ...corsHeaders, 'Content-Type': 'application/json' }
-            });
-        }
+        // No token gate on status — applicants may track from any device.
+        // Document downloads (/download/:fileId) are still token-protected.
 
         // Fetch student-uploaded files
         const studentFiles = await env.DB.prepare(
