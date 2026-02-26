@@ -243,25 +243,16 @@ async function handleAdminLogin(request, env, corsHeaders) {
         });
     }
 
-    let passwordValid = false;
-
-    if (admin.salt) {
-        // Modern path: PBKDF2 verification
-        passwordValid = await verifyPassword(password, admin.salt, admin.password_hash);
-    } else {
-        // Legacy path: unsalted SHA-256 — verify and transparently migrate to PBKDF2
-        const encoder = new TextEncoder();
-        const hashBuffer = await crypto.subtle.digest('SHA-256', encoder.encode(password));
-        const legacyHash = Array.from(new Uint8Array(hashBuffer)).map(b => b.toString(16).padStart(2, '0')).join('');
-        if (legacyHash === admin.password_hash) {
-            passwordValid = true;
-            // Migrate: re-hash with PBKDF2 and store salt
-            const { salt, hash } = await hashPassword(password);
-            await env.DB.prepare(
-                'UPDATE admin_users SET password_hash = ?, salt = ? WHERE username = ?'
-            ).bind(hash, salt, username).run();
-        }
+    // All accounts must have a salt (PBKDF2). Accounts without one were
+    // invalidated by add_admin_salt_migration.sql and cannot log in.
+    if (!admin.salt) {
+        return new Response(JSON.stringify({ error: 'Invalid credentials' }), {
+            status: 401,
+            headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+        });
     }
+
+    const passwordValid = await verifyPassword(password, admin.salt, admin.password_hash);
 
     if (!passwordValid) {
         return new Response(JSON.stringify({ error: 'Invalid credentials' }), {

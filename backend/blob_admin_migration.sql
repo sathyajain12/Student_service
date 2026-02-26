@@ -17,11 +17,11 @@ CREATE TABLE IF NOT EXISTS admin_users (
   id INTEGER PRIMARY KEY AUTOINCREMENT,
   username TEXT UNIQUE NOT NULL,
   password_hash TEXT NOT NULL,
+  salt TEXT,
   email TEXT NOT NULL,
   created_at DATETIME DEFAULT CURRENT_TIMESTAMP
 );
 
--- Insert default admin user (password: admin123 - should be changed)
--- Password hash is SHA-256 of 'admin123'
-INSERT OR IGNORE INTO admin_users (username, password_hash, email) 
-VALUES ('admin', '240be518fabd2724ddb6f04eeb9d', 'sathyajain9@gmail.com');
+-- NOTE: No default admin is seeded here.
+-- Add admin accounts manually using the PBKDF2 migration script
+-- (add_admin_salt_migration.sql) to ensure all passwords use strong hashing.
