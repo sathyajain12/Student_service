@@ -8,7 +8,9 @@ import {
     MapPin,
     Phone,
     Mail,
-    Globe
+    Globe,
+    FlaskConical,
+    Palette
 } from 'lucide-react';
 
 // Helper function to parse **bold** text and signature blocks
@@ -432,108 +434,125 @@ export default function InstructionsScreen({ config, onProceed, onCancel }) {
                                                     background: 'rgba(37, 99, 235, 0.04)',
                                                     border: '1px solid rgba(37, 99, 235, 0.2)'
                                                 }}>
-                                                    {/* Calculator Section — modernized two-zone card */}
-                                                    <div style={{ background: 'linear-gradient(135deg, #2563eb, #7c3aed)', borderRadius: '20px', padding: '2px' }}>
-                                                        <div style={{ background: '#fff', borderRadius: '18px', overflow: 'hidden' }}>
-                                                            {/* Dark header zone */}
-                                                            <div style={{ background: 'linear-gradient(135deg, #0f172a 0%, #1e3a5f 100%)', padding: '24px' }}>
-                                                                <p style={{ fontSize: '0.68rem', fontWeight: '700', color: 'rgba(255,255,255,0.4)', textTransform: 'uppercase', letterSpacing: '0.12em', margin: '0 0 14px 0' }}>
-                                                                    GPA / CGPA Calculator
-                                                                </p>
-                                                                {/* Display screen */}
-                                                                <div style={{
-                                                                    background: 'rgba(0,0,0,0.35)', border: '1px solid rgba(255,255,255,0.08)',
-                                                                    borderRadius: '12px', padding: '16px 20px', minHeight: '80px',
-                                                                    display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'flex-end',
-                                                                    marginBottom: '16px'
-                                                                }}>
-                                                                    {calcResult ? (
-                                                                        calcResult.error ? (
-                                                                            <p style={{ color: '#f87171', fontSize: '0.875rem', margin: 0, fontWeight: '500', textAlign: 'right', fontFamily: 'monospace' }}>{calcResult.error}</p>
-                                                                        ) : (
-                                                                            <>
-                                                                                <p style={{ fontSize: '2.5rem', fontWeight: '800', color: '#fff', margin: 0, fontFamily: 'monospace', lineHeight: 1 }}>{calcResult.result}%</p>
-                                                                                <p style={{ fontSize: '0.72rem', color: 'rgba(255,255,255,0.45)', margin: '6px 0 0 0', fontFamily: 'monospace', textAlign: 'right' }}>{calcResult.formulaStr}</p>
-                                                                            </>
-                                                                        )
-                                                                    ) : (
-                                                                        <p style={{ fontSize: '2.2rem', fontWeight: '300', color: 'rgba(255,255,255,0.18)', margin: 0, fontFamily: 'monospace' }}>—.—%</p>
-                                                                    )}
-                                                                </div>
-                                                                {/* Sliding segmented control */}
-                                                                <div style={{ position: 'relative', display: 'flex', background: 'rgba(255,255,255,0.08)', borderRadius: '10px', padding: '3px' }}>
-                                                                    <div style={{
-                                                                        position: 'absolute', top: '3px',
-                                                                        left: calcScale === '10' ? '3px' : 'calc(50% + 1.5px)',
-                                                                        width: 'calc(50% - 4.5px)', height: 'calc(100% - 6px)',
-                                                                        background: 'rgba(255,255,255,0.15)', borderRadius: '8px',
-                                                                        boxShadow: '0 1px 4px rgba(0,0,0,0.3)',
-                                                                        transition: 'left 0.25s cubic-bezier(0.4,0,0.2,1)'
-                                                                    }} />
-                                                                    {[{ val: '10', label: '10-Point Scale' }, { val: '5', label: '5-Point Scale' }].map(({ val, label }) => (
-                                                                        <button key={val} onClick={() => { setCalcScale(val); setCalcCgpa(''); }}
-                                                                            style={{
-                                                                                flex: 1, padding: '8px', border: 'none', background: 'transparent',
-                                                                                fontSize: '0.82rem', fontWeight: calcScale === val ? '700' : '600',
-                                                                                color: calcScale === val ? '#fff' : 'rgba(255,255,255,0.45)',
-                                                                                cursor: 'pointer', position: 'relative', zIndex: 1,
-                                                                                borderRadius: '8px', transition: 'color 0.25s ease'
-                                                                            }}>
-                                                                            {label}
-                                                                        </button>
-                                                                    ))}
-                                                                </div>
-                                                            </div>
-                                                            {/* White content zone */}
-                                                            <div style={{ padding: '20px' }}>
-                                                                {/* Programme type chips (5-point only) */}
-                                                                {calcScale === '5' && (
-                                                                    <div style={{ marginBottom: '18px' }}>
-                                                                        <p style={{ fontSize: '0.7rem', fontWeight: '700', color: '#94a3b8', textTransform: 'uppercase', letterSpacing: '0.08em', margin: '0 0 10px 0' }}>
-                                                                            Programme Type
-                                                                        </p>
-                                                                        <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap' }}>
-                                                                            {[
-                                                                                { val: '1', label: 'Science & M.Tech', sub: 'Table 1' },
-                                                                                { val: '2', label: 'Arts & Management', sub: 'Table 2' }
-                                                                            ].map(({ val, label, sub }) => (
-                                                                                <button key={val} onClick={() => setCalcTable(val)} style={{
-                                                                                    padding: '8px 14px', borderRadius: '10px', cursor: 'pointer', textAlign: 'left',
-                                                                                    border: `2px solid ${calcTable === val ? 'var(--accent)' : '#e2e8f0'}`,
-                                                                                    background: calcTable === val ? 'rgba(37,99,235,0.06)' : '#fff',
-                                                                                    transition: 'all 0.2s'
-                                                                                }}>
-                                                                                    <p style={{ fontSize: '0.82rem', fontWeight: '700', color: calcTable === val ? 'var(--accent)' : 'var(--text-main)', margin: 0 }}>{label}</p>
-                                                                                    <p style={{ fontSize: '0.72rem', color: calcTable === val ? 'var(--accent)' : 'var(--text-muted)', margin: 0, opacity: 0.8 }}>{sub}</p>
-                                                                                </button>
-                                                                            ))}
-                                                                        </div>
+                                                    {/* Calculator Section — clean light card */}
+                                                    <div style={{
+                                                        background: '#fff', borderRadius: '24px', padding: '24px',
+                                                        boxShadow: '0 4px 24px rgba(37,99,235,0.08)',
+                                                        border: '1px solid #e8eef8'
+                                                    }}>
+                                                        {/* Title */}
+                                                        <p style={{ fontSize: '1.25rem', fontWeight: '800', color: '#1e293b', margin: '0 0 20px 0' }}>
+                                                            GPA Calculator
+                                                        </p>
+                                                        {/* Display */}
+                                                        <div style={{
+                                                            background: 'linear-gradient(135deg, #eef2ff 0%, #f0f7ff 100%)',
+                                                            borderRadius: '18px', padding: '24px', textAlign: 'center', marginBottom: '16px'
+                                                        }}>
+                                                            <p style={{ fontSize: '0.68rem', fontWeight: '700', color: '#94a3b8', textTransform: 'uppercase', letterSpacing: '0.12em', margin: '0 0 10px 0' }}>
+                                                                Current CGPA
+                                                            </p>
+                                                            {calcResult && !calcResult.error ? (
+                                                                <>
+                                                                    <div style={{ lineHeight: 1, margin: '0 0 18px 0' }}>
+                                                                        <span style={{ fontSize: '3.8rem', fontWeight: '900', color: '#1e293b' }}>
+                                                                            {calcResult.result.split('.')[0]}
+                                                                        </span>
+                                                                        <span style={{ fontSize: '2.2rem', fontWeight: '900', color: '#1e293b' }}>
+                                                                            .{calcResult.result.split('.')[1]}
+                                                                        </span>
+                                                                        <span style={{ fontSize: '1.8rem', fontWeight: '700', color: '#94a3b8' }}>%</span>
                                                                     </div>
-                                                                )}
-                                                                {/* GPA input */}
-                                                                <div>
-                                                                    <p style={{ fontSize: '0.7rem', fontWeight: '700', color: '#94a3b8', textTransform: 'uppercase', letterSpacing: '0.08em', margin: '0 0 8px 0' }}>
-                                                                        GPA / CGPA
-                                                                    </p>
-                                                                    <input
-                                                                        type="number"
-                                                                        value={calcCgpa}
-                                                                        onChange={e => setCalcCgpa(e.target.value)}
-                                                                        placeholder={calcScale === '10' ? '0.00 – 10.00' : '2.00 – 5.00'}
-                                                                        min="0"
-                                                                        max={calcScale === '10' ? '10' : '5'}
-                                                                        step="0.01"
-                                                                        style={{
-                                                                            width: '100%', padding: '14px 16px', borderRadius: '12px',
-                                                                            fontSize: '1.5rem', fontWeight: '600', fontFamily: 'monospace',
-                                                                            border: '2px solid #e2e8f0', background: '#f8fafc',
-                                                                            color: 'var(--text-main)', outline: 'none',
-                                                                            boxSizing: 'border-box', letterSpacing: '0.05em'
-                                                                        }}
-                                                                    />
+                                                                    <div style={{ display: 'flex', gap: '6px', justifyContent: 'center' }}>
+                                                                        {[25, 50, 75, 100].map((threshold, i) => {
+                                                                            const pct = parseFloat(calcResult.result);
+                                                                            const filled = pct >= threshold;
+                                                                            return (
+                                                                                <div key={i} style={{
+                                                                                    height: '4px', width: '44px', borderRadius: '2px',
+                                                                                    background: filled ? '#2563eb' : '#dde5f4',
+                                                                                    transition: 'background 0.3s'
+                                                                                }} />
+                                                                            );
+                                                                        })}
+                                                                    </div>
+                                                                </>
+                                                            ) : calcResult?.error ? (
+                                                                <p style={{ color: '#ef4444', fontSize: '0.9rem', fontWeight: '600', margin: '8px 0' }}>{calcResult.error}</p>
+                                                            ) : (
+                                                                <div style={{ lineHeight: 1, margin: '0 0 18px 0' }}>
+                                                                    <span style={{ fontSize: '3.8rem', fontWeight: '900', color: '#cbd5e1' }}>—.—</span>
+                                                                    <span style={{ fontSize: '1.8rem', fontWeight: '700', color: '#cbd5e1' }}>%</span>
                                                                 </div>
-                                                            </div>
+                                                            )}
                                                         </div>
+                                                        {/* Scale toggle */}
+                                                        <div style={{ display: 'flex', gap: '10px', marginBottom: '16px' }}>
+                                                            {[{ val: '10', label: '10-Point Scale' }, { val: '5', label: '5-Point Scale' }].map(({ val, label }) => (
+                                                                <button key={val} onClick={() => { setCalcScale(val); setCalcCgpa(''); }}
+                                                                    style={{
+                                                                        flex: 1, padding: '14px', borderRadius: '50px', border: 'none', cursor: 'pointer',
+                                                                        fontWeight: '700', fontSize: '0.9rem',
+                                                                        background: calcScale === val ? '#2563eb' : '#f1f5f9',
+                                                                        color: calcScale === val ? '#fff' : '#64748b',
+                                                                        transition: 'all 0.2s', boxShadow: calcScale === val ? '0 4px 12px rgba(37,99,235,0.3)' : 'none'
+                                                                    }}>
+                                                                    {label}
+                                                                </button>
+                                                            ))}
+                                                        </div>
+                                                        {/* Programme type (5-point only) */}
+                                                        {calcScale === '5' && (
+                                                            <div style={{ display: 'flex', gap: '12px', marginBottom: '16px' }}>
+                                                                {[
+                                                                    { val: '1', label: 'Science & M.Tech', Icon: FlaskConical },
+                                                                    { val: '2', label: 'Arts & Mgmt', Icon: Palette }
+                                                                ].map(({ val, label, Icon }) => (
+                                                                    <button key={val} onClick={() => setCalcTable(val)} style={{
+                                                                        flex: 1, padding: '22px 16px', borderRadius: '18px', cursor: 'pointer', textAlign: 'center',
+                                                                        border: `2px solid ${calcTable === val ? '#2563eb' : '#e2e8f0'}`,
+                                                                        background: '#fff', transition: 'all 0.2s'
+                                                                    }}>
+                                                                        <div style={{ marginBottom: '10px', display: 'flex', justifyContent: 'center' }}>
+                                                                            <Icon size={30} color={calcTable === val ? '#2563eb' : '#94a3b8'} strokeWidth={1.5} />
+                                                                        </div>
+                                                                        <p style={{ fontSize: '0.85rem', fontWeight: '700', color: calcTable === val ? '#2563eb' : '#475569', margin: 0 }}>{label}</p>
+                                                                    </button>
+                                                                ))}
+                                                            </div>
+                                                        )}
+                                                        {/* Input */}
+                                                        <div style={{ marginBottom: '16px' }}>
+                                                            <p style={{ fontSize: '0.68rem', fontWeight: '700', color: '#94a3b8', textTransform: 'uppercase', letterSpacing: '0.1em', margin: '0 0 8px 0' }}>
+                                                                Average Grade Point
+                                                            </p>
+                                                            <input
+                                                                type="number"
+                                                                value={calcCgpa}
+                                                                onChange={e => setCalcCgpa(e.target.value)}
+                                                                placeholder="0.00"
+                                                                min="0"
+                                                                max={calcScale === '10' ? '10' : '5'}
+                                                                step="0.01"
+                                                                style={{
+                                                                    width: '100%', padding: '16px 20px', borderRadius: '14px',
+                                                                    fontSize: '1.4rem', fontWeight: '600',
+                                                                    border: '2px solid #e2e8f0', background: '#f8fafc',
+                                                                    color: '#1e293b', outline: 'none',
+                                                                    boxSizing: 'border-box'
+                                                                }}
+                                                            />
+                                                        </div>
+                                                        {/* Calculate button */}
+                                                        <button style={{
+                                                            width: '100%', padding: '16px', borderRadius: '50px', border: 'none',
+                                                            background: 'linear-gradient(135deg, #2563eb, #3b82f6)',
+                                                            color: '#fff', fontSize: '1rem', fontWeight: '700', cursor: 'default',
+                                                            display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px',
+                                                            boxShadow: '0 4px 16px rgba(37,99,235,0.3)'
+                                                        }}>
+                                                            Calculate Final Score <ArrowRight size={18} />
+                                                        </button>
                                                     </div>
                                                     {/* 5-Point Scale Section */}
                                                     <div style={{ borderTop: '1px solid var(--glass-border)', paddingTop: '20px', marginTop: '20px' }}>
