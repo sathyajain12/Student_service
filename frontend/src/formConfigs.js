@@ -502,7 +502,7 @@ export const FORM_CONFIGS = {
 
     'retotaling': {
         title: 'Application for Re-Totalling of Marks',
-        description: 'Note: The application will be considered only within 10 days from the date of receipt of the respective Semester Grade Cards by the Campus Office',
+        description: 'The application will be considered only within 10 days from the date of receipt of the respective Semester Grade Cards by the Campus Office',
         instructions: [
             'This service is for verification of marks totaling in your answer script.',
             'Select whether it is for End-Semester or Supplementary Examinations.',
@@ -566,9 +566,8 @@ export const FORM_CONFIGS = {
             'Kindly mention the word **Convocation** on the envelope for the Institute’s easy reference.',
             'The envelope should state clearly the name and programme of the student. The full and complete postal address must be clearly written or typed on it, including the town/city, PIN code, district and state.',
             'Students of foreign nationality may affix appropriate postage for an envelope weighing 100-120 gms.',
-            'Degree certificates will be dispatched by post (in the submitted envelope) to candidates during the first week of December, after the convocation.',
-            'Candidates applying for admission to the convocation for Undergraduate degrees such as B.A. / B.A. (Hons.) / B.Sc. / B.Sc. (Hons.) / B.Com. (Hons.) / B.P.A. / B.B.M. / B.B.A. and B.C.A. should upload the softcopy of the original pass certificate of Intermediate or Pre-University issued by the Board.',
-            'Candidates applying for admission to the convocation for Postgraduate degrees such as M.A. / M.Sc. / M.B.A. / M.B.A. (Fin.) / M.F.M. / M.Tech. / B.Ed. / M.Ed. should upload the softcopy of the qualifying degree pass certificate.',
+            'Candidates applying for the Degree Certificate for Undergraduate degrees such as B.A. / B.A. (Hons.) / B.Sc. / B.Sc. (Hons.) / B.Com. (Hons.) / B.P.A. / B.B.M. / B.B.A. and B.C.A. should upload the soft copy of the Original Pass Certificate of the Intermediate or Pre-University Examination issued by the Board.',
+            'Candidates applying for the Degree Certificate for Postgraduate degrees such as M.A. / M.Sc. / M.B.A. / M.B.A. (Fin.) / M.F.M. / M.Tech. / B.Ed. / M.Ed. should upload the soft copy of the Qualifying Degree Pass Certificate.',
         ],
         fields: [
             {
