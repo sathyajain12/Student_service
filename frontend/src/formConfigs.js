@@ -530,7 +530,7 @@ export const FORM_CONFIGS = {
 
         {
             name: 'subjectCode',
-            label: 'Papers for Re-Totalling',
+            label: 'Courses for Re-Totalling',
             type: 'paperTable',
             required: true
         }],
