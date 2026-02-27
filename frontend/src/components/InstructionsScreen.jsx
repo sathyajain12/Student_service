@@ -61,6 +61,7 @@ export default function InstructionsScreen({ config, onProceed, onCancel }) {
     const instructions = config.instructions || [];
     const [hardCopy, setHardCopy] = useState(false);
     const [softCopy, setSoftCopy] = useState(false);
+    const [examType, setExamType] = useState(null);
     const [calcScale, setCalcScale] = useState('5');
     const [calcCgpa, setCalcCgpa] = useState('');
     const [calcTable, setCalcTable] = useState('1');
@@ -113,8 +114,12 @@ export default function InstructionsScreen({ config, onProceed, onCancel }) {
     }
 
     const hasDeliveryOptions = config.instructions?.some(i => i?.type === 'deliveryOptions');
-    const proceedDisabled = hasDeliveryOptions && !hardCopy && !softCopy;
     const deliveryOptionsInstruction = config.instructions?.find(i => i?.type === 'deliveryOptions');
+    const examTypeSelectorInstruction = config.instructions?.find(i => i?.type === 'examTypeSelector');
+    const hasExamTypeSelector = !!examTypeSelectorInstruction;
+    const proceedDisabled =
+        (hasDeliveryOptions && !hardCopy && !softCopy) ||
+        (hasExamTypeSelector && !examType);
     const isCgpaCalculator = deliveryOptionsInstruction?.softCopyContent === 'cgpaFormula';
     const hideProceedButton = isCgpaCalculator && softCopy && !hardCopy;
 
@@ -202,6 +207,7 @@ export default function InstructionsScreen({ config, onProceed, onCancel }) {
                         const isTextWithFormat = isObject && instruction.type === 'textWithFormat';
                         const isAddress = isObject && instruction.type === 'address';
                         const isDeliveryOptions = isObject && instruction.type === 'deliveryOptions';
+                        const isExamTypeSelector = isObject && instruction.type === 'examTypeSelector';
                         const text = isObject ? instruction.text : instruction;
 
                         return (
@@ -678,6 +684,42 @@ export default function InstructionsScreen({ config, onProceed, onCancel }) {
                                             )
                                         )}
                                     </div>
+                                ) : isExamTypeSelector ? (
+                                    <div style={{ flex: 1 }}>
+                                        <p style={{ color: 'var(--text-main)', fontSize: '0.95rem', fontWeight: '500', lineHeight: '1.6', margin: '0 0 14px 0' }}>
+                                            Select the type of examination you appeared for:
+                                        </p>
+                                        <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+                                            {instruction.options.map(opt => {
+                                                const months = instruction.optionsMap?.[opt] || [];
+                                                const unavailable = months.length === 0;
+                                                return (
+                                                    <label key={opt} style={{
+                                                        display: 'flex', alignItems: 'center', gap: '12px',
+                                                        cursor: unavailable ? 'not-allowed' : 'pointer',
+                                                        padding: '12px 16px', borderRadius: '10px',
+                                                        border: `2px solid ${examType === opt ? 'var(--accent)' : 'var(--glass-border)'}`,
+                                                        background: examType === opt ? 'rgba(37, 99, 235, 0.06)' : 'transparent',
+                                                        opacity: unavailable ? 0.45 : 1,
+                                                        transition: 'all 0.2s'
+                                                    }}>
+                                                        <input type="radio" name="examTypeSelector" value={opt}
+                                                            checked={examType === opt}
+                                                            disabled={unavailable}
+                                                            onChange={() => setExamType(opt)}
+                                                            style={{ width: '18px', height: '18px', accentColor: 'var(--accent)', cursor: 'pointer', flexShrink: 0 }} />
+                                                        <div>
+                                                            <span style={{ fontWeight: '600', color: 'var(--text-main)', fontSize: '0.95rem' }}>{opt}</span>
+                                                            {unavailable
+                                                                ? <span style={{ color: 'var(--text-muted)', fontSize: '0.82rem', marginLeft: '8px' }}>No recent examination available</span>
+                                                                : <span style={{ color: 'var(--text-muted)', fontSize: '0.82rem', marginLeft: '8px' }}>{months[0]}</span>
+                                                            }
+                                                        </div>
+                                                    </label>
+                                                );
+                                            })}
+                                        </div>
+                                    </div>
                                 ) : (
                                     <p style={{
                                         color: 'var(--text-main)',
@@ -726,7 +768,7 @@ export default function InstructionsScreen({ config, onProceed, onCancel }) {
                                     : hardCopy ? hcVal
                                         : softCopy ? scVal
                                             : null);
-                            onProceed(pref);
+                            onProceed({ deliveryPreference: pref, examType: examType });
                         }}
                         disabled={proceedDisabled}
                         className="btn-primary"

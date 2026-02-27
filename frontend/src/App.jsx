@@ -12,19 +12,19 @@ function App() {
   const [isLoading, setIsLoading] = useState(true);
   const [view, setView] = useState('portal'); // 'portal' | 'instructions' | 'form' | 'status' | 'admin'
   const [currentFormId, setCurrentFormId] = useState(null);
-  const [deliveryPreference, setDeliveryPreference] = useState(null);
+  const [hiddenFormData, setHiddenFormData] = useState(null);
 
   // Helper: navigate to a view and push a browser history entry
   const navigateTo = (newView, newFormId = null, newPref = null) => {
     const hashMap = { portal: '', instructions: '#instructions', form: '#form', status: '#status' };
     window.history.pushState(
-      { view: newView, currentFormId: newFormId, deliveryPreference: newPref },
+      { view: newView, currentFormId: newFormId, hiddenFormData: newPref },
       '',
       hashMap[newView] ?? ''
     );
     setView(newView);
     setCurrentFormId(newFormId);
-    setDeliveryPreference(newPref);
+    setHiddenFormData(newPref);
   };
 
   // Restore state when browser back/forward is pressed
@@ -34,11 +34,11 @@ function App() {
       if (s?.view) {
         setView(s.view);
         setCurrentFormId(s.currentFormId ?? null);
-        setDeliveryPreference(s.deliveryPreference ?? null);
+        setHiddenFormData(s.hiddenFormData ?? null);
       } else {
         setView('portal');
         setCurrentFormId(null);
-        setDeliveryPreference(null);
+        setHiddenFormData(null);
       }
     };
     window.addEventListener('popstate', handlePopState);
@@ -80,8 +80,8 @@ function App() {
     navigateTo('instructions', id, null);
   };
 
-  const handleProceedToForm = (pref) => {
-    navigateTo('form', currentFormId, pref || null);
+  const handleProceedToForm = (data) => {
+    navigateTo('form', currentFormId, data || null);
   };
 
   const handleBackToPortal = () => {
@@ -137,7 +137,7 @@ function App() {
                     config={selectedConfig}
                     onCancel={handleBackToInstructions}
                     onTrackStatus={() => navigateTo('status', null, null)}
-                    hiddenData={deliveryPreference ? { deliveryPreference } : null}
+                    hiddenData={hiddenFormData && Object.values(hiddenFormData).some(v => v != null) ? hiddenFormData : null}
                   />
                 ) : (
                   <p style={{ color: 'var(--text-muted)' }}>

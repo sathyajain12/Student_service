@@ -83,6 +83,12 @@ export default function FormBuilder({ config, onSubmit, onCancel, onTrackStatus,
     const fileInputRefs = useRef({});
     const [paperTables, setPaperTables] = useState({});
 
+    const hasEmptyPrePopulated = (config.fields || []).some(f =>
+        f.type === 'conditionalSelect' &&
+        hiddenData?.[f.dependsOn] &&
+        !f.optionsMap?.[hiddenData[f.dependsOn]]?.[0]
+    );
+
     const handleChange = (e) => {
         const { name, value } = e.target;
         setFormData(prev => ({ ...prev, [name]: value }));
@@ -212,7 +218,7 @@ export default function FormBuilder({ config, onSubmit, onCancel, onTrackStatus,
         });
         Object.entries(files).forEach(([k, v]) => bundle.append(k, v));
         if (hiddenData) {
-            Object.entries(hiddenData).forEach(([k, v]) => bundle.append(k, v));
+            Object.entries(hiddenData).forEach(([k, v]) => { if (v != null) bundle.append(k, v); });
         }
 
         try {
@@ -265,7 +271,7 @@ export default function FormBuilder({ config, onSubmit, onCancel, onTrackStatus,
         });
         Object.entries(files).forEach(([k, v]) => bundle.append(k, v));
         if (hiddenData) {
-            Object.entries(hiddenData).forEach(([k, v]) => bundle.append(k, v));
+            Object.entries(hiddenData).forEach(([k, v]) => { if (v != null) bundle.append(k, v); });
         }
 
         try {
@@ -576,6 +582,23 @@ export default function FormBuilder({ config, onSubmit, onCancel, onTrackStatus,
                                             )}
                                         </div>
                                     ) : field.type === 'conditionalSelect' ? (
+                                        hiddenData?.[field.dependsOn] ? (
+                                            (() => {
+                                                const preVal = field.optionsMap?.[hiddenData[field.dependsOn]]?.[0] || '';
+                                                return preVal ? (
+                                                    <>
+                                                        <input type="hidden" name={field.name} value={preVal} />
+                                                        <div className="form-input" style={{ background: 'rgba(15,23,42,0.03)', color: 'var(--text-main)', cursor: 'default', display: 'flex', alignItems: 'center' }}>
+                                                            {preVal}
+                                                        </div>
+                                                    </>
+                                                ) : (
+                                                    <div className="form-input" style={{ background: 'rgba(239,68,68,0.05)', border: '2px solid rgba(239,68,68,0.3)', color: '#dc2626', fontSize: '0.875rem' }}>
+                                                        No recent examination available — submission is not possible at this time
+                                                    </div>
+                                                );
+                                            })()
+                                        ) : (
                                         <div style={{ position: 'relative' }}>
                                             <select
                                                 name={field.name}
@@ -597,6 +620,7 @@ export default function FormBuilder({ config, onSubmit, onCancel, onTrackStatus,
                                             </select>
                                             <ChevronDown size={18} style={{ position: 'absolute', right: '16px', top: '50%', transform: 'translateY(-50%)', color: 'var(--text-muted)', pointerEvents: 'none' }} />
                                         </div>
+                                        )
                                     ) : field.type === 'countrySelect' ? (
                                         <div style={{ position: 'relative' }}>
                                             <select
@@ -965,15 +989,15 @@ export default function FormBuilder({ config, onSubmit, onCancel, onTrackStatus,
                     <button
                         type="submit"
                         className="btn-primary"
-                        disabled={loading || submitted}
+                        disabled={loading || submitted || hasEmptyPrePopulated}
                         style={{
                             flexGrow: 1,
                             display: 'flex',
                             alignItems: 'center',
                             justifyContent: 'center',
                             gap: '10px',
-                            opacity: (loading || submitted) ? 0.6 : 1,
-                            cursor: (loading || submitted) ? 'not-allowed' : 'pointer'
+                            opacity: (loading || submitted || hasEmptyPrePopulated) ? 0.6 : 1,
+                            cursor: (loading || submitted || hasEmptyPrePopulated) ? 'not-allowed' : 'pointer'
                         }}
                     >
                         {loading && <Loader2 size={18} className="animate-spin" />}

@@ -521,6 +521,10 @@ export const FORM_CONFIGS = {
         title: 'Application for Re-Totalling of Marks',
         description: 'The application will be considered only within 10 days from the date of access to the Student Academic Grade Information Sheet (SAGIS)',
         instructions: [
+            { type: 'examTypeSelector',
+              options: ['End-Semester Examinations', 'Supplementary Examinations'],
+              optionsMap: EXAM_MONTH_YEAR_OPTIONS
+            },
             'Ensure you have the correct Course Code(s) and Course Title.'
         ],
 
@@ -529,13 +533,6 @@ export const FORM_CONFIGS = {
             url: 'https://www.onlinesbi.sbi/sbicollect/icollecthome.htm?corpID=350506&categoryName=SSSIHL%20Exam%20App%20%20Re-Totaling%20of%20Marks'
         },
         fields: [...COMMON_ACADEMIC_FIELDS,
-        {
-            name: 'examType',
-            label: 'Examination Type',
-            type: 'radio',
-            required: true,
-            options: ['End-Semester Examinations', 'Supplementary Examinations']
-        },
 
         {
             name: 'examMonthYear',
