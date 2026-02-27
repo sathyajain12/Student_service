@@ -640,6 +640,7 @@ export const FORM_CONFIGS = {
                 type: 'number',
                 required: false
             },
+            { name: 'program', label: 'Academic Programme', type: 'select', options: PROGRAMME_OPTIONS, required: true },
             {
                 name: 'lastExamDate',
                 label: 'Month & Year of Last Examination',

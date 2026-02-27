@@ -6,7 +6,8 @@
       "Bash(npx wrangler deploy:*)",
       "Bash(git push)",
       "Bash(git push:*)",
-      "Bash(git fetch:*)"
+      "Bash(git fetch:*)",
+      "Bash(npx wrangler d1 execute sssihl-student-services --remote --command \"ALTER TABLE form_migration_certificate ADD COLUMN programme TEXT\")"
     ]
   }
 }

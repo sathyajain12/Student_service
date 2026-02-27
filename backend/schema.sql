@@ -218,6 +218,7 @@ CREATE TABLE form_migration_certificate (
   admission_year TEXT,
   Campus_of_admission TEXT,
   last_examination_passed TEXT,
+  programme TEXT,
   degree_recieved TEXT,
   university_to_migrate TEXT,
   address_line1 TEXT,
