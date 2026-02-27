@@ -554,7 +554,7 @@ export const FORM_CONFIGS = {
             text: 'Please click here to make the payment of ₹3000 using SBI Collect',
             url: 'https://onlinesbi.sbi.bank.in/sbicollect/icollecthome.htm?corpID=350506&categoryName=APP%20on%20Request%20Degree%20Certificate%20Issue'
         },
-        description: 'This application is exclusively for candidates who have neither applied for any Convocation nor collected their Degree Certificate during the Convocation ceremony of their respective batch. Only such candidates are eligible to apply through this portal on a need basis.',
+        description: 'Eligibility to apply for an On‑Request Degree Certificate arises only after the completion of the Convocation of your graduating batch. Candidates who have not applied for the Institute’s Convocation may do so for the upcoming November Convocation (applications available from June on the Institute website), but if the Degree Certificate is required urgently, they may apply for an On‑Request Degree Certificate by paying the specified fee.',
         instructions: [
 
             { type: 'address', text: 'Applicants are required to send a self-addressed, cloth-lined  waterproof envelope  (16 × 12 inches in size), affixed with stamps totalling ₹95, to the address mentioned below. The Institute requires this for dispatch of the On-Request Degree Certificate to the applicant by Speed Post service of India Post.', details: CONTROLLER_ADDRESS },
