@@ -594,10 +594,12 @@ export const FORM_CONFIGS = {
             {
                 type: 'deliveryOptions',
                 digilockerUrl: 'https://accounts.digilocker.gov.in/v3/7b9f84c86732efd21cd8076ff06f3fd60b1fbe146732fa57444b03b35f3740a4--en',
-                envelopeNotes: [
-                    'The name of the applicant, along with the complete postal address, including the town / city, PIN code, district and state must be clearly written or typed on the envelope.',
-                    'Students of foreign nationality may affix appropriate postage for an envelope weighing 100-120 g.'
-                ]
+                hardCopyLabel: 'Scanned Copy',
+                hardCopyValue: 'Scanned Copy',
+                hardCopyDesc: 'Download your certificate from the Track Application page',
+                softCopyLabel: 'DigiLocker',
+                softCopyValue: 'DigiLocker',
+                softCopyDesc: 'Login to DigiLocker to download your certificate',
             }
         ],
         fields: [

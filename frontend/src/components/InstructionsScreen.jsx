@@ -347,8 +347,8 @@ export default function InstructionsScreen({ config, onProceed, onCancel }) {
                                         {/* Checkboxes */}
                                         <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', marginBottom: '20px' }}>
                                             {[
-                                                { id: 'hardCopy', label: 'Hard Copy', desc: instruction.hardCopyDesc || 'Certificate dispatched by Speed Post', checked: hardCopy, setter: setHardCopy },
-                                                { id: 'softCopy', label: isCgpaCalculator ? 'Calculate' : 'Soft Copy', desc: instruction.softCopyDesc || 'Download from DigiLocker', checked: softCopy, setter: setSoftCopy }
+                                                { id: 'hardCopy', label: instruction.hardCopyLabel || 'Hard Copy', desc: instruction.hardCopyDesc || 'Certificate dispatched by Speed Post', checked: hardCopy, setter: setHardCopy },
+                                                { id: 'softCopy', label: isCgpaCalculator ? 'Calculate' : (instruction.softCopyLabel || 'Soft Copy'), desc: instruction.softCopyDesc || 'Download from DigiLocker', checked: softCopy, setter: setSoftCopy }
                                             ].map(({ id, label, desc, checked, setter }) => (
                                                 <label key={id} style={{
                                                     display: 'flex', alignItems: 'center', gap: '12px', cursor: 'pointer',
@@ -698,11 +698,13 @@ export default function InstructionsScreen({ config, onProceed, onCancel }) {
                 {!hideProceedButton && (
                     <button
                         onClick={() => {
+                            const hcVal = deliveryOptionsInstruction?.hardCopyValue || 'Hard Copy';
+                            const scVal = deliveryOptionsInstruction?.softCopyValue || 'Soft Copy';
                             const pref = isCgpaCalculator
-                                ? (hardCopy ? 'Hard Copy' : null)
-                                : (hardCopy && softCopy ? 'Both Hard Copy and Soft Copy'
-                                    : hardCopy ? 'Hard Copy'
-                                        : softCopy ? 'Soft Copy'
+                                ? (hardCopy ? hcVal : null)
+                                : (hardCopy && softCopy ? `Both ${hcVal} and ${scVal}`
+                                    : hardCopy ? hcVal
+                                        : softCopy ? scVal
                                             : null);
                             onProceed(pref);
                         }}
