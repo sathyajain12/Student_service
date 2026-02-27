@@ -732,6 +732,7 @@ export default function InstructionsScreen({ config, onProceed, onCancel }) {
                 </div>
             </div>
 
+            {!(isCgpaCalculator && softCopy && !hardCopy) && (
             <div style={{
                 padding: '20px',
                 background: 'rgba(245, 158, 11, 0.08)',
@@ -748,6 +749,7 @@ export default function InstructionsScreen({ config, onProceed, onCancel }) {
                     {config.files?.length > 0 && ' Please ensure all required documents are ready before filling the form.'}
                 </p>
             </div>
+            )}
 
             <div style={{ display: 'flex', gap: '15px' }}>
                 {!hideProceedButton && (
