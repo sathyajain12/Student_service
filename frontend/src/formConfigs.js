@@ -109,7 +109,7 @@ export const FORM_CONFIGS = {
             'Once the application is submitted, the applicant must wait for the Director\'s approval. Only after the Director approves the application will the Examination Section process it further. The applicant can track the status of the application using the Application ID provided at the time of submission.',
         ],
         titleLink: {
-            text: 'Please click here to make the payment of ₹500 for each Duplicate Grade Card using SBI Collect',
+            text: 'Please click here to make the payment of ₹500 Duplicate Grade Card using SBI Collect',
             url: 'https://www.onlinesbi.sbi/sbicollect/icollecthome.htm?corpID=350506&categoryName=SSSIHL%20Exams%20App%20Duplicate%20Grade%20Card'
         },
         fields: [
@@ -551,11 +551,6 @@ export const FORM_CONFIGS = {
         }],
 
         files: [
-            {
-                name: 'gradeCard',
-                label: 'Grade Card (Optional)',
-                required: false
-            },
             {
                 name: 'sbiReceipt',
                 label: 'SBI Collect Receipt',
