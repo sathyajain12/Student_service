@@ -1430,12 +1430,16 @@ export default function AdminPortal() {
                                         )}
 
                                         {/* Upload Response */}
-                                        <label className="btn-upload" style={{ ...sidebarBtnBase, background: '#4F46E5', color: 'white', cursor: uploading ? 'not-allowed' : 'pointer', opacity: uploading ? 0.6 : 1 }}>
-                                            <Upload size={16} /> {uploading ? 'Uploading...' : 'Upload Response Document'}
-                                            <input type="file" accept=".pdf,.jpg,.jpeg,.png" onChange={(e) => handleFileSelect(e, app.id)} style={{ display: 'none' }} disabled={uploading} />
-                                        </label>
-                                        {uploadError && <p style={{ color: '#ef4444', fontSize: '0.8rem', margin: 0 }}>{uploadError}</p>}
-                                        {uploadSuccess && <p style={{ color: '#10b981', fontSize: '0.8rem', margin: 0 }}>Uploaded successfully!</p>}
+                                        {!(appDetails.responseDocuments && appDetails.responseDocuments.length > 0) && (
+                                            <>
+                                                <label className="btn-upload" style={{ ...sidebarBtnBase, background: '#4F46E5', color: 'white', cursor: uploading ? 'not-allowed' : 'pointer', opacity: uploading ? 0.6 : 1 }}>
+                                                    <Upload size={16} /> {uploading ? 'Uploading...' : 'Upload Response Document'}
+                                                    <input type="file" accept=".pdf,.jpg,.jpeg,.png" onChange={(e) => handleFileSelect(e, app.id)} style={{ display: 'none' }} disabled={uploading} />
+                                                </label>
+                                                {uploadError && <p style={{ color: '#ef4444', fontSize: '0.8rem', margin: 0 }}>{uploadError}</p>}
+                                                {uploadSuccess && <p style={{ color: '#10b981', fontSize: '0.8rem', margin: 0 }}>Uploaded successfully!</p>}
+                                            </>
+                                        )}
 
                                         <hr style={{ border: 'none', borderTop: '1px solid #f1f5f9', margin: '4px 0' }} />
 
