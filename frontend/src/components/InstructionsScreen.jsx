@@ -115,11 +115,7 @@ export default function InstructionsScreen({ config, onProceed, onCancel }) {
 
     const hasDeliveryOptions = config.instructions?.some(i => i?.type === 'deliveryOptions');
     const deliveryOptionsInstruction = config.instructions?.find(i => i?.type === 'deliveryOptions');
-    const examTypeSelectorInstruction = config.instructions?.find(i => i?.type === 'examTypeSelector');
-    const hasExamTypeSelector = !!examTypeSelectorInstruction;
-    const proceedDisabled =
-        (hasDeliveryOptions && !hardCopy && !softCopy) ||
-        (hasExamTypeSelector && !examType);
+    const proceedDisabled = hasDeliveryOptions && !hardCopy && !softCopy;
     const isCgpaCalculator = deliveryOptionsInstruction?.softCopyContent === 'cgpaFormula';
     const hideProceedButton = isCgpaCalculator && softCopy && !hardCopy;
 
@@ -692,27 +688,24 @@ export default function InstructionsScreen({ config, onProceed, onCancel }) {
                                         <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
                                             {instruction.options.map(opt => {
                                                 const months = instruction.optionsMap?.[opt] || [];
-                                                const unavailable = months.length === 0;
                                                 return (
                                                     <label key={opt} style={{
                                                         display: 'flex', alignItems: 'center', gap: '12px',
-                                                        cursor: unavailable ? 'not-allowed' : 'pointer',
+                                                        cursor: 'pointer',
                                                         padding: '12px 16px', borderRadius: '10px',
                                                         border: `2px solid ${examType === opt ? 'var(--accent)' : 'var(--glass-border)'}`,
                                                         background: examType === opt ? 'rgba(37, 99, 235, 0.06)' : 'transparent',
-                                                        opacity: unavailable ? 0.45 : 1,
                                                         transition: 'all 0.2s'
                                                     }}>
                                                         <input type="radio" name="examTypeSelector" value={opt}
                                                             checked={examType === opt}
-                                                            disabled={unavailable}
                                                             onChange={() => setExamType(opt)}
                                                             style={{ width: '18px', height: '18px', accentColor: 'var(--accent)', cursor: 'pointer', flexShrink: 0 }} />
                                                         <div>
                                                             <span style={{ fontWeight: '600', color: 'var(--text-main)', fontSize: '0.95rem' }}>{opt}</span>
-                                                            {unavailable
-                                                                ? <span style={{ color: 'var(--text-muted)', fontSize: '0.82rem', marginLeft: '8px' }}>No recent examination available</span>
-                                                                : <span style={{ color: 'var(--text-muted)', fontSize: '0.82rem', marginLeft: '8px' }}>{months[0]}</span>
+                                                            {months.length > 0
+                                                                ? <span style={{ color: 'var(--text-muted)', fontSize: '0.82rem', marginLeft: '8px' }}>{months[0]}</span>
+                                                                : <span style={{ color: 'var(--text-muted)', fontSize: '0.82rem', marginLeft: '8px' }}>No recent exam yet</span>
                                                             }
                                                         </div>
                                                     </label>

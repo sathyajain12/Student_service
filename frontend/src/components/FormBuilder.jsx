@@ -347,7 +347,16 @@ export default function FormBuilder({ config, onSubmit, onCancel, onTrackStatus,
                 </div>
             </div>
 
+            {hasEmptyPrePopulated && (
+                <div style={{ marginBottom: '20px', padding: '14px 18px', borderRadius: '10px',
+                    background: 'rgba(239,68,68,0.07)', border: '1px solid rgba(239,68,68,0.25)',
+                    color: '#dc2626', fontSize: '0.9rem', fontWeight: '500' }}>
+                    No recent examination is available for the selected type. All fields are disabled until a recent examination exists.
+                </div>
+            )}
+
             <form onSubmit={config.needsDirectorApproval ? handleSeekDirectorApproval : handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '5px' }}>
+                <fieldset disabled={hasEmptyPrePopulated} style={{ border: 'none', padding: 0, margin: 0, opacity: hasEmptyPrePopulated ? 0.45 : 1, pointerEvents: hasEmptyPrePopulated ? 'none' : undefined }}>
                 {config.fields.map(field => (
                     <div key={field.name} className={field.type === 'heading' || field.type === 'paragraph' || field.type === 'separator' ? '' : 'form-group'}>
                         {field.type === 'separator' ? (
@@ -984,6 +993,7 @@ export default function FormBuilder({ config, onSubmit, onCancel, onTrackStatus,
                         )}
                     </div>
                 )}
+                </fieldset>
 
                 <div style={{ display: 'flex', gap: '15px', marginTop: '10px', flexWrap: 'wrap' }}>
                     <button
