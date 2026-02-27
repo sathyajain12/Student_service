@@ -369,59 +369,63 @@ export default function InstructionsScreen({ config, onProceed, onCancel }) {
                                         {/* Hard Copy: address card + envelope notes */}
                                         {hardCopy && (
                                             <div style={{ marginBottom: softCopy ? '20px' : '0' }}>
-                                                <div style={{ display: 'flex', alignItems: 'flex-start', gap: '10px', margin: '0 0 16px 0' }}>
-                                                    <div style={{ width: '7px', height: '7px', borderRadius: '50%', background: 'var(--accent)', flexShrink: 0, marginTop: '6px' }} />
-                                                    <p style={{ color: 'var(--text-main)', fontSize: '0.95rem', fontWeight: '500', lineHeight: '1.6', margin: 0, textAlign: 'justify' }}>
-                                                        {instruction.addressText}
-                                                    </p>
-                                                </div>
-                                                <div style={{
-                                                    background: 'linear-gradient(145deg, #ffffff 0%, #f8fafc 100%)',
-                                                    border: '1px solid #e2e8f0', borderRadius: '16px', padding: '24px',
-                                                    boxShadow: '0 4px 15px rgba(0,0,0,0.03)', display: 'flex', flexDirection: 'column', gap: '20px',
-                                                    marginBottom: '12px'
-                                                }}>
-                                                    <div style={{ display: 'flex', gap: '16px', alignItems: 'flex-start' }}>
-                                                        <div style={{ background: 'rgba(37, 99, 235, 0.1)', padding: '10px', borderRadius: '10px' }}>
-                                                            <MapPin size={20} color="var(--accent)" />
-                                                        </div>
-                                                        <div>
-                                                            <h4 style={{ fontSize: '1rem', fontWeight: '700', color: 'var(--text-main)', marginBottom: '4px' }}>
-                                                                {instruction.addressDetails.title}
-                                                            </h4>
-                                                            <p style={{ fontSize: '0.9rem', color: 'var(--text-muted)', lineHeight: '1.5', margin: 0 }}>
-                                                                {instruction.addressDetails.office}<br />
-                                                                {instruction.addressDetails.institution}<br />
-                                                                {instruction.addressDetails.location}<br />
-                                                                {instruction.addressDetails.district}
+                                                {instruction.addressDetails && (
+                                                    <>
+                                                        <div style={{ display: 'flex', alignItems: 'flex-start', gap: '10px', margin: '0 0 16px 0' }}>
+                                                            <div style={{ width: '7px', height: '7px', borderRadius: '50%', background: 'var(--accent)', flexShrink: 0, marginTop: '6px' }} />
+                                                            <p style={{ color: 'var(--text-main)', fontSize: '0.95rem', fontWeight: '500', lineHeight: '1.6', margin: 0, textAlign: 'justify' }}>
+                                                                {instruction.addressText}
                                                             </p>
                                                         </div>
-                                                    </div>
-                                                    <div style={{ height: '1px', background: '#e2e8f0', width: '100%' }}></div>
-                                                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '16px' }}>
-                                                        <div style={{ display: 'flex', gap: '12px', alignItems: 'center' }}>
-                                                            <div style={{ background: '#f1f5f9', padding: '8px', borderRadius: '8px' }}><Phone size={16} color="#475569" /></div>
-                                                            <div>
-                                                                <p style={{ fontSize: '0.75rem', fontWeight: '700', color: '#64748b', textTransform: 'uppercase', marginBottom: '1px', letterSpacing: '0.025em' }}>Call Us</p>
-                                                                <p style={{ fontSize: '0.9rem', fontWeight: '600', color: 'var(--text-main)', margin: 0 }}>{instruction.addressDetails.contact.tel}</p>
+                                                        <div style={{
+                                                            background: 'linear-gradient(145deg, #ffffff 0%, #f8fafc 100%)',
+                                                            border: '1px solid #e2e8f0', borderRadius: '16px', padding: '24px',
+                                                            boxShadow: '0 4px 15px rgba(0,0,0,0.03)', display: 'flex', flexDirection: 'column', gap: '20px',
+                                                            marginBottom: '12px'
+                                                        }}>
+                                                            <div style={{ display: 'flex', gap: '16px', alignItems: 'flex-start' }}>
+                                                                <div style={{ background: 'rgba(37, 99, 235, 0.1)', padding: '10px', borderRadius: '10px' }}>
+                                                                    <MapPin size={20} color="var(--accent)" />
+                                                                </div>
+                                                                <div>
+                                                                    <h4 style={{ fontSize: '1rem', fontWeight: '700', color: 'var(--text-main)', marginBottom: '4px' }}>
+                                                                        {instruction.addressDetails.title}
+                                                                    </h4>
+                                                                    <p style={{ fontSize: '0.9rem', color: 'var(--text-muted)', lineHeight: '1.5', margin: 0 }}>
+                                                                        {instruction.addressDetails.office}<br />
+                                                                        {instruction.addressDetails.institution}<br />
+                                                                        {instruction.addressDetails.location}<br />
+                                                                        {instruction.addressDetails.district}
+                                                                    </p>
+                                                                </div>
+                                                            </div>
+                                                            <div style={{ height: '1px', background: '#e2e8f0', width: '100%' }}></div>
+                                                            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '16px' }}>
+                                                                <div style={{ display: 'flex', gap: '12px', alignItems: 'center' }}>
+                                                                    <div style={{ background: '#f1f5f9', padding: '8px', borderRadius: '8px' }}><Phone size={16} color="#475569" /></div>
+                                                                    <div>
+                                                                        <p style={{ fontSize: '0.75rem', fontWeight: '700', color: '#64748b', textTransform: 'uppercase', marginBottom: '1px', letterSpacing: '0.025em' }}>Call Us</p>
+                                                                        <p style={{ fontSize: '0.9rem', fontWeight: '600', color: 'var(--text-main)', margin: 0 }}>{instruction.addressDetails.contact.tel}</p>
+                                                                    </div>
+                                                                </div>
+                                                                <div style={{ display: 'flex', gap: '12px', alignItems: 'center' }}>
+                                                                    <div style={{ background: '#f1f5f9', padding: '8px', borderRadius: '8px' }}><Mail size={16} color="#475569" /></div>
+                                                                    <div>
+                                                                        <p style={{ fontSize: '0.75rem', fontWeight: '700', color: '#64748b', textTransform: 'uppercase', marginBottom: '1px', letterSpacing: '0.025em' }}>Email</p>
+                                                                        <p style={{ fontSize: '0.9rem', fontWeight: '600', color: 'var(--accent)', margin: 0 }}>{instruction.addressDetails.contact.email}</p>
+                                                                    </div>
+                                                                </div>
+                                                                <div style={{ display: 'flex', gap: '12px', alignItems: 'center' }}>
+                                                                    <div style={{ background: '#f1f5f9', padding: '8px', borderRadius: '8px' }}><Globe size={16} color="#475569" /></div>
+                                                                    <div>
+                                                                        <p style={{ fontSize: '0.75rem', fontWeight: '700', color: '#64748b', textTransform: 'uppercase', marginBottom: '1px', letterSpacing: '0.025em' }}>Website</p>
+                                                                        <p style={{ fontSize: '0.9rem', fontWeight: '600', color: 'var(--text-main)', margin: 0 }}>{instruction.addressDetails.contact.web}</p>
+                                                                    </div>
+                                                                </div>
                                                             </div>
                                                         </div>
-                                                        <div style={{ display: 'flex', gap: '12px', alignItems: 'center' }}>
-                                                            <div style={{ background: '#f1f5f9', padding: '8px', borderRadius: '8px' }}><Mail size={16} color="#475569" /></div>
-                                                            <div>
-                                                                <p style={{ fontSize: '0.75rem', fontWeight: '700', color: '#64748b', textTransform: 'uppercase', marginBottom: '1px', letterSpacing: '0.025em' }}>Email</p>
-                                                                <p style={{ fontSize: '0.9rem', fontWeight: '600', color: 'var(--accent)', margin: 0 }}>{instruction.addressDetails.contact.email}</p>
-                                                            </div>
-                                                        </div>
-                                                        <div style={{ display: 'flex', gap: '12px', alignItems: 'center' }}>
-                                                            <div style={{ background: '#f1f5f9', padding: '8px', borderRadius: '8px' }}><Globe size={16} color="#475569" /></div>
-                                                            <div>
-                                                                <p style={{ fontSize: '0.75rem', fontWeight: '700', color: '#64748b', textTransform: 'uppercase', marginBottom: '1px', letterSpacing: '0.025em' }}>Website</p>
-                                                                <p style={{ fontSize: '0.9rem', fontWeight: '600', color: 'var(--text-main)', margin: 0 }}>{instruction.addressDetails.contact.web}</p>
-                                                            </div>
-                                                        </div>
-                                                    </div>
-                                                </div>
+                                                    </>
+                                                )}
                                                 {instruction.envelopeNotes?.map((note, i) => (
                                                     <div key={i} style={{ display: 'flex', alignItems: 'flex-start', gap: '10px', margin: '0 0 8px 0' }}>
                                                         <div style={{ width: '7px', height: '7px', borderRadius: '50%', background: 'var(--accent)', flexShrink: 0, marginTop: '6px' }} />

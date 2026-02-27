@@ -554,14 +554,14 @@ export const FORM_CONFIGS = {
             text: 'Please click here to make the payment of ₹3000 using SBI Collect',
             url: 'https://onlinesbi.sbi.bank.in/sbicollect/icollecthome.htm?corpID=350506&categoryName=APP%20on%20Request%20Degree%20Certificate%20Issue'
         },
-        description: 'This application is exclusively for candidates who were absent from the convocation ceremony of their respective batch and have not yet received their Degree Certificate. Only such candidates are eligible to submit an application through this portal.',
+        description: 'This application is exclusively for candidates who have neither applied for any Convocation nor collected their Degree Certificate during the Convocation ceremony of their respective batch. Only such candidates are eligible to apply through this portal on a need basis.',
         instructions: [
 
             { type: 'address', text: 'Applicants are required to send a self-addressed, cloth-lined  waterproof envelope  (16 × 12 inches in size), affixed with stamps totalling ₹95, to the address mentioned below. The Institute requires this for dispatch of the On-Request Degree Certificate to the applicant by Speed Post service of India Post.', details: CONTROLLER_ADDRESS },
             'The envelope should state clearly the name and programme of the student. The full and complete postal address must be clearly written or typed on it, including the town / city, PIN code, district and state.',
             'Students of foreign nationality may affix appropriate postage for an envelope weighing 100-120 gms.',
-            'Candidates applying for the Degree Certificate for Undergraduate degrees such as B.A. / B.A. (Hons.) / B.Sc. / B.Sc. (Hons.) / B.Com. (Hons.) / B.P.A. / B.B.M. / B.B.A. should upload the soft copy of the Original Pass Certificate of the Intermediate or Pre-University Examination issued by the Board.',
-            'Candidates applying for the Degree Certificate for Postgraduate degrees such as M.A. / M.Sc. / M.B.A. / M.Tech. / B.Ed. should upload the soft copy of the Qualifying Degree Pass Certificate.',
+            'Candidates applying for the Degree Certificate for Undergraduate degrees such as B.A. / B.A. (Hons.) / B.Sc. / B.Sc. (Hons.) / B.Com. (Hons.) / B.P.A. / B.B.M. / B.B.A. and B.C.A. should upload the soft copy of the Original Pass Certificate of the Intermediate or Pre-University Examination issued by the Board.',
+            'Candidates applying for the Degree Certificate for Postgraduate degrees such as M.A. / M.Sc. / M.B.A. / M.B.A. (Fin.) / M.F.M. / M.Tech. / B.Ed. / M.Ed. should upload the soft copy of the Qualifying Degree Pass Certificate.',
         ],
         fields: [
             { type: 'heading', label: 'Candidate Details', name: 'heading1' },
@@ -594,8 +594,6 @@ export const FORM_CONFIGS = {
             {
                 type: 'deliveryOptions',
                 digilockerUrl: 'https://accounts.digilocker.gov.in/v3/7b9f84c86732efd21cd8076ff06f3fd60b1fbe146732fa57444b03b35f3740a4--en',
-                addressText: 'Send a self-addressed waterproof envelope (11 × 5 inches in size), affixed with stamps totalling ₹65, to the address below. The Migration Certificate will be dispatched by Speed Post service of India Post.',
-                addressDetails: CONTROLLER_ADDRESS,
                 envelopeNotes: [
                     'The name of the applicant, along with the complete postal address, including the town / city, PIN code, district and state must be clearly written or typed on the envelope.',
                     'Students of foreign nationality may affix appropriate postage for an envelope weighing 100-120 g.'

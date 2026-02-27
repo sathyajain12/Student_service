@@ -507,7 +507,7 @@ async function handleResolveHold(request, env, corsHeaders) {
     }
 }
 
-async function sendDocumentDispatchedEmail(env, application, programme = null, trackingNumber = null, digilockerUrl = null, deliveryPreference = null) {
+async function sendDocumentDispatchedEmail(env, application, programme = null, trackingNumber = null, digilockerUrl = null, deliveryPreference = null, downloadLinks = []) {
     if (env.GOOGLE_CLIENT_ID && env.GOOGLE_CLIENT_SECRET && env.GOOGLE_REFRESH_TOKEN) {
         try {
             const accessToken = await getGoogleAuth(env);
@@ -545,7 +545,8 @@ async function sendDocumentDispatchedEmail(env, application, programme = null, t
                     { label: 'Dispatched On', value: dispatchedOn },
                     ...(trackingNumber ? [{ label: 'Postal Tracking Number', value: escapeHtml(trackingNumber) }] : [])
                 ],
-                importantNote
+                importantNote,
+                ...(downloadLinks.length > 0 ? { actionButtons: downloadLinks.map(dl => ({ label: dl.label, link: dl.url })) } : {})
             });
 
             await sendEmail(accessToken, {
@@ -581,7 +582,7 @@ async function handleNotifyDispatched(request, env, corsHeaders) {
         }
 
         const application = await env.DB.prepare(
-            `SELECT id, form_type, applicant_name, student_email, campus, status, reg_no, created_at FROM applications WHERE id = ?`
+            `SELECT id, form_type, applicant_name, student_email, campus, status, reg_no, created_at, access_token FROM applications WHERE id = ?`
         ).bind(applicationId).first();
 
         if (!application) {
@@ -637,7 +638,16 @@ async function handleNotifyDispatched(request, env, corsHeaders) {
             } catch (e) { /* ignore */ }
         }
 
-        await sendDocumentDispatchedEmail(env, application, programme, trackingNumber || null, digilockerUrl, deliveryPreference);
+        const backendUrl = new URL(request.url).origin;
+        const responseDocsResult = await env.DB.prepare(
+            `SELECT id, file_name FROM file_blobs WHERE application_id = ? AND is_response = TRUE`
+        ).bind(applicationId).all();
+        const downloadLinks = (responseDocsResult.results || []).map(doc => ({
+            label: `Download ${doc.file_name}`,
+            url: `${backendUrl}/download/${doc.id}?appId=${applicationId}${application.access_token ? `&token=${application.access_token}` : ''}`
+        }));
+
+        await sendDocumentDispatchedEmail(env, application, programme, trackingNumber || null, digilockerUrl, deliveryPreference, downloadLinks);
 
         await env.DB.prepare(
             `UPDATE applications SET status = 'DISPATCHED', updated_at = CURRENT_TIMESTAMP WHERE id = ?`
