@@ -486,7 +486,7 @@ export default function InstructionsScreen({ config, onProceed, onCancel }) {
                                                             {[
                                                                 {
                                                                     title: 'Table 1',
-                                                                    note: 'Science & M.Tech programmes',
+                                                                    note: 'Science & M.Tech',
                                                                     rows: [
                                                                         ['4.50', '5.00', '75', '100'],
                                                                         ['3.50', '4.50', '60', '75'],
@@ -600,7 +600,7 @@ export default function InstructionsScreen({ config, onProceed, onCancel }) {
                                                             <div style={{ display: 'flex', gap: '12px', marginBottom: '16px' }}>
                                                                 {[
                                                                     { val: '1', label: 'Science & M.Tech', Icon: FlaskConical },
-                                                                    { val: '2', label: 'Arts & Mgmt', Icon: Palette }
+                                                                    { val: '2', label: 'Arts, Management, Commerce, M.B.A., B.Ed. & Music', Icon: Palette }
                                                                 ].map(({ val, label, Icon }) => (
                                                                     <button key={val} onClick={() => setCalcTable(val)} style={{
                                                                         flex: 1, padding: '22px 16px', borderRadius: '18px', cursor: 'pointer', textAlign: 'center',
