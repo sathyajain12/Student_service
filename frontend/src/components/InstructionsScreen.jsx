@@ -462,7 +462,7 @@ export default function InstructionsScreen({ config, onProceed, onCancel }) {
                                                             <span style={{ verticalAlign: 'middle' }}> × (CGPA / GPA in question – LP)</span>
                                                         </div>
                                                         {/* Abbreviations */}
-                                                        <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px', marginBottom: '20px', justifyContent: 'center' }}>
+                                                        <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', marginBottom: '20px' }}>
                                                             {[
                                                                 { abbr: 'LP', full: 'Lower Point of CGPA range' },
                                                                 { abbr: 'UP', full: 'Upper Point of CGPA range' },
