@@ -560,8 +560,8 @@ export const FORM_CONFIGS = {
             { type: 'address', text: 'Applicants are required to send a self-addressed, cloth-lined  waterproof envelope  (16 × 12 inches in size), affixed with stamps totalling ₹95, to the address mentioned below. The Institute requires this for dispatch of the On-Request Degree Certificate to the applicant by Speed Post service of India Post.', details: CONTROLLER_ADDRESS },
             'The envelope should state clearly the name and programme of the student. The full and complete postal address must be clearly written or typed on it, including the town / city, PIN code, district and state.',
             'Students of foreign nationality may affix appropriate postage for an envelope weighing 100-120 gms.',
-            'Candidates applying for the Degree Certificate for Undergraduate degrees such as B.A. / B.A. (Hons.) / B.Sc. / B.Sc. (Hons.) / B.Com. (Hons.) / B.P.A. / B.B.M. / B.B.A. and B.C.A. should upload the soft copy of the Original Pass Certificate of the Intermediate or Pre-University Examination issued by the Board.',
-            'Candidates applying for the Degree Certificate for Postgraduate degrees such as M.A. / M.Sc. / M.B.A. / M.B.A. (Fin.) / M.F.M. / M.Tech. / B.Ed. / M.Ed. should upload the soft copy of the Qualifying Degree Pass Certificate.',
+            'Candidates applying for the Degree Certificate for Undergraduate degrees such as B.A. / B.A. (Hons.) / B.Sc. / B.Sc. (Hons.) / B.Com. (Hons.) / B.P.A. / B.B.M. / B.B.A. should upload the soft copy of the Original Pass Certificate of the Intermediate or Pre-University Examination issued by the Board.',
+            'Candidates applying for the Degree Certificate for Postgraduate degrees such as M.A. / M.Sc. / M.B.A. / M.Tech. / B.Ed. should upload the soft copy of the Qualifying Degree Pass Certificate.',
         ],
         fields: [
             { type: 'heading', label: 'Candidate Details', name: 'heading1' },
