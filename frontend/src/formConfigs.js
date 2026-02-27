@@ -67,6 +67,30 @@ const CONTROLLER_ADDRESS = {
 };
 
 
+const _now = new Date();
+const _yr = _now.getFullYear();
+const _mo = _now.getMonth() + 1; // 1–12
+
+function _latestPastExam(sessions) {
+    // sessions: [{month, label}, ...] in chronological order
+    const passed = sessions.filter(s => s.month <= _mo);
+    if (passed.length === 0) return [];
+    // Return only the most recently passed session
+    const latest = passed[passed.length - 1];
+    return [`${latest.label} ${_yr}`];
+}
+
+const EXAM_MONTH_YEAR_OPTIONS = {
+    'End-Semester Examinations': _latestPastExam([
+        { month: 4, label: 'April' },
+        { month: 11, label: 'November' }
+    ]),
+    'Supplementary Examinations': _latestPastExam([
+        { month: 6, label: 'June' },
+        { month: 12, label: 'December' }
+    ])
+};
+
 export const FORM_CONFIGS = {
     'duplicate-grade-card': {
         needsDirectorApproval: true,
@@ -495,16 +519,13 @@ export const FORM_CONFIGS = {
 
     'retotaling': {
         title: 'Application for Re-Totalling of Marks',
-        description: 'The application will be considered only within 10 days from the date of receipt of the respective Semester Grade Cards by the Campus Office',
+        description: 'The application will be considered only within 10 days from the date of access to the Student Academic Grade Information Sheet (SAGIS)',
         instructions: [
-            'This service is for verification of marks totaling in your answer script.',
-            'Select whether it is for End-Semester or Supplementary Examinations.',
-            'Grade Card upload is optional but recommended.',
-            { type: 'address', text: 'Applicants are required to send a self-addressed waterproof envelope affixed with stamps totalling ₹95, to the address mentioned below.', details: CONTROLLER_ADDRESS }
+            'Ensure you have the correct Course Code(s) and Course Title.'
         ],
 
         titleLink: {
-            text: 'Please click here to make the payment of ₹100 for each Re-Totalling Application using SBI Collect',
+            text: 'Please click here to make the payment of ₹100 for Re-Totalling Application using SBI Collect',
             url: 'https://www.onlinesbi.sbi/sbicollect/icollecthome.htm?corpID=350506&categoryName=SSSIHL%20Exam%20App%20%20Re-Totaling%20of%20Marks'
         },
         fields: [...COMMON_ACADEMIC_FIELDS,
@@ -522,10 +543,7 @@ export const FORM_CONFIGS = {
             type: 'conditionalSelect',
             required: true,
             dependsOn: 'examType',
-            optionsMap: {
-                'End-Semester Examinations': ['April 2024', 'February 2024', 'April 2025', 'February 2025', 'April 2026', 'February 2026'],
-                'Supplementary Examinations': ['June 2024', 'December 2024', 'June 2025', 'December 2025', 'June 2026', 'December 2026']
-            }
+            optionsMap: EXAM_MONTH_YEAR_OPTIONS
         },
 
         {
