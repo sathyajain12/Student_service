@@ -344,7 +344,7 @@ export default function InstructionsScreen({ config, onProceed, onCancel }) {
                                 ) : isDeliveryOptions ? (
                                     <div style={{ flex: 1 }}>
                                         <p style={{ color: 'var(--text-main)', fontSize: '0.95rem', fontWeight: '500', lineHeight: '1.6', margin: '0 0 16px 0' }}>
-                                            Please select your preferred delivery option for the {instruction.certificateName || 'Migration Certificate'}:
+                                            Please select your preferred option for the {instruction.certificateName || 'Migration Certificate'}:
                                         </p>
                                         {/* Checkboxes */}
                                         <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', marginBottom: '20px' }}>

@@ -143,13 +143,12 @@ export const FORM_CONFIGS = {
     'cgpa-conversion': {
         title: 'Application for CGPA to Percentage Conversion',
         instructions: [
-            'As the Institute follows a grading system, grade cards, which are already issued to the students by the Institute-serve as Statement of Marks. No other mark statements are issued. However, if required, a Statement of CGPA Equivalent Percentage of Marks is issued on application to pursue further studies or to seek a job.',
-            'No Fee is charged for the issue of a Statement of CGPA Equivalent Percentage of Marks.',
+            
             {
                 type: 'deliveryOptions',
                 certificateName: 'CGPA Conversion Statement',
                 hardCopyDesc: 'Statement dispatched by Speed Post',
-                addressText: 'Applicants are required to send a self-addressed envelope affixed with stamps totalling ₹95, to the address mentioned below. The Institute requires this for dispatch of the statement of conversion of CGPA into equivalent percentage of marks to the applicant by Speed Post service of India Post.',
+                addressText: 'Applicants are required to send a self-addressed waterproof envelope (11 x 5 inches in size) affixed with stamps totalling ₹65, to the address mentioned below. The Institute requires this for dispatch of the statement of conversion of CGPA into equivalent percentage of marks to the applicant by Speed Post service of India Post.',
                 addressDetails: CONTROLLER_ADDRESS,
                 envelopeNotes: [
                     'The name of the applicant, along with the complete postal address, including the town / city, PIN code, district and state must be clearly written or typed on the envelope.',
