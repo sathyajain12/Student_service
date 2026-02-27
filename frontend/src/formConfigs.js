@@ -532,7 +532,8 @@ export const FORM_CONFIGS = {
             name: 'subjectCode',
             label: 'Courses for Re-Totalling',
             type: 'paperTable',
-            required: true
+            required: true,
+            maxRows: 1
         }],
 
         files: [

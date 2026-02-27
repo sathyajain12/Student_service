@@ -745,7 +745,7 @@ export default function FormBuilder({ config, onSubmit, onCancel, onTrackStatus,
                                                                         borderRadius: '8px',
                                                                         padding: '8px',
                                                                         cursor: 'pointer',
-                                                                        display: 'flex',
+                                                                        display: field.maxRows === 1 ? 'none' : 'flex',
                                                                         alignItems: 'center',
                                                                         justifyContent: 'center',
                                                                         color: 'var(--error)',
@@ -765,7 +765,7 @@ export default function FormBuilder({ config, onSubmit, onCancel, onTrackStatus,
                                                     ))}
                                                 </tbody>
                                             </table>
-                                            <button
+                                            {field.maxRows !== 1 && <button
                                                 type="button"
                                                 onClick={() => addPaperTableRow(field.name)}
                                                 style={{
@@ -791,7 +791,7 @@ export default function FormBuilder({ config, onSubmit, onCancel, onTrackStatus,
                                                 }}
                                             >
                                                 <Plus size={18} /> Add Another Course
-                                            </button>
+                                            </button>}
                                         </div>
                                     ) : (
                                         <input
