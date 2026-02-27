@@ -644,10 +644,16 @@ async function handleNotifyDispatched(request, env, corsHeaders) {
         const responseDocsResult = await env.DB.prepare(
             `SELECT id, file_name FROM file_blobs WHERE application_id = ? AND is_response = TRUE`
         ).bind(applicationId).all();
-        const downloadLinks = (responseDocsResult.results || []).map(doc => ({
-            label: `Download ${doc.file_name}`,
-            url: `${backendUrl}/download/${doc.id}?appId=${applicationId}${application.access_token ? `&token=${application.access_token}` : ''}`
-        }));
+        const isScannedCopyDelivery = deliveryPreference === 'Scanned Copy' || deliveryPreference === 'Both Scanned Copy and DigiLocker';
+        let downloadLinks = [];
+        if (isScannedCopyDelivery && (responseDocsResult.results || []).length > 0) {
+            downloadLinks = [{ label: 'Track Application', url: `https://student-service.pages.dev/#track=${applicationId}` }];
+        } else {
+            downloadLinks = (responseDocsResult.results || []).map(doc => ({
+                label: `Download ${doc.file_name}`,
+                url: `${backendUrl}/download/${doc.id}?appId=${applicationId}${application.access_token ? `&token=${application.access_token}` : ''}`
+            }));
+        }
 
         await sendDocumentDispatchedEmail(env, application, programme, trackingNumber || null, digilockerUrl, deliveryPreference, downloadLinks);
 
