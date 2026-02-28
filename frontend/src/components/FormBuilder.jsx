@@ -83,11 +83,6 @@ export default function FormBuilder({ config, onSubmit, onCancel, onTrackStatus,
     const fileInputRefs = useRef({});
     const [paperTables, setPaperTables] = useState({});
 
-    const hasEmptyPrePopulated = (config.fields || []).some(f =>
-        f.type === 'conditionalSelect' &&
-        hiddenData?.[f.dependsOn] &&
-        !f.optionsMap?.[hiddenData[f.dependsOn]]?.[0]
-    );
 
     const handleChange = (e) => {
         const { name, value } = e.target;
@@ -347,16 +342,9 @@ export default function FormBuilder({ config, onSubmit, onCancel, onTrackStatus,
                 </div>
             </div>
 
-            {hasEmptyPrePopulated && (
-                <div style={{ marginBottom: '20px', padding: '14px 18px', borderRadius: '10px',
-                    background: 'rgba(239,68,68,0.07)', border: '1px solid rgba(239,68,68,0.25)',
-                    color: '#dc2626', fontSize: '0.9rem', fontWeight: '500' }}>
-                    No recent examination is available for the selected type. All fields are disabled until a recent examination exists.
-                </div>
-            )}
 
             <form onSubmit={config.needsDirectorApproval ? handleSeekDirectorApproval : handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '5px' }}>
-                <fieldset disabled={hasEmptyPrePopulated} style={{ border: 'none', padding: 0, margin: 0, opacity: hasEmptyPrePopulated ? 0.45 : 1, pointerEvents: hasEmptyPrePopulated ? 'none' : undefined }}>
+                <>
                 {config.fields.map(field => (
                     <div key={field.name} className={field.type === 'heading' || field.type === 'paragraph' || field.type === 'separator' ? '' : 'form-group'}>
                         {field.type === 'separator' ? (
@@ -993,21 +981,21 @@ export default function FormBuilder({ config, onSubmit, onCancel, onTrackStatus,
                         )}
                     </div>
                 )}
-                </fieldset>
+                </>
 
                 <div style={{ display: 'flex', gap: '15px', marginTop: '10px', flexWrap: 'wrap' }}>
                     <button
                         type="submit"
                         className="btn-primary"
-                        disabled={loading || submitted || hasEmptyPrePopulated}
+                        disabled={loading || submitted}
                         style={{
                             flexGrow: 1,
                             display: 'flex',
                             alignItems: 'center',
                             justifyContent: 'center',
                             gap: '10px',
-                            opacity: (loading || submitted || hasEmptyPrePopulated) ? 0.6 : 1,
-                            cursor: (loading || submitted || hasEmptyPrePopulated) ? 'not-allowed' : 'pointer'
+                            opacity: (loading || submitted) ? 0.6 : 1,
+                            cursor: (loading || submitted) ? 'not-allowed' : 'pointer'
                         }}
                     >
                         {loading && <Loader2 size={18} className="animate-spin" />}
