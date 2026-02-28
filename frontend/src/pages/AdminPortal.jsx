@@ -1704,14 +1704,6 @@ export default function AdminPortal() {
                         {/* PRIORITY HEADER */}
                         {stats && (
                             <div style={{ marginBottom: '20px' }}>
-                                {stalePendingCount > 0 && (
-                                    <div onClick={() => setStatusFilter('PENDING')}
-                                        style={{ display: 'flex', alignItems: 'center', gap: '12px', background: '#fffbeb', border: '1px solid #fde68a', borderLeft: '4px solid #f59e0b', borderRadius: '10px', padding: '12px 18px', marginBottom: '10px', cursor: 'pointer' }}>
-                                        <Clock size={18} color="#f59e0b" />
-                                        <span style={{ fontWeight: 700, color: '#92400e', fontSize: '0.9rem' }}>{stalePendingCount} Pending for 3+ days</span>
-                                        <span style={{ marginLeft: 'auto', background: '#f59e0b', color: 'white', borderRadius: '999px', padding: '2px 10px', fontSize: '0.75rem', fontWeight: 700 }}>{stalePendingCount}</span>
-                                    </div>
-                                )}
                                 <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap' }}>
                                     <div style={{ flex: '1 1 140px', background: 'white', borderRadius: '10px', border: '1px solid #e2e8f0', padding: '14px 16px', boxShadow: '0 1px 3px rgba(0,0,0,0.04)' }}>
                                         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '6px' }}>
