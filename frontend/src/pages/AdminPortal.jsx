@@ -280,12 +280,12 @@ export default function AdminPortal() {
     };
 
     const getUrgencyScore = (app) => {
-        if (app.status === 'REJECTED') return 0;
         if (app.status === 'PENDING') {
             const ageDays = (Date.now() - new Date((app.created_at || '') + 'Z').getTime()) / 86400000;
-            return ageDays >= 3 ? 1 : 2;
+            return ageDays >= 3 ? 0 : 1;
         }
-        return 3;
+        if (app.status === 'REJECTED') return 3;
+        return 2;
     };
 
     const sortByUrgency = (apps) => [...apps].sort((a, b) => {
@@ -1704,14 +1704,6 @@ export default function AdminPortal() {
                         {/* PRIORITY HEADER */}
                         {stats && (
                             <div style={{ marginBottom: '20px' }}>
-                                {stats.rejected > 0 && (
-                                    <div onClick={() => setStatusFilter('REJECTED')}
-                                        style={{ display: 'flex', alignItems: 'center', gap: '12px', background: '#fef2f2', border: '1px solid #fecaca', borderLeft: '4px solid #ef4444', borderRadius: '10px', padding: '12px 18px', marginBottom: '10px', cursor: 'pointer' }}>
-                                        <XCircle size={18} color="#ef4444" />
-                                        <span style={{ fontWeight: 700, color: '#991b1b', fontSize: '0.9rem' }}>{stats.rejected} Rejected — need attention</span>
-                                        <span style={{ marginLeft: 'auto', background: '#ef4444', color: 'white', borderRadius: '999px', padding: '2px 10px', fontSize: '0.75rem', fontWeight: 700 }}>{stats.rejected}</span>
-                                    </div>
-                                )}
                                 {stalePendingCount > 0 && (
                                     <div onClick={() => setStatusFilter('PENDING')}
                                         style={{ display: 'flex', alignItems: 'center', gap: '12px', background: '#fffbeb', border: '1px solid #fde68a', borderLeft: '4px solid #f59e0b', borderRadius: '10px', padding: '12px 18px', marginBottom: '10px', cursor: 'pointer' }}>
@@ -1747,12 +1739,6 @@ export default function AdminPortal() {
                                         <p style={{ fontSize: '0.7rem', fontWeight: 600, color: '#64748b', margin: '0 0 8px', textTransform: 'uppercase', letterSpacing: '0.05em' }}>By Campus</p>
                                         <DonutChart data={campusBreakdown} colors={['#6366f1', '#10b981', '#f59e0b', '#ec4899']} />
                                     </div>
-                                </div>
-                                <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: '10px' }}>
-                                    <button onClick={() => setUrgencySort(u => !u)}
-                                        style={{ display: 'flex', alignItems: 'center', gap: '6px', padding: '5px 12px', background: urgencySort ? '#fef3c7' : 'white', border: `1px solid ${urgencySort ? '#fde68a' : '#e2e8f0'}`, borderRadius: '6px', cursor: 'pointer', fontSize: '0.75rem', fontWeight: 600, color: urgencySort ? '#92400e' : '#64748b', fontFamily: 'inherit' }}>
-                                        {urgencySort ? '⚡ Urgency Sort' : '📅 Date Sort'}
-                                    </button>
                                 </div>
                             </div>
                         )}
