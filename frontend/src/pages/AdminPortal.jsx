@@ -243,6 +243,82 @@ export default function AdminPortal() {
     const [statusFilter, setStatusFilter] = useState('ALL');
     const [campusFilter, setCampusFilter] = useState('ALL');
     const [retotalingActive, setRetotalingActive] = useState(null);
+    const [urgencySort, setUrgencySort] = useState(true);
+    const [formTypeFilter, setFormTypeFilter] = useState(null);
+
+    const CAMPUS_COLORS = {
+        'Prashanti Nilayam Campus': '#6366f1',
+        'Anantapur Campus': '#10b981',
+        'Brindavan Campus': '#f59e0b',
+        'Nandigiri Campus': '#ec4899',
+    };
+    const getCampusColor = (campus) => CAMPUS_COLORS[campus] || '#94a3b8';
+
+    const FORM_SHORT = {
+        'Application for Duplicate Grade Card': 'Duplicate Grade Card',
+        'Application for CGPA to Percentage Conversion': 'CGPA Conversion',
+        'Application for Supplementary Examinations Registration': 'Supplementary Exam',
+        'Application for Duplicate Degree Certificate': 'Duplicate Degree',
+        'Application for Registration of Student Name change in the Institute Records': 'Name Change',
+        'Application for Repeating Examinations Registration (CIE and ESE)': 'Repeat Paper',
+        'Application for Re-Totalling of Marks': 'Re-Totalling',
+        'Application for On-Request Degree Certificate': 'On-Request Degree',
+        'Application for Migration Certificate': 'Migration',
+    };
+    const getShortLabel = (ft) => FORM_SHORT[ft] || ft;
+
+    const getTimeAgo = (dateStr) => {
+        if (!dateStr) return '';
+        const ms = Date.now() - new Date(dateStr.endsWith('Z') ? dateStr : dateStr + 'Z').getTime();
+        const min = Math.floor(ms / 60000);
+        if (min < 2) return 'just now';
+        if (min < 60) return `${min} min ago`;
+        const hr = Math.floor(min / 60);
+        if (hr < 24) return `${hr} hr ago`;
+        const d = Math.floor(hr / 24);
+        return `${d} day${d !== 1 ? 's' : ''} ago`;
+    };
+
+    const getUrgencyScore = (app) => {
+        if (app.status === 'REJECTED') return 0;
+        if (app.status === 'PENDING') {
+            const ageDays = (Date.now() - new Date((app.created_at || '') + 'Z').getTime()) / 86400000;
+            return ageDays >= 3 ? 1 : 2;
+        }
+        return 3;
+    };
+
+    const sortByUrgency = (apps) => [...apps].sort((a, b) => {
+        const sd = getUrgencyScore(a) - getUrgencyScore(b);
+        if (sd !== 0) return sd;
+        return new Date((b.created_at || '') + 'Z') - new Date((a.created_at || '') + 'Z');
+    });
+
+    const getSparklineData = (apps) => Array.from({ length: 7 }, (_, i) => {
+        const d = new Date(); d.setDate(d.getDate() - (6 - i));
+        const ds = d.toISOString().split('T')[0];
+        return apps.filter(a => (a.created_at || '').startsWith(ds)).length;
+    });
+
+    const exportCSV = (apps) => {
+        const h = ['ID', 'Form Type', 'Applicant', 'Email', 'Campus', 'Status', 'Date'];
+        const rows = apps.map(a => [
+            a.id,
+            `"${(a.form_type || '').replace(/"/g, '""')}"`,
+            `"${(a.applicant_name || '').replace(/"/g, '""')}"`,
+            a.student_email || '',
+            `"${(a.campus || '').replace(/"/g, '""')}"`,
+            a.status || '',
+            a.created_at ? new Date(a.created_at + 'Z').toLocaleDateString('en-IN', { timeZone: 'Asia/Kolkata' }) : ''
+        ]);
+        const csv = [h.join(','), ...rows.map(r => r.join(','))].join('\n');
+        const url = URL.createObjectURL(new Blob([csv], { type: 'text/csv;charset=utf-8;' }));
+        const el = Object.assign(document.createElement('a'), {
+            href: url,
+            download: `applications_${new Date().toISOString().split('T')[0]}.csv`
+        });
+        document.body.appendChild(el); el.click(); document.body.removeChild(el); URL.revokeObjectURL(url);
+    };
 
     const showToast = (message, type = 'success') => {
         setToast({ message, type });
@@ -272,6 +348,7 @@ export default function AdminPortal() {
     useEffect(() => { setCurrentPage(1); }, [searchQuery]);
     useEffect(() => { setCurrentPage(1); }, [statusFilter]);
     useEffect(() => { setCurrentPage(1); }, [campusFilter]);
+    useEffect(() => { setCurrentPage(1); }, [formTypeFilter]);
 
     const handleLogin = async (e) => {
         e.preventDefault();
@@ -1239,75 +1316,207 @@ export default function AdminPortal() {
         );
     }
 
-    // Application Details View
-    if (selectedApp && appDetails) {
-        const app = appDetails.application;
-        const statusIcon = app.status === 'COMPLETED' || app.status === 'APPROVED'
-            ? <CheckCircle size={16} />
-            : app.status === 'REJECTED' ? <XCircle size={16} /> : <Clock size={16} />;
-
-        const detailLabelStyle = { fontSize: '0.7rem', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.06em', color: '#94a3b8', margin: '0 0 4px 0' };
-        const detailValueStyle = { fontSize: '0.9rem', fontWeight: 600, color: '#0F172A', margin: 0, lineHeight: 1.4 };
-
-        const FIELD_LABEL_OVERRIDES = { paper_codes: 'Course Code(s)', paper_titles: 'Course Title(s)' };
-        const formatFieldKey = (key) =>
-            FIELD_LABEL_OVERRIDES[key] ||
-            key.replace(/_/g, ' ').replace(/([A-Z])/g, ' $1').trim()
-               .replace(/\b\w/g, c => c.toUpperCase());
-
-        const formatFieldValue = (value) => {
-            if (value === null || value === undefined || value === '') return '—';
-            try {
-                const parsed = JSON.parse(value);
-                if (Array.isArray(parsed)) {
-                    return parsed.map((item) =>
-                        typeof item === 'object'
-                            ? Object.entries(item).map(([k, v]) => `${formatFieldKey(k)}: ${v}`).join(' | ')
-                            : item
-                    ).join('\n');
-                }
-                return String(value);
-            } catch {
-                return String(value);
+    // Detail view locals (use optional chaining since they may be null)
+    const app = appDetails?.application;
+    const statusIcon = app?.status === 'COMPLETED' || app?.status === 'APPROVED'
+        ? <CheckCircle size={16} />
+        : app?.status === 'REJECTED' ? <XCircle size={16} /> : <Clock size={16} />;
+    const detailLabelStyle = { fontSize: '0.7rem', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.06em', color: '#94a3b8', margin: '0 0 4px 0' };
+    const detailValueStyle = { fontSize: '0.9rem', fontWeight: 600, color: '#0F172A', margin: 0, lineHeight: 1.4 };
+    const FIELD_LABEL_OVERRIDES = { paper_codes: 'Course Code(s)', paper_titles: 'Course Title(s)' };
+    const formatFieldKey = (key) =>
+        FIELD_LABEL_OVERRIDES[key] ||
+        key.replace(/_/g, ' ').replace(/([A-Z])/g, ' $1').trim().replace(/\b\w/g, c => c.toUpperCase());
+    const formatFieldValue = (value) => {
+        if (value === null || value === undefined || value === '') return '—';
+        try {
+            const parsed = JSON.parse(value);
+            if (Array.isArray(parsed)) {
+                return parsed.map((item) =>
+                    typeof item === 'object'
+                        ? Object.entries(item).map(([k, v]) => `${formatFieldKey(k)}: ${v}`).join(' | ')
+                        : item
+                ).join('\n');
             }
-        };
+            return String(value);
+        } catch { return String(value); }
+    };
 
-        const sidebarBtnBase = { width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', padding: '11px 16px', borderRadius: '8px', cursor: 'pointer', fontWeight: 600, fontSize: '0.875rem', fontFamily: 'inherit', border: 'none', transition: 'all 0.15s ease' };
-        const fileRowStyle = { display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '14px 16px', borderRadius: '8px', border: '1px solid #f1f5f9', marginBottom: '8px', gap: '12px' };
-        const downloadBtnStyle = { display: 'flex', alignItems: 'center', gap: '6px', padding: '6px 14px', background: 'white', color: '#334155', border: '1px solid #e2e8f0', borderRadius: '6px', cursor: 'pointer', fontSize: '0.8rem', fontWeight: 600, fontFamily: 'inherit', flexShrink: 0 };
+    // Dashboard computed values
+    const CAMPUS_ORDER = ['Prashanti Nilayam Campus', 'Anantapur Campus', 'Brindavan Campus', 'Nandigiri Campus'];
+    const campusBreakdown = CAMPUS_ORDER.map(c => ({ label: c, count: applications.filter(a => a.campus === c).length }));
 
+    const stalePendingCount = applications.filter(a =>
+        a.status === 'PENDING' && (Date.now() - new Date((a.created_at || '') + 'Z').getTime()) / 86400000 >= 3
+    ).length;
+
+    const filteredApplications = (() => {
+        let list = applications
+            .filter(a => {
+                if (!searchQuery.trim()) return true;
+                const q = searchQuery.toLowerCase();
+                return [a.id, a.applicant_name, a.form_type, a.campus, a.student_email, a.status]
+                    .some(f => f?.toLowerCase().includes(q));
+            })
+            .filter(a => statusFilter === 'ALL' || a.status === statusFilter)
+            .filter(a => campusFilter === 'ALL' || a.campus === campusFilter)
+            .filter(a => !formTypeFilter || a.form_type === formTypeFilter);
+        return urgencySort ? sortByUrgency(list)
+            : list.sort((a, b) => new Date((b.created_at || '') + 'Z') - new Date((a.created_at || '') + 'Z'));
+    })();
+
+    const sparklineAll = getSparklineData(applications);
+    const sparklinePending = getSparklineData(applications.filter(a => a.status === 'PENDING'));
+    const recentActivity = [...applications]
+        .sort((a, b) => new Date((b.created_at || '') + 'Z') - new Date((a.created_at || '') + 'Z'))
+        .slice(0, 10);
+
+    const sidebarBtnBase = { width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', padding: '11px 16px', borderRadius: '8px', cursor: 'pointer', fontWeight: 600, fontSize: '0.875rem', fontFamily: 'inherit', border: 'none', transition: 'all 0.15s ease' };
+    const fileRowStyle = { display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '14px 16px', borderRadius: '8px', border: '1px solid #f1f5f9', marginBottom: '8px', gap: '12px' };
+    const downloadBtnStyle = { display: 'flex', alignItems: 'center', gap: '6px', padding: '6px 14px', background: 'white', color: '#334155', border: '1px solid #e2e8f0', borderRadius: '6px', cursor: 'pointer', fontSize: '0.8rem', fontWeight: 600, fontFamily: 'inherit', flexShrink: 0 };
+
+    const Sparkline = ({ data, color = '#6366f1' }) => {
+        const max = Math.max(...data, 1);
+        const pts = data.map((v, i) => `${(i / (data.length - 1)) * 60},${24 - (v / max) * 22}`).join(' ');
         return (
-            <>
-                <style>{`
-                    .btn-complete, .btn-upload, .btn-delete, .btn-download, .btn-back, .det-dl-btn { transition: all 0.2s ease; }
-                    .btn-complete:hover:not(:disabled) { filter: brightness(1.08); transform: translateY(-1px); }
-                    .btn-upload:hover:not(:disabled) { filter: brightness(1.08); transform: translateY(-1px); }
-                    .btn-delete:hover { background: rgba(239,68,68,0.08) !important; border-color: #ef4444 !important; }
-                    .det-dl-btn:hover { background: #f8fafc !important; border-color: #94a3b8 !important; }
-                    .btn-back-det:hover { color: #0F172A !important; }
-                    .btn-back-det { transition: color 0.15s ease; }
-                    .detail-pdf-btn:hover { background: #1e293b !important; }
-                    .detail-pdf-btn { transition: background 0.15s ease; }
-                    @media (max-width: 900px) { .det-grid { grid-template-columns: 1fr !important; } }
-                `}</style>
-                <ToastNotification />
-                <ConfirmationModal />
-                <DispatchModal />
+            <svg width="60" height="24" style={{ display: 'block', overflow: 'visible' }}>
+                <polyline points={pts} fill="none" stroke={color} strokeWidth="1.5" strokeLinejoin="round" strokeLinecap="round" />
+            </svg>
+        );
+    };
 
-                <div style={{ minHeight: '100vh', background: '#F8FAFC', fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif' }}>
+    const DonutChart = ({ data, colors }) => {
+        const total = data.reduce((s, d) => s + d.count, 0);
+        if (!total) return <p style={{ color: '#94a3b8', fontSize: '0.8rem', margin: 0 }}>No data</p>;
+        const r = 36, cx = 44, cy = 44, sw = 12, circ = 2 * Math.PI * r;
+        let offset = 0;
+        return (
+            <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                <svg width="88" height="88">
+                    {data.map((d, i) => {
+                        if (!d.count) return null;
+                        const pct = d.count / total, dash = pct * circ, gap = circ - dash;
+                        const seg = (
+                            <circle key={d.label} cx={cx} cy={cy} r={r} fill="none"
+                                stroke={colors[i % colors.length]} strokeWidth={sw}
+                                strokeDasharray={`${dash} ${gap}`} strokeDashoffset={-offset * circ}
+                                style={{ transform: 'rotate(-90deg)', transformOrigin: `${cx}px ${cy}px` }} />
+                        );
+                        offset += pct; return seg;
+                    })}
+                    <text x={cx} y={cy + 1} textAnchor="middle" dominantBaseline="middle"
+                        style={{ fontSize: '13px', fontWeight: 700, fill: '#0f172a' }}>{total}</text>
+                </svg>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                    {data.map((d, i) => (
+                        <div key={d.label} style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                            <div style={{ width: '8px', height: '8px', borderRadius: '50%', background: colors[i % colors.length], flexShrink: 0 }} />
+                            <span style={{ fontSize: '0.72rem', color: '#64748b', whiteSpace: 'nowrap' }}>
+                                {d.label.replace(' Campus', '')} <b style={{ color: '#0f172a' }}>{d.count}</b>
+                            </span>
+                        </div>
+                    ))}
+                </div>
+            </div>
+        );
+    };
 
-                    {/* Minimal sticky top bar */}
-                    <div style={{ position: 'sticky', top: 0, zIndex: 40, background: 'white', borderBottom: '1px solid #e2e8f0', padding: '0 32px', height: '64px', display: 'flex', alignItems: 'center', gap: '16px' }}>
-                        <img src="/logo.png" alt="Logo" style={{ height: '36px', width: '36px', objectFit: 'contain' }} />
-                        <div style={{ width: '1px', height: '22px', background: '#e2e8f0' }} />
-                        <button className="btn-back-det" onClick={() => { setSelectedApp(null); setAppDetails(null); }} style={{ display: 'flex', alignItems: 'center', gap: '6px', background: 'none', border: 'none', cursor: 'pointer', color: '#64748b', fontSize: '0.875rem', fontWeight: 600, padding: 0, fontFamily: 'inherit' }}>
-                            <ArrowLeft size={15} /> Back to Applications
-                        </button>
+    // NEW SINGLE RETURN
+    return (
+        <>
+            <style>{`
+                @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+                @keyframes slideInRight { from { transform: translateX(100%); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
+                @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+                @keyframes scaleIn { from { transform: scale(0.95); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+                .dash-row:hover td { background: #f8fafc !important; }
+                .dash-row td { transition: background 0.15s; }
+                .dash-row { border-left-width: 4px; border-left-style: solid; }
+                .dash-row td:first-child { padding-left: 14px; }
+                .btn-complete, .btn-upload, .btn-delete, .btn-download, .btn-back, .det-dl-btn { transition: all 0.2s ease; }
+                .btn-complete:hover:not(:disabled) { filter: brightness(1.08); transform: translateY(-1px); }
+                .btn-upload:hover:not(:disabled) { filter: brightness(1.08); transform: translateY(-1px); }
+                .btn-delete:hover { background: rgba(239,68,68,0.08) !important; border-color: #ef4444 !important; }
+                .det-dl-btn:hover { background: #f8fafc !important; border-color: #94a3b8 !important; }
+                .btn-back-det:hover { color: #0F172A !important; }
+                .btn-back-det { transition: color 0.15s ease; }
+                .detail-pdf-btn:hover { background: #1e293b !important; }
+                .detail-pdf-btn { transition: background 0.15s ease; }
+                @media (max-width: 900px) { .det-grid { grid-template-columns: 1fr !important; } }
+                aside nav button:hover { background: rgba(255,255,255,0.06) !important; color: #e2e8f0 !important; }
+                .btn-modal-cancel { transition: all 0.15s ease; }
+                .btn-modal-cancel:hover { background: #e2e8f0 !important; }
+                .btn-modal-confirm { transition: all 0.15s ease; }
+                .btn-modal-confirm:hover { filter: brightness(1.1); transform: translateY(-1px); box-shadow: 0 4px 12px rgba(0,0,0,0.15); }
+                .btn-modal-confirm:active { transform: translateY(0); }
+            `}</style>
+            <ToastNotification />
+            <ConfirmationModal />
+            <DispatchModal />
+
+            <div style={{ display: 'flex', minHeight: '100vh', background: '#F8FAFC', fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif' }}>
+
+                {/* LEFT SIDEBAR */}
+                <aside style={{ position: 'fixed', top: 0, left: 0, bottom: 0, width: '210px', background: '#0F172A', display: 'flex', flexDirection: 'column', zIndex: 50, overflowY: 'auto', borderRight: '1px solid #1e293b' }}>
+                    <div style={{ padding: '20px 16px 16px', borderBottom: '1px solid #1e293b', display: 'flex', alignItems: 'center', gap: '10px' }}>
+                        <img src="/logo.png" alt="Logo" style={{ height: '32px', width: '32px', objectFit: 'contain' }} />
+                        <span style={{ color: 'white', fontWeight: 700, fontSize: '0.82rem', lineHeight: 1.3 }}>
+                            Exam Services<br />Admin
+                        </span>
                     </div>
 
-                    <div style={{ maxWidth: '1200px', margin: '0 auto', padding: '32px 24px' }}>
+                    <div style={{ padding: '12px 12px 8px' }}>
+                        <div style={{ position: 'relative' }}>
+                            <Search size={13} style={{ position: 'absolute', left: '10px', top: '50%', transform: 'translateY(-50%)', color: '#64748b', pointerEvents: 'none' }} />
+                            <input type="text" value={searchQuery} onChange={e => setSearchQuery(e.target.value)}
+                                placeholder="Search..." style={{ width: '100%', height: '34px', paddingLeft: '30px', paddingRight: searchQuery ? '28px' : '10px', background: 'rgba(255,255,255,0.07)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '6px', color: 'white', fontSize: '0.78rem', outline: 'none', boxSizing: 'border-box', fontFamily: 'inherit' }} />
+                            {searchQuery && (
+                                <button onClick={() => setSearchQuery('')} style={{ position: 'absolute', right: '8px', top: '50%', transform: 'translateY(-50%)', background: 'none', border: 'none', cursor: 'pointer', color: '#64748b', padding: 0 }}>
+                                    <X size={11} />
+                                </button>
+                            )}
+                        </div>
+                    </div>
 
-                        {/* Breadcrumb + Title */}
+                    <nav style={{ flex: 1, padding: '8px 0' }}>
+                        {[{ id: null, label: 'All Forms', count: stats?.total }].concat(
+                            (stats?.byFormType || []).map(({ form_type, count }) => ({ id: form_type, label: getShortLabel(form_type), count }))
+                        ).map(item => (
+                            <button key={item.label} onClick={() => setFormTypeFilter(item.id)}
+                                style={{ width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '9px 16px', background: formTypeFilter === item.id ? 'rgba(99,102,241,0.18)' : 'none', border: 'none', borderLeft: formTypeFilter === item.id ? '3px solid #6366f1' : '3px solid transparent', color: formTypeFilter === item.id ? '#e2e8f0' : '#94a3b8', cursor: 'pointer', fontSize: '0.78rem', fontWeight: formTypeFilter === item.id ? 600 : 400, fontFamily: 'inherit', textAlign: 'left', transition: 'all 0.15s' }}>
+                                <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', paddingRight: '6px' }}>{item.label}</span>
+                                {item.count != null && (
+                                    <span style={{ background: 'rgba(255,255,255,0.1)', borderRadius: '999px', padding: '1px 7px', fontSize: '0.68rem', fontWeight: 600, flexShrink: 0 }}>{item.count}</span>
+                                )}
+                            </button>
+                        ))}
+                    </nav>
+
+                    <div style={{ borderTop: '1px solid #1e293b', padding: '12px 16px', display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                        {lastUpdated && <p style={{ color: '#475569', fontSize: '0.68rem', margin: 0 }}>Updated {lastUpdated.toLocaleTimeString()}</p>}
+                        <button onClick={handleManualRefresh} disabled={isRefreshing}
+                            style={{ display: 'flex', alignItems: 'center', gap: '6px', padding: '7px 12px', background: 'transparent', color: '#94a3b8', border: '1px solid rgba(255,255,255,0.12)', borderRadius: '6px', cursor: isRefreshing ? 'not-allowed' : 'pointer', fontSize: '0.75rem', fontWeight: 500, fontFamily: 'inherit', opacity: isRefreshing ? 0.5 : 1 }}>
+                            <RefreshCw size={12} style={{ animation: isRefreshing ? 'spin 1s linear infinite' : 'none' }} />
+                            {isRefreshing ? 'Refreshing...' : 'Refresh'}
+                        </button>
+                        <button onClick={handleLogout}
+                            style={{ display: 'flex', alignItems: 'center', gap: '6px', padding: '7px 12px', background: 'transparent', color: '#94a3b8', border: '1px solid rgba(255,255,255,0.12)', borderRadius: '6px', cursor: 'pointer', fontSize: '0.75rem', fontWeight: 500, fontFamily: 'inherit' }}>
+                            <LogOut size={12} /> Logout
+                        </button>
+                    </div>
+                </aside>
+
+                {/* MAIN AREA */}
+                <div style={{ marginLeft: '210px', flex: 1, minHeight: '100vh' }}>
+                    {selectedApp && appDetails ? (
+                        /* DETAIL VIEW */
+                        <div style={{ padding: '28px 24px' }}>
+                            <button className="btn-back-det" onClick={() => { setSelectedApp(null); setAppDetails(null); }}
+                                style={{ display: 'flex', alignItems: 'center', gap: '6px', background: 'none', border: 'none', cursor: 'pointer', color: '#64748b', fontSize: '0.875rem', fontWeight: 600, marginBottom: '24px', padding: 0, fontFamily: 'inherit' }}>
+                                <ArrowLeft size={15} /> Back to Applications
+                            </button>
+
+                            {/* Breadcrumb + Title */}
                         <div style={{ marginBottom: '28px' }}>
                             <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '10px' }}>
                                 <span style={{ color: '#94a3b8', fontSize: '0.82rem' }}>Applications</span>
@@ -1488,259 +1697,65 @@ export default function AdminPortal() {
                                 </div>
                             </div>
                         </div>
-                    </div>
-                </div>
-            </>
-        );
-    }
-
-    // Dashboard View
-    return (
-        <>
-            <ToastNotification />
-            <ConfirmationModal />
-            <style>{`
-                @keyframes spin {
-                    from { transform: rotate(0deg); }
-                    to { transform: rotate(360deg); }
-                }
-
-                @keyframes slideInRight {
-                    from { transform: translateX(100%); opacity: 0; }
-                    to { transform: translateX(0); opacity: 1; }
-                }
-
-                @keyframes fadeIn {
-                    from { opacity: 0; }
-                    to { opacity: 1; }
-                }
-
-                @keyframes scaleIn {
-                    from { transform: scale(0.95); opacity: 0; }
-                    to { transform: scale(1); opacity: 1; }
-                }
-
-                td button {
-                    transition: all 0.2s ease;
-                }
-
-                td button:hover:not(:disabled) {
-                    background: #eff6ff !important;
-                    border-color: #2563eb !important;
-                    transform: translateY(-1px);
-                    box-shadow: 0 2px 8px rgba(37, 99, 235, 0.15);
-                }
-
-                td button:active:not(:disabled) {
-                    transform: translateY(0);
-                }
-
-                .btn-refresh {
-                    transition: all 0.2s ease;
-                }
-
-                .btn-refresh:hover:not(:disabled) {
-                    background: rgba(255,255,255,0.08) !important;
-                    color: #e2e8f0 !important;
-                    border-color: rgba(255,255,255,0.22) !important;
-                }
-
-                .btn-refresh:active:not(:disabled) {
-                    transform: translateY(0);
-                }
-
-                .btn-logout {
-                    transition: all 0.2s ease;
-                }
-
-                .btn-logout:hover {
-                    background: rgba(255,255,255,0.08) !important;
-                    color: #e2e8f0 !important;
-                    border-color: rgba(255,255,255,0.22) !important;
-                    transform: translateY(-1px);
-                }
-
-                .btn-logout:active {
-                    transform: translateY(0);
-                }
-
-                .nav-search:focus {
-                    background: rgba(255,255,255,0.1) !important;
-                    border-color: rgba(255,255,255,0.25) !important;
-                }
-                .nav-search::placeholder { color: #475569; }
-
-                .dash-row:hover td {
-                    background: #f8fafc;
-                }
-
-                .btn-modal-cancel {
-                    transition: all 0.15s ease;
-                }
-
-                .btn-modal-cancel:hover {
-                    background: #e2e8f0 !important;
-                }
-
-                .btn-modal-confirm {
-                    transition: all 0.15s ease;
-                }
-
-                .btn-modal-confirm:hover {
-                    filter: brightness(1.1);
-                    transform: translateY(-1px);
-                    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-                }
-
-                .btn-modal-confirm:active {
-                    transform: translateY(0);
-                }
-            `}</style>
-            {/* Fixed Navbar */}
-            <header style={{
-                position: 'fixed', top: 0, left: 0, right: 0, zIndex: 50,
-                height: '72px', background: '#0F172A',
-                borderBottom: '1px solid #1e293b',
-                display: 'flex', alignItems: 'center', padding: '0 32px', gap: '24px',
-                fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif'
-            }}>
-                {/* Logo + name */}
-                <div style={{ display: 'flex', alignItems: 'center', gap: '12px', flexShrink: 0 }}>
-                    <img src="/logo.png" alt="Logo" style={{ height: '38px', width: '38px', objectFit: 'contain' }} />
-                    <span style={{ color: 'white', fontWeight: 700, fontSize: '0.95rem', whiteSpace: 'nowrap' }}>Examination Services Admin</span>
-                </div>
-
-                {/* Search box */}
-                <div style={{ flex: 1, maxWidth: '460px', margin: '0 auto', position: 'relative' }}>
-                    <Search size={15} style={{ position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)', color: '#64748b', pointerEvents: 'none' }} />
-                    <input
-                        className="nav-search"
-                        type="text"
-                        value={searchQuery}
-                        onChange={(e) => setSearchQuery(e.target.value)}
-                        placeholder="Search applications by name, ID, campus..."
-                        style={{
-                            width: '100%', height: '40px',
-                            paddingLeft: '38px', paddingRight: searchQuery ? '36px' : '14px',
-                            background: 'rgba(255,255,255,0.07)',
-                            border: '1px solid rgba(255,255,255,0.1)',
-                            borderRadius: '8px',
-                            color: 'white', fontSize: '0.85rem',
-                            outline: 'none', boxSizing: 'border-box',
-                            fontFamily: 'inherit'
-                        }}
-                    />
-                    {searchQuery && (
-                        <button onClick={() => setSearchQuery('')} style={{ position: 'absolute', right: '10px', top: '50%', transform: 'translateY(-50%)', background: 'none', border: 'none', cursor: 'pointer', color: '#64748b', display: 'flex', alignItems: 'center', padding: 0 }}>
-                            <X size={13} />
-                        </button>
-                    )}
-                </div>
-
-                {/* Right controls */}
-                <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginLeft: 'auto', flexShrink: 0 }}>
-                    {lastUpdated && (
-                        <span style={{ color: '#475569', fontSize: '0.75rem', whiteSpace: 'nowrap' }}>
-                            Updated {lastUpdated.toLocaleTimeString()}
-                        </span>
-                    )}
-                    <button
-                        className="btn-refresh"
-                        onClick={handleManualRefresh}
-                        disabled={isRefreshing}
-                        style={{
-                            display: 'flex', alignItems: 'center', gap: '6px',
-                            padding: '7px 14px',
-                            background: 'transparent',
-                            color: '#94a3b8',
-                            border: '1px solid rgba(255,255,255,0.12)',
-                            borderRadius: '8px',
-                            cursor: isRefreshing ? 'not-allowed' : 'pointer',
-                            fontSize: '0.8rem', fontWeight: 500,
-                            opacity: isRefreshing ? 0.5 : 1,
-                            fontFamily: 'inherit', transition: 'all 0.15s ease'
-                        }}
-                    >
-                        <RefreshCw size={14} style={{ animation: isRefreshing ? 'spin 1s linear infinite' : 'none' }} />
-                        {isRefreshing ? 'Refreshing...' : 'Refresh'}
-                    </button>
-                    <button
-                        className="btn-logout"
-                        onClick={handleLogout}
-                        style={{
-                            display: 'flex', alignItems: 'center', gap: '6px',
-                            padding: '7px 14px',
-                            background: 'transparent',
-                            color: '#94a3b8',
-                            border: '1px solid rgba(255,255,255,0.12)',
-                            borderRadius: '8px',
-                            cursor: 'pointer',
-                            fontSize: '0.8rem', fontWeight: 500,
-                            fontFamily: 'inherit', transition: 'all 0.15s ease'
-                        }}
-                    >
-                        <LogOut size={14} /> Logout
-                    </button>
-                </div>
-            </header>
-
-            {/* Main content */}
-            <div style={{ paddingTop: '72px', minHeight: '100vh', background: '#F8FAFC', fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif' }}>
-                <div style={{ maxWidth: '1200px', margin: '0 auto', padding: '32px 24px' }}>
-
-                    {/* Welcome */}
-                    <div style={{ marginBottom: '28px' }}>
-                        <h2 style={{ fontSize: '1.65rem', fontWeight: 800, color: '#0F172A', margin: '0 0 6px 0', letterSpacing: '-0.02em' }}>Dashboard Overview</h2>
-                        <p style={{ color: '#64748b', margin: 0, fontSize: '0.9rem' }}>Welcome back. Here's what needs your attention today.</p>
-                    </div>
-
-                    {/* Stat cards */}
-                    {stats && (
-                        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '16px', marginBottom: '28px' }}>
-                            <div style={{ background: 'white', padding: '24px', borderRadius: '12px', border: '1px solid #e2e8f0', boxShadow: '0 1px 3px rgba(0,0,0,0.05)' }}>
-                                <div style={{ background: 'rgba(79,70,229,0.08)', padding: '10px', borderRadius: '10px', display: 'inline-flex', marginBottom: '16px' }}>
-                                    <Users size={20} color="#4F46E5" />
-                                </div>
-                                <p style={{ fontSize: '0.75rem', fontWeight: 600, color: '#64748b', margin: '0 0 4px 0', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Total Applications</p>
-                                <p style={{ fontSize: '2rem', fontWeight: 800, color: '#0F172A', margin: 0, lineHeight: 1 }}>{stats.total}</p>
-                            </div>
-                            <div style={{ background: 'white', padding: '24px', borderRadius: '12px', border: '1px solid #e2e8f0', boxShadow: '0 1px 3px rgba(0,0,0,0.05)' }}>
-                                <div style={{ background: 'rgba(245,158,11,0.08)', padding: '10px', borderRadius: '10px', display: 'inline-flex', marginBottom: '16px' }}>
-                                    <Clock size={20} color="#f59e0b" />
-                                </div>
-                                <p style={{ fontSize: '0.75rem', fontWeight: 600, color: '#64748b', margin: '0 0 4px 0', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Pending Review</p>
-                                <p style={{ fontSize: '2rem', fontWeight: 800, color: '#0F172A', margin: 0, lineHeight: 1 }}>{stats.pending}</p>
-                            </div>
-                            <div style={{ background: 'white', padding: '24px', borderRadius: '12px', border: '1px solid #e2e8f0', boxShadow: '0 1px 3px rgba(0,0,0,0.05)' }}>
-                                <div style={{ background: 'rgba(16,185,129,0.08)', padding: '10px', borderRadius: '10px', display: 'inline-flex', marginBottom: '16px' }}>
-                                    <CheckCircle size={20} color="#10b981" />
-                                </div>
-                                <p style={{ fontSize: '0.75rem', fontWeight: 600, color: '#64748b', margin: '0 0 4px 0', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Approved</p>
-                                <p style={{ fontSize: '2rem', fontWeight: 800, color: '#0F172A', margin: 0, lineHeight: 1 }}>{stats.approved}</p>
-                            </div>
-                            <div style={{ background: 'white', padding: '24px', borderRadius: '12px', border: '1px solid #e2e8f0', boxShadow: '0 1px 3px rgba(0,0,0,0.05)' }}>
-                                <div style={{ background: 'rgba(239,68,68,0.08)', padding: '10px', borderRadius: '10px', display: 'inline-flex', marginBottom: '16px' }}>
-                                    <XCircle size={20} color="#ef4444" />
-                                </div>
-                                <p style={{ fontSize: '0.75rem', fontWeight: 600, color: '#64748b', margin: '0 0 4px 0', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Rejected</p>
-                                <p style={{ fontSize: '2rem', fontWeight: 800, color: '#0F172A', margin: 0, lineHeight: 1 }}>{stats.rejected}</p>
-                            </div>
-                            <div style={{ background: 'white', padding: '24px', borderRadius: '12px', border: '1px solid #e2e8f0', boxShadow: '0 1px 3px rgba(0,0,0,0.05)' }}>
-                                <div style={{ background: 'rgba(14,165,233,0.08)', padding: '10px', borderRadius: '10px', display: 'inline-flex', marginBottom: '16px' }}>
-                                    <svg width="20" height="20" fill="none" stroke="#0ea5e9" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" viewBox="0 0 24 24"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
-                                </div>
-                                <p style={{ fontSize: '0.75rem', fontWeight: 600, color: '#64748b', margin: '0 0 4px 0', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Dispatched</p>
-                                <p style={{ fontSize: '2rem', fontWeight: 800, color: '#0F172A', margin: 0, lineHeight: 1 }}>{stats.dispatched ?? 0}</p>
-                            </div>
-                            <div style={{ background: 'white', padding: '24px', borderRadius: '12px', border: '1px solid #e2e8f0', boxShadow: '0 1px 3px rgba(0,0,0,0.05)' }}>
-                                <div style={{ background: 'rgba(16,185,129,0.08)', padding: '10px', borderRadius: '10px', display: 'inline-flex', marginBottom: '16px' }}>
-                                    <svg width="20" height="20" fill="none" stroke="#10b981" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>
-                                </div>
-                                <p style={{ fontSize: '0.75rem', fontWeight: 600, color: '#64748b', margin: '0 0 4px 0', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Completed</p>
-                                <p style={{ fontSize: '2rem', fontWeight: 800, color: '#0F172A', margin: 0, lineHeight: 1 }}>{stats.completed ?? 0}</p>
-                            </div>
                         </div>
-                    )}
+                    ) : (
+                        /* DASHBOARD VIEW */
+                        <div style={{ padding: '28px 24px' }}>
+                        {/* PRIORITY HEADER */}
+                        {stats && (
+                            <div style={{ marginBottom: '20px' }}>
+                                {stats.rejected > 0 && (
+                                    <div onClick={() => setStatusFilter('REJECTED')}
+                                        style={{ display: 'flex', alignItems: 'center', gap: '12px', background: '#fef2f2', border: '1px solid #fecaca', borderLeft: '4px solid #ef4444', borderRadius: '10px', padding: '12px 18px', marginBottom: '10px', cursor: 'pointer' }}>
+                                        <XCircle size={18} color="#ef4444" />
+                                        <span style={{ fontWeight: 700, color: '#991b1b', fontSize: '0.9rem' }}>{stats.rejected} Rejected — need attention</span>
+                                        <span style={{ marginLeft: 'auto', background: '#ef4444', color: 'white', borderRadius: '999px', padding: '2px 10px', fontSize: '0.75rem', fontWeight: 700 }}>{stats.rejected}</span>
+                                    </div>
+                                )}
+                                {stalePendingCount > 0 && (
+                                    <div onClick={() => setStatusFilter('PENDING')}
+                                        style={{ display: 'flex', alignItems: 'center', gap: '12px', background: '#fffbeb', border: '1px solid #fde68a', borderLeft: '4px solid #f59e0b', borderRadius: '10px', padding: '12px 18px', marginBottom: '10px', cursor: 'pointer' }}>
+                                        <Clock size={18} color="#f59e0b" />
+                                        <span style={{ fontWeight: 700, color: '#92400e', fontSize: '0.9rem' }}>{stalePendingCount} Pending for 3+ days</span>
+                                        <span style={{ marginLeft: 'auto', background: '#f59e0b', color: 'white', borderRadius: '999px', padding: '2px 10px', fontSize: '0.75rem', fontWeight: 700 }}>{stalePendingCount}</span>
+                                    </div>
+                                )}
+                                <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap' }}>
+                                    <div style={{ flex: '1 1 140px', background: 'white', borderRadius: '10px', border: '1px solid #e2e8f0', padding: '14px 16px', boxShadow: '0 1px 3px rgba(0,0,0,0.04)' }}>
+                                        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '6px' }}>
+                                            <span style={{ fontSize: '0.7rem', fontWeight: 600, color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Total</span>
+                                            <Sparkline data={sparklineAll} color="#6366f1" />
+                                        </div>
+                                        <p style={{ fontSize: '1.6rem', fontWeight: 800, color: '#0f172a', margin: 0 }}>{stats.total}</p>
+                                    </div>
+                                    <div style={{ flex: '1 1 140px', background: 'white', borderRadius: '10px', border: '1px solid #e2e8f0', padding: '14px 16px', boxShadow: '0 1px 3px rgba(0,0,0,0.04)' }}>
+                                        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '6px' }}>
+                                            <span style={{ fontSize: '0.7rem', fontWeight: 600, color: '#f59e0b', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Pending</span>
+                                            <Sparkline data={sparklinePending} color="#f59e0b" />
+                                        </div>
+                                        <p style={{ fontSize: '1.6rem', fontWeight: 800, color: '#0f172a', margin: 0 }}>{stats.pending}</p>
+                                    </div>
+                                    <div style={{ flex: '1 1 110px', background: 'white', borderRadius: '10px', border: '1px solid #e2e8f0', padding: '14px 16px', boxShadow: '0 1px 3px rgba(0,0,0,0.04)' }}>
+                                        <p style={{ fontSize: '0.7rem', fontWeight: 600, color: '#10b981', margin: '0 0 6px', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Approved</p>
+                                        <p style={{ fontSize: '1.6rem', fontWeight: 800, color: '#0f172a', margin: 0 }}>{stats.approved}</p>
+                                    </div>
+                                    <div style={{ flex: '1 1 110px', background: 'white', borderRadius: '10px', border: '1px solid #e2e8f0', padding: '14px 16px', boxShadow: '0 1px 3px rgba(0,0,0,0.04)' }}>
+                                        <p style={{ fontSize: '0.7rem', fontWeight: 600, color: '#10b981', margin: '0 0 6px', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Completed</p>
+                                        <p style={{ fontSize: '1.6rem', fontWeight: 800, color: '#0f172a', margin: 0 }}>{stats.completed ?? 0}</p>
+                                    </div>
+                                    <div style={{ flex: '2 1 240px', background: 'white', borderRadius: '10px', border: '1px solid #e2e8f0', padding: '14px 16px', boxShadow: '0 1px 3px rgba(0,0,0,0.04)' }}>
+                                        <p style={{ fontSize: '0.7rem', fontWeight: 600, color: '#64748b', margin: '0 0 8px', textTransform: 'uppercase', letterSpacing: '0.05em' }}>By Campus</p>
+                                        <DonutChart data={campusBreakdown} colors={['#6366f1', '#10b981', '#f59e0b', '#ec4899']} />
+                                    </div>
+                                </div>
+                                <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: '10px' }}>
+                                    <button onClick={() => setUrgencySort(u => !u)}
+                                        style={{ display: 'flex', alignItems: 'center', gap: '6px', padding: '5px 12px', background: urgencySort ? '#fef3c7' : 'white', border: `1px solid ${urgencySort ? '#fde68a' : '#e2e8f0'}`, borderRadius: '6px', cursor: 'pointer', fontSize: '0.75rem', fontWeight: 600, color: urgencySort ? '#92400e' : '#64748b', fontFamily: 'inherit' }}>
+                                        {urgencySort ? '⚡ Urgency Sort' : '📅 Date Sort'}
+                                    </button>
+                                </div>
+                            </div>
+                        )}
 
                     {/* Re-Totalling Form Availability */}
                     {retotalingActive !== null && (
@@ -1799,6 +1814,9 @@ export default function AdminPortal() {
                         ))}
                     </div>
 
+                    {/* TABLE + ACTIVITY PANEL */}
+                    <div style={{ display: 'flex', gap: '20px', alignItems: 'flex-start' }}>
+                    <div style={{ flex: 1, minWidth: 0 }}>
                     {/* Applications Table */}
                     <div style={{ background: 'white', borderRadius: '12px', border: '1px solid #e2e8f0', boxShadow: '0 1px 3px rgba(0,0,0,0.05)', overflow: 'hidden' }}>
                         <div style={{ padding: '18px 24px', borderBottom: '1px solid #e2e8f0', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
@@ -1821,22 +1839,6 @@ export default function AdminPortal() {
                         </div>
 
                         {(() => {
-                            const filteredApplications = applications
-                                .filter(app => {
-                                    if (!searchQuery.trim()) return true;
-                                    const query = searchQuery.toLowerCase();
-                                    return (
-                                        app.id?.toLowerCase().includes(query) ||
-                                        app.applicant_name?.toLowerCase().includes(query) ||
-                                        app.form_type?.toLowerCase().includes(query) ||
-                                        app.campus?.toLowerCase().includes(query) ||
-                                        app.student_email?.toLowerCase().includes(query) ||
-                                        app.status?.toLowerCase().includes(query)
-                                    );
-                                })
-                                .filter(app => statusFilter === 'ALL' || app.status === statusFilter)
-                                .filter(app => campusFilter === 'ALL' || app.campus === campusFilter);
-
                             const PAGE_SIZE = 10;
                             const totalPages = Math.max(1, Math.ceil(filteredApplications.length / PAGE_SIZE));
                             const safePage = Math.min(currentPage, totalPages);
@@ -1862,11 +1864,11 @@ export default function AdminPortal() {
                                             </thead>
                                             <tbody>
                                                 {pagedApplications.map((app) => (
-                                                    <tr key={app.id} className="dash-row">
+                                                    <tr key={app.id} className="dash-row" style={{ borderLeft: `4px solid ${getCampusColor(app.campus)}` }}>
                                                         <td style={{ ...tdStyle, fontFamily: 'monospace', fontSize: '0.78rem', color: '#64748b' }}>{app.id}</td>
                                                         <td style={{ ...tdStyle, maxWidth: '200px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', fontWeight: 500 }}>{app.form_type}</td>
                                                         <td style={{ ...tdStyle, fontWeight: 600, color: '#0F172A' }}>{app.applicant_name}</td>
-                                                        <td style={tdStyle}>{app.campus}</td>
+                                                        <td style={tdStyle}><div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}><div style={{ width: '8px', height: '8px', borderRadius: '50%', background: getCampusColor(app.campus), flexShrink: 0 }} /><span>{app.campus || '—'}</span></div></td>
                                                         <td style={tdStyle}><span style={getStatusStyle(app.status)}>{app.status}</span></td>
                                                         <td style={{ ...tdStyle, color: '#64748b' }}>{new Date(app.created_at + 'Z').toLocaleDateString('en-IN', { timeZone: 'Asia/Kolkata' })}</td>
                                                         <td style={tdStyle}>
@@ -1919,9 +1921,46 @@ export default function AdminPortal() {
                             );
                         })()}
                     </div>
+                    </div>
 
-                   
-                    
+                    {/* ACTIVITY PANEL */}
+                    <aside style={{ width: '260px', flexShrink: 0, display: 'flex', flexDirection: 'column', gap: '16px' }}>
+                        <div style={{ background: 'white', borderRadius: '12px', border: '1px solid #e2e8f0', boxShadow: '0 1px 3px rgba(0,0,0,0.04)', overflow: 'hidden' }}>
+                            <div style={{ padding: '14px 16px', borderBottom: '1px solid #e2e8f0' }}>
+                                <h3 style={{ fontSize: '0.85rem', fontWeight: 700, color: '#0f172a', margin: 0 }}>Recent Activity</h3>
+                            </div>
+                            <div style={{ padding: '8px 0' }}>
+                                {recentActivity.length === 0
+                                    ? <p style={{ color: '#94a3b8', fontSize: '0.8rem', padding: '16px', margin: 0 }}>No activity yet</p>
+                                    : recentActivity.map(a => (
+                                        <div key={a.id} onClick={() => fetchAppDetails(a.id)}
+                                            style={{ padding: '10px 16px', cursor: 'pointer', borderBottom: '1px solid #f8fafc' }}
+                                            onMouseEnter={e => e.currentTarget.style.background = '#f8fafc'}
+                                            onMouseLeave={e => e.currentTarget.style.background = 'transparent'}>
+                                            <p style={{ margin: '0 0 2px', fontSize: '0.78rem', fontWeight: 600, color: '#0f172a', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                                                {a.applicant_name || 'Unknown'}
+                                            </p>
+                                            <p style={{ margin: 0, fontSize: '0.72rem', color: '#64748b', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                                                {getShortLabel(a.form_type)} · {getTimeAgo(a.created_at)}
+                                            </p>
+                                        </div>
+                                    ))
+                                }
+                            </div>
+                        </div>
+                        <div style={{ background: 'white', borderRadius: '12px', border: '1px solid #e2e8f0', boxShadow: '0 1px 3px rgba(0,0,0,0.04)', padding: '16px' }}>
+                            <h3 style={{ fontSize: '0.85rem', fontWeight: 700, color: '#0f172a', margin: '0 0 12px' }}>Quick Actions</h3>
+                            <button onClick={() => exportCSV(filteredApplications)}
+                                style={{ width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px', padding: '8px 14px', background: '#f8fafc', border: '1px solid #e2e8f0', borderRadius: '8px', cursor: 'pointer', fontSize: '0.8rem', fontWeight: 600, color: '#334155', fontFamily: 'inherit' }}>
+                                <Download size={14} /> Export CSV
+                                <span style={{ color: '#94a3b8', fontSize: '0.72rem', fontWeight: 400 }}>({filteredApplications.length})</span>
+                            </button>
+                        </div>
+                    </aside>
+                </div>
+
+                    </div>
+                )}
                 </div>
             </div>
         </>
