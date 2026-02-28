@@ -154,6 +154,16 @@ export default {
                     return await handlePublicDownload(fileId, url, env, corsHeaders);
                 }
 
+                // Public: re-totalling form active status
+                if (url.pathname === '/form-settings' && request.method === 'GET') {
+                    return await handleGetFormSettings(env, corsHeaders);
+                }
+
+                // Admin: toggle re-totalling active/inactive
+                if (url.pathname === '/admin/form-settings' && request.method === 'POST') {
+                    return await handleToggleFormSetting(request, env, corsHeaders);
+                }
+
                 // Admin routes
                 if (url.pathname === '/admin/login' && request.method === 'POST') {
                     return await handleAdminLogin(request, env, corsHeaders);
@@ -812,6 +822,42 @@ async function handleDeleteApplication(id, request, env, corsHeaders) {
             headers: { ...corsHeaders, 'Content-Type': 'application/json' }
         });
     }
+}
+
+// ==================== FORM SETTINGS ====================
+
+async function handleGetFormSettings(env, corsHeaders) {
+    const result = await env.DB.prepare(
+        'SELECT form_id, is_active FROM form_settings'
+    ).all();
+    const settings = {};
+    for (const row of result.results) {
+        settings[row.form_id] = row.is_active === 1;
+    }
+    return new Response(JSON.stringify(settings), {
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+    });
+}
+
+async function handleToggleFormSetting(request, env, corsHeaders) {
+    const admin = await verifyAdminToken(request, env);
+    if (!admin) {
+        return new Response(JSON.stringify({ error: 'Unauthorized' }), {
+            status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+        });
+    }
+    const { formId, isActive } = await request.json();
+    if (!formId || typeof isActive !== 'boolean') {
+        return new Response(JSON.stringify({ error: 'formId and isActive (boolean) required' }), {
+            status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+        });
+    }
+    await env.DB.prepare(
+        'UPDATE form_settings SET is_active = ?, updated_at = CURRENT_TIMESTAMP WHERE form_id = ?'
+    ).bind(isActive ? 1 : 0, formId).run();
+    return new Response(JSON.stringify({ success: true, formId, isActive }), {
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+    });
 }
 
 // Handler for public download (students downloading response documents)

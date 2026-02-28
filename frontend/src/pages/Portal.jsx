@@ -27,6 +27,21 @@ const FORMS = [
 ];
 
 export default function Portal({ onSelectForm, onTrackStatus }) {
+  const [retotalingActive, setRetotalingActive] = React.useState(true);
+
+  React.useEffect(() => {
+    fetch(`${import.meta.env.VITE_BACKEND_URL || 'http://localhost:8787'}/form-settings`)
+      .then(r => r.json())
+      .then(settings => {
+        if (typeof settings['retotaling'] === 'boolean') {
+          setRetotalingActive(settings['retotaling']);
+        }
+      })
+      .catch(() => {}); // on error, keep showing (fail-open)
+  }, []);
+
+  const visibleForms = retotalingActive ? FORMS : FORMS.filter(f => f.id !== 'retotaling');
+
   return (
     <div className="container animate-fade-in">
       <header style={{ textAlign: 'center', marginBottom: '80px', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
@@ -86,7 +101,7 @@ export default function Portal({ onSelectForm, onTrackStatus }) {
       </div>
 
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(340px, 1fr))', gap: '30px' }}>
-        {FORMS.map((form) => {
+        {visibleForms.map((form) => {
           const Icon = form.Icon;
           return (
             <div

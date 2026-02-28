@@ -242,6 +242,7 @@ export default function AdminPortal() {
     const [currentPage, setCurrentPage] = useState(1);
     const [statusFilter, setStatusFilter] = useState('ALL');
     const [campusFilter, setCampusFilter] = useState('ALL');
+    const [retotalingActive, setRetotalingActive] = useState(null);
 
     const showToast = (message, type = 'success') => {
         setToast({ message, type });
@@ -252,6 +253,7 @@ export default function AdminPortal() {
         if (isLoggedIn) {
             fetchStats();
             fetchApplications();
+            fetchFormSettings();
         }
     }, [isLoggedIn]);
 
@@ -346,6 +348,41 @@ export default function AdminPortal() {
             }
         } catch (err) {
             console.error('Failed to fetch applications:', err);
+        }
+    };
+
+    const fetchFormSettings = async () => {
+        try {
+            const response = await fetch(`${API_URL}/form-settings`);
+            if (response.ok) {
+                const data = await response.json();
+                setRetotalingActive(data['retotaling'] === true);
+            }
+        } catch (err) {
+            console.error('Failed to fetch form settings:', err);
+        }
+    };
+
+    const toggleRetotaling = async () => {
+        const currentToken = localStorage.getItem('adminToken');
+        try {
+            const response = await fetch(`${API_URL}/admin/form-settings`, {
+                method: 'POST',
+                headers: {
+                    'Authorization': `Bearer ${currentToken}`,
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ formId: 'retotaling', isActive: !retotalingActive })
+            });
+            const data = await response.json();
+            if (response.ok) {
+                setRetotalingActive(!retotalingActive);
+                showToast(`Re-Totalling form ${!retotalingActive ? 'activated' : 'deactivated'} successfully.`, 'success');
+            } else {
+                showToast('Error: ' + (data.error || 'Failed to update'), 'error');
+            }
+        } catch {
+            showToast('Failed to update. Please try again.', 'error');
         }
     };
 
@@ -1702,6 +1739,32 @@ export default function AdminPortal() {
                                 <p style={{ fontSize: '0.75rem', fontWeight: 600, color: '#64748b', margin: '0 0 4px 0', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Completed</p>
                                 <p style={{ fontSize: '2rem', fontWeight: 800, color: '#0F172A', margin: 0, lineHeight: 1 }}>{stats.completed ?? 0}</p>
                             </div>
+                        </div>
+                    )}
+
+                    {/* Re-Totalling Form Availability */}
+                    {retotalingActive !== null && (
+                        <div style={{ background: 'white', borderRadius: '12px', border: '1px solid #e2e8f0', boxShadow: '0 1px 3px rgba(0,0,0,0.05)', marginBottom: '28px', padding: '18px 24px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '16px' }}>
+                            <div>
+                                <h3 style={{ fontSize: '1rem', fontWeight: 700, color: '#0F172A', margin: '0 0 4px 0' }}>Re-Totalling of Marks</h3>
+                                <p style={{ fontSize: '0.8rem', color: '#64748b', margin: 0 }}>
+                                    {retotalingActive
+                                        ? 'Form is currently active — students can submit applications.'
+                                        : 'Form is currently inactive — hidden from the student portal.'}
+                                </p>
+                            </div>
+                            <button
+                                onClick={toggleRetotaling}
+                                style={{
+                                    padding: '8px 20px', fontSize: '0.85rem', fontWeight: 600, borderRadius: '8px',
+                                    cursor: 'pointer', fontFamily: 'inherit', flexShrink: 0,
+                                    border: retotalingActive ? '1px solid #fca5a5' : '1px solid #86efac',
+                                    background: retotalingActive ? '#fef2f2' : '#f0fdf4',
+                                    color: retotalingActive ? '#dc2626' : '#16a34a',
+                                }}
+                            >
+                                {retotalingActive ? 'Deactivate' : 'Activate'}
+                            </button>
                         </div>
                     )}
 
