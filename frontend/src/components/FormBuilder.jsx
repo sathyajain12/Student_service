@@ -590,9 +590,14 @@ export default function FormBuilder({ config, onSubmit, onCancel, onTrackStatus,
                                                         </div>
                                                     </>
                                                 ) : (
-                                                    <div className="form-input" style={{ background: 'rgba(239,68,68,0.05)', border: '2px solid rgba(239,68,68,0.3)', color: '#dc2626', fontSize: '0.875rem' }}>
-                                                        No recent examination available — submission is not possible at this time
-                                                    </div>
+                                                    <input
+                                                        type="text"
+                                                        name={field.name}
+                                                        required={field.required}
+                                                        placeholder="e.g., April 2026"
+                                                        onChange={handleChange}
+                                                        className="form-input"
+                                                    />
                                                 );
                                             })()
                                         ) : (
