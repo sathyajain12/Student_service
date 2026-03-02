@@ -244,7 +244,6 @@ export default function AdminPortal() {
     const [campusFilter, setCampusFilter] = useState('ALL');
     const [retotalingActive, setRetotalingActive] = useState(null);
     const [urgencySort, setUrgencySort] = useState(true);
-    const [formTypeFilter, setFormTypeFilter] = useState(null);
 
     const CAMPUS_COLORS = {
         'Prashanti Nilayam Campus': '#6366f1',
@@ -348,7 +347,6 @@ export default function AdminPortal() {
     useEffect(() => { setCurrentPage(1); }, [searchQuery]);
     useEffect(() => { setCurrentPage(1); }, [statusFilter]);
     useEffect(() => { setCurrentPage(1); }, [campusFilter]);
-    useEffect(() => { setCurrentPage(1); }, [formTypeFilter]);
 
     const handleLogin = async (e) => {
         e.preventDefault();
@@ -1359,8 +1357,7 @@ export default function AdminPortal() {
                     .some(f => f?.toLowerCase().includes(q));
             })
             .filter(a => statusFilter === 'ALL' || a.status === statusFilter)
-            .filter(a => campusFilter === 'ALL' || a.campus === campusFilter)
-            .filter(a => !formTypeFilter || a.form_type === formTypeFilter);
+            .filter(a => campusFilter === 'ALL' || a.campus === campusFilter);
         return urgencySort ? sortByUrgency(list)
             : list.sort((a, b) => new Date((b.created_at || '') + 'Z') - new Date((a.created_at || '') + 'Z'));
     })();
@@ -1454,60 +1451,40 @@ export default function AdminPortal() {
             <ConfirmationModal />
             <DispatchModal />
 
-            <div style={{ display: 'flex', minHeight: '100vh', background: '#F8FAFC', fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif' }}>
+            <div style={{ minHeight: '100vh', background: '#F8FAFC', fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif' }}>
 
-                {/* LEFT SIDEBAR */}
-                <aside style={{ position: 'fixed', top: 0, left: 0, bottom: 0, width: '210px', background: '#0F172A', display: 'flex', flexDirection: 'column', zIndex: 50, overflowY: 'auto', borderRight: '1px solid #1e293b' }}>
-                    <div style={{ padding: '20px 16px 16px', borderBottom: '1px solid #1e293b', display: 'flex', alignItems: 'center', gap: '10px' }}>
-                        <img src="/logo.png" alt="Logo" style={{ height: '32px', width: '32px', objectFit: 'contain' }} />
-                        <span style={{ color: 'white', fontWeight: 700, fontSize: '0.82rem', lineHeight: 1.3 }}>
-                            Exam Services<br />Admin
-                        </span>
+                {/* TOP NAVBAR */}
+                <header style={{ position: 'fixed', top: 0, left: 0, right: 0, height: '52px', background: '#0F172A', display: 'flex', alignItems: 'center', padding: '0 20px', gap: '16px', zIndex: 50, borderBottom: '1px solid #1e293b' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '10px', flexShrink: 0 }}>
+                        <img src="/logo.png" alt="Logo" style={{ height: '28px', width: '28px', objectFit: 'contain' }} />
+                        <span style={{ color: 'white', fontWeight: 700, fontSize: '0.82rem', whiteSpace: 'nowrap' }}>Exam Services Admin</span>
                     </div>
-
-                    <div style={{ padding: '12px 12px 8px' }}>
-                        <div style={{ position: 'relative' }}>
-                            <Search size={13} style={{ position: 'absolute', left: '10px', top: '50%', transform: 'translateY(-50%)', color: '#64748b', pointerEvents: 'none' }} />
-                            <input type="text" value={searchQuery} onChange={e => setSearchQuery(e.target.value)}
-                                placeholder="Search..." style={{ width: '100%', height: '34px', paddingLeft: '30px', paddingRight: searchQuery ? '28px' : '10px', background: 'rgba(255,255,255,0.07)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '6px', color: 'white', fontSize: '0.78rem', outline: 'none', boxSizing: 'border-box', fontFamily: 'inherit' }} />
-                            {searchQuery && (
-                                <button onClick={() => setSearchQuery('')} style={{ position: 'absolute', right: '8px', top: '50%', transform: 'translateY(-50%)', background: 'none', border: 'none', cursor: 'pointer', color: '#64748b', padding: 0 }}>
-                                    <X size={11} />
-                                </button>
-                            )}
-                        </div>
-                    </div>
-
-                    <nav style={{ flex: 1, padding: '8px 0' }}>
-                        {[{ id: null, label: 'All Forms', count: stats?.total }].concat(
-                            (stats?.byFormType || []).map(({ form_type, count }) => ({ id: form_type, label: getShortLabel(form_type), count }))
-                        ).map(item => (
-                            <button key={item.label} onClick={() => setFormTypeFilter(item.id)}
-                                style={{ width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '9px 16px', background: formTypeFilter === item.id ? 'rgba(99,102,241,0.18)' : 'none', border: 'none', borderLeft: formTypeFilter === item.id ? '3px solid #6366f1' : '3px solid transparent', color: formTypeFilter === item.id ? '#e2e8f0' : '#94a3b8', cursor: 'pointer', fontSize: '0.78rem', fontWeight: formTypeFilter === item.id ? 600 : 400, fontFamily: 'inherit', textAlign: 'left', transition: 'all 0.15s' }}>
-                                <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', paddingRight: '6px' }}>{item.label}</span>
-                                {item.count != null && (
-                                    <span style={{ background: 'rgba(255,255,255,0.1)', borderRadius: '999px', padding: '1px 7px', fontSize: '0.68rem', fontWeight: 600, flexShrink: 0 }}>{item.count}</span>
-                                )}
+                    <div style={{ flex: 1, maxWidth: '320px', position: 'relative' }}>
+                        <Search size={13} style={{ position: 'absolute', left: '10px', top: '50%', transform: 'translateY(-50%)', color: '#64748b', pointerEvents: 'none' }} />
+                        <input type="text" value={searchQuery} onChange={e => setSearchQuery(e.target.value)}
+                            placeholder="Search applications..."
+                            style={{ width: '100%', height: '32px', paddingLeft: '30px', paddingRight: searchQuery ? '28px' : '10px', background: 'rgba(255,255,255,0.07)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '6px', color: 'white', fontSize: '0.78rem', outline: 'none', boxSizing: 'border-box', fontFamily: 'inherit' }} />
+                        {searchQuery && (
+                            <button onClick={() => setSearchQuery('')} style={{ position: 'absolute', right: '8px', top: '50%', transform: 'translateY(-50%)', background: 'none', border: 'none', cursor: 'pointer', color: '#64748b', padding: 0 }}>
+                                <X size={11} />
                             </button>
-                        ))}
-                    </nav>
-
-                    <div style={{ borderTop: '1px solid #1e293b', padding: '12px 16px', display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                        {lastUpdated && <p style={{ color: '#475569', fontSize: '0.68rem', margin: 0 }}>Updated {lastUpdated.toLocaleTimeString()}</p>}
-                        <button onClick={handleManualRefresh} disabled={isRefreshing}
-                            style={{ display: 'flex', alignItems: 'center', gap: '6px', padding: '7px 12px', background: 'transparent', color: '#94a3b8', border: '1px solid rgba(255,255,255,0.12)', borderRadius: '6px', cursor: isRefreshing ? 'not-allowed' : 'pointer', fontSize: '0.75rem', fontWeight: 500, fontFamily: 'inherit', opacity: isRefreshing ? 0.5 : 1 }}>
-                            <RefreshCw size={12} style={{ animation: isRefreshing ? 'spin 1s linear infinite' : 'none' }} />
-                            {isRefreshing ? 'Refreshing...' : 'Refresh'}
-                        </button>
-                        <button onClick={handleLogout}
-                            style={{ display: 'flex', alignItems: 'center', gap: '6px', padding: '7px 12px', background: 'transparent', color: '#94a3b8', border: '1px solid rgba(255,255,255,0.12)', borderRadius: '6px', cursor: 'pointer', fontSize: '0.75rem', fontWeight: 500, fontFamily: 'inherit' }}>
-                            <LogOut size={12} /> Logout
-                        </button>
+                        )}
                     </div>
-                </aside>
+                    <div style={{ flex: 1 }} />
+                    {lastUpdated && <span style={{ color: '#475569', fontSize: '0.68rem', whiteSpace: 'nowrap' }}>Updated {lastUpdated.toLocaleTimeString()}</span>}
+                    <button onClick={handleManualRefresh} disabled={isRefreshing}
+                        style={{ display: 'flex', alignItems: 'center', gap: '6px', padding: '5px 12px', background: 'transparent', color: '#94a3b8', border: '1px solid rgba(255,255,255,0.12)', borderRadius: '6px', cursor: isRefreshing ? 'not-allowed' : 'pointer', fontSize: '0.75rem', fontWeight: 500, fontFamily: 'inherit', opacity: isRefreshing ? 0.5 : 1, flexShrink: 0 }}>
+                        <RefreshCw size={12} style={{ animation: isRefreshing ? 'spin 1s linear infinite' : 'none' }} />
+                        {isRefreshing ? 'Refreshing...' : 'Refresh'}
+                    </button>
+                    <button onClick={handleLogout}
+                        style={{ display: 'flex', alignItems: 'center', gap: '6px', padding: '5px 12px', background: 'transparent', color: '#94a3b8', border: '1px solid rgba(255,255,255,0.12)', borderRadius: '6px', cursor: 'pointer', fontSize: '0.75rem', fontWeight: 500, fontFamily: 'inherit', flexShrink: 0 }}>
+                        <LogOut size={12} /> Logout
+                    </button>
+                </header>
 
                 {/* MAIN AREA */}
-                <div style={{ marginLeft: '210px', flex: 1, minHeight: '100vh' }}>
+                <div style={{ paddingTop: '52px', minHeight: '100vh' }}>
                     {selectedApp && appDetails ? (
                         /* DETAIL VIEW */
                         <div style={{ padding: '28px 24px' }}>
