@@ -521,7 +521,9 @@ async function sendDocumentDispatchedEmail(env, application, programme = null, t
     if (env.GOOGLE_CLIENT_ID && env.GOOGLE_CLIENT_SECRET && env.GOOGLE_REFRESH_TOKEN) {
         try {
             const accessToken = await getGoogleAuth(env);
-            const dispatchedOn = new Date().toLocaleDateString('en-IN', { day: '2-digit', month: 'long', year: 'numeric' });
+            const isMigration = application.form_type === 'Application for Migration Certificate';
+            const actionWord = isMigration ? 'Uploaded' : 'Dispatched';
+            const processedOn = new Date().toLocaleDateString('en-IN', { day: '2-digit', month: 'long', year: 'numeric' });
             const appliedOn = application.created_at
                 ? new Date(application.created_at).toLocaleDateString('en-IN', { day: '2-digit', month: 'long', year: 'numeric' })
                 : null;
@@ -540,11 +542,13 @@ async function sendDocumentDispatchedEmail(env, application, programme = null, t
                 content = 'Your application has been processed. Your scanned Migration Certificate is available to download from the Track Application page and is also available from your DigiLocker account.';
             } else if (deliveryPreference === 'Scanned Copy') {
                 content = 'Your application has been processed. Your scanned Migration Certificate is ready to download from the Track Application page on the portal.';
+            } else if (isMigration) {
+                content = 'Your application has been processed and your document has been uploaded by the Office of the Controller of Examinations, SSSIHL. You may download it from the Track Application page on the portal.';
             } else {
-                content = 'Your application has been processed and your document has been dispatched from Office of the Controller of Examinations, SSSIHL. Please collect or expect to receive your document shortly.';
+                content = 'Your application has been processed and your document has been dispatched from the Office of the Controller of Examinations, SSSIHL. Please collect or expect to receive your document shortly.';
             }
             const htmlBody = renderEmailTemplate({
-                title: 'Document Dispatched',
+                title: `Document ${actionWord}`,
                 greeting: `Sai Ram!<br><br>Dear ${escapeHtml(application.applicant_name)},`,
                 content,
                 details: [
@@ -554,7 +558,7 @@ async function sendDocumentDispatchedEmail(env, application, programme = null, t
                     { label: 'Campus', value: escapeHtml(application.campus) },
                     ...(programme ? [{ label: 'Programme', value: escapeHtml(programme) }] : []),
                     ...(appliedOn ? [{ label: 'Applied On', value: appliedOn }] : []),
-                    { label: 'Dispatched On', value: dispatchedOn },
+                    { label: `${actionWord} On`, value: processedOn },
                     ...(trackingNumber ? [{ label: 'Postal Tracking Number', value: escapeHtml(trackingNumber) }] : [])
                 ],
                 importantNote,
@@ -563,7 +567,7 @@ async function sendDocumentDispatchedEmail(env, application, programme = null, t
 
             await sendEmail(accessToken, {
                 to: application.student_email,
-                subject: `Document Dispatched : ${application.form_type} (${application.id})`,
+                subject: `Document ${actionWord} : ${application.form_type} (${application.id})`,
                 htmlBody
             });
             console.log(`Document dispatched email sent for app ${application.id}`);

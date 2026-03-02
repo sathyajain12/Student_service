@@ -237,13 +237,14 @@ export default function AdminPortal() {
     const [confirmModal, setConfirmModal] = useState(null);
     const [showDispatchModal, setShowDispatchModal] = useState(false);
     const [dispatchAppId, setDispatchAppId] = useState(null);
+    const [dispatchFormType, setDispatchFormType] = useState(null);
     const dispatchTrackingRef = useRef(null);
     const [searchQuery, setSearchQuery] = useState('');
     const [currentPage, setCurrentPage] = useState(1);
     const [statusFilter, setStatusFilter] = useState('ALL');
     const [campusFilter, setCampusFilter] = useState('ALL');
     const [retotalingActive, setRetotalingActive] = useState(null);
-    const [urgencySort, setUrgencySort] = useState(true);
+    const urgencySort = true;
 
     const CAMPUS_COLORS = {
         'Prashanti Nilayam Campus': '#6366f1',
@@ -809,13 +810,14 @@ export default function AdminPortal() {
         }
     };
 
-    const notifyDispatched = (applicationId) => {
+    const notifyDispatched = (applicationId, formType) => {
         setDispatchAppId(applicationId);
+        setDispatchFormType(formType);
         if (dispatchTrackingRef.current) dispatchTrackingRef.current.value = '';
         setShowDispatchModal(true);
     };
 
-    const doNotifyDispatched = async (applicationId, trackingNumber) => {
+    const doNotifyDispatched = async (applicationId, trackingNumber, formType) => {
         try {
             const response = await fetch(`${API_URL}/admin/notify-dispatched`, {
                 method: 'POST',
@@ -829,7 +831,8 @@ export default function AdminPortal() {
             const data = await response.json();
 
             if (response.ok) {
-                showToast('Student notified — document marked as dispatched!', 'success');
+                const word = formType === 'Application for Migration Certificate' ? 'uploaded' : 'dispatched';
+                showToast(`Student notified — document marked as ${word}!`, 'success');
                 fetchAppDetails(applicationId);
                 fetchStats();
                 fetchApplications();
@@ -1002,6 +1005,7 @@ export default function AdminPortal() {
     // Dispatch Modal Component (with tracking number input)
     const DispatchModal = () => {
         if (!showDispatchModal) return null;
+        const isMigration = dispatchFormType === 'Application for Migration Certificate';
         return (
             <div style={{
                 position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, zIndex: 9999,
@@ -1019,25 +1023,31 @@ export default function AdminPortal() {
                         <div style={{ padding: '10px', borderRadius: '12px', background: 'rgba(14,165,233,0.1)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                             <span style={{ fontSize: '22px', color: '#0ea5e9' }}>&#9993;</span>
                         </div>
-                        <h3 style={{ margin: 0, fontSize: '18px', color: '#0f172a', fontWeight: '700' }}>Notify: Document Dispatched</h3>
+                        <h3 style={{ margin: 0, fontSize: '18px', color: '#0f172a', fontWeight: '700' }}>
+                            Notify: Document {isMigration ? 'Uploaded' : 'Dispatched'}
+                        </h3>
                     </div>
                     <p style={{ color: '#475569', fontSize: '14px', lineHeight: '1.6', margin: '0 0 20px 0' }}>
-                        This will send an email to the student informing them that their document has been dispatched.
+                        {isMigration
+                            ? 'This will send an email to the student informing them that their document has been uploaded and is ready to download.'
+                            : 'This will send an email to the student informing them that their document has been dispatched.'}
                     </p>
-                    <div style={{ marginBottom: '24px' }}>
-                        <label style={{ display: 'block', fontSize: '13px', fontWeight: '600', color: '#0f172a', marginBottom: '6px' }}>
-                            Postal Tracking Number <span style={{ color: '#94a3b8', fontWeight: '400' }}>(optional)</span>
-                        </label>
-                        <input
-                            type="text"
-                            placeholder="e.g. EW123456789IN"
-                            ref={dispatchTrackingRef}
-                            defaultValue=""
-                            className="form-input"
-                            style={{ width: '100%', boxSizing: 'border-box' }}
-                            autoFocus
-                        />
-                    </div>
+                    {!isMigration && (
+                        <div style={{ marginBottom: '24px' }}>
+                            <label style={{ display: 'block', fontSize: '13px', fontWeight: '600', color: '#0f172a', marginBottom: '6px' }}>
+                                Postal Tracking Number <span style={{ color: '#94a3b8', fontWeight: '400' }}>(optional)</span>
+                            </label>
+                            <input
+                                type="text"
+                                placeholder="e.g. EW123456789IN"
+                                ref={dispatchTrackingRef}
+                                defaultValue=""
+                                className="form-input"
+                                style={{ width: '100%', boxSizing: 'border-box' }}
+                                autoFocus
+                            />
+                        </div>
+                    )}
                     <div style={{ display: 'flex', gap: '12px', justifyContent: 'flex-end' }}>
                         <button
                             onClick={() => setShowDispatchModal(false)}
@@ -1046,7 +1056,7 @@ export default function AdminPortal() {
                             Cancel
                         </button>
                         <button
-                            onClick={() => { setShowDispatchModal(false); doNotifyDispatched(dispatchAppId, dispatchTrackingRef.current?.value || null); }}
+                            onClick={() => { setShowDispatchModal(false); doNotifyDispatched(dispatchAppId, isMigration ? null : dispatchTrackingRef.current?.value || null, dispatchFormType); }}
                             style={{ padding: '10px 24px', background: 'linear-gradient(135deg, #0ea5e9 0%, #0284c7 100%)', color: '#ffffff', border: 'none', borderRadius: '8px', cursor: 'pointer', fontWeight: '600', fontSize: '14px' }}
                         >
                             &#9993; Notify Student
@@ -1344,9 +1354,6 @@ export default function AdminPortal() {
     const CAMPUS_ORDER = ['Prashanti Nilayam Campus', 'Anantapur Campus', 'Brindavan Campus', 'Nandigiri Campus'];
     const campusBreakdown = CAMPUS_ORDER.map(c => ({ label: c, count: applications.filter(a => a.campus === c).length }));
 
-    const stalePendingCount = applications.filter(a =>
-        a.status === 'PENDING' && (Date.now() - new Date((a.created_at || '') + 'Z').getTime()) / 86400000 >= 3
-    ).length;
 
     const filteredApplications = (() => {
         let list = applications
@@ -1645,10 +1652,10 @@ export default function AdminPortal() {
                                             </button>
                                         )}
 
-                                        {/* Notify Dispatched */}
+                                        {/* Notify Dispatched / Uploaded */}
                                         {app.status === 'COMPLETED' && (
-                                            <button onClick={() => notifyDispatched(app.id)} style={{ ...sidebarBtnBase, background: '#0ea5e9', color: 'white' }}>
-                                                &#9993; Notify: Document Dispatched
+                                            <button onClick={() => notifyDispatched(app.id, app.form_type)} style={{ ...sidebarBtnBase, background: '#0ea5e9', color: 'white' }}>
+                                                &#9993; Notify: Document {app.form_type === 'Application for Migration Certificate' ? 'Uploaded' : 'Dispatched'}
                                             </button>
                                         )}
 

@@ -122,7 +122,7 @@ export default function StatusTracker({ onBack }) {
         }
     };
 
-    const getStatusLabel = (status) => {
+    const getStatusLabel = (status, formType = null) => {
         switch (status) {
             case 'PENDING': return 'Pending Review';
             case 'AWAITING_DIRECTOR': return 'Awaiting Director Approval';
@@ -130,7 +130,7 @@ export default function StatusTracker({ onBack }) {
             case 'DIRECTOR_COMMENTED': return 'On Hold';
             case 'APPROVED': return 'Under Process';
             case 'COMPLETED': return 'Completed';
-            case 'DISPATCHED': return 'Dispatched';
+            case 'DISPATCHED': return formType === 'Application for Migration Certificate' ? 'Uploaded' : 'Dispatched';
             case 'REJECTED': return 'Rejected';
             default: return status;
         }
@@ -191,7 +191,8 @@ export default function StatusTracker({ onBack }) {
 
         // Dispatched — only show after admin dispatches
         if (s === 'DISPATCHED') {
-            stages.push({ id: 'dispatched', label: 'Dispatched', status: 'COMPLETED', icon: Send });
+            const dispatchLabel = app.form_type === 'Application for Migration Certificate' ? 'Uploaded' : 'Dispatched';
+            stages.push({ id: 'dispatched', label: dispatchLabel, status: 'COMPLETED', icon: Send });
         }
 
         return stages;
@@ -287,7 +288,7 @@ export default function StatusTracker({ onBack }) {
                                 fontSize: '1.1rem',
                                 letterSpacing: '0.05em'
                             }}>
-                                {getStatusLabel(application.status)}
+                                {getStatusLabel(application.status, application.form_type)}
                             </div>
                             <p style={{ fontSize: '0.85rem', color: 'var(--text-muted)', marginTop: '12px' }}>
                                 Last updated: {new Date(application.updated_at + 'Z').toLocaleString('en-IN', { timeZone: 'Asia/Kolkata' })}
