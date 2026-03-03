@@ -1292,6 +1292,7 @@ async function sendDirectorNotification(env, request, appId, formType, applicant
                     `,
                 actionButtons: [
                     { label: '✓ Proceed', link: `${url.origin}/approve?id=${appId}&role=Director&action=Approve`, color: '#10b981' },
+                    { label: '✗ Grade Card Available', link: `${url.origin}/approve?id=${appId}&role=Director&action=Reject`, color: '#ef4444' },
                     { label: '✎ Submit Comments', link: `${url.origin}/director-comment?id=${appId}`, color: '#f59e0b' }
                 ]
             })
