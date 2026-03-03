@@ -1285,7 +1285,11 @@ async function sendDirectorNotification(env, request, appId, formType, applicant
                     { label: 'Applicant Email', value: escapeHtml(email) },
                     { label: 'Submission Date', value: submissionDate },
                 ],
-                importantNote: '',
+                importantNote: `
+                        <p style="margin: 0; font-weight: 700;">⚠️ Important Note</p>
+                        <p style="margin: 8px 0 0 0;">Request you to please verify the availability of the original grade card in the campus office before processing this application.</p>
+                        <p style="margin: 8px 0 0 0;"><strong>If the grade card is available at the campus office and the student has not collected it yet, please reject this application. The student will be notified to contact the campus office to collect her / his original grade card.</strong></p>
+                    `,
                 actionButtons: [
                     { label: '✓ Proceed', link: `${url.origin}/approve?id=${appId}&role=Director&action=Approve`, color: '#10b981' },
                     { label: '✎ Submit Comments', link: `${url.origin}/director-comment?id=${appId}`, color: '#f59e0b' }
