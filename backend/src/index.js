@@ -1373,6 +1373,8 @@ function generateStudentEmailHTML(verification, isApproved, portalUrl) {
     const statusColor = isApproved ? '#059669' : '#dc2626';
     const heading = isApproved ? 'Application Approved' : 'Application Status Update';
     const isDuplicateGradeCard = verification.form_type === 'Application for Duplicate Grade Card';
+    const isNameChange = verification.form_type === 'Application for Registration of Student Name change in the Institute Records';
+    const needsGradeCardCheck = isDuplicateGradeCard || isNameChange;
 
     let content = isApproved
         ? (needsTwoStep
@@ -1391,7 +1393,7 @@ function generateStudentEmailHTML(verification, isApproved, portalUrl) {
         : 'N/A';
 
     const campusContact = CAMPUS_CONTACTS[verification.campus];
-    const campusContactHtml = (!isApproved && isDuplicateGradeCard && campusContact)
+    const campusContactHtml = (!isApproved && needsGradeCardCheck && campusContact)
         ? `<li style="list-style:none; margin-top:8px; padding:10px 12px; background:#eff6ff; border-radius:6px; color:#1e40af;">
                <strong>${escapeHtml(verification.campus)} Office</strong><br>
                <span style="font-size:13px;">Phone: ${campusContact.phone}</span><br>
@@ -1407,7 +1409,7 @@ function generateStudentEmailHTML(verification, isApproved, portalUrl) {
                        <li>Click the button below to submit your application to COE</li>`
                 : `<li>Your request is being processed by the Examination Department</li>
                        <li>You will receive further updates via email</li>`)
-            : (isDuplicateGradeCard
+            : (needsGradeCardCheck
                 ? `<li><strong>Your original grade card is available at the ${escapeHtml(verification.campus || 'campus')} office</strong></li>
                        <li>Please contact the campus office to collect your grade card</li>
                        ${campusContactHtml}`
