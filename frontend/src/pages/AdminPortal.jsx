@@ -1727,7 +1727,7 @@ export default function AdminPortal() {
                                 <p style={{ fontSize: '0.8rem', color: '#64748b', margin: 0 }}>
                                     {retotalingActive
                                         ? 'Form is currently active — students can submit applications.'
-                                        : 'Form is currently inactive — hidden from the student portal.'}
+                                        : 'Form is currently inactive — greyed out in the student portal.'}
                                 </p>
                             </div>
                             <button

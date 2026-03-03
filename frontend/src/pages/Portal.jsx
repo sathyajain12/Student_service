@@ -40,7 +40,6 @@ export default function Portal({ onSelectForm, onTrackStatus }) {
       .catch(() => {}); // on error, keep showing (fail-open)
   }, []);
 
-  const visibleForms = retotalingActive ? FORMS : FORMS.filter(f => f.id !== 'retotaling');
 
   return (
     <div className="container animate-fade-in">
@@ -101,28 +100,32 @@ export default function Portal({ onSelectForm, onTrackStatus }) {
       </div>
 
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(340px, 1fr))', gap: '30px' }}>
-        {visibleForms.map((form) => {
+        {FORMS.map((form) => {
           const Icon = form.Icon;
+          const isDisabled = form.id === 'retotaling' && !retotalingActive;
           return (
             <div
               key={form.id}
               className="glass-card"
               style={{
                 padding: '35px',
-                cursor: 'pointer',
+                cursor: isDisabled ? 'not-allowed' : 'pointer',
                 display: 'flex',
                 flexDirection: 'column',
                 position: 'relative',
-                background: 'white',
-                border: '1px solid var(--glass-border)'
+                background: isDisabled ? '#f8fafc' : 'white',
+                border: '1px solid var(--glass-border)',
+                opacity: isDisabled ? 0.55 : 1,
+                pointerEvents: isDisabled ? 'none' : 'auto',
+                transition: 'all 0.3s ease'
               }}
-              onClick={() => onSelectForm(form.id)}
-              onMouseEnter={(e) => {
+              onClick={isDisabled ? undefined : () => onSelectForm(form.id)}
+              onMouseEnter={isDisabled ? undefined : (e) => {
                 e.currentTarget.style.transform = 'translateY(-8px)';
                 e.currentTarget.style.borderColor = 'var(--accent)';
                 e.currentTarget.style.boxShadow = '0 20px 40px -15px rgba(15, 23, 42, 0.15)';
               }}
-              onMouseLeave={(e) => {
+              onMouseLeave={isDisabled ? undefined : (e) => {
                 e.currentTarget.style.transform = 'translateY(0)';
                 e.currentTarget.style.borderColor = 'var(--glass-border)';
                 e.currentTarget.style.boxShadow = 'var(--card-shadow)';
@@ -164,9 +167,15 @@ export default function Portal({ onSelectForm, onTrackStatus }) {
                 }}>
                   {form.category}
                 </span>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '6px', color: 'var(--accent)', fontWeight: '700', fontSize: '0.9rem' }}>
-                  Apply Now <Send size={14} />
-                </div>
+                {isDisabled ? (
+                  <span style={{ fontSize: '0.8rem', fontWeight: '600', color: '#94a3b8' }}>
+                    Currently Unavailable
+                  </span>
+                ) : (
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '6px', color: 'var(--accent)', fontWeight: '700', fontSize: '0.9rem' }}>
+                    Apply Now <Send size={14} />
+                  </div>
+                )}
               </div>
             </div>
           );
