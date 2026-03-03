@@ -338,7 +338,7 @@ export const FORM_CONFIGS = {
             },
             {
                 name: 'originalDegreeScan',
-                label: 'Original Degree Certificate (SCAN COPY IF AVAILABLE)',
+                label: 'Original Degree Certificat/ Grade Card / Consolidated Grade Card (SCAN COPY IF AVAILABLE)',
                 required: false
 
             },
