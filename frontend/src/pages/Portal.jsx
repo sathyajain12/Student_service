@@ -88,7 +88,7 @@ export default function Portal({ onSelectForm, onTrackStatus }) {
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))', gap: '25px' }}>
           {[
             'Select a service from the options below',
-            'Prepare all required documents in PDF format',
+            'Keep Supporting Documents ready in PDF format (max 3MB each)',
             'Save your Application ID for future reference',
             'Notifications will be sent to your registered email'
           ].map((text, i) => (
