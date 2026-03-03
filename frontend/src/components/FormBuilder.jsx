@@ -129,9 +129,13 @@ export default function FormBuilder({ config, onSubmit, onCancel, onTrackStatus,
     };
 
     const handlePaperTableChange = (fieldName, rowIndex, column, value) => {
+        let processedValue = value;
+        if (column === 'paperCode') {
+            processedValue = value.toUpperCase().replace(/\s/g, '').replace(/[^A-Z0-9\-'()]/g, '');
+        }
         setPaperTables(prev => {
             const newTable = [...(prev[fieldName] || [])];
-            newTable[rowIndex] = { ...newTable[rowIndex], [column]: value };
+            newTable[rowIndex] = { ...newTable[rowIndex], [column]: processedValue };
 
             // Update formData with stringified table data
             const tableData = JSON.stringify(newTable);
@@ -742,7 +746,7 @@ export default function FormBuilder({ config, onSubmit, onCancel, onTrackStatus,
                                                                     onChange={(e) => handlePaperTableChange(field.name, rowIndex, 'paperCode', e.target.value)}
                                                                     className="form-input"
                                                                     style={{ width: '100%', padding: '10px 12px' }}
-                                                                    placeholder="e.g., UPOL-201"
+                                                                    placeholder="e.g., UPOL-201 (capitals only, no spaces)"
                                                                     required={field.required && rowIndex === 0}
                                                                 />
                                                             </td>
