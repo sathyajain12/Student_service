@@ -96,7 +96,7 @@ export const FORM_CONFIGS = {
         needsDirectorApproval: true,
         title: 'Application for Duplicate Grade Card',
         description: 'This form is applicable only to students belonging to batches up to and including 2020. Students from 2021 batch onwards can download their Duplicate Grade Cards from [DigiLocker](https://accounts.digilocker.gov.in/v3/7b9f84c86732efd21cd8076ff06f3fd60b1fbe146732fa57444b03b35f3740a4--en).',
-
+        paymentApplicationName: 'SSSIHL Exams App Duplicate Grade Card',
         instructions: [
             'Before applying for a Duplicate Grade Card, the applicant must make all reasonable efforts to trace the Original Grade Card. Only after being fully satisfied that the Original Grade Card has been lost beyond recovery may the candidate proceed to apply for a Duplicate Grade Card.',
             'In the event of loss in transit or misplacement of the Original Grade Card, the candidate is required to lodge a police complaint and obtain an official acknowledgment from the concerned police station. A scanned copy of the police complaint, along with the original acknowledgment, must be uploaded.',
@@ -280,6 +280,7 @@ export const FORM_CONFIGS = {
             { type: 'format', text: '**FORMAT OF THE NEWSPAPER NOTIFICATION**\n\nNotice is hereby given that the undersigned has lost the Original Degree Certificate pertaining to the _________________________________ Academic Programme, issued by Sri Sathya Sai Institute of Higher Learning. Any person who finds the said certificate is requested to return it to the undersigned without delay. Possession of the certificate despite this public notice shall be deemed unauthorized and unlawful, and the holder shall be liable for any misuse thereof.\n\nName of the Candidate:\nMobile No:\nAddress(with city and state):\n\nDate:' },
             { type: 'format', text: '**FORMAT FOR AFFIDAVIT**\n\nI, _________________________ (Name), son/daughter of _________________________, Registered Number _________________________, do hereby solemnly affirm and declare that:\n\n1. That the Original Degree Certificate pertaining to the _________________________________ Academic Programme, issued to me by Sri Sathya Sai Institute of Higher Learning, Prasanthi Nilayam, has been irrecoverably lost or destroyed.\n\n2. That I have made a thorough and diligent search for the said Original Degree Certificate, but despite my best efforts, I have been unable to recover it.\n\n3. That a duplicate copy of the ________ Degree Certificate is now required by me, for the purpose of\n___________________________________________________________________________\n(state clearly why the duplicate is required and where it is to be submitted or produced).\n\n4. That I understand and acknowledge that if the lost Original Degree Certificate is misused by me or by any other person into whose possession it may fall, I shall be fully liable for all consequences arising therefrom. I further undertake to indemnify and hold harmless the Institute against any loss or consequences that may arise due to any improper or unfair use of the aforesaid Degree Certificate.\n\nDate:\n\nStudent Signature:\n\n**VERIFICATION**\n\nI, the deponent above named, do hereby solemnly affirm and state that the contents of Paragraphs 1 to 4 of the above affidavit are true and correct to my knowledge, and that no part of it is false and nothing  has been concealed therein.\nSolemnly affirmed / Sworn on this ______ day of _________________________________ at _________________________________\n\n **Attested and identified by me**\t**Signature of Deponent**\n\n(Signature and Seal of Notary Public / First-Class Magistrate)' }
         ],
+        paymentApplicationName: 'SSSIHL Exams App Duplicate Degree Certificate',
         titleLink: {
             text: 'Please click here to make the payment of ₹1000 for each Duplicate Degree Certificate using SBI Collect',
             url: 'https://www.onlinesbi.sbi/sbicollect/icollecthome.htm?corpID=350506&categoryName=SSSIHL%20Exams%20App%20Duplicate%20Grade%20Cardhttps://onlinesbi.sbi.bank.in/sbicollect/icollecthome.htm'
@@ -366,6 +367,7 @@ export const FORM_CONFIGS = {
             'The applicant must submit the original academic documents issued by the Institute, such as Grade Cards and Degree Certificate, in hard copy to the Examinations Section. These documents will then be reissued with the new name and sent back to the applicant. In case the applicant has lost any of the original documents, they must apply for duplicate documents before submitting the request for a name change.',
             'Once the application is submitted, the applicant must wait for clearance from the Director of the concerned Campus of the Institute. Only after the Director clears the application will the Examination Section process it further. The applicant can track the status of the application using the Application ID provided at the time of submission.'
         ],
+        paymentApplicationName: 'SSSIHL Exams App Change of Name',
         titleLink: {
             text: 'Please click here to make the payment of ₹500 using SBI Collect',
             url: 'https://www.onlinesbi.sbi/sbicollect/icollecthome.htm?corpID=350506&categoryName=SSSIHL%20Exams%20App%20Change%20of%20Name'
@@ -526,7 +528,7 @@ export const FORM_CONFIGS = {
             },
             'Ensure you have the correct Course Code(s) and Course Title.'
         ],
-
+        paymentApplicationName: 'SSSIHL Exams App Re-Totalling of Marks',
         titleLink: {
             text: 'Please click here to make the payment of ₹100 for Re-Totalling Application using SBI Collect',
             url: 'https://www.onlinesbi.sbi/sbicollect/icollecthome.htm?corpID=350506&categoryName=SSSIHL%20Exam%20App%20%20Re-Totaling%20of%20Marks'
@@ -560,6 +562,7 @@ export const FORM_CONFIGS = {
     },
     'on-request-degree': {
         title: 'Application for On-Request Degree Certificate',
+        paymentApplicationName: 'APP on Request Degree Certificate Issue',
         titleLink: {
             text: 'Please click here to make the payment of ₹3000 using SBI Collect',
             url: 'https://onlinesbi.sbi.bank.in/sbicollect/icollecthome.htm?corpID=350506&categoryName=APP%20on%20Request%20Degree%20Certificate%20Issue'
