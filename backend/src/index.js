@@ -1300,7 +1300,7 @@ async function sendDirectorNotification(env, request, appId, formType, applicant
                 ? renderEmailTemplate({
                     title: 'For Your Kind Attention',
                     greeting: 'Dear Madam / Sir,<br><br>Sairam!<br><br>Greetings from the Examinations Section, SSSIHL.',
-                    content: `This is to bring to your kind notice that <strong>${escapeHtml(applicantName)}</strong> has submitted an <strong>${escapeHtml(formType)}</strong>. This is for your information.<br><br>If you are in agreement, kindly click the <strong>Proceed</strong> button so that the Examination Section may process the application. If you have any concerns, please record your comments by clicking <strong>Submit Comments</strong>.`,
+                    content: `This is to bring to your kind notice that <strong>${escapeHtml(applicantName)}</strong> has submitted an <strong>${escapeHtml(formType)}</strong>. Kindly verify whether the applicant fulfils the attendance requirement before proceeding.`,
                     details: [
                         { label: 'Form Type', value: escapeHtml(formType) },
                         { label: 'Application ID', value: escapeHtml(appId) },
@@ -1315,9 +1315,17 @@ async function sendDirectorNotification(env, request, appId, formType, applicant
                         { label: 'Applicant Email', value: escapeHtml(email) },
                         { label: 'Submission Date', value: submissionDate },
                     ],
-                    importantNote: '',
+                    importantNote: `
+                        <p style="margin: 0; font-weight: 700;">📋 Attendance Verification Required</p>
+                        <p style="margin: 8px 0 0 0;">Kindly verify whether <strong>${escapeHtml(applicantName)}</strong> fulfils the required attendance criteria.</p>
+                        <p style="margin: 8px 0 0 0;">
+                            ☐ <strong>If the student meets the attendance requirement</strong>, please click <strong>Yes, Attendance Fulfilled — Proceed</strong> to forward the application to the Examination Section.<br><br>
+                            ☐ <strong>If the student does not meet the attendance requirement</strong>, please click <strong>No, Insufficient Attendance — Send Back</strong>. The student will be notified that they are not eligible.
+                        </p>
+                    `,
                     actionButtons: [
-                        { label: '✓ Proceed', link: `${url.origin}/approve?id=${appId}&role=Director&action=Approve`, color: '#10b981' },
+                        { label: '✓ Yes, Attendance Fulfilled — Proceed', link: `${url.origin}/approve?id=${appId}&role=Director&action=Approve`, color: '#10b981' },
+                        { label: '✗ No, Insufficient Attendance — Send Back', link: `${url.origin}/approve?id=${appId}&role=Director&action=Reject`, color: '#ef4444' },
                         { label: '✎ Submit Comments', link: `${url.origin}/director-comment?id=${appId}`, color: '#f59e0b' }
                     ]
                 })
@@ -1376,6 +1384,8 @@ function generateStudentEmailHTML(verification, isApproved, portalUrl) {
     const isDuplicateGradeCard = verification.form_type === 'Application for Duplicate Grade Card';
     const isNameChange = verification.form_type === 'Application for Registration of Student Name change in the Institute Records';
     const needsGradeCardCheck = isDuplicateGradeCard || isNameChange;
+    const isExamRepeat = verification.form_type === 'Application for Supplementary Examinations Registration'
+        || verification.form_type === 'Application for Repeating Examinations Registration (CIE and ESE)';
 
     let content = isApproved
         ? (needsTwoStep
@@ -1383,7 +1393,9 @@ function generateStudentEmailHTML(verification, isApproved, portalUrl) {
             : 'We are pleased to inform you that your application has been approved.')
         : (isDuplicateGradeCard
             ? 'Your application for Duplicate Grade Card has been reviewed. Please see the details below.'
-            : 'Your application status has been updated. Please see the details below.');
+            : isExamRepeat
+                ? 'Your application has been reviewed by the Campus Director. Unfortunately, your application has been sent back as you do not fulfil the required attendance criteria.'
+                : 'Your application status has been updated. Please see the details below.');
 
     const submissionDate = verification.created_at
         ? new Date(verification.created_at).toLocaleString('en-IN', {
@@ -1414,7 +1426,10 @@ function generateStudentEmailHTML(verification, isApproved, portalUrl) {
                 ? `<li><strong>Your original grade card is available at the ${escapeHtml(verification.campus || 'campus')} office</strong></li>
                        <li>Please contact the campus office to collect your grade card</li>
                        ${campusContactHtml}`
-                : `<li>For queries or clarifications, please contact: <a href="mailto:coeoffice@sssihl.edu.in" style="color: #2563eb; text-decoration: none;">coeoffice@sssihl.edu.in</a></li>`)
+                : isExamRepeat
+                    ? `<li>You are currently not eligible as you do not meet the required attendance criteria.</li>
+                       <li>For queries or clarifications, please contact: <a href="mailto:coeoffice@sssihl.edu.in" style="color: #2563eb; text-decoration: none;">coeoffice@sssihl.edu.in</a></li>`
+                    : `<li>For queries or clarifications, please contact: <a href="mailto:coeoffice@sssihl.edu.in" style="color: #2563eb; text-decoration: none;">coeoffice@sssihl.edu.in</a></li>`)
         }
         </ul>
     `;
