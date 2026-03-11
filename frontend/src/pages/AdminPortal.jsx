@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import DOMPurify from 'dompurify';
-import { LogOut, FileText, Download, Users, Clock, CheckCircle, XCircle, ArrowLeft, RefreshCw, Upload, Trash2, X, AlertTriangle, Search } from 'lucide-react';
+import { LogOut, FileText, Download, Users, Clock, CheckCircle, XCircle, ArrowLeft, RefreshCw, Upload, Trash2, X, AlertTriangle, Search, Eye } from 'lucide-react';
 
 const API_URL = import.meta.env.VITE_BACKEND_URL || 'http://localhost:8787';
 
@@ -215,6 +215,22 @@ const getStatusStyle = (status) => {
     }
 };
 
+const getAuditActionStyle = (action) => {
+    const base = { fontSize: '0.72rem', fontWeight: 700, padding: '2px 8px', borderRadius: '999px', whiteSpace: 'nowrap' };
+    const colors = {
+        APPROVED: { background: '#f0fdf4', color: '#15803d', border: '1px solid #bbf7d0' },
+        COMPLETED: { background: '#f0fdf4', color: '#15803d', border: '1px solid #bbf7d0' },
+        REJECTED: { background: '#fef2f2', color: '#dc2626', border: '1px solid #fecaca' },
+        DELETED: { background: '#fef2f2', color: '#dc2626', border: '1px solid #fecaca' },
+        DISPATCHED: { background: '#f0f9ff', color: '#0369a1', border: '1px solid #bae6fd' },
+        HOLD_RESOLVED: { background: '#faf5ff', color: '#7c3aed', border: '1px solid #e9d5ff' },
+        RESPONSE_UPLOADED: { background: '#eef2ff', color: '#4338ca', border: '1px solid #c7d2fe' },
+        FORM_TOGGLED: { background: '#f8fafc', color: '#475569', border: '1px solid #e2e8f0' },
+        LOGIN: { background: '#f8fafc', color: '#475569', border: '1px solid #e2e8f0' },
+    };
+    return { ...base, ...(colors[action] || colors.LOGIN) };
+};
+
 export default function AdminPortal() {
     const [token, setToken] = useState(localStorage.getItem('adminToken') || '');
     const [isLoggedIn, setIsLoggedIn] = useState(!!localStorage.getItem('adminToken'));
@@ -245,6 +261,17 @@ export default function AdminPortal() {
     const [campusFilter, setCampusFilter] = useState('ALL');
     const [retotalingActive, setRetotalingActive] = useState(null);
     const urgencySort = true;
+
+    const [pdfViewerUrl, setPdfViewerUrl] = useState(null);
+    const [pdfViewerName, setPdfViewerName] = useState('');
+
+    const [showStudentLookup, setShowStudentLookup] = useState(false);
+    const [studentLookupQuery, setStudentLookupQuery] = useState('');
+
+    const [showAuditLog, setShowAuditLog] = useState(false);
+    const [auditEntries, setAuditEntries] = useState([]);
+    const [auditActionFilter, setAuditActionFilter] = useState('ALL');
+    const [auditLoading, setAuditLoading] = useState(false);
 
     const CAMPUS_COLORS = {
         'Prashanti Nilayam Campus': '#6366f1',
@@ -286,6 +313,14 @@ export default function AdminPortal() {
         }
         if (app.status === 'REJECTED') return 3;
         return 2;
+    };
+
+    const getAgeBadge = (app) => {
+        if (!['PENDING', 'AWAITING_DIRECTOR'].includes(app.status)) return null;
+        const ageDays = Math.floor((Date.now() - new Date(app.created_at + 'Z').getTime()) / 86400000);
+        if (ageDays >= 3) return { label: `${ageDays}d overdue`, bg: '#fef2f2', color: '#dc2626', border: '#fecaca' };
+        if (ageDays >= 1) return { label: `${ageDays}d`, bg: '#fffbeb', color: '#d97706', border: '#fde68a' };
+        return null;
     };
 
     const sortByUrgency = (apps) => [...apps].sort((a, b) => {
@@ -348,6 +383,10 @@ export default function AdminPortal() {
     useEffect(() => { setCurrentPage(1); }, [searchQuery]);
     useEffect(() => { setCurrentPage(1); }, [statusFilter]);
     useEffect(() => { setCurrentPage(1); }, [campusFilter]);
+
+    useEffect(() => {
+        if (showAuditLog) fetchAuditLog(auditActionFilter === 'ALL' ? null : auditActionFilter);
+    }, [showAuditLog, auditActionFilter]);
 
     const handleLogin = async (e) => {
         e.preventDefault();
@@ -436,6 +475,22 @@ export default function AdminPortal() {
             }
         } catch (err) {
             console.error('Failed to fetch form settings:', err);
+        }
+    };
+
+    const fetchAuditLog = async (actionFilter = null) => {
+        setAuditLoading(true);
+        try {
+            const currentToken = localStorage.getItem('adminToken');
+            const qs = actionFilter && actionFilter !== 'ALL' ? `?action=${actionFilter}` : '';
+            const res = await fetch(`${API_URL}/admin/audit-log${qs}`, {
+                headers: { 'Authorization': `Bearer ${currentToken}` }
+            });
+            if (res.ok) setAuditEntries(await res.json());
+        } catch (e) {
+            console.error('Failed to fetch audit log:', e);
+        } finally {
+            setAuditLoading(false);
         }
     };
 
@@ -733,6 +788,28 @@ export default function AdminPortal() {
                 document.body.removeChild(a);
                 window.URL.revokeObjectURL(url);
             });
+    };
+
+    const viewFile = async (fileId, fileName) => {
+        try {
+            const currentToken = localStorage.getItem('adminToken');
+            const response = await fetch(`${API_URL}/admin/file/${fileId}`, {
+                headers: { 'Authorization': `Bearer ${currentToken}` }
+            });
+            if (!response.ok) throw new Error('Failed to fetch file');
+            const blob = await response.blob();
+            const url = URL.createObjectURL(blob);
+            setPdfViewerName(fileName);
+            setPdfViewerUrl(url);
+        } catch (e) {
+            showToast('Failed to load file for viewing.', 'error');
+        }
+    };
+
+    const closePdfViewer = () => {
+        if (pdfViewerUrl) URL.revokeObjectURL(pdfViewerUrl);
+        setPdfViewerUrl(null);
+        setPdfViewerName('');
     };
 
     const markAsCompleted = (applicationId) => {
@@ -1156,6 +1233,223 @@ export default function AdminPortal() {
         );
     };
 
+    const PdfViewerModal = () => {
+        if (!pdfViewerUrl) return null;
+        return (
+            <div style={{
+                position: 'fixed', inset: 0, zIndex: 10000,
+                background: 'rgba(0,0,0,0.85)',
+                display: 'flex', flexDirection: 'column'
+            }}>
+                <div style={{
+                    display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+                    padding: '12px 20px', background: '#1e293b', flexShrink: 0
+                }}>
+                    <span style={{ color: 'white', fontSize: '0.9rem', fontWeight: 600, fontFamily: 'monospace' }}>
+                        {pdfViewerName}
+                    </span>
+                    <button
+                        onClick={closePdfViewer}
+                        style={{
+                            background: 'rgba(255,255,255,0.1)', border: 'none', borderRadius: '6px',
+                            color: 'white', cursor: 'pointer', padding: '6px 12px',
+                            fontSize: '0.85rem', fontWeight: 600, fontFamily: 'inherit'
+                        }}
+                    >
+                        ✕ Close
+                    </button>
+                </div>
+                <iframe
+                    src={pdfViewerUrl}
+                    title={pdfViewerName}
+                    style={{ flex: 1, border: 'none', width: '100%', height: '100%' }}
+                />
+            </div>
+        );
+    };
+
+    const StudentLookupPanel = () => {
+        if (!showStudentLookup) return null;
+        return (
+            <div style={{
+                position: 'fixed', inset: 0, zIndex: 9997,
+                background: 'rgba(0,0,0,0.5)',
+                display: 'flex', justifyContent: 'flex-end'
+            }}>
+                <div style={{
+                    width: 'min(720px, 95vw)', height: '100%', background: 'white',
+                    display: 'flex', flexDirection: 'column',
+                    boxShadow: '-4px 0 24px rgba(0,0,0,0.12)'
+                }}>
+                    {/* Header */}
+                    <div style={{
+                        padding: '20px 24px', borderBottom: '1px solid #e2e8f0',
+                        display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexShrink: 0
+                    }}>
+                        <div>
+                            <h2 style={{ margin: 0, fontSize: '1.1rem', fontWeight: 700, color: '#0f172a' }}>Student Application History</h2>
+                            <p style={{ margin: 0, fontSize: '0.8rem', color: '#64748b' }}>Search by registration number</p>
+                        </div>
+                        <button onClick={() => { setShowStudentLookup(false); setStudentLookupQuery(''); }}
+                            style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#64748b', padding: '4px' }}>
+                            ✕
+                        </button>
+                    </div>
+
+                    {/* Search input */}
+                    <div style={{ padding: '16px 24px', borderBottom: '1px solid #e2e8f0', flexShrink: 0 }}>
+                        <div style={{ position: 'relative' }}>
+                            <Search size={14} style={{ position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)', color: '#94a3b8' }} />
+                            <input
+                                type="text"
+                                value={studentLookupQuery}
+                                onChange={e => setStudentLookupQuery(e.target.value)}
+                                placeholder="Enter registration number..."
+                                autoFocus
+                                style={{
+                                    width: '100%', paddingLeft: '36px', height: '40px',
+                                    border: '1px solid #e2e8f0', borderRadius: '8px',
+                                    fontSize: '0.875rem', boxSizing: 'border-box', fontFamily: 'inherit',
+                                    outline: 'none'
+                                }}
+                            />
+                        </div>
+                    </div>
+
+                    {/* Results */}
+                    <div style={{ flex: 1, overflowY: 'auto', padding: '20px 24px' }}>
+                        {studentLookupQuery.trim().length >= 3 && studentLookupResults.length > 0 && (
+                            <>
+                                {/* Summary stats */}
+                                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '10px', marginBottom: '20px' }}>
+                                    {[
+                                        { label: 'Total', value: lookupStats.total, color: '#4F46E5' },
+                                        { label: 'Pending', value: lookupStats.pending, color: '#f59e0b' },
+                                        { label: 'Completed', value: lookupStats.completed, color: '#10b981' },
+                                        { label: 'Rejected', value: lookupStats.rejected, color: '#ef4444' },
+                                    ].map(s => (
+                                        <div key={s.label} style={{ background: 'white', border: '1px solid #e2e8f0', borderRadius: '8px', padding: '12px', textAlign: 'center' }}>
+                                            <p style={{ color: s.color, fontSize: '1.4rem', fontWeight: 800, margin: 0 }}>{s.value}</p>
+                                            <p style={{ color: '#64748b', fontSize: '0.72rem', fontWeight: 600, margin: 0, textTransform: 'uppercase' }}>{s.label}</p>
+                                        </div>
+                                    ))}
+                                </div>
+                                {/* Applications table */}
+                                <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+                                    <thead>
+                                        <tr>
+                                            {['Form Type', 'Status', 'Date', 'Action'].map(h => (
+                                                <th key={h} style={{ padding: '10px 12px', textAlign: 'left', fontSize: '0.72rem', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.05em', color: '#64748b', borderBottom: '2px solid #e2e8f0' }}>{h}</th>
+                                            ))}
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {studentLookupResults.map(a => (
+                                            <tr key={a.id} style={{ borderBottom: '1px solid #f1f5f9' }}>
+                                                <td style={{ padding: '10px 12px' }}>
+                                                    <p style={{ fontWeight: 600, fontSize: '0.8rem', margin: 0, color: '#0f172a' }}>{getShortLabel(a.form_type)}</p>
+                                                    <p style={{ fontFamily: 'monospace', fontSize: '0.72rem', color: '#94a3b8', margin: 0 }}>{a.id}</p>
+                                                </td>
+                                                <td style={{ padding: '10px 12px' }}><span style={getStatusStyle(a.status)}>{a.status}</span></td>
+                                                <td style={{ padding: '10px 12px', fontSize: '0.78rem', color: '#64748b' }}>
+                                                    {new Date(a.created_at + 'Z').toLocaleDateString('en-IN', { timeZone: 'Asia/Kolkata' })}
+                                                </td>
+                                                <td style={{ padding: '10px 12px' }}>
+                                                    <button
+                                                        onClick={() => { setShowStudentLookup(false); fetchAppDetails(a.id); }}
+                                                        style={{ padding: '5px 12px', fontSize: '0.78rem', fontWeight: 600, background: 'white', border: '1px solid #e2e8f0', borderRadius: '6px', cursor: 'pointer', fontFamily: 'inherit' }}
+                                                    >View</button>
+                                                </td>
+                                            </tr>
+                                        ))}
+                                    </tbody>
+                                </table>
+                            </>
+                        )}
+                        {studentLookupQuery.trim().length >= 3 && studentLookupResults.length === 0 && (
+                            <p style={{ color: '#94a3b8', textAlign: 'center', padding: '48px', fontSize: '0.875rem' }}>
+                                No applications found for "{studentLookupQuery.trim()}"
+                            </p>
+                        )}
+                        {studentLookupQuery.trim().length < 3 && (
+                            <p style={{ color: '#94a3b8', textAlign: 'center', padding: '48px', fontSize: '0.875rem' }}>
+                                Enter at least 3 characters to search
+                            </p>
+                        )}
+                    </div>
+                </div>
+            </div>
+        );
+    };
+
+    const AuditLogPanel = () => {
+        if (!showAuditLog) return null;
+        const ACTION_FILTERS = ['ALL', 'LOGIN', 'APPROVED', 'REJECTED', 'COMPLETED', 'DISPATCHED', 'HOLD_RESOLVED', 'RESPONSE_UPLOADED', 'DELETED', 'FORM_TOGGLED'];
+        return (
+            <div style={{ position: 'fixed', inset: 0, zIndex: 9998, background: 'rgba(0,0,0,0.5)', display: 'flex', justifyContent: 'flex-end' }}>
+                <div style={{ width: 'min(800px, 95vw)', height: '100%', background: 'white', display: 'flex', flexDirection: 'column', boxShadow: '-4px 0 24px rgba(0,0,0,0.12)' }}>
+                    {/* Header */}
+                    <div style={{ padding: '20px 24px', borderBottom: '1px solid #e2e8f0', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexShrink: 0 }}>
+                        <div>
+                            <h2 style={{ margin: 0, fontSize: '1.1rem', fontWeight: 700, color: '#0f172a' }}>Audit Log</h2>
+                            <p style={{ margin: 0, fontSize: '0.8rem', color: '#64748b' }}>Last 100 admin actions</p>
+                        </div>
+                        <button onClick={() => setShowAuditLog(false)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#64748b', padding: '4px' }}>✕</button>
+                    </div>
+                    {/* Filter tabs */}
+                    <div style={{ padding: '12px 24px', borderBottom: '1px solid #e2e8f0', display: 'flex', gap: '6px', flexWrap: 'wrap', flexShrink: 0 }}>
+                        {ACTION_FILTERS.map(a => (
+                            <button key={a} onClick={() => setAuditActionFilter(a)}
+                                style={{ padding: '4px 12px', fontSize: '0.75rem', fontWeight: 600, borderRadius: '999px', cursor: 'pointer', fontFamily: 'inherit', border: auditActionFilter === a ? 'none' : '1px solid #e2e8f0', background: auditActionFilter === a ? '#4F46E5' : 'white', color: auditActionFilter === a ? 'white' : '#475569' }}>
+                                {a}
+                            </button>
+                        ))}
+                    </div>
+                    {/* Table */}
+                    <div style={{ flex: 1, overflowY: 'auto', padding: '0 24px 24px' }}>
+                        {auditLoading ? (
+                            <p style={{ color: '#94a3b8', textAlign: 'center', padding: '48px' }}>Loading...</p>
+                        ) : auditEntries.length === 0 ? (
+                            <p style={{ color: '#94a3b8', textAlign: 'center', padding: '48px' }}>No entries found</p>
+                        ) : (
+                            <table style={{ width: '100%', borderCollapse: 'collapse', marginTop: '16px' }}>
+                                <thead>
+                                    <tr>
+                                        {['Time', 'Admin', 'Action', 'Application ID', 'Details'].map(h => (
+                                            <th key={h} style={{ padding: '10px 12px', textAlign: 'left', fontSize: '0.72rem', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.05em', color: '#64748b', borderBottom: '2px solid #e2e8f0', whiteSpace: 'nowrap' }}>{h}</th>
+                                        ))}
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {auditEntries.map(entry => (
+                                        <tr key={entry.id} style={{ borderBottom: '1px solid #f1f5f9' }}>
+                                            <td style={{ padding: '10px 12px', fontFamily: 'monospace', fontSize: '0.75rem', color: '#64748b', whiteSpace: 'nowrap' }}>
+                                                {new Date(entry.created_at + 'Z').toLocaleString('en-IN', { timeZone: 'Asia/Kolkata', dateStyle: 'medium', timeStyle: 'short' })}
+                                            </td>
+                                            <td style={{ padding: '10px 12px', fontWeight: 600, fontSize: '0.82rem', color: '#0f172a' }}>{entry.admin_username}</td>
+                                            <td style={{ padding: '10px 12px' }}><span style={getAuditActionStyle(entry.action)}>{entry.action}</span></td>
+                                            <td style={{ padding: '10px 12px' }}>
+                                                {entry.application_id ? (
+                                                    <button
+                                                        onClick={() => { setShowAuditLog(false); fetchAppDetails(entry.application_id); }}
+                                                        style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#4F46E5', textDecoration: 'underline', fontSize: '0.75rem', fontFamily: 'monospace', padding: 0 }}
+                                                    >{entry.application_id}</button>
+                                                ) : <span style={{ color: '#94a3b8' }}>—</span>}
+                                            </td>
+                                            <td style={{ padding: '10px 12px', fontSize: '0.75rem', color: '#475569', maxWidth: '200px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                                                {entry.details ? entry.details : '—'}
+                                            </td>
+                                        </tr>
+                                    ))}
+                                </tbody>
+                            </table>
+                        )}
+                    </div>
+                </div>
+            </div>
+        );
+    };
+
     // Login Screen
     if (!isLoggedIn) {
         const inputStyle = {
@@ -1375,6 +1669,17 @@ export default function AdminPortal() {
         .sort((a, b) => new Date((b.created_at || '') + 'Z') - new Date((a.created_at || '') + 'Z'))
         .slice(0, 10);
 
+    const studentLookupResults = studentLookupQuery.trim().length >= 3
+        ? applications.filter(a => a.reg_no?.toLowerCase().includes(studentLookupQuery.trim().toLowerCase()))
+        : [];
+
+    const lookupStats = {
+        total: studentLookupResults.length,
+        pending: studentLookupResults.filter(a => a.status === 'PENDING').length,
+        completed: studentLookupResults.filter(a => ['COMPLETED', 'DISPATCHED'].includes(a.status)).length,
+        rejected: studentLookupResults.filter(a => a.status === 'REJECTED').length,
+    };
+
     const sidebarBtnBase = { width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', padding: '11px 16px', borderRadius: '8px', cursor: 'pointer', fontWeight: 600, fontSize: '0.875rem', fontFamily: 'inherit', border: 'none', transition: 'all 0.15s ease' };
     const fileRowStyle = { display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '14px 16px', borderRadius: '8px', border: '1px solid #f1f5f9', marginBottom: '8px', gap: '12px' };
     const downloadBtnStyle = { display: 'flex', alignItems: 'center', gap: '6px', padding: '6px 14px', background: 'white', color: '#334155', border: '1px solid #e2e8f0', borderRadius: '6px', cursor: 'pointer', fontSize: '0.8rem', fontWeight: 600, fontFamily: 'inherit', flexShrink: 0 };
@@ -1455,8 +1760,11 @@ export default function AdminPortal() {
                 .btn-modal-confirm:active { transform: translateY(0); }
             `}</style>
             <ToastNotification />
+            <PdfViewerModal />
             <ConfirmationModal />
             <DispatchModal />
+            <StudentLookupPanel />
+            <AuditLogPanel />
 
             <div style={{ minHeight: '100vh', background: '#F8FAFC', fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif' }}>
 
@@ -1608,7 +1916,21 @@ export default function AdminPortal() {
                                                                 <p style={{ color: '#94a3b8', margin: 0, fontSize: '0.75rem' }}>{file.file_type} · {(file.file_size / 1024).toFixed(1)} KB · {file.uploaded_by || 'Admin'}</p>
                                                             </div>
                                                         </div>
-                                                        <button className="det-dl-btn" onClick={() => downloadFile(file.id, file.file_name)} style={downloadBtnStyle}><Download size={14} /> Download</button>
+                                                        <div style={{ display: 'flex', gap: '8px', flexShrink: 0 }}>
+                                                            <button
+                                                                onClick={() => viewFile(file.id, file.file_name)}
+                                                                style={{
+                                                                    display: 'flex', alignItems: 'center', gap: '5px',
+                                                                    padding: '6px 14px', fontSize: '0.8rem', fontWeight: 600,
+                                                                    background: 'white', border: '1px solid #e0e7ff',
+                                                                    color: '#4F46E5', borderRadius: '8px', cursor: 'pointer',
+                                                                    fontFamily: 'inherit'
+                                                                }}
+                                                            >
+                                                                <Eye size={13} /> View
+                                                            </button>
+                                                            <button className="det-dl-btn" onClick={() => downloadFile(file.id, file.file_name)} style={downloadBtnStyle}><Download size={14} /> Download</button>
+                                                        </div>
                                                     </div>
                                                 ))}
                                             </div>
@@ -1623,7 +1945,21 @@ export default function AdminPortal() {
                                                         <p style={{ color: '#94a3b8', margin: 0, fontSize: '0.75rem' }}>{file.file_type} · {(file.file_size / 1024).toFixed(1)} KB</p>
                                                     </div>
                                                 </div>
-                                                <button className="det-dl-btn" onClick={() => downloadFile(file.id, file.file_name)} style={downloadBtnStyle}><Download size={14} /> Download</button>
+                                                <div style={{ display: 'flex', gap: '8px', flexShrink: 0 }}>
+                                                    <button
+                                                        onClick={() => viewFile(file.id, file.file_name)}
+                                                        style={{
+                                                            display: 'flex', alignItems: 'center', gap: '5px',
+                                                            padding: '6px 14px', fontSize: '0.8rem', fontWeight: 600,
+                                                            background: 'white', border: '1px solid #e0e7ff',
+                                                            color: '#4F46E5', borderRadius: '8px', cursor: 'pointer',
+                                                            fontFamily: 'inherit'
+                                                        }}
+                                                    >
+                                                        <Eye size={13} /> View
+                                                    </button>
+                                                    <button className="det-dl-btn" onClick={() => downloadFile(file.id, file.file_name)} style={downloadBtnStyle}><Download size={14} /> Download</button>
+                                                </div>
                                             </div>
                                         )) : <p style={{ color: '#94a3b8', fontSize: '0.875rem', margin: 0 }}>No files attached</p>}
                                     </div>
@@ -1831,7 +2167,23 @@ export default function AdminPortal() {
                                                         <td style={{ ...tdStyle, maxWidth: '200px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', fontWeight: 500 }}>{app.form_type}</td>
                                                         <td style={{ ...tdStyle, fontWeight: 600, color: '#0F172A' }}>{app.applicant_name}</td>
                                                         <td style={tdStyle}><div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}><div style={{ width: '8px', height: '8px', borderRadius: '50%', background: getCampusColor(app.campus), flexShrink: 0 }} /><span>{app.campus || '—'}</span></div></td>
-                                                        <td style={tdStyle}><span style={getStatusStyle(app.status)}>{app.status}</span></td>
+                                                        <td style={tdStyle}>
+                                                            <div style={{ display: 'flex', alignItems: 'center', gap: '6px', flexWrap: 'wrap' }}>
+                                                                <span style={getStatusStyle(app.status)}>{app.status}</span>
+                                                                {(() => {
+                                                                    const badge = getAgeBadge(app);
+                                                                    if (!badge) return null;
+                                                                    return (
+                                                                        <span style={{
+                                                                            fontSize: '0.68rem', fontWeight: 700, padding: '2px 7px',
+                                                                            borderRadius: '999px', background: badge.bg,
+                                                                            color: badge.color, border: `1px solid ${badge.border}`,
+                                                                            whiteSpace: 'nowrap'
+                                                                        }}>{badge.label}</span>
+                                                                    );
+                                                                })()}
+                                                            </div>
+                                                        </td>
                                                         <td style={{ ...tdStyle, color: '#64748b' }}>{new Date(app.created_at + 'Z').toLocaleDateString('en-IN', { timeZone: 'Asia/Kolkata' })}</td>
                                                         <td style={tdStyle}>
                                                             <button
@@ -1916,6 +2268,18 @@ export default function AdminPortal() {
                                 style={{ width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px', padding: '8px 14px', background: '#f8fafc', border: '1px solid #e2e8f0', borderRadius: '8px', cursor: 'pointer', fontSize: '0.8rem', fontWeight: 600, color: '#334155', fontFamily: 'inherit' }}>
                                 <Download size={14} /> Export CSV
                                 <span style={{ color: '#94a3b8', fontSize: '0.72rem', fontWeight: 400 }}>({filteredApplications.length})</span>
+                            </button>
+                            <button
+                                onClick={() => setShowStudentLookup(true)}
+                                style={{ width: '100%', padding: '8px 16px', fontSize: '0.8rem', fontWeight: 600, background: 'white', border: '1px solid #e2e8f0', borderRadius: '8px', cursor: 'pointer', fontFamily: 'inherit', color: '#0f172a', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px', marginTop: '8px' }}
+                            >
+                                <Search size={13} /> Student Lookup
+                            </button>
+                            <button
+                                onClick={() => setShowAuditLog(true)}
+                                style={{ width: '100%', padding: '8px 16px', fontSize: '0.8rem', fontWeight: 600, background: 'white', border: '1px solid #e2e8f0', borderRadius: '8px', cursor: 'pointer', fontFamily: 'inherit', color: '#0f172a', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px', marginTop: '8px' }}
+                            >
+                                📋 Audit Log
                             </button>
                         </div>
                     </aside>

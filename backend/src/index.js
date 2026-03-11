@@ -208,6 +208,10 @@ export default {
                     return await handleDeleteApplication(id, request, env, corsHeaders);
                 }
 
+                if (url.pathname === '/admin/audit-log' && request.method === 'GET') {
+                    return await handleGetAuditLog(request, env, corsHeaders);
+                }
+
                 return new Response('Not Found', { status: 404, headers: corsHeaders });
             } catch (error) {
                 console.error(error);
@@ -224,6 +228,16 @@ export default {
 };
 
 // ==================== ADMIN FUNCTIONS ====================
+
+async function logAuditEvent(env, adminUsername, action, applicationId = null, details = null) {
+    try {
+        await env.DB.prepare(
+            `INSERT INTO audit_log (admin_username, action, application_id, details) VALUES (?, ?, ?, ?)`
+        ).bind(adminUsername, action, applicationId ?? null, details ? JSON.stringify(details) : null).run();
+    } catch (e) {
+        console.error('Audit log write failed:', e);
+    }
+}
 
 async function verifyAdminToken(request, env) {
     const authHeader = request.headers.get('Authorization');
@@ -281,6 +295,8 @@ async function handleAdminLogin(request, env, corsHeaders) {
         .setIssuedAt()
         .setExpirationTime('24h')
         .sign(secret);
+
+    await logAuditEvent(env, username, 'LOGIN', null, { username });
 
     return new Response(JSON.stringify({ success: true, token, username: admin.username }), {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' }
@@ -408,7 +424,7 @@ async function handleGetFile(fileId, request, env, corsHeaders) {
         headers: {
             ...corsHeaders,
             'Content-Type': file.file_type,
-            'Content-Disposition': `attachment; filename="${safeFilename}"`
+            'Content-Disposition': `inline; filename="${safeFilename}"`
         }
     });
 }
@@ -470,6 +486,8 @@ async function handleMarkCompleted(request, env, corsHeaders) {
             `UPDATE applications SET controller_status = 'APPROVED', status = 'COMPLETED', updated_at = CURRENT_TIMESTAMP WHERE id = ?`
         ).bind(applicationId).run();
 
+        await logAuditEvent(env, admin.username, 'COMPLETED', applicationId);
+
         console.log(`Application ${applicationId} marked as completed by admin`);
 
         return new Response(JSON.stringify({ success: true, message: 'Application marked as completed' }), {
@@ -503,6 +521,8 @@ async function handleResolveHold(request, env, corsHeaders) {
         await env.DB.prepare(
             `UPDATE applications SET status = 'APPROVED', director_status = 'RESOLVED', updated_at = CURRENT_TIMESTAMP WHERE id = ?`
         ).bind(applicationId).run();
+
+        await logAuditEvent(env, admin.username, 'HOLD_RESOLVED', applicationId);
 
         console.log(`Application ${applicationId} hold resolved by admin ${admin.username}`);
         await sendStudentResolvedEmail(env, application.id, application.form_type, application.applicant_name, application.student_email, application.campus);
@@ -675,6 +695,8 @@ async function handleNotifyDispatched(request, env, corsHeaders) {
             `UPDATE applications SET status = 'DISPATCHED', updated_at = CURRENT_TIMESTAMP WHERE id = ?`
         ).bind(applicationId).run();
 
+        await logAuditEvent(env, admin.username, 'DISPATCHED', applicationId, { trackingNumber: trackingNumber || null });
+
         console.log(`Application ${applicationId} marked as DISPATCHED by admin`);
 
         return new Response(JSON.stringify({ success: true, message: 'Student notified and application marked as dispatched' }), {
@@ -746,6 +768,8 @@ async function handleUploadResponse(request, env, corsHeaders) {
             admin.username
         ).run();
 
+        await logAuditEvent(env, admin.username, 'RESPONSE_UPLOADED', applicationId, { fileName: file.name });
+
         console.log(`Response document uploaded: ${file.name} for app ${applicationId} by admin ${admin.username}`);
 
         return new Response(JSON.stringify({ success: true, message: 'Response document uploaded successfully' }), {
@@ -814,6 +838,8 @@ async function handleDeleteApplication(id, request, env, corsHeaders) {
         // Delete the application record
         await env.DB.prepare('DELETE FROM applications WHERE id = ?').bind(id).run();
 
+        await logAuditEvent(env, admin.username, 'DELETED', id, { form_type: application.form_type });
+
         console.log(`Application ${id} deleted by admin ${admin.username}`);
 
         return new Response(JSON.stringify({ success: true, message: `Application ${id} deleted successfully` }), {
@@ -859,7 +885,32 @@ async function handleToggleFormSetting(request, env, corsHeaders) {
     await env.DB.prepare(
         'UPDATE form_settings SET is_active = ?, updated_at = CURRENT_TIMESTAMP WHERE form_id = ?'
     ).bind(isActive ? 1 : 0, formId).run();
+    await logAuditEvent(env, admin.username, 'FORM_TOGGLED', null, { formId, isActive });
     return new Response(JSON.stringify({ success: true, formId, isActive }), {
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+    });
+}
+
+async function handleGetAuditLog(request, env, corsHeaders) {
+    const admin = await verifyAdminToken(request, env);
+    if (!admin) {
+        return new Response(JSON.stringify({ error: 'Unauthorized' }), {
+            status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+        });
+    }
+    const url = new URL(request.url);
+    const actionFilter = url.searchParams.get('action') || null;
+    let query = `SELECT id, created_at, admin_username, action, application_id, details FROM audit_log`;
+    const bindings = [];
+    if (actionFilter) {
+        query += ` WHERE action = ?`;
+        bindings.push(actionFilter);
+    }
+    query += ` ORDER BY id DESC LIMIT 100`;
+    const result = bindings.length > 0
+        ? await env.DB.prepare(query).bind(...bindings).all()
+        : await env.DB.prepare(query).all();
+    return new Response(JSON.stringify(result.results), {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' }
     });
 }
@@ -2508,6 +2559,8 @@ async function handleApproval(url, env, corsHeaders) {
 
             console.log(`Update result:`, result);
         }
+
+        await logAuditEvent(env, role, statusValue === 'APPROVED' ? 'APPROVED' : 'REJECTED', id, { role });
 
         // Verify the update
         const verification = await env.DB.prepare(
