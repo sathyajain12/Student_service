@@ -1195,7 +1195,7 @@ async function sendAdminNotification(env, appId, formType, applicantName, email,
 function getDirectorEmail(campus) {
     const map = {
         'Prashanti Nilayam Campus': 'controller@sssihl.edu.in',
-        'Anantapur Campus': 'results@sssihl.edu.in',
+        'Anantapur Campus': 'dycontroller@sssihl.edu.in',
         'Brindavan Campus': 'sathyajain9@gmail.com',
         'Nandigiri Campus': 'sathyajain99@outlook.com'
     };
@@ -1269,7 +1269,7 @@ async function sendDirectorNotification(env, request, appId, formType, applicant
         const emailBody = isNameChange
             ? renderEmailTemplate({
                 title: 'For Your Information',
-                greeting: 'Dear Madam / Sir,<br><br>Sairam!<br><br>Greetings from the Examinations Section, SSSIHL.',
+                greeting: `${campus === 'Anantapur Campus' ? 'Dear Madam,' : 'Dear Sir,'}<br><br>Sairam!<br><br>Greetings from the Examinations Section, SSSIHL.`,
                 content: `This is to bring to your notice that<strong>${escapeHtml(applicantName)}</strong> has submitted an application for registration of name change in the Institute records. This is for your kind information.<br><br>If you are in agreement with the above, kindly click the <strong>Proceed</strong> button below so that the Examination Section may process the application. Alternatively, if you have any concerns, you may record your comments by clicking the <strong>Submit Comments</strong> button.`,
                 details: [
                     { label: 'Form Type', value: escapeHtml(formType) },
@@ -1299,7 +1299,7 @@ async function sendDirectorNotification(env, request, appId, formType, applicant
             : (isSupplementary || isRepeatPaper)
                 ? renderEmailTemplate({
                     title: 'For Your Kind Attention',
-                    greeting: 'Dear Madam / Sir,<br><br>Sairam!<br><br>Greetings from the Examinations Section, SSSIHL.',
+                    greeting: `${campus === 'Anantapur Campus' ? 'Dear Madam,' : 'Dear Sir,'}<br><br>Sairam!<br><br>Greetings from the Examinations Section, SSSIHL.`,
                     content: `This is to bring to your kind notice that <strong>${escapeHtml(applicantName)}</strong> has submitted an <strong>${escapeHtml(formType)}</strong>. Kindly verify whether the applicant fulfils the attendance requirement before proceeding.`,
                     details: [
                         { label: 'Form Type', value: escapeHtml(formType) },
@@ -1331,7 +1331,7 @@ async function sendDirectorNotification(env, request, appId, formType, applicant
                 })
                 : renderEmailTemplate({
                     title: 'Clearance Required',
-                    greeting: 'Dear Madam / Sir,<br><br>Sairam!<br><br>Greetings from the Examinations Section, SSSIHL.',
+                    greeting: `${campus === 'Anantapur Campus' ? 'Dear Madam,' : 'Dear Sir,'}<br><br>Sairam!<br><br>Greetings from the Examinations Section, SSSIHL.`,
                     content: `An <strong>${escapeHtml(formType)}</strong> has been submitted and requires your clearance for further processing.`,
                     details: [
                         { label: 'Form Type', value: escapeHtml(formType) },
@@ -1679,7 +1679,7 @@ async function sendDirectorResolvedEmail(env, appId, formType, applicantName, ca
         const resolvedOn = new Date().toLocaleString('en-IN', { dateStyle: 'long', timeStyle: 'short', timeZone: 'Asia/Kolkata' });
         const htmlBody = renderEmailTemplate({
             title: 'Application Hold Resolved',
-            greeting: 'Dear Madam / Sir,<br><br>Sairam!<br><br>Greetings from the Examinations Section, SSSIHL.',
+            greeting: `${campus === 'Anantapur Campus' ? 'Dear Madam,' : 'Dear Sir,'}<br><br>Sairam!<br><br>Greetings from the Examinations Section, SSSIHL.`,
             content: `This is to inform you that the hold you placed on the application of <strong>${escapeHtml(applicantName)}</strong> has been reviewed and resolved by the Examinations Section. The application is now under process.`,
             details: [
                 { label: 'Application ID', value: escapeHtml(appId) },
