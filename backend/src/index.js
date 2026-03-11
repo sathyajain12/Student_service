@@ -1047,9 +1047,11 @@ function renderEmailTemplate({ title, greeting, content, details = [], actionBut
     `).join('');
 
     const buttons = actionButtons.map(btn => `
-        <td style="padding: 0 10px 0 0;">
-            <a href="${btn.link}" style="display: inline-block; background-color: ${btn.color || '#3b82f6'}; color: #ffffff; text-decoration: none; padding: 12px 28px; border-radius: 9999px; font-weight: 600; font-size: 14px; box-shadow: 0 4px 6px -1px rgba(59, 130, 246, 0.2); transition: all 0.2s ease;">${btn.label}</a>
-        </td>
+        <tr>
+            <td style="padding: 0 0 10px 0; text-align: center;">
+                <a href="${btn.link}" style="display: inline-block; background-color: ${btn.color || '#3b82f6'}; color: #ffffff; text-decoration: none; padding: 12px 32px; border-radius: 9999px; font-weight: 600; font-size: 14px; box-shadow: 0 4px 6px -1px rgba(59, 130, 246, 0.2);">${btn.label}</a>
+            </td>
+        </tr>
     `).join('');
 
     return `
@@ -1130,9 +1132,7 @@ function renderEmailTemplate({ title, greeting, content, details = [], actionBut
                                 <tr>
                                     <td align="center">
                                         <table cellpadding="0" cellspacing="0">
-                                            <tr>
                                                 ${buttons}
-                                            </tr>
                                         </table>
                                     </td>
                                 </tr>
@@ -1317,15 +1317,15 @@ async function sendDirectorNotification(env, request, appId, formType, applicant
                     ],
                     importantNote: `
                         <p style="margin: 0; font-weight: 700;">📋 Attendance Verification Required</p>
-                        <p style="margin: 8px 0 0 0;">Kindly verify whether <strong>${escapeHtml(applicantName)}</strong> fulfils the required attendance criteria.</p>
-                        <p style="margin: 8px 0 0 0;">
-                            ☐ <strong>If the student meets the attendance requirement</strong>, please click <strong>Yes, Attendance Fulfilled — Proceed</strong> to forward the application to the Examination Section.<br><br>
-                            ☐ <strong>If the student does not meet the attendance requirement</strong>, please click <strong>No, Insufficient Attendance — Send Back</strong>. The student will be notified that they are not eligible.
-                        </p>
+                        <p style="margin: 8px 0 0 0;">Kindly verify whether <strong>${escapeHtml(applicantName)}</strong> fulfils the required attendance criteria, and take action accordingly:</p>
+                        <ul style="margin: 8px 0 0 0; padding-left: 20px; line-height: 1.8;">
+                            <li><strong>If attendance is fulfilled</strong> — click <strong>"Attendance Met — Proceed"</strong> to forward the application to the Examination Section.</li>
+                            <li><strong>If attendance is not fulfilled</strong> — click <strong>"Attendance Not Met"</strong>. The student will be notified of their ineligibility.</li>
+                        </ul>
                     `,
                     actionButtons: [
-                        { label: '✓ Yes, Attendance Fulfilled — Proceed', link: `${url.origin}/approve?id=${appId}&role=Director&action=Approve`, color: '#10b981' },
-                        { label: '✗ No, Insufficient Attendance — Send Back', link: `${url.origin}/approve?id=${appId}&role=Director&action=Reject`, color: '#ef4444' },
+                        { label: '✓ Attendance Met — Proceed', link: `${url.origin}/approve?id=${appId}&role=Director&action=Approve`, color: '#10b981' },
+                        { label: '✗ Attendance Not Met', link: `${url.origin}/approve?id=${appId}&role=Director&action=Reject`, color: '#ef4444' },
                         { label: '✎ Submit Comments', link: `${url.origin}/director-comment?id=${appId}`, color: '#f59e0b' }
                     ]
                 })
