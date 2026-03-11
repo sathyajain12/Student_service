@@ -746,7 +746,7 @@ export default function FormBuilder({ config, onSubmit, onCancel, onTrackStatus,
                                                                     onChange={(e) => handlePaperTableChange(field.name, rowIndex, 'paperCode', e.target.value)}
                                                                     className="form-input"
                                                                     style={{ width: '100%', padding: '10px 12px' }}
-                                                                    placeholder="e.g., UPOL-201 (capitals only, no spaces)"
+                                                                    placeholder="e.g., UPOL-201"
                                                                     required={field.required && rowIndex === 0}
                                                                 />
                                                             </td>
