@@ -69,7 +69,7 @@ export default function StatusTracker({ onBack }) {
     const downloadResponseDocument = async (fileId, fileName, applicationId) => {
         try {
             const backendUrl = import.meta.env.VITE_BACKEND_URL || 'http://localhost:8787';
-            const token = localStorage.getItem(`access_token_${applicationId}`);
+            const token = localStorage.getItem(`access_token_${applicationId}`) || application?.access_token;
             const response = await fetch(`${backendUrl}/download/${fileId}?appId=${applicationId}${token ? `&token=${token}` : ''}`);
 
             if (!response.ok) {
@@ -125,6 +125,7 @@ export default function StatusTracker({ onBack }) {
     const getStatusLabel = (status, formType = null) => {
         switch (status) {
             case 'PENDING': return 'Pending Review';
+            case 'AWAITING_CAMPUS_EXAM': return 'Awaiting Campus Examination Review';
             case 'AWAITING_DIRECTOR': return 'Awaiting Director Approval';
             case 'DIRECTOR_APPROVED': return 'Director Approved — Submit to COE';
             case 'DIRECTOR_COMMENTED': return 'On Hold';
@@ -145,12 +146,23 @@ export default function StatusTracker({ onBack }) {
         ];
 
         if (app.needs_director_approval) {
+            if (app.needs_campus_exam_review) {
+                const campusExamDone = app.campus_exam_status === 'FORWARDED';
+                stages.push({
+                    id: 'campus-exam',
+                    label: 'Campus Examination Review',
+                    status: campusExamDone ? 'COMPLETED' : app.status === 'AWAITING_CAMPUS_EXAM' ? 'IN_PROGRESS' : 'COMPLETED',
+                    icon: FileText,
+                    date: campusExamDone ? app.updated_at : null,
+                });
+            }
+
             const isOnHold = app.status === 'DIRECTOR_COMMENTED';
             const isResolved = app.director_status === 'RESOLVED';
             stages.push({
                 id: 'director',
                 label: 'Director Approval',
-                status: (app.director_status === 'APPROVED' || isResolved) ? 'COMPLETED' : isOnHold ? 'ON_HOLD' : 'IN_PROGRESS',
+                status: (app.director_status === 'APPROVED' || isResolved) ? 'COMPLETED' : isOnHold ? 'ON_HOLD' : app.status === 'AWAITING_CAMPUS_EXAM' ? 'PENDING' : 'IN_PROGRESS',
                 icon: isOnHold ? PauseCircle : User,
                 date: (app.director_status === 'APPROVED' || isResolved) ? app.updated_at : null,
                 comment: isOnHold ? app.director_comment : null,
@@ -197,6 +209,10 @@ export default function StatusTracker({ onBack }) {
 
         return stages;
     };
+
+    const parseDate = (val) => val ? new Date(String(val).replace(' ', 'T') + (String(val).includes('Z') ? '' : 'Z')) : null;
+    const fmtDate = (val) => { const d = parseDate(val); return d && !isNaN(d) ? d.toLocaleDateString('en-IN', { timeZone: 'Asia/Kolkata' }) : '—'; };
+    const fmtDateTime = (val) => { const d = parseDate(val); return d && !isNaN(d) ? d.toLocaleString('en-IN', { timeZone: 'Asia/Kolkata' }) : '—'; };
 
     return (
         <div className="animate-fade-in">
@@ -258,7 +274,46 @@ export default function StatusTracker({ onBack }) {
                 </div>
             )}
 
-            {application && (
+            {application && application.archived && (
+                <div className="animate-fade-in" style={{ marginBottom: '40px' }}>
+                    <style>{`
+                        @keyframes exclaim-pulse {
+                            0%, 100% { transform: scale(1); box-shadow: 0 0 0 0 rgba(245,158,11,0.4); }
+                            50% { transform: scale(1.12); box-shadow: 0 0 0 14px rgba(245,158,11,0); }
+                        }
+                        .exclaim-icon { animation: exclaim-pulse 1.8s ease-in-out infinite; }
+                    `}</style>
+                    <div style={{
+                        padding: '32px 28px',
+                        borderRadius: '20px',
+                        background: 'rgba(245,158,11,0.06)',
+                        border: '1.5px solid rgba(245,158,11,0.3)',
+                        display: 'flex',
+                        flexDirection: 'column',
+                        alignItems: 'center',
+                        textAlign: 'center',
+                        gap: '16px'
+                    }}>
+                        <div className="exclaim-icon" style={{ width: '64px', height: '64px', borderRadius: '50%', background: 'rgba(245,158,11,0.12)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '30px' }}>
+                            ❗
+                        </div>
+                        <div>
+                            <h3 style={{ fontSize: '1.25rem', fontWeight: '700', color: '#92400e', marginBottom: '8px' }}>Application Not Found</h3>
+                            <p style={{ color: '#a16207', fontSize: '0.9rem', lineHeight: '1.6', maxWidth: '480px' }}>
+                                Application is no longer available for tracking.
+                                Please contact the Examinations Section at{' '}
+                                <a href="mailto:coeoffice@sssihl.edu.in" style={{ color: '#d97706', fontWeight: '600' }}>coeoffice@sssihl.edu.in</a>{' '}
+                                if you have any queries.
+                            </p>
+                        </div>
+                        <div style={{ background: 'rgba(245,158,11,0.08)', border: '1px solid rgba(245,158,11,0.2)', borderRadius: '10px', padding: '10px 20px', fontSize: '0.82rem', color: '#92400e', fontFamily: 'monospace' }}>
+                            Application ID: {application.id}
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {application && !application.archived && (
                 <div className="animate-fade-in">
                     <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '30px', marginBottom: '40px' }}>
                         <div className="glass-card" style={{ padding: '25px', borderLeft: '4px solid var(--accent)' }}>
@@ -272,7 +327,7 @@ export default function StatusTracker({ onBack }) {
                                     <FileText size={16} /> {application.form_type}
                                 </div>
                                 <div style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '0.9rem', color: 'var(--text-muted)' }}>
-                                    <Calendar size={16} /> Submitted on {new Date(application.created_at + 'Z').toLocaleDateString('en-IN', { timeZone: 'Asia/Kolkata' })}
+                                    <Calendar size={16} /> Submitted on {fmtDate(application.created_at)}
                                 </div>
                             </div>
                         </div>
@@ -291,7 +346,7 @@ export default function StatusTracker({ onBack }) {
                                 {getStatusLabel(application.status, application.form_type)}
                             </div>
                             <p style={{ fontSize: '0.85rem', color: 'var(--text-muted)', marginTop: '12px' }}>
-                                Last updated: {new Date(application.updated_at + 'Z').toLocaleString('en-IN', { timeZone: 'Asia/Kolkata' })}
+                                Last updated: {fmtDateTime(application.updated_at)}
                             </p>
                         </div>
                     </div>
@@ -342,7 +397,7 @@ export default function StatusTracker({ onBack }) {
                                                 )}
                                                 {stage.date && (
                                                     <p style={{ fontSize: '0.7rem', color: 'var(--text-muted)', marginTop: '4px' }}>
-                                                        {new Date(stage.date + 'Z').toLocaleDateString('en-IN', { timeZone: 'Asia/Kolkata' })}
+                                                        {fmtDate(stage.date)}
                                                     </p>
                                                 )}
                                             </div>
@@ -703,7 +758,7 @@ export default function StatusTracker({ onBack }) {
                                                     marginTop: '4px'
                                                 }}>
                                                     {(doc.file_size / 1024).toFixed(1)} KB •
-                                                    Uploaded {new Date(doc.created_at + 'Z').toLocaleDateString('en-IN', { timeZone: 'Asia/Kolkata' })}
+                                                    Uploaded {fmtDate(doc.created_at)}
                                                 </p>
                                             </div>
                                         </div>

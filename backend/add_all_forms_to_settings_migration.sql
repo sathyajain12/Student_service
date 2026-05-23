@@ -1,0 +1,11 @@
+-- Adds all application forms to form_settings (active by default).
+-- Re-Totalling already exists; INSERT OR IGNORE keeps it untouched.
+INSERT OR IGNORE INTO form_settings (form_id, is_active) VALUES ('retotaling', 1);
+INSERT OR IGNORE INTO form_settings (form_id, is_active) VALUES ('duplicate-grade-card', 1);
+INSERT OR IGNORE INTO form_settings (form_id, is_active) VALUES ('cgpa-conversion', 1);
+INSERT OR IGNORE INTO form_settings (form_id, is_active) VALUES ('supplementary-exam', 1);
+INSERT OR IGNORE INTO form_settings (form_id, is_active) VALUES ('duplicate-degree', 1);
+INSERT OR IGNORE INTO form_settings (form_id, is_active) VALUES ('name-change', 1);
+INSERT OR IGNORE INTO form_settings (form_id, is_active) VALUES ('repeat-paper', 1);
+INSERT OR IGNORE INTO form_settings (form_id, is_active) VALUES ('on-request-degree', 1);
+INSERT OR IGNORE INTO form_settings (form_id, is_active) VALUES ('migration', 1);

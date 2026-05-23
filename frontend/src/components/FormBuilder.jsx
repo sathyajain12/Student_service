@@ -82,11 +82,20 @@ export default function FormBuilder({ config, onSubmit, onCancel, onTrackStatus,
     const [status, setStatus] = useState(null);
     const fileInputRefs = useRef({});
     const [paperTables, setPaperTables] = useState({});
-
+    const [fieldErrors, setFieldErrors] = useState({});
 
     const handleChange = (e) => {
         const { name, value } = e.target;
         setFormData(prev => ({ ...prev, [name]: value }));
+
+        const field = (config.fields || []).find(f => f.name === name);
+        if (field?.maxError && field.max !== undefined && value !== '') {
+            if (parseFloat(value) > parseFloat(field.max)) {
+                setFieldErrors(prev => ({ ...prev, [name]: field.maxError }));
+            } else {
+                setFieldErrors(prev => { const next = { ...prev }; delete next[name]; return next; });
+            }
+        }
     };
 
     const handleCheckboxChange = (fieldName, option, checked) => {
@@ -198,6 +207,11 @@ export default function FormBuilder({ config, onSubmit, onCancel, onTrackStatus,
         const missing = validateForm();
         if (missing.length > 0) {
             alert(`⚠️ Please fill in all mandatory fields before submitting.\n\nThe following required field${missing.length > 1 ? 's are' : ' is'} empty:\n\n${missing.map(f => `• ${f}`).join('\n')}`);
+            return;
+        }
+
+        if (Object.keys(fieldErrors).length > 0) {
+            alert(`⚠️ Please fix the errors in the form before submitting.`);
             return;
         }
 
@@ -330,18 +344,6 @@ export default function FormBuilder({ config, onSubmit, onCancel, onTrackStatus,
                             </a>
                             <ol style={{ margin: '8px 0 0 0', paddingLeft: '20px', color: 'var(--text-muted)', fontSize: '0.85rem', lineHeight: '1.8' }}>
                                 <li>Click on the link — it will open SBI Collect homepage.</li>
-                                <li>Search <strong>"SSSIHL-ADMN" it will redirect to payment page.</strong></li>
-                                <li>
-                                    {config.paymentApplicationName ? (
-                                        <>
-                                            Select payment Category:&nbsp;
-                                            <strong>{config.paymentApplicationName}</strong>
-                                            {' (from the dropdown).'}
-                                        </>
-                                    ) : (
-                                        'Select payment Category (Application name will be seen in the dropdown).'
-                                    )}
-                                </li>
                                 <li>Complete the payment process and keep your receipt for upload.</li>
                             </ol>
                         </div>
@@ -558,7 +560,7 @@ export default function FormBuilder({ config, onSubmit, onCancel, onTrackStatus,
                                                 color: formData[field.name] ? 'var(--accent)' : 'var(--text-main)',
                                                 lineHeight: '1.6',
                                                 whiteSpace: 'pre-wrap'
-                                            }}>{field.label}</span>
+                                            }}>{field.label}{field.required && <span style={{ color: 'var(--error)' }}> *</span>}</span>
                                         </label>
                                     ) : field.type === 'select' ? (
                                         <div>
@@ -834,18 +836,33 @@ export default function FormBuilder({ config, onSubmit, onCancel, onTrackStatus,
                                             </button>}
                                         </div>
                                     ) : (
-                                        <input
-                                            type={field.type}
-                                            name={field.name}
-                                            required={field.required}
-                                            placeholder={field.placeholder}
-                                            onChange={handleChange}
-                                            className="form-input"
-                                            style={{ width: '100%' }}
-                                            {...(field.step && { step: field.step })}
-                                            {...(field.min && { min: field.min })}
-                                            {...(field.max && { max: field.max })}
-                                        />
+                                        <>
+                                            <input
+                                                type={field.type}
+                                                name={field.name}
+                                                required={field.required}
+                                                placeholder={field.placeholder}
+                                                onChange={handleChange}
+                                                onInput={field.max !== undefined ? (e) => {
+                                                    if (e.target.value !== '' && parseFloat(e.target.value) > parseFloat(field.max)) {
+                                                        e.target.value = field.max;
+                                                        setFormData(prev => ({ ...prev, [field.name]: field.max }));
+                                                        setFieldErrors(prev => { const next = { ...prev }; delete next[field.name]; return next; });
+                                                    }
+                                                } : undefined}
+                                                className="form-input"
+                                                style={{ width: '100%', ...(fieldErrors[field.name] && { borderColor: '#ef4444' }) }}
+                                                {...(field.step && { step: field.step })}
+                                                {...(field.min && { min: field.min })}
+                                                {...(field.max && { max: field.max })}
+                                            />
+                                            {fieldErrors[field.name] && (
+                                                <p style={{ margin: '6px 0 0', fontSize: '0.8rem', color: '#ef4444', display: 'flex', alignItems: 'flex-start', gap: '4px' }}>
+                                                    <AlertCircle size={13} style={{ flexShrink: 0, marginTop: '1px' }} />
+                                                    {fieldErrors[field.name]}
+                                                </p>
+                                            )}
+                                        </>
                                     )}
                                 </div>
                             </>

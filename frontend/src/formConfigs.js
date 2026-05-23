@@ -110,7 +110,7 @@ export const FORM_CONFIGS = {
         ],
         titleLink: {
             text: 'Please click here to make the payment of ₹500 Duplicate Grade Card using SBI Collect',
-            url: 'https://www.onlinesbi.sbi/sbicollect/icollecthome.htm?corpID=350506&categoryName=SSSIHL%20Exams%20App%20Duplicate%20Grade%20Card'
+            url: 'https://onlinesbi.sbi.bank.in/sbicollect/icollecthome.htm?corpID=350506&categoryName=SSSIHL%20Exams%20App%20Duplicate%20Grade%20Card'
         },
         fields: [
             { name: 'applicantName', label: 'Candidate Name', type: 'text', required: true },
@@ -143,7 +143,7 @@ export const FORM_CONFIGS = {
     'cgpa-conversion': {
         title: 'Application for CGPA to Percentage Conversion',
         instructions: [
-            
+            'Applicable only for students who have completed their Programme in March 2009 or earlier.',
             {
                 type: 'deliveryOptions',
                 certificateName: 'CGPA Conversion Statement',
@@ -186,7 +186,8 @@ export const FORM_CONFIGS = {
             placeholder: 'Enter your CGPA',
             step: '0.01',
             min: '0',
-            max: '10'
+            max: '5',
+            maxError: 'Applicable only for students who have completed their Programme in March 2009 or earlier.'
         },
         { name: 'mobile', label: 'Mobile Number', type: 'number', required: true },
         { name: 'email', label: 'Email Address', type: 'email', required: true },
@@ -283,7 +284,7 @@ export const FORM_CONFIGS = {
         paymentApplicationName: 'SSSIHL Exams App Duplicate Degree Certificate',
         titleLink: {
             text: 'Please click here to make the payment of ₹1000 for each Duplicate Degree Certificate using SBI Collect',
-            url: 'https://www.onlinesbi.sbi/sbicollect/icollecthome.htm?corpID=350506&categoryName=SSSIHL%20Exams%20App%20Duplicate%20Grade%20Cardhttps://onlinesbi.sbi.bank.in/sbicollect/icollecthome.htm'
+            url: 'https://onlinesbi.sbi.bank.in/sbicollect/icollecthome.htm?corpID=350506&categoryName=SSSIHL%20Exams%20App%20Duplicate%20Degree%20Certificate'
         },
         fields: [
             { name: 'applicantName', label: 'Candidate Name', type: 'text', required: true },
@@ -370,7 +371,7 @@ export const FORM_CONFIGS = {
         paymentApplicationName: 'SSSIHL Exams App Change of Name',
         titleLink: {
             text: 'Please click here to make the payment of ₹500 using SBI Collect',
-            url: 'https://www.onlinesbi.sbi/sbicollect/icollecthome.htm?corpID=350506&categoryName=SSSIHL%20Exams%20App%20Change%20of%20Name'
+            url: 'https://onlinesbi.sbi.bank.in/sbicollect/icollecthome.htm?corpID=350506&categoryName=SSSIHL%20Exams%20App%20Change%20of%20Name'
         },
         fields: [
             {
@@ -531,7 +532,7 @@ export const FORM_CONFIGS = {
         paymentApplicationName: 'SSSIHL Exams App Re-Totalling of Marks',
         titleLink: {
             text: 'Please click here to make the payment of ₹100 for Re-Totalling Application using SBI Collect',
-            url: 'https://www.onlinesbi.sbi/sbicollect/icollecthome.htm?corpID=350506&categoryName=SSSIHL%20Exam%20App%20%20Re-Totaling%20of%20Marks'
+            url: 'https://onlinesbi.sbi.bank.in/sbicollect/icollecthome.htm?corpID=350506&categoryName=SSSIHL%20Exam%20App%20%20Re-Totaling%20of%20Marks'
         },
         fields: [...COMMON_ACADEMIC_FIELDS,
 
@@ -603,7 +604,7 @@ export const FORM_CONFIGS = {
     'migration': {
         title: 'Application for Migration Certificate',
         instructions: [
-            'No Fees is charged for issuing of Migration Certificate.',
+            'No fee is charged for issue of Migration Certificate.',
             {
                 type: 'deliveryOptions',
                 digilockerUrl: 'https://accounts.digilocker.gov.in/v3/7b9f84c86732efd21cd8076ff06f3fd60b1fbe146732fa57444b03b35f3740a4--en',

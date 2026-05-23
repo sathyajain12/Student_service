@@ -12,6 +12,9 @@ CREATE TABLE applications (
   status TEXT DEFAULT 'PENDING',
   director_status TEXT DEFAULT 'PENDING',
   controller_status TEXT DEFAULT 'PENDING',
+  programme TEXT,
+  director_comment TEXT,
+  access_token TEXT,
   created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
   updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
 );
@@ -146,6 +149,7 @@ CREATE TABLE form_name_change (
 
 CREATE TABLE form_repeat_paper (
   application_id TEXT PRIMARY KEY REFERENCES applications(id),
+  student_email TEXT,
   Period_of_Study TEXT,
   student_name TEXT,
   reg_no numeric,
@@ -169,6 +173,7 @@ CREATE TABLE form_repeat_paper (
 CREATE TABLE form_retotaling (
   application_id TEXT PRIMARY KEY REFERENCES applications(id),
   exam_type TEXT,
+  period_of_examination TEXT,
   student_name TEXT,
   reg_no numeric,
   Campus TEXT,
@@ -191,7 +196,6 @@ CREATE TABLE form_on_request_degree (
   application_id TEXT PRIMARY KEY REFERENCES applications(id),
   student_name TEXT,
   reg_no numeric,
-  DOB DATETIME,
   Campus TEXT,
   address_line1 TEXT,
   address_line2 TEXT,

@@ -1,5 +1,5 @@
 // Google API functions using OAuth 2.0 with Refresh Token
-// For sending emails from sathyajain9@gmail.com
+// For sending emails from coeoffice@sssihl.edu.in
 
 export async function getGoogleAuth(env) {
   console.log('Getting Google Auth with OAuth...');
@@ -28,6 +28,68 @@ export async function getGoogleAuth(env) {
 
   console.log('OAuth successful, got access token');
   return data.access_token;
+}
+
+export async function createMonthlyBackupSheet(env, data) {
+  const accessToken = await getGoogleAuth(env);
+  const date = new Date();
+  const monthNames = ['January','February','March','April','May','June','July','August','September','October','November','December'];
+  const title = `Examination services backup data ${date.getUTCDate()} ${monthNames[date.getUTCMonth()]} ${date.getUTCFullYear()}`;
+
+  const tableNames = Object.keys(data);
+
+  // Create spreadsheet with one sheet per table
+  const createRes = await fetch('https://sheets.googleapis.com/v4/spreadsheets', {
+    method: 'POST',
+    headers: { 'Authorization': `Bearer ${accessToken}`, 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      properties: { title },
+      sheets: tableNames.map(name => ({ properties: { title: name } }))
+    })
+  });
+  const spreadsheet = await createRes.json();
+  if (!createRes.ok) throw new Error(`Sheets create failed: ${JSON.stringify(spreadsheet)}`);
+
+  const spreadsheetId = spreadsheet.spreadsheetId;
+
+  // Write data to each sheet
+  const valueData = tableNames.map(tableName => {
+    const rows = data[tableName];
+    if (!rows || rows.length === 0) return { range: `${tableName}!A1`, values: [['(no data)']] };
+    const headers = Object.keys(rows[0]);
+    const values = [headers, ...rows.map(row => headers.map(h => {
+      const val = row[h];
+      return val === null || val === undefined ? '' : String(val);
+    }))];
+    return { range: `${tableName}!A1`, values };
+  });
+
+  const updateRes = await fetch(`https://sheets.googleapis.com/v4/spreadsheets/${spreadsheetId}/values:batchUpdate`, {
+    method: 'POST',
+    headers: { 'Authorization': `Bearer ${accessToken}`, 'Content-Type': 'application/json' },
+    body: JSON.stringify({ valueInputOption: 'RAW', data: valueData })
+  });
+  if (!updateRes.ok) {
+    const err = await updateRes.json();
+    throw new Error(`Sheets write failed: ${JSON.stringify(err)}`);
+  }
+
+  // Move spreadsheet into the backup folder
+  if (env.GOOGLE_DRIVE_BACKUP_FOLDER_ID) {
+    const moveRes = await fetch(`https://www.googleapis.com/drive/v3/files/${spreadsheetId}?addParents=${env.GOOGLE_DRIVE_BACKUP_FOLDER_ID}&removeParents=root&fields=id,parents`, {
+      method: 'PATCH',
+      headers: { 'Authorization': `Bearer ${accessToken}` }
+    });
+    const moveData = await moveRes.json();
+    if (!moveRes.ok) {
+      console.error('Drive move failed:', JSON.stringify(moveData));
+      throw new Error(`Drive move failed: ${JSON.stringify(moveData)}`);
+    }
+    console.log('Drive move result:', JSON.stringify(moveData));
+  }
+
+  console.log(`Monthly backup created: ${title} (${spreadsheetId})`);
+  return spreadsheetId;
 }
 
 export async function sendEmail(accessToken, { to, subject, htmlBody, attachments = [] }) {

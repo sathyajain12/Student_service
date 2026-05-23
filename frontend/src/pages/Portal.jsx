@@ -27,16 +27,12 @@ const FORMS = [
 ];
 
 export default function Portal({ onSelectForm, onTrackStatus }) {
-  const [retotalingActive, setRetotalingActive] = React.useState(true);
+  const [formSettings, setFormSettings] = React.useState({});
 
   React.useEffect(() => {
     fetch(`${import.meta.env.VITE_BACKEND_URL || 'http://localhost:8787'}/form-settings`)
       .then(r => r.json())
-      .then(settings => {
-        if (typeof settings['retotaling'] === 'boolean') {
-          setRetotalingActive(settings['retotaling']);
-        }
-      })
+      .then(settings => setFormSettings(settings))
       .catch(() => {}); // on error, keep showing (fail-open)
   }, []);
 
@@ -102,7 +98,7 @@ export default function Portal({ onSelectForm, onTrackStatus }) {
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(340px, 1fr))', gap: '30px' }}>
         {FORMS.map((form) => {
           const Icon = form.Icon;
-          const isDisabled = form.id === 'retotaling' && !retotalingActive;
+          const isDisabled = formSettings[form.id] === false;
           return (
             <div
               key={form.id}

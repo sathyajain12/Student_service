@@ -1,0 +1,20 @@
+CREATE TABLE IF NOT EXISTS archived_applications (
+  id TEXT PRIMARY KEY,
+  student_email TEXT,
+  form_type TEXT,
+  applicant_name TEXT,
+  reg_no TEXT,
+  abc_apaar_id TEXT,
+  campus TEXT,
+  status TEXT,
+  director_status TEXT,
+  controller_status TEXT,
+  programme TEXT,
+  director_comment TEXT,
+  access_token TEXT,
+  created_at DATETIME,
+  updated_at DATETIME,
+  archived_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+  archived_by TEXT,
+  form_data_json TEXT
+);

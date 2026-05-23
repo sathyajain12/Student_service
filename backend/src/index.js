@@ -1,4 +1,4 @@
-import { getGoogleAuth, sendEmail } from './google-api';
+import { getGoogleAuth, sendEmail, createMonthlyBackupSheet } from './google-api';
 import { SignJWT, jwtVerify } from 'jose';
 
 const CAMPUS_CONTACTS = {
@@ -100,7 +100,26 @@ async function hmacVerify(secret, message, sigHex) {
     return expected === sigHex;
 }
 
+async function performMonthlyBackup(env) {
+    const tables = [
+        'applications', 'form_duplicate_grade_card', 'form_cgpa_conversion',
+        'form_supplementary_exam', 'form_duplicate_degree', 'form_name_change',
+        'form_repeat_paper', 'form_retotaling', 'form_on_request_degree',
+        'form_migration_certificate', 'admin_users', 'audit_log', 'form_settings'
+    ];
+    const data = {};
+    for (const table of tables) {
+        const result = await env.DB.prepare(`SELECT * FROM ${table}`).all();
+        data[table] = result.results || [];
+    }
+    await createMonthlyBackupSheet(env, data);
+    console.log('Monthly backup completed successfully');
+}
+
 export default {
+    async scheduled(_event, env, ctx) {
+        ctx.waitUntil(performMonthlyBackup(env));
+    },
     async fetch(request, env) {
         const url = new URL(request.url);
         const corsHeaders = getCorsHeaders(env);
@@ -136,8 +155,28 @@ export default {
                     return await handleDirectorCommentPage(url, env, corsHeaders);
                 }
 
+                if (url.pathname === '/campus-exam-review' && request.method === 'GET') {
+                    return await handleCampusExamReviewPage(url, env, corsHeaders);
+                }
+
+                if (url.pathname === '/campus-exam-action' && request.method === 'POST') {
+                    return await handleCampusExamAction(request, env, corsHeaders);
+                }
+
+                if (url.pathname === '/campus-exam-upload-letter' && request.method === 'POST') {
+                    return await handleCampusExamUploadLetter(request, env, corsHeaders);
+                }
+
                 if (url.pathname === '/director-comment' && request.method === 'POST') {
                     return await handleDirectorCommentSubmit(request, env, corsHeaders);
+                }
+
+                if (url.pathname === '/director-upload-letter' && request.method === 'POST') {
+                    return await handleDirectorUploadLetter(request, env, corsHeaders);
+                }
+
+                if (url.pathname === '/director-action' && request.method === 'POST') {
+                    return await handleDirectorAction(request, env, corsHeaders);
                 }
 
                 if (url.pathname === '/submit-to-coe' && request.method === 'POST') {
@@ -203,13 +242,39 @@ export default {
                     return await handleUploadResponse(request, env, corsHeaders);
                 }
 
+                if (url.pathname === '/admin/test-director-email' && request.method === 'POST') {
+                    return await handleTestDirectorEmail(request, env, corsHeaders);
+                }
+
                 if (url.pathname.startsWith('/admin/application/') && request.method === 'DELETE') {
                     const id = url.pathname.split('/').pop();
-                    return await handleDeleteApplication(id, request, env, corsHeaders);
+                    return await handleArchiveApplication(id, request, env, corsHeaders);
+                }
+
+                if (url.pathname.startsWith('/admin/export-application/') && request.method === 'GET') {
+                    const id = url.pathname.split('/').pop();
+                    return await handleExportApplication(id, request, env, corsHeaders);
+                }
+
+                if (url.pathname === '/admin/export-form-type' && request.method === 'GET') {
+                    return await handleExportFormType(url, request, env, corsHeaders);
                 }
 
                 if (url.pathname === '/admin/audit-log' && request.method === 'GET') {
                     return await handleGetAuditLog(request, env, corsHeaders);
+                }
+
+                if (url.pathname === '/admin/create-user' && request.method === 'POST') {
+                    return await handleCreateAdminUser(request, env, corsHeaders);
+                }
+
+                if (url.pathname === '/admin/users' && request.method === 'GET') {
+                    return await handleListAdminUsers(request, env, corsHeaders);
+                }
+
+                if (url.pathname.startsWith('/admin/users/') && request.method === 'DELETE') {
+                    const userId = url.pathname.split('/').pop();
+                    return await handleDeleteAdminUser(userId, request, env, corsHeaders);
                 }
 
                 return new Response('Not Found', { status: 404, headers: corsHeaders });
@@ -289,8 +354,9 @@ async function handleAdminLogin(request, env, corsHeaders) {
     }
 
     // Issue signed JWT (24h expiry)
+    const role = admin.role || 'admin';
     const secret = new TextEncoder().encode(env.JWT_SECRET);
-    const token = await new SignJWT({ username })
+    const token = await new SignJWT({ username, role })
         .setProtectedHeader({ alg: 'HS256' })
         .setIssuedAt()
         .setExpirationTime('24h')
@@ -298,7 +364,7 @@ async function handleAdminLogin(request, env, corsHeaders) {
 
     await logAuditEvent(env, username, 'LOGIN', null, { username });
 
-    return new Response(JSON.stringify({ success: true, token, username: admin.username }), {
+    return new Response(JSON.stringify({ success: true, token, username: admin.username, role }), {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' }
     });
 }
@@ -312,10 +378,24 @@ async function handleGetApplications(request, env, corsHeaders) {
         });
     }
 
+    const role = admin.role || 'admin';
+    const phd_forms = `('Application for On-Request Degree Certificate', 'Application for Migration Certificate')`;
+
+    let roleFilter = '';
+    if (role === 'ug') {
+        roleFilter = `WHERE programme LIKE 'Bachelor%' AND programme != 'Bachelor of Education'
+                      AND form_type NOT IN ${phd_forms}`;
+    } else if (role === 'pg') {
+        roleFilter = `WHERE (programme LIKE 'Master%' OR programme = 'Bachelor of Education')
+                      AND form_type NOT IN ${phd_forms}`;
+    } else if (role === 'phd') {
+        roleFilter = `WHERE form_type IN ${phd_forms}`;
+    }
+
     const applications = await env.DB.prepare(
-        `SELECT id, student_email, form_type, applicant_name, reg_no, campus, status, 
-                director_status, controller_status, created_at, updated_at 
-         FROM applications ORDER BY created_at DESC`
+        `SELECT id, student_email, form_type, applicant_name, reg_no, campus, programme, status,
+                director_status, controller_status, created_at, updated_at
+         FROM applications ${roleFilter} ORDER BY created_at DESC`
     ).all();
 
     return new Response(JSON.stringify(applications.results), {
@@ -641,10 +721,10 @@ async function handleNotifyDispatched(request, env, corsHeaders) {
             'Application for Supplementary Examinations Registration': 'form_supplementary_exam',
             'Application for Repeating Examinations Registration (CIE and ESE)': 'form_repeat_paper',
             'Application for Duplicate Degree Certificate': 'form_duplicate_degree',
-            'Application for CGPA to Percentage Conversion Certificate': 'form_cgpa_conversion',
-            'Application for Re-totaling of Marks': 'form_retotaling',
+            'Application for CGPA to Percentage Conversion': 'form_cgpa_conversion',
+            'Application for Re-Totalling of Marks': 'form_retotaling',
             'Application for On-Request Degree Certificate': 'form_on_request_degree',
-            'Application for Registration of Student Name change': 'form_name_change',
+            'Application for Registration of Student Name change in the Institute Records': 'form_name_change',
             'Application for Migration Certificate': 'form_migration_certificate',
         };
         let programme = null;
@@ -681,7 +761,7 @@ async function handleNotifyDispatched(request, env, corsHeaders) {
         const isScannedCopyDelivery = deliveryPreference === 'Scanned Copy' || deliveryPreference === 'Both Scanned Copy and DigiLocker';
         let downloadLinks = [];
         if (isScannedCopyDelivery && (responseDocsResult.results || []).length > 0) {
-            downloadLinks = [{ label: 'Track Application', url: `https://student-service.pages.dev/#track=${applicationId}` }];
+            downloadLinks = [{ label: 'Track Application', url: `https://sssihl-student-service.pages.dev/#track=${applicationId}` }];
         } else {
             downloadLinks = (responseDocsResult.results || []).map(doc => ({
                 label: `Download ${doc.file_name}`,
@@ -790,8 +870,111 @@ async function handleUploadResponse(request, env, corsHeaders) {
     }
 }
 
-// Handler for deleting an application and all related data
-async function handleDeleteApplication(id, request, env, corsHeaders) {
+async function handleExportApplication(id, request, env, corsHeaders) {
+    const admin = await verifyAdminToken(request, env);
+    if (!admin) return new Response(JSON.stringify({ error: 'Unauthorized' }), { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+
+    const application = await env.DB.prepare(
+        `SELECT id, student_email, form_type, applicant_name, reg_no, abc_apaar_id, campus, status,
+                director_status, controller_status, programme, director_comment, created_at, updated_at
+         FROM applications WHERE id = ?`
+    ).bind(id).first();
+
+    if (!application) return new Response(JSON.stringify({ error: 'Application not found' }), { status: 404, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+
+    const formTableMap = {
+        'Application for Duplicate Grade Card': 'form_duplicate_grade_card',
+        'Application for CGPA to Percentage Conversion': 'form_cgpa_conversion',
+        'Application for Supplementary Examinations Registration': 'form_supplementary_exam',
+        'Application for Duplicate Degree Certificate': 'form_duplicate_degree',
+        'Application for Registration of Student Name change in the Institute Records': 'form_name_change',
+        'Application for Repeating Examinations Registration (CIE and ESE)': 'form_repeat_paper',
+        'Application for Re-Totalling of Marks': 'form_retotaling',
+        'Application for On-Request Degree Certificate': 'form_on_request_degree',
+        'Application for Migration Certificate': 'form_migration_certificate',
+    };
+
+    let formData = null;
+    const formTable = formTableMap[application.form_type];
+    if (formTable) {
+        try {
+            const raw = await env.DB.prepare(`SELECT * FROM ${formTable} WHERE application_id = ?`).bind(id).first();
+            if (raw) {
+                // Strip large/binary fields
+                formData = Object.fromEntries(Object.entries(raw).filter(([k]) => !k.endsWith('_file') && k !== 'application_id'));
+            }
+        } catch (e) { /* non-critical */ }
+    }
+
+    return new Response(JSON.stringify({ application, formData: formData || {} }), {
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+    });
+}
+
+async function handleExportFormType(url, request, env, corsHeaders) {
+    const admin = await verifyAdminToken(request, env);
+    if (!admin) return new Response(JSON.stringify({ error: 'Unauthorized' }), { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+
+    const formType = url.searchParams.get('formType');
+    if (!formType) return new Response(JSON.stringify({ error: 'formType is required' }), { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+
+    const formTableMap = {
+        'Application for Duplicate Grade Card': 'form_duplicate_grade_card',
+        'Application for CGPA to Percentage Conversion': 'form_cgpa_conversion',
+        'Application for Supplementary Examinations Registration': 'form_supplementary_exam',
+        'Application for Duplicate Degree Certificate': 'form_duplicate_degree',
+        'Application for Registration of Student Name change in the Institute Records': 'form_name_change',
+        'Application for Repeating Examinations Registration (CIE and ESE)': 'form_repeat_paper',
+        'Application for Re-Totalling of Marks': 'form_retotaling',
+        'Application for On-Request Degree Certificate': 'form_on_request_degree',
+        'Application for Migration Certificate': 'form_migration_certificate',
+    };
+
+    const formTable = formTableMap[formType];
+
+    // Fetch all applications of this type
+    const appsResult = await env.DB.prepare(
+        `SELECT id, student_email, form_type, applicant_name, reg_no, abc_apaar_id, campus, status,
+                director_status, controller_status, programme, director_comment, created_at, updated_at
+         FROM applications WHERE form_type = ?`
+    ).bind(formType).all();
+
+    const apps = appsResult.results || [];
+    if (apps.length === 0) {
+        return new Response(JSON.stringify({ rows: [] }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+    }
+
+    // Fetch form-specific rows for all these application IDs
+    let formRows = {};
+    if (formTable) {
+        try {
+            const ids = apps.map(a => a.id);
+            // D1 doesn't support large IN lists well — fetch individually if needed, else batch
+            const placeholders = ids.map(() => '?').join(',');
+            const formResult = await env.DB.prepare(
+                `SELECT * FROM ${formTable} WHERE application_id IN (${placeholders})`
+            ).bind(...ids).all();
+            for (const row of (formResult.results || [])) {
+                formRows[row.application_id] = row;
+            }
+        } catch (e) { /* non-critical */ }
+    }
+
+    // Merge each application with its form data, strip binary fields
+    const rows = apps.map(app => {
+        const fd = formRows[app.id] || {};
+        const merged = { ...app, ...fd };
+        delete merged.application_id; // redundant (same as id)
+        // Strip file blob columns (raw filenames stored in old schema — keep them; strip only raw base64)
+        delete merged.file_data;
+        return merged;
+    });
+
+    return new Response(JSON.stringify({ rows }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+}
+
+// Handler for archiving an application — moves data to archived_applications, keeps file_blobs
+async function handleArchiveApplication(id, request, env, corsHeaders) {
     const admin = await verifyAdminToken(request, env);
     if (!admin) {
         return new Response(JSON.stringify({ error: 'Unauthorized' }), {
@@ -801,9 +984,10 @@ async function handleDeleteApplication(id, request, env, corsHeaders) {
     }
 
     try {
-        // Get the application to find its form_type
         const application = await env.DB.prepare(
-            'SELECT id, form_type FROM applications WHERE id = ?'
+            `SELECT id, student_email, form_type, applicant_name, reg_no, abc_apaar_id, campus, status,
+                    director_status, controller_status, programme, director_comment, access_token, created_at, updated_at
+             FROM applications WHERE id = ?`
         ).bind(id).first();
 
         if (!application) {
@@ -813,10 +997,9 @@ async function handleDeleteApplication(id, request, env, corsHeaders) {
             });
         }
 
-        // Map form_type to table name
         const formTableMap = {
             'Application for Duplicate Grade Card': 'form_duplicate_grade_card',
-            'Application for CGPA to Marks Conversion': 'form_cgpa_conversion',
+            'Application for CGPA to Percentage Conversion': 'form_cgpa_conversion',
             'Application for Supplementary Examinations Registration': 'form_supplementary_exam',
             'Application for Duplicate Degree Certificate': 'form_duplicate_degree',
             'Application for Registration of Student Name change in the Institute Records': 'form_name_change',
@@ -826,27 +1009,48 @@ async function handleDeleteApplication(id, request, env, corsHeaders) {
             'Application for Migration Certificate': 'form_migration_certificate',
         };
 
-        // Delete from form-specific table first (FK constraint)
+        // Fetch and preserve form-specific data as JSON
+        let formDataJson = null;
         const formTable = formTableMap[application.form_type];
         if (formTable) {
-            await env.DB.prepare(`DELETE FROM ${formTable} WHERE Application_id = ?`).bind(id).run();
+            try {
+                const fd = await env.DB.prepare(`SELECT * FROM ${formTable} WHERE application_id = ?`).bind(id).first();
+                if (fd) formDataJson = JSON.stringify(fd);
+            } catch (e) { /* non-critical */ }
         }
 
-        // Delete all file blobs for this application
-        await env.DB.prepare('DELETE FROM file_blobs WHERE application_id = ?').bind(id).run();
+        // Insert into archived_applications
+        await env.DB.prepare(
+            `INSERT INTO archived_applications
+               (id, student_email, form_type, applicant_name, reg_no, abc_apaar_id, campus, status,
+                director_status, controller_status, programme, director_comment, access_token,
+                created_at, updated_at, archived_by, form_data_json)
+             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
+        ).bind(
+            application.id, application.student_email, application.form_type, application.applicant_name,
+            application.reg_no, application.abc_apaar_id, application.campus, application.status,
+            application.director_status, application.controller_status, application.programme,
+            application.director_comment, application.access_token, application.created_at,
+            application.updated_at, admin.username, formDataJson
+        ).run();
 
-        // Delete the application record
+        // Remove from form-specific table
+        if (formTable) {
+            await env.DB.prepare(`DELETE FROM ${formTable} WHERE application_id = ?`).bind(id).run();
+        }
+
+        // Remove from applications (file_blobs rows stay, still linked by application_id for admin reference)
         await env.DB.prepare('DELETE FROM applications WHERE id = ?').bind(id).run();
 
-        await logAuditEvent(env, admin.username, 'DELETED', id, { form_type: application.form_type });
+        await logAuditEvent(env, admin.username, 'ARCHIVED', id, { form_type: application.form_type });
 
-        console.log(`Application ${id} deleted by admin ${admin.username}`);
+        console.log(`Application ${id} archived by admin ${admin.username}`);
 
-        return new Response(JSON.stringify({ success: true, message: `Application ${id} deleted successfully` }), {
+        return new Response(JSON.stringify({ success: true, message: `Application ${id} archived successfully` }), {
             headers: { ...corsHeaders, 'Content-Type': 'application/json' }
         });
     } catch (error) {
-        console.error('Error deleting application:', error);
+        console.error('Error archiving application:', error);
         return new Response(JSON.stringify({ error: error.message }), {
             status: 500,
             headers: { ...corsHeaders, 'Content-Type': 'application/json' }
@@ -865,7 +1069,7 @@ async function handleGetFormSettings(env, corsHeaders) {
         settings[row.form_id] = row.is_active === 1;
     }
     return new Response(JSON.stringify(settings), {
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+        headers: { ...corsHeaders, 'Content-Type': 'application/json', 'Cache-Control': 'no-store' }
     });
 }
 
@@ -911,6 +1115,81 @@ async function handleGetAuditLog(request, env, corsHeaders) {
         ? await env.DB.prepare(query).bind(...bindings).all()
         : await env.DB.prepare(query).all();
     return new Response(JSON.stringify(result.results), {
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+    });
+}
+
+async function handleCreateAdminUser(request, env, corsHeaders) {
+    const admin = await verifyAdminToken(request, env);
+    if (!admin || (admin.role || 'admin') !== 'admin') {
+        return new Response(JSON.stringify({ error: 'Unauthorized' }), {
+            status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+        });
+    }
+    const { username, password, role } = await request.json();
+    if (!username || !password || !role) {
+        return new Response(JSON.stringify({ error: 'username, password, and role are required' }), {
+            status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+        });
+    }
+    const validRoles = ['admin', 'ug', 'pg', 'phd'];
+    if (!validRoles.includes(role)) {
+        return new Response(JSON.stringify({ error: `role must be one of: ${validRoles.join(', ')}` }), {
+            status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+        });
+    }
+    const existing = await env.DB.prepare('SELECT id FROM admin_users WHERE username = ?').bind(username).first();
+    if (existing) {
+        return new Response(JSON.stringify({ error: 'Username already exists' }), {
+            status: 409, headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+        });
+    }
+    const { salt, hash } = await hashPassword(password);
+    await env.DB.prepare(
+        'INSERT INTO admin_users (username, password_hash, salt, email, role) VALUES (?, ?, ?, ?, ?)'
+    ).bind(username, hash, salt, '', role).run();
+    await logAuditEvent(env, admin.username, 'CREATE_USER', null, { created_username: username, role });
+    return new Response(JSON.stringify({ success: true }), {
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+    });
+}
+
+async function handleListAdminUsers(request, env, corsHeaders) {
+    const admin = await verifyAdminToken(request, env);
+    if (!admin || (admin.role || 'admin') !== 'admin') {
+        return new Response(JSON.stringify({ error: 'Unauthorized' }), {
+            status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+        });
+    }
+    const result = await env.DB.prepare(
+        'SELECT id, username, email, role, created_at FROM admin_users ORDER BY created_at ASC'
+    ).all();
+    return new Response(JSON.stringify(result.results), {
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+    });
+}
+
+async function handleDeleteAdminUser(userId, request, env, corsHeaders) {
+    const admin = await verifyAdminToken(request, env);
+    if (!admin || (admin.role || 'admin') !== 'admin') {
+        return new Response(JSON.stringify({ error: 'Unauthorized' }), {
+            status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+        });
+    }
+    const target = await env.DB.prepare('SELECT username FROM admin_users WHERE id = ?').bind(userId).first();
+    if (!target) {
+        return new Response(JSON.stringify({ error: 'User not found' }), {
+            status: 404, headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+        });
+    }
+    if (target.username === admin.username) {
+        return new Response(JSON.stringify({ error: 'Cannot delete your own account' }), {
+            status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+        });
+    }
+    await env.DB.prepare('DELETE FROM admin_users WHERE id = ?').bind(userId).run();
+    await logAuditEvent(env, admin.username, 'DELETE_USER', null, { deleted_username: target.username });
+    return new Response(JSON.stringify({ success: true }), {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' }
     });
 }
@@ -1098,11 +1377,9 @@ function renderEmailTemplate({ title, greeting, content, details = [], actionBut
     `).join('');
 
     const buttons = actionButtons.map(btn => `
-        <tr>
-            <td style="padding: 0 0 10px 0; text-align: center;">
-                <a href="${btn.link}" style="display: inline-block; background-color: ${btn.color || '#3b82f6'}; color: #ffffff; text-decoration: none; padding: 12px 32px; border-radius: 9999px; font-weight: 600; font-size: 14px; box-shadow: 0 4px 6px -1px rgba(59, 130, 246, 0.2);">${btn.label}</a>
-            </td>
-        </tr>
+        <td style="padding: 0 8px 10px 8px; text-align: center;">
+            <a href="${btn.link}" style="display: inline-block; background-color: ${btn.color || '#3b82f6'}; color: #ffffff; text-decoration: none; padding: 12px 32px; border-radius: 9999px; font-weight: 600; font-size: 14px; box-shadow: 0 4px 6px -1px rgba(59, 130, 246, 0.2);">${btn.label}</a>
+        </td>
     `).join('');
 
     return `
@@ -1121,7 +1398,7 @@ function renderEmailTemplate({ title, greeting, content, details = [], actionBut
                     <!-- Header Banner -->
                     <tr>
                         <td align="center" style="padding: 0;">
-                            <img src="https://student-service.pages.dev/Examinations_Service.png" alt="SSSIHL Examinations Service" width="650" style="width: 100%; height: auto; display: block; border-bottom: 1px solid #f1f5f9;">
+                            <img src="https://sssihl-student-service.pages.dev/Examinations_Service.png" alt="SSSIHL Examinations Service" width="650" style="width: 100%; height: auto; display: block; border-bottom: 1px solid #f1f5f9;">
                         </td>
                     </tr>
 
@@ -1183,7 +1460,9 @@ function renderEmailTemplate({ title, greeting, content, details = [], actionBut
                                 <tr>
                                     <td align="center">
                                         <table cellpadding="0" cellspacing="0">
+                                            <tr>
                                                 ${buttons}
+                                            </tr>
                                         </table>
                                     </td>
                                 </tr>
@@ -1214,6 +1493,19 @@ async function sendAdminNotification(env, appId, formType, applicantName, email,
     if (env.GOOGLE_CLIENT_ID && env.GOOGLE_CLIENT_SECRET && env.GOOGLE_REFRESH_TOKEN) {
         try {
             const accessToken = await getGoogleAuth(env);
+
+            let reason = null;
+            if (formType === 'Application for Duplicate Degree Certificate') {
+                try {
+                    const row = await env.DB.prepare(
+                        `SELECT Reason FROM form_duplicate_degree WHERE application_id = ?`
+                    ).bind(appId).first();
+                    reason = row?.Reason || null;
+                } catch (e) {
+                    console.error('Failed to fetch reason for admin notification:', e);
+                }
+            }
+
             const htmlBody = renderEmailTemplate({
                 title: 'New Application Received',
                 greeting: 'Sai Ram!',
@@ -1223,10 +1515,11 @@ async function sendAdminNotification(env, appId, formType, applicantName, email,
                     { label: 'Form Type', value: escapeHtml(formType) },
                     { label: 'Applicant', value: escapeHtml(applicantName) },
                     { label: 'Email', value: escapeHtml(email) },
+                    ...(reason ? [{ label: 'Reason', value: escapeHtml(reason) }] : []),
                     { label: 'Submitted On', value: new Date().toLocaleString() }
                 ],
                 actionButtons: [
-                    { label: 'Login to Admin Portal', link: 'https://student-service.pages.dev/admin' }
+                    { label: 'Login to Admin Portal', link: 'https://sssihl-student-service.pages.dev/admin' }
                 ]
             });
 
@@ -1245,10 +1538,20 @@ async function sendAdminNotification(env, appId, formType, applicantName, email,
 // Director email functions
 function getDirectorEmail(campus) {
     const map = {
-        'Prashanti Nilayam Campus': 'controller@sssihl.edu.in',
-        'Anantapur Campus': 'dycontroller@sssihl.edu.in',
-        'Brindavan Campus': 'sathyajain9@gmail.com',
-        'Nandigiri Campus': 'sathyajain99@outlook.com'
+        'Prashanti Nilayam Campus': 'directorpsn@sssihl.edu.in',
+        'Anantapur Campus': 'directoratp@sssihl.edu.in',
+        'Brindavan Campus': 'directorbrn@sssihl.edu.in',
+        'Nandigiri Campus': 'directorndg@sssihl.edu.in'
+    };
+    return map[campus] || map['Prashanti Nilayam Campus'];
+}
+
+function getCampusExamEmail(campus) {
+    const map = {
+        'Anantapur Campus': 'examination.atp@sssihl.edu.in',
+        'Brindavan Campus': 'examination.brn@sssihl.edu.in',
+        'Nandigiri Campus': 'examination.ndg@sssihl.edu.in',
+        'Prashanti Nilayam Campus': 'examination.psn@sssihl.edu.in',
     };
     return map[campus] || map['Prashanti Nilayam Campus'];
 }
@@ -1261,6 +1564,147 @@ function shouldNotifyDirector(formType) {
         'Application for Repeating Examinations Registration (CIE and ESE)',
     ];
     return forms.includes(formType);
+}
+
+async function sendCampusExamNotification(env, request, appId, formType, applicantName, email, campus, semester = null, regNo = null, programme = null) {
+    try {
+        const accessToken = await getGoogleAuth(env);
+        const campusExamEmail = getCampusExamEmail(campus);
+        const url = new URL(request.url);
+
+        const isSupplementary = formType === 'Application for Supplementary Examinations Registration';
+        const isRepeatPaper = formType === 'Application for Repeating Examinations Registration (CIE and ESE)';
+
+        let examDetails = null;
+        try {
+            const table = isSupplementary ? 'form_supplementary_exam' : 'form_repeat_paper';
+            examDetails = await env.DB.prepare(
+                `SELECT Period_of_Study, Semester, paper_codes, paper_titles FROM ${table} WHERE application_id = ?`
+            ).bind(appId).first();
+        } catch (e) {
+            console.error('Failed to fetch exam details for campus exam email:', e);
+        }
+
+        const submissionDate = new Date().toLocaleString('en-IN', { dateStyle: 'long', timeStyle: 'short', timeZone: 'Asia/Kolkata' });
+
+        const htmlBody = renderEmailTemplate({
+            title: 'Application Received for Review',
+            greeting: `${campus === 'Anantapur Campus' ? 'Dear Madam,' : 'Dear Sir,'}<br><br>Sairam!<br><br>Greetings from the Examinations Section, SSSIHL.`,
+            content: `This is to bring to your kind notice that <strong>${escapeHtml(applicantName)}</strong> has submitted an <strong>${escapeHtml(formType)}</strong>. Kindly review the application and forward it to the Director with your remarks.`,
+            details: [
+                { label: 'Form Type', value: escapeHtml(formType) },
+                { label: 'Application ID', value: escapeHtml(appId) },
+                { label: 'Applicant Name', value: escapeHtml(applicantName) },
+                { label: 'Registered Number', value: escapeHtml(regNo || 'N/A') },
+                { label: 'Campus', value: escapeHtml(campus) },
+                ...(programme ? [{ label: 'Programme', value: escapeHtml(programme) }] : []),
+                { label: 'Period of Study', value: escapeHtml(examDetails?.Period_of_Study || 'N/A') },
+                { label: 'Semester', value: escapeHtml(examDetails?.Semester || semester || 'N/A') },
+                { label: 'Paper Codes', value: escapeHtml(examDetails?.paper_codes || 'N/A') },
+                { label: 'Paper Titles', value: escapeHtml(examDetails?.paper_titles || 'N/A') },
+                { label: 'Applicant Email', value: escapeHtml(email) },
+                { label: 'Submission Date', value: submissionDate },
+            ],
+            importantNote: `
+                <p style="margin: 0; font-weight: 700;">&#128203; Action Required</p>
+                <p style="margin: 8px 0 0 0;">Please click the button below to review the application, select the case type, add your remarks, and forward it to the Director.</p>
+            `,
+            actionButtons: [
+                { label: '&#128203; Review Application', link: `${url.origin}/campus-exam-review?id=${appId}`, color: '#3b82f6' }
+            ]
+        });
+
+        await sendEmail(accessToken, {
+            to: campusExamEmail,
+            subject: `Application for Review: ${formType} - ${appId}`,
+            htmlBody,
+            attachments: []
+        });
+        console.log(`Campus exam notification sent for app ${appId} to ${campusExamEmail}`);
+    } catch (e) {
+        console.error('Failed to send campus exam notification:', e);
+    }
+}
+
+async function sendDirectorNotificationFromCampusExam(env, request, appId, formType, applicantName, email, campus, semester, regNo, programme, caseType, cieSatisfied, campusExamRemarks) {
+    try {
+        const accessToken = await getGoogleAuth(env);
+        const directorEmail = getDirectorEmail(campus);
+        const url = new URL(request.url);
+
+        const isRepeatPaper = formType === 'Application for Repeating Examinations Registration (CIE and ESE)';
+
+        let examDetails = null;
+        try {
+            const table = isRepeatPaper ? 'form_repeat_paper' : 'form_supplementary_exam';
+            examDetails = await env.DB.prepare(
+                `SELECT Period_of_Study, Semester, paper_codes, paper_titles FROM ${table} WHERE application_id = ?`
+            ).bind(appId).first();
+        } catch (e) {
+            console.error('Failed to fetch exam details for director email:', e);
+        }
+
+        const submissionDate = new Date().toLocaleString('en-IN', { dateStyle: 'long', timeStyle: 'short', timeZone: 'Asia/Kolkata' });
+
+        const caseTypeLabel = caseType === 'regular_supplementary' ? 'Regular Supplementary Case'
+            : caseType === 'regular' ? 'Regular Case'
+            : caseType === 'repeat_case' ? 'Repeat Case'
+            : caseType === 'condonation' ? 'Condonation Case'
+            : caseType;
+
+        const cieRemark = caseType === 'repeat_case'
+            ? (cieSatisfied === 'yes'
+                ? 'Yes, the candidate has completed CIE tests satisfactorily.'
+                : 'No, the candidate has not completed CIE tests satisfactorily.')
+            : null;
+
+        const actionButtons = (caseType === 'repeat_case' && cieSatisfied === 'yes')
+            ? [{ label: '&#10003; Accept', link: `${url.origin}/director-comment?id=${appId}`, color: '#10b981' }]
+            : (caseType === 'repeat_case' && cieSatisfied === 'no')
+                ? [{ label: '&#10007; Reject', link: `${url.origin}/director-comment?id=${appId}`, color: '#ef4444' }]
+                : [{ label: '&#128203; Review Application', link: `${url.origin}/director-comment?id=${appId}`, color: '#3b82f6' }];
+
+        const htmlBody = renderEmailTemplate({
+            title: 'For Your Kind Attention',
+            greeting: `${campus === 'Anantapur Campus' ? 'Dear Madam,' : 'Dear Sir,'}<br><br>Sairam!<br><br>Greetings from the Examinations Section, SSSIHL.`,
+            content: `This is to bring to your kind notice that <strong>${escapeHtml(applicantName)}</strong> has submitted an <strong>${escapeHtml(formType)}</strong>. The Campus Examination Section has reviewed and forwarded this application. Kindly review and record your decision.`,
+            details: [
+                { label: 'Form Type', value: escapeHtml(formType) },
+                { label: 'Application ID', value: escapeHtml(appId) },
+                { label: 'Applicant Name', value: escapeHtml(applicantName) },
+                { label: 'Registered Number', value: escapeHtml(regNo || 'N/A') },
+                { label: 'Campus', value: escapeHtml(campus) },
+                ...(programme ? [{ label: 'Programme', value: escapeHtml(programme) }] : []),
+                { label: 'Period of Study', value: escapeHtml(examDetails?.Period_of_Study || 'N/A') },
+                { label: 'Semester', value: escapeHtml(examDetails?.Semester || semester || 'N/A') },
+                { label: 'Paper Codes', value: escapeHtml(examDetails?.paper_codes || 'N/A') },
+                { label: 'Paper Titles', value: escapeHtml(examDetails?.paper_titles || 'N/A') },
+                { label: 'Case Type', value: escapeHtml(caseTypeLabel) },
+                ...(cieRemark ? [{ label: 'CIE Status', value: escapeHtml(cieRemark) }] : []),
+                ...(campusExamRemarks ? [{ label: 'Remarks from Examination Section', value: escapeHtml(campusExamRemarks) }] : []),
+                { label: 'Applicant Email', value: escapeHtml(email) },
+                { label: 'Forwarded On', value: submissionDate },
+            ],
+            importantNote: cieRemark ? `
+                <p style="margin: 0; font-weight: 700;">&#128203; CIE Completion Status</p>
+                <p style="margin: 8px 0 0 0;">${escapeHtml(cieRemark)}</p>
+            ` : `
+                <p style="margin: 0; font-weight: 700;">&#128203; Action Required</p>
+                <p style="margin: 8px 0 0 0;">Please click the button below to review and record your decision.</p>
+            `,
+            actionButtons
+        });
+
+        await sendEmail(accessToken, {
+            to: directorEmail,
+            subject: `For Your Kind Attention: ${formType} - ${appId}`,
+            htmlBody,
+            attachments: []
+        });
+        console.log(`Director email (from campus exam) sent for app ${appId}`);
+    } catch (e) {
+        console.error('Failed to send director notification from campus exam:', e);
+    }
 }
 
 async function sendDirectorNotification(env, request, appId, formType, applicantName, email, campus, semester = null, regNo = null, programme = null) {
@@ -1292,7 +1736,7 @@ async function sendDirectorNotification(env, request, appId, formType, applicant
         if (isNameChange) {
             try {
                 nameChangeDetails = await env.DB.prepare(
-                    `SELECT changed_name, Father_name, Period_of_Study, Mobile_Number,
+                    `SELECT existing_name, changed_name, Father_name, Period_of_Study, Mobile_Number,
                             address_line1, address_line2, city, state_province, country, postal_code
                      FROM form_name_change WHERE application_id = ?`
                 ).bind(appId).first();
@@ -1310,6 +1754,19 @@ async function sendDirectorNotification(env, request, appId, formType, applicant
                 ).bind(appId).first();
             } catch (e) {
                 console.error('Failed to fetch exam details for director email:', e);
+            }
+        }
+
+        const isDuplicateGradeCard = formType === 'Application for Duplicate Grade Card';
+
+        let dgcDetails = null;
+        if (isDuplicateGradeCard) {
+            try {
+                dgcDetails = await env.DB.prepare(
+                    `SELECT Reason FROM form_duplicate_grade_card WHERE Application_id = ?`
+                ).bind(appId).first();
+            } catch (e) {
+                console.error('Failed to fetch DGC details for director email:', e);
             }
         }
 
@@ -1347,11 +1804,11 @@ async function sendDirectorNotification(env, request, appId, formType, applicant
                     { label: '✎ Submit Comments', link: `${url.origin}/director-comment?id=${appId}`, color: '#f59e0b' }
                 ]
             })
-            : (isSupplementary || isRepeatPaper)
+            : isSupplementary
                 ? renderEmailTemplate({
                     title: 'For Your Kind Attention',
                     greeting: `${campus === 'Anantapur Campus' ? 'Dear Madam,' : 'Dear Sir,'}<br><br>Sairam!<br><br>Greetings from the Examinations Section, SSSIHL.`,
-                    content: `This is to bring to your kind notice that <strong>${escapeHtml(applicantName)}</strong> has submitted an <strong>${escapeHtml(formType)}</strong>. Kindly verify whether the applicant fulfils the attendance requirement before proceeding.`,
+                    content: `This is to bring to your kind notice that <strong>${escapeHtml(applicantName)}</strong> has submitted an <strong>${escapeHtml(formType)}</strong>. Kindly review the application and record your decision.`,
                     details: [
                         { label: 'Form Type', value: escapeHtml(formType) },
                         { label: 'Application ID', value: escapeHtml(appId) },
@@ -1367,17 +1824,38 @@ async function sendDirectorNotification(env, request, appId, formType, applicant
                         { label: 'Submission Date', value: submissionDate },
                     ],
                     importantNote: `
-                        <p style="margin: 0; font-weight: 700;">📋 Attendance Verification Required</p>
-                        <p style="margin: 8px 0 0 0;">Kindly verify whether <strong>${escapeHtml(applicantName)}</strong> fulfils the required attendance criteria, and take action accordingly:</p>
-                        <ul style="margin: 8px 0 0 0; padding-left: 20px; line-height: 1.8;">
-                            <li><strong>If attendance is fulfilled</strong> — click <strong>"Attendance Met — Proceed"</strong> to forward the application to the Examination Section.</li>
-                            <li><strong>If attendance is not fulfilled</strong> — click <strong>"Attendance Not Met"</strong>. The student will be notified of their ineligibility.</li>
-                        </ul>
+                        <p style="margin: 0; font-weight: 700;">📋 Action Required</p>
+                        <p style="margin: 8px 0 0 0;">Please click the button below to review the application and record your decision. You will be able to classify the case and approve or reject accordingly.</p>
                     `,
                     actionButtons: [
-                        { label: '✓ Attendance Met — Proceed', link: `${url.origin}/approve?id=${appId}&role=Director&action=Approve`, color: '#10b981' },
-                        { label: '✗ Attendance Not Met', link: `${url.origin}/approve?id=${appId}&role=Director&action=Reject`, color: '#ef4444' },
-                        { label: '✎ Submit Comments', link: `${url.origin}/director-comment?id=${appId}`, color: '#f59e0b' }
+                        { label: '📋 Review Application', link: `${url.origin}/director-comment?id=${appId}`, color: '#3b82f6' }
+                    ]
+                })
+                : isRepeatPaper
+                ? renderEmailTemplate({
+                    title: 'For Your Kind Attention',
+                    greeting: `${campus === 'Anantapur Campus' ? 'Dear Madam,' : 'Dear Sir,'}<br><br>Sairam!<br><br>Greetings from the Examinations Section, SSSIHL.`,
+                    content: `This is to bring to your kind notice that <strong>${escapeHtml(applicantName)}</strong> has submitted an <strong>${escapeHtml(formType)}</strong>. Kindly review the application and record your decision.`,
+                    details: [
+                        { label: 'Form Type', value: escapeHtml(formType) },
+                        { label: 'Application ID', value: escapeHtml(appId) },
+                        { label: 'Applicant Name', value: escapeHtml(applicantName) },
+                        { label: 'Registered Number', value: escapeHtml(regNo || 'N/A') },
+                        { label: 'Campus', value: escapeHtml(campus) },
+                        ...(programme ? [{ label: 'Programme', value: escapeHtml(programme) }] : []),
+                        { label: 'Period of Study', value: escapeHtml(examDetails?.Period_of_Study || 'N/A') },
+                        { label: 'Semester', value: escapeHtml(examDetails?.Semester || semester || 'N/A') },
+                        { label: 'Paper Codes', value: escapeHtml(examDetails?.paper_codes || 'N/A') },
+                        { label: 'Paper Titles', value: escapeHtml(examDetails?.paper_titles || 'N/A') },
+                        { label: 'Applicant Email', value: escapeHtml(email) },
+                        { label: 'Submission Date', value: submissionDate },
+                    ],
+                    importantNote: `
+                        <p style="margin: 0; font-weight: 700;">&#128203; Action Required</p>
+                        <p style="margin: 8px 0 0 0;">Please click the button below to review the application and record your decision. You will be able to classify the case and approve or reject accordingly.</p>
+                    `,
+                    actionButtons: [
+                        { label: '&#128203; Review Application', link: `${url.origin}/director-comment?id=${appId}`, color: '#3b82f6' }
                     ]
                 })
                 : renderEmailTemplate({
@@ -1393,6 +1871,7 @@ async function sendDirectorNotification(env, request, appId, formType, applicant
                         { label: 'Campus', value: escapeHtml(campus) },
                         ...(programme ? [{ label: 'Programme', value: escapeHtml(programme) }] : []),
                         { label: 'Semester', value: escapeHtml(semester || 'N/A') },
+                        ...(dgcDetails?.Reason ? [{ label: 'Reason for Loss', value: escapeHtml(dgcDetails.Reason) }] : []),
                         { label: 'Submission Date', value: submissionDate },
                     ],
                     importantNote: `
@@ -1415,6 +1894,151 @@ async function sendDirectorNotification(env, request, appId, formType, applicant
         console.log(`Director email sent for app ${appId}`);
     } catch (e) {
         console.error('Failed to send director notification:', e);
+    }
+}
+
+async function handleTestDirectorEmail(request, env, corsHeaders) {
+    const admin = await verifyAdminToken(request, env);
+    if (!admin) return new Response(JSON.stringify({ error: 'Unauthorized' }), { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+
+    const { campus, formType, testEmail } = await request.json();
+    if (!testEmail || !campus || !formType) {
+        return new Response(JSON.stringify({ error: 'testEmail, campus, and formType are required' }), { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+    }
+    if (!shouldNotifyDirector(formType)) {
+        return new Response(JSON.stringify({ error: 'This form type does not trigger director notifications' }), { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+    }
+
+    try {
+        const accessToken = await getGoogleAuth(env);
+        const url = new URL(request.url);
+        const fakeAppId = 'TEST-' + Date.now();
+        const applicantName = 'Test Applicant';
+        const regNo = 'TEST-REG-001';
+        const programme = 'B.Sc. (Hons.) Mathematics';
+
+        // Insert a real application record so approve/reject/comment links work
+        await env.DB.prepare(
+            `INSERT INTO applications (id, student_email, form_type, applicant_name, reg_no, campus, status, programme)
+             VALUES (?, ?, ?, ?, ?, ?, 'AWAITING_DIRECTOR', ?)`
+        ).bind(fakeAppId, testEmail, formType, applicantName, regNo, campus, programme).run();
+        const submissionDate = new Date().toLocaleString('en-IN', { dateStyle: 'long', timeStyle: 'short', timeZone: 'Asia/Kolkata' });
+
+        const isNameChange = formType === 'Application for Registration of Student Name change in the Institute Records';
+        const isSupplementary = formType === 'Application for Supplementary Examinations Registration';
+        const isRepeatPaper = formType === 'Application for Repeating Examinations Registration (CIE and ESE)';
+        const useNewFlow = isNameChange || isSupplementary || isRepeatPaper;
+
+        const emailSubject = `[TEST] ${useNewFlow ? 'For Your Kind Attention' : 'Clearance Required'}: ${formType} - ${fakeAppId}`;
+
+        const emailBody = isNameChange
+            ? renderEmailTemplate({
+                title: '[TEST] For Your Information',
+                greeting: `${campus === 'Anantapur Campus' ? 'Dear Madam,' : 'Dear Sir,'}<br><br>Sairam!<br><br>Greetings from the Examinations Section, SSSIHL.`,
+                content: `<strong>[THIS IS A TEST EMAIL]</strong><br><br>This is to bring to your notice that <strong>${escapeHtml(applicantName)}</strong> has submitted an application for registration of name change in the Institute records.`,
+                details: [
+                    { label: 'Form Type', value: escapeHtml(formType) },
+                    { label: 'Application ID', value: escapeHtml(fakeAppId) },
+                    { label: 'Former Name', value: escapeHtml(applicantName) },
+                    { label: 'Changed Name as per the Gazette notification', value: 'Test New Name' },
+                    { label: "Father's Name", value: 'Test Father Name' },
+                    { label: 'Registered Number', value: regNo },
+                    { label: 'Campus', value: escapeHtml(campus) },
+                    { label: 'Programme', value: programme },
+                    { label: 'Period of Study', value: '2004 – 2007' },
+                    { label: 'Mobile Number', value: '+91 9999999999' },
+                    { label: 'Applicant Email', value: 'teststudent@example.com' },
+                    { label: 'Submission Date', value: submissionDate },
+                ],
+                importantNote: `<p style="margin: 0; font-weight: 700;">⚠️ Important Note</p><p style="margin: 8px 0 0 0;">This is a test email. The approve/reject links below are functional but will operate on the TEST application ID.</p>`,
+                actionButtons: [
+                    { label: '✓ Proceed', link: `${url.origin}/approve?id=${fakeAppId}&role=Director&action=Approve`, color: '#10b981' },
+                    { label: '✗ Grade Card Available', link: `${url.origin}/approve?id=${fakeAppId}&role=Director&action=Reject`, color: '#ef4444' },
+                    { label: '✎ Submit Comments', link: `${url.origin}/director-comment?id=${fakeAppId}`, color: '#f59e0b' }
+                ]
+            })
+            : isSupplementary
+                ? renderEmailTemplate({
+                    title: '[TEST] For Your Kind Attention',
+                    greeting: `${campus === 'Anantapur Campus' ? 'Dear Madam,' : 'Dear Sir,'}<br><br>Sairam!<br><br>Greetings from the Examinations Section, SSSIHL.`,
+                    content: `<strong>[THIS IS A TEST EMAIL]</strong><br><br>This is to bring to your kind notice that <strong>${escapeHtml(applicantName)}</strong> has submitted an <strong>${escapeHtml(formType)}</strong>. Kindly review the application and record your decision.`,
+                    details: [
+                        { label: 'Form Type', value: escapeHtml(formType) },
+                        { label: 'Application ID', value: escapeHtml(fakeAppId) },
+                        { label: 'Applicant Name', value: escapeHtml(applicantName) },
+                        { label: 'Registered Number', value: regNo },
+                        { label: 'Campus', value: escapeHtml(campus) },
+                        { label: 'Programme', value: programme },
+                        { label: 'Period of Study', value: '2004 – 2007' },
+                        { label: 'Semester', value: 'IV' },
+                        { label: 'Paper Codes', value: 'MAT401, MAT402' },
+                        { label: 'Paper Titles', value: 'Real Analysis, Abstract Algebra' },
+                        { label: 'Applicant Email', value: 'teststudent@example.com' },
+                        { label: 'Submission Date', value: submissionDate },
+                    ],
+                    importantNote: `<p style="margin: 0; font-weight: 700;">📋 [TEST] Action Required</p><p style="margin: 8px 0 0 0;">This is a test email. Click the button below to open the review page — it is fully functional and operates on the TEST application ID.</p>`,
+                    actionButtons: [
+                        { label: '📋 Review Application', link: `${url.origin}/director-comment?id=${fakeAppId}`, color: '#3b82f6' }
+                    ]
+                })
+                : isRepeatPaper
+                ? renderEmailTemplate({
+                    title: '[TEST] For Your Kind Attention',
+                    greeting: `${campus === 'Anantapur Campus' ? 'Dear Madam,' : 'Dear Sir,'}<br><br>Sairam!<br><br>Greetings from the Examinations Section, SSSIHL.`,
+                    content: `<strong>[THIS IS A TEST EMAIL]</strong><br><br>This is to bring to your kind notice that <strong>${escapeHtml(applicantName)}</strong> has submitted an <strong>${escapeHtml(formType)}</strong>. Kindly review the application and record your decision.`,
+                    details: [
+                        { label: 'Form Type', value: escapeHtml(formType) },
+                        { label: 'Application ID', value: escapeHtml(fakeAppId) },
+                        { label: 'Applicant Name', value: escapeHtml(applicantName) },
+                        { label: 'Registered Number', value: regNo },
+                        { label: 'Campus', value: escapeHtml(campus) },
+                        { label: 'Programme', value: programme },
+                        { label: 'Period of Study', value: '2004 – 2007' },
+                        { label: 'Semester', value: 'IV' },
+                        { label: 'Paper Codes', value: 'MAT401, MAT402' },
+                        { label: 'Paper Titles', value: 'Real Analysis, Abstract Algebra' },
+                        { label: 'Applicant Email', value: 'teststudent@example.com' },
+                        { label: 'Submission Date', value: submissionDate },
+                    ],
+                    importantNote: `<p style="margin: 0; font-weight: 700;">&#128203; [TEST] Action Required</p><p style="margin: 8px 0 0 0;">This is a test email. Click the button below to open the review page — it is fully functional and operates on the TEST application ID.</p>`,
+                    actionButtons: [
+                        { label: '&#128203; Review Application', link: `${url.origin}/director-comment?id=${fakeAppId}`, color: '#3b82f6' }
+                    ]
+                })
+                : renderEmailTemplate({
+                    title: '[TEST] Clearance Required',
+                    greeting: `${campus === 'Anantapur Campus' ? 'Dear Madam,' : 'Dear Sir,'}<br><br>Sairam!<br><br>Greetings from the Examinations Section, SSSIHL.`,
+                    content: `<strong>[THIS IS A TEST EMAIL]</strong><br><br>An <strong>${escapeHtml(formType)}</strong> has been submitted and requires your clearance for further processing.`,
+                    details: [
+                        { label: 'Form Type', value: escapeHtml(formType) },
+                        { label: 'Application ID', value: escapeHtml(fakeAppId) },
+                        { label: 'Applicant Name', value: escapeHtml(applicantName) },
+                        { label: 'Registered Number', value: regNo },
+                        { label: 'Applicant Email', value: 'teststudent@example.com' },
+                        { label: 'Campus', value: escapeHtml(campus) },
+                        { label: 'Programme', value: programme },
+                        { label: 'Semester', value: 'IV' },
+                        { label: 'Reason for Loss', value: 'Test reason — grade card misplaced during relocation.' },
+                        { label: 'Submission Date', value: submissionDate },
+                    ],
+                    importantNote: `<p style="margin: 0; font-weight: 700;">⚠️ [TEST] Important Note</p><p style="margin: 8px 0 0 0;">This is a test email. The action links below are functional but operate on the TEST application ID.</p>`,
+                    actionButtons: [
+                        { label: '✓ Clear Application', link: `${url.origin}/approve?id=${fakeAppId}&role=Director&action=Approve`, color: '#10b981' },
+                        { label: '✗ Reject', link: `${url.origin}/approve?id=${fakeAppId}&role=Director&action=Reject`, color: '#ef4444' }
+                    ]
+                });
+
+        await sendEmail(accessToken, { to: testEmail, subject: emailSubject, htmlBody: emailBody, attachments: [] });
+        await logAuditEvent(env, admin.username, 'TEST_EMAIL_SENT', null, { testEmail, campus, formType });
+
+        return new Response(JSON.stringify({ success: true, message: `Test email sent to ${testEmail}` }), {
+            headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+        });
+    } catch (e) {
+        console.error('Test director email failed:', e);
+        return new Response(JSON.stringify({ error: 'Failed to send test email: ' + e.message }), {
+            status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+        });
     }
 }
 
@@ -1575,7 +2199,7 @@ function generateStudentConfirmationHTML(appId, formType, applicantName, email, 
             </ul>
         `,
         actionButtons: [
-            { label: 'Track Application Status', link: 'https://student-service.pages.dev/#track' }
+            { label: 'Track Application Status', link: 'https://sssihl-student-service.pages.dev/#track' }
         ]
     });
 }
@@ -1648,7 +2272,7 @@ async function sendDirectorSoughtConfirmationEmail(env, appId, formType, applica
                 <p style="margin: 0;">Once the Director of the Campus provides clearance, your application will be forwarded to the Controller of Examinations. You will receive an email notification when this happens.</p>
             `,
             actionButtons: [
-                { label: 'Track Application Status', link: 'https://student-service.pages.dev/#track' }
+                { label: 'Track Application Status', link: 'https://sssihl-student-service.pages.dev/#track' }
             ]
         });
 
@@ -1683,7 +2307,7 @@ async function sendStudentOnHoldEmail(env, appId, formType, applicantName, stude
             ],
             importantNote: `<p style="margin:0;">For queries or clarifications, please contact: <a href="mailto:coeoffice@sssihl.edu.in" style="color:#2563eb;text-decoration:none;">coeoffice@sssihl.edu.in</a></p>`,
             actionButtons: [
-                { label: 'Track Application Status', link: `https://student-service.pages.dev/#track=${escapeHtml(appId)}` }
+                { label: 'Track Application Status', link: `https://sssihl-student-service.pages.dev/#track=${escapeHtml(appId)}` }
             ]
         });
         await sendEmail(accessToken, {
@@ -1714,7 +2338,7 @@ async function sendStudentResolvedEmail(env, appId, formType, applicantName, stu
                 { label: 'Resolved On', value: resolvedOn },
             ],
             importantNote: `<p style="margin:0;">If you have any queries, please contact: <a href="mailto:coeoffice@sssihl.edu.in" style="color:#2563eb;text-decoration:none;">coeoffice@sssihl.edu.in</a></p>`,
-            actionButtons: [{ label: 'Track Application Status', link: `https://student-service.pages.dev/#track=${escapeHtml(appId)}` }]
+            actionButtons: [{ label: 'Track Application Status', link: `https://sssihl-student-service.pages.dev/#track=${escapeHtml(appId)}` }]
         });
         await sendEmail(accessToken, { to: studentEmail, subject: `Application Resolved & Under Process - ${formType} - ${appId}`, htmlBody });
         console.log(`Student resolved email sent for app ${appId}`);
@@ -1752,15 +2376,41 @@ async function sendDirectorResolvedEmail(env, appId, formType, applicantName, ca
 
 // ==================== FORM HANDLERS ====================
 
+const FORM_TYPE_TO_ID = {
+    'Application for Duplicate Grade Card': 'duplicate-grade-card',
+    'Application for CGPA to Percentage Conversion': 'cgpa-conversion',
+    'Application for Supplementary Examinations Registration': 'supplementary-exam',
+    'Application for Duplicate Degree Certificate': 'duplicate-degree',
+    'Application for Registration of Student Name change in the Institute Records': 'name-change',
+    'Application for Repeating Examinations Registration (CIE and ESE)': 'repeat-paper',
+    'Application for Re-Totalling of Marks': 'retotaling',
+    'Application for On-Request Degree Certificate': 'on-request-degree',
+    'Application for Migration Certificate': 'migration',
+};
+
 async function handleSubmission(request, env, corsHeaders) {
     const formData = await request.formData();
     const formType = formData.get('formType');
+
+    // Enforce form_settings: reject submissions for disabled forms
+    const formId = FORM_TYPE_TO_ID[formType];
+    if (formId) {
+        const setting = await env.DB.prepare(
+            'SELECT is_active FROM form_settings WHERE form_id = ?'
+        ).bind(formId).first();
+        if (setting && setting.is_active === 0) {
+            return new Response(JSON.stringify({ success: false, error: 'This form is currently unavailable.' }), {
+                status: 403,
+                headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+            });
+        }
+    }
 
     let subResult;
     switch (formType) {
         case 'Application for Duplicate Grade Card':
             subResult = await handleDuplicateGradeCard(formData, request, env, corsHeaders); break;
-        case 'Application for CGPA to Marks Conversion':
+        case 'Application for CGPA to Percentage Conversion':
             subResult = await handleCGPAConversion(formData, request, env, corsHeaders); break;
         case 'Application for Supplementary Examinations Registration':
             subResult = await handleSupplementaryExam(formData, request, env, corsHeaders); break;
@@ -1818,9 +2468,9 @@ async function handleDuplicateGradeCard(formData, request, env, corsHeaders) {
 
     // 1. Save to main applications table
     await env.DB.prepare(
-        `INSERT INTO applications (id, student_email, form_type, applicant_name, reg_no, abc_apaar_id, campus, status)
-         VALUES (?, ?, ?, ?, ?, ?, ?, ?)`
-    ).bind(appId, email, formType, applicantName, regNo, formData.get('abcApaarId') || '', campus, isSeekingDirectorApproval ? 'AWAITING_DIRECTOR' : 'PENDING').run();
+        `INSERT INTO applications (id, student_email, form_type, applicant_name, reg_no, abc_apaar_id, campus, status, programme)
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`
+    ).bind(appId, email, formType, applicantName, regNo, formData.get('abcApaarId') || '', campus, isSeekingDirectorApproval ? 'AWAITING_DIRECTOR' : 'PENDING', formData.get('program') || null).run();
 
     // 2. Save to form-specific table
     await env.DB.prepare(
@@ -1856,6 +2506,7 @@ async function handleDuplicateGradeCard(formData, request, env, corsHeaders) {
 
     // 4. Send notifications based on submission type
     if (isSeekingDirectorApproval) {
+        await sendAdminNotification(env, appId, formType, applicantName, email);
         await sendDirectorNotification(env, request, appId, formType, applicantName, email, campus, semester, regNo, formData.get('program') || null);
         await sendDirectorSoughtConfirmationEmail(env, appId, formType, applicantName, email, campus, formData.get('program') || null, semester || null, formData.get('regNo') || null);
     } else {
@@ -1880,15 +2531,15 @@ async function handleCGPAConversion(formData, request, env, corsHeaders) {
     const appId = generateAppId('CGPA');
 
     await env.DB.prepare(
-        `INSERT INTO applications (id, student_email, form_type, applicant_name, reg_no, abc_apaar_id, campus)
-         VALUES (?, ?, ?, ?, ?, ?, ?)`
-    ).bind(appId, email, formType, applicantName, regNo, formData.get('abcApaarId') || '', campus).run();
+        `INSERT INTO applications (id, student_email, form_type, applicant_name, reg_no, abc_apaar_id, campus, programme)
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?)`
+    ).bind(appId, email, formType, applicantName, regNo, formData.get('abcApaarId') || '', campus, formData.get('program') || null).run();
 
     await env.DB.prepare(
         `INSERT INTO form_cgpa_conversion
          (application_id, student_name, address_line1, address_line2, country, state_province, city, postal_code, Mobile_Number, Registration_Number,
-          Programme, Period_of_Study, graduation_year, CGPA)
-         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
+          Programme, Period_of_Study, graduation_year, CGPA, delivery_preference)
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
     ).bind(
         appId,
         formData.get('applicantName') || '',
@@ -1903,7 +2554,8 @@ async function handleCGPAConversion(formData, request, env, corsHeaders) {
         formData.get('program') || '',
         formData.get('periodOfStudy') || '',
         formData.get('monthOfPassing') || '',
-        parseFloat(formData.get('cgpa')) || 0.0
+        parseFloat(formData.get('cgpa')) || 0.0,
+        formData.get('deliveryPreference') || ''
     ).run();
 
     for (const [key, value] of formData.entries()) {
@@ -1934,9 +2586,9 @@ async function handleSupplementaryExam(formData, request, env, corsHeaders) {
     const appId = generateAppId('SE');
 
     await env.DB.prepare(
-        `INSERT INTO applications (id, student_email, form_type, applicant_name, reg_no, abc_apaar_id, campus, status)
-         VALUES (?, ?, ?, ?, ?, ?, ?, ?)`
-    ).bind(appId, email, formType, applicantName, regNo, formData.get('abcApaarId') || '', campus, isSeekingDirectorApproval ? 'AWAITING_DIRECTOR' : 'PENDING').run();
+        `INSERT INTO applications (id, student_email, form_type, applicant_name, reg_no, abc_apaar_id, campus, status, programme)
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`
+    ).bind(appId, email, formType, applicantName, regNo, formData.get('abcApaarId') || '', campus, 'AWAITING_CAMPUS_EXAM', formData.get('program') || null).run();
 
     // Parse paper details JSON and format for storage
     const paperDetailsJson = formData.get('paperDetails') || '[]';
@@ -1981,14 +2633,9 @@ async function handleSupplementaryExam(formData, request, env, corsHeaders) {
         }
     }
 
-    if (isSeekingDirectorApproval) {
-        await sendDirectorNotification(env, request, appId, formType, applicantName, email, campus, semester, regNo, formData.get('program') || null);
-        await sendDirectorSoughtConfirmationEmail(env, appId, formType, applicantName, email, campus, formData.get('program') || null, semester || null, formData.get('regNo') || null);
-    } else {
-        await sendAdminNotification(env, appId, formType, applicantName, email);
-        await sendDirectorNotification(env, request, appId, formType, applicantName, email, campus, semester, regNo, formData.get('program') || null);
-        await sendStudentConfirmationEmail(env, appId, formType, applicantName, email, campus, formData.get('program') || null, semester || null);
-    }
+    await sendAdminNotification(env, appId, formType, applicantName, email);
+    await sendCampusExamNotification(env, request, appId, formType, applicantName, email, campus, semester, regNo, formData.get('program') || null);
+    await sendDirectorSoughtConfirmationEmail(env, appId, formType, applicantName, email, campus, formData.get('program') || null, semester || null, formData.get('regNo') || null);
 
     return new Response(JSON.stringify({ success: true, appId }), {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' }
@@ -2008,9 +2655,9 @@ async function handleRepeatPaper(formData, request, env, corsHeaders) {
     const appId = generateAppId('RP');
 
     await env.DB.prepare(
-        `INSERT INTO applications (id, student_email, form_type, applicant_name, reg_no, abc_apaar_id, campus, status)
-         VALUES (?, ?, ?, ?, ?, ?, ?, ?)`
-    ).bind(appId, email, formType, applicantName, regNo, formData.get('abcApaarId') || '', campus, isSeekingDirectorApproval ? 'AWAITING_DIRECTOR' : 'PENDING').run();
+        `INSERT INTO applications (id, student_email, form_type, applicant_name, reg_no, abc_apaar_id, campus, status, programme)
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`
+    ).bind(appId, email, formType, applicantName, regNo, formData.get('abcApaarId') || '', campus, 'AWAITING_CAMPUS_EXAM', formData.get('program') || null).run();
 
     // Parse paper details JSON and format for storage
     const paperDetailsJson = formData.get('paperDetails') || '[]';
@@ -2026,11 +2673,12 @@ async function handleRepeatPaper(formData, request, env, corsHeaders) {
 
     await env.DB.prepare(
         `INSERT INTO form_repeat_paper
-         (application_id, Period_of_Study, student_name, reg_no, Campus, Programme,
+         (application_id, student_email, Period_of_Study, student_name, reg_no, Campus, Programme,
           Mobile_Number, address_line1, address_line2, country, state_province, city, postal_code, paper_codes, paper_titles, Semester)
-         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
     ).bind(
         appId,
+        formData.get('email') || '',
         formData.get('periodOfStudy') || '',
         formData.get('applicantName') || '',
         formData.get('regNo') || '',
@@ -2054,14 +2702,9 @@ async function handleRepeatPaper(formData, request, env, corsHeaders) {
         }
     }
 
-    if (isSeekingDirectorApproval) {
-        await sendDirectorNotification(env, request, appId, formType, applicantName, email, campus, semester, regNo, formData.get('program') || null);
-        await sendDirectorSoughtConfirmationEmail(env, appId, formType, applicantName, email, campus, formData.get('program') || null, semester || null, formData.get('regNo') || null);
-    } else {
-        await sendAdminNotification(env, appId, formType, applicantName, email);
-        await sendDirectorNotification(env, request, appId, formType, applicantName, email, campus, semester, regNo, formData.get('program') || null);
-        await sendStudentConfirmationEmail(env, appId, formType, applicantName, email, campus, formData.get('program') || null, semester || null);
-    }
+    await sendAdminNotification(env, appId, formType, applicantName, email);
+    await sendCampusExamNotification(env, request, appId, formType, applicantName, email, campus, semester, regNo, formData.get('program') || null);
+    await sendDirectorSoughtConfirmationEmail(env, appId, formType, applicantName, email, campus, formData.get('program') || null, semester || null, formData.get('regNo') || null);
 
     return new Response(JSON.stringify({ success: true, appId }), {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' }
@@ -2079,9 +2722,9 @@ async function handleDuplicateDegree(formData, request, env, corsHeaders) {
     const appId = generateAppId('DD');
 
     await env.DB.prepare(
-        `INSERT INTO applications (id, student_email, form_type, applicant_name, reg_no, abc_apaar_id, campus)
-         VALUES (?, ?, ?, ?, ?, ?, ?)`
-    ).bind(appId, email, formType, applicantName, regNo, formData.get('abcApaarId') || '', campus).run();
+        `INSERT INTO applications (id, student_email, form_type, applicant_name, reg_no, abc_apaar_id, campus, programme)
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?)`
+    ).bind(appId, email, formType, applicantName, regNo, formData.get('abcApaarId') || '', campus, formData.get('program') || null).run();
 
     await env.DB.prepare(
         `INSERT INTO form_duplicate_degree
@@ -2135,9 +2778,9 @@ async function handleNameChange(formData, request, env, corsHeaders) {
     const appId = generateAppId('NC');
 
     await env.DB.prepare(
-        `INSERT INTO applications (id, student_email, form_type, applicant_name, reg_no, abc_apaar_id, campus, status)
-         VALUES (?, ?, ?, ?, ?, ?, ?, ?)`
-    ).bind(appId, email, formType, applicantName, regNo, formData.get('abcApaarId') || '', campus, isSeekingDirectorApproval ? 'AWAITING_DIRECTOR' : 'PENDING').run();
+        `INSERT INTO applications (id, student_email, form_type, applicant_name, reg_no, abc_apaar_id, campus, status, programme)
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`
+    ).bind(appId, email, formType, applicantName, regNo, formData.get('abcApaarId') || '', campus, isSeekingDirectorApproval ? 'AWAITING_DIRECTOR' : 'PENDING', formData.get('program') || null).run();
 
     await env.DB.prepare(
         `INSERT INTO form_name_change
@@ -2168,8 +2811,9 @@ async function handleNameChange(formData, request, env, corsHeaders) {
     }
 
     if (isSeekingDirectorApproval) {
+        await sendAdminNotification(env, appId, formType, applicantName, email);
         await sendDirectorNotification(env, request, appId, formType, applicantName, email, campus, null, regNo, formData.get('program') || null);
-        await sendDirectorSoughtConfirmationEmail(env, appId, formType, applicantName, email, campus, formData.get('program') || null, formData.get('semester') || null);
+        await sendDirectorSoughtConfirmationEmail(env, appId, formType, applicantName, email, campus, formData.get('program') || null, formData.get('semester') || null, regNo);
     } else {
         await sendAdminNotification(env, appId, formType, applicantName, email);
         await sendDirectorNotification(env, request, appId, formType, applicantName, email, campus, null, regNo, formData.get('program') || null);
@@ -2195,9 +2839,9 @@ async function handleRetotaling(formData, request, env, corsHeaders) {
     const periodOfExam = formData.get('examMonthYear') || '';
 
     await env.DB.prepare(
-        `INSERT INTO applications (id, student_email, form_type, applicant_name, reg_no, abc_apaar_id, campus)
-         VALUES (?, ?, ?, ?, ?, ?, ?)`
-    ).bind(appId, email, formType, applicantName, regNo, formData.get('abcApaarId') || '', campus).run();
+        `INSERT INTO applications (id, student_email, form_type, applicant_name, reg_no, abc_apaar_id, campus, programme)
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?)`
+    ).bind(appId, email, formType, applicantName, regNo, formData.get('abcApaarId') || '', campus, formData.get('program') || null).run();
 
     await env.DB.prepare(
         `INSERT INTO form_retotaling
@@ -2248,9 +2892,9 @@ async function handleOnRequestDegree(formData, request, env, corsHeaders) {
     const appId = generateAppId('ORD');
 
     await env.DB.prepare(
-        `INSERT INTO applications (id, student_email, form_type, applicant_name, reg_no, abc_apaar_id, campus)
-         VALUES (?, ?, ?, ?, ?, ?, ?)`
-    ).bind(appId, email, formType, applicantName, regNo, formData.get('abcApaarId') || '', campus).run();
+        `INSERT INTO applications (id, student_email, form_type, applicant_name, reg_no, abc_apaar_id, campus, programme)
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?)`
+    ).bind(appId, email, formType, applicantName, regNo, formData.get('abcApaarId') || '', campus, formData.get('program') || null).run();
 
     await env.DB.prepare(
         `INSERT INTO form_on_request_degree
@@ -2298,9 +2942,9 @@ async function handleMigration(formData, request, env, corsHeaders) {
     const regNo = formData.get('lastExamRegNo') || '';
 
     await env.DB.prepare(
-        `INSERT INTO applications (id, student_email, form_type, applicant_name, reg_no, abc_apaar_id, campus)
-         VALUES (?, ?, ?, ?, ?, ?, ?)`
-    ).bind(appId, email, formType, applicantName, regNo, formData.get('abcApaarId') || '', campus).run();
+        `INSERT INTO applications (id, student_email, form_type, applicant_name, reg_no, abc_apaar_id, campus, programme)
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?)`
+    ).bind(appId, email, formType, applicantName, regNo, formData.get('abcApaarId') || '', campus, formData.get('program') || null).run();
 
     await env.DB.prepare(
         `INSERT INTO form_migration_certificate
@@ -2343,12 +2987,448 @@ async function handleMigration(formData, request, env, corsHeaders) {
     });
 }
 
+async function handleCampusExamReviewPage(url, env, corsHeaders) {
+    const id = url.searchParams.get('id');
+    if (!id) return new Response('Missing application ID', { status: 400, headers: corsHeaders });
+
+    const app = await env.DB.prepare(
+        'SELECT id, applicant_name, form_type, campus, status, campus_exam_status FROM applications WHERE id = ?'
+    ).bind(id).first();
+
+    if (!app) return new Response('Application not found', { status: 404, headers: corsHeaders });
+
+    const alreadyActed = app.campus_exam_status === 'FORWARDED' || app.status !== 'AWAITING_CAMPUS_EXAM';
+
+    const nonce = Array.from(crypto.getRandomValues(new Uint8Array(16))).map(b => b.toString(16).padStart(2, '0')).join('');
+    const exp = Date.now() + 3600000;
+    const csrfPayload = `${nonce}:${exp}`;
+    const csrfSig = await hmacSign(env.CSRF_SECRET || 'fallback-dev-secret', csrfPayload);
+
+    const REPEAT_PAPER_FORM = 'Application for Repeating Examinations Registration (CIE and ESE)';
+    const isRepeatPaper = app.form_type === REPEAT_PAPER_FORM;
+
+    const caseTypeOptions = isRepeatPaper ? `
+               <label class="radio-option">
+                   <input type="radio" name="caseType" value="regular" onchange="showSection('regular')">
+                   <div class="radio-option-text"><p>Regular</p><p>Standard repeat examination case</p></div>
+               </label>
+               <label class="radio-option">
+                   <input type="radio" name="caseType" value="repeat_case" onchange="showSection('repeat_case')">
+                   <div class="radio-option-text"><p>Repeat Case</p><p>Candidate's CIE completion needs to be verified</p></div>
+               </label>
+               <label class="radio-option" style="margin-bottom:20px;">
+                   <input type="radio" name="caseType" value="condonation" onchange="showSection('condonation')">
+                   <div class="radio-option-text"><p>Condonation Case</p><p>Requires Registrar's letter upload</p></div>
+               </label>` : `
+               <label class="radio-option">
+                   <input type="radio" name="caseType" value="regular_supplementary" onchange="showSection('regular')">
+                   <div class="radio-option-text"><p>Regular Supplementary Case</p><p>Standard supplementary examination case</p></div>
+               </label>
+               <label class="radio-option" style="margin-bottom:20px;">
+                   <input type="radio" name="caseType" value="condonation" onchange="showSection('condonation')">
+                   <div class="radio-option-text"><p>Condonation Case</p><p>Requires Registrar's letter upload</p></div>
+               </label>`;
+
+    const pageHtml = `<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Review Application - SSSIHL Examination Services</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Outfit:wght@700;800&display=swap" rel="stylesheet">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'Inter', sans-serif; background: linear-gradient(135deg, #f1f5f9, #e2e8f0); min-height: 100vh; display: flex; flex-direction: column; align-items: center; justify-content: flex-start; padding: 40px 20px; }
+        .header { text-align: center; margin-bottom: 28px; }
+        .header img { height: 90px; width: auto; }
+        .card { background: white; border-radius: 20px; padding: 36px 32px; max-width: 560px; width: 100%; box-shadow: 0 10px 30px -5px rgba(15,23,42,0.10); border: 1px solid #e2e8f0; }
+        .icon-wrap { width: 64px; height: 64px; border-radius: 50%; background: #eff6ff; display: flex; align-items: center; justify-content: center; margin: 0 auto 20px; font-size: 30px; }
+        h1 { font-family: 'Outfit', sans-serif; color: #0f172a; font-size: 1.5rem; text-align: center; margin-bottom: 6px; }
+        .subtitle { color: #64748b; font-size: 0.875rem; text-align: center; line-height: 1.6; margin-bottom: 24px; }
+        .details-box { background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 12px; padding: 16px; margin-bottom: 24px; }
+        .detail-row { display: flex; justify-content: space-between; align-items: flex-start; padding: 8px 0; border-bottom: 1px solid #e2e8f0; gap: 12px; }
+        .detail-row:last-child { border-bottom: none; padding-bottom: 0; }
+        .detail-label { font-size: 0.72rem; color: #94a3b8; font-weight: 600; text-transform: uppercase; letter-spacing: 0.04em; flex-shrink: 0; }
+        .detail-value { font-size: 0.875rem; color: #0f172a; font-weight: 600; text-align: right; }
+        .section-label { font-size: 0.8rem; font-weight: 700; color: #0f172a; margin-bottom: 12px; }
+        .radio-option { display: flex; align-items: flex-start; gap: 12px; padding: 14px; border: 1.5px solid #e2e8f0; border-radius: 12px; cursor: pointer; margin-bottom: 10px; }
+        .radio-option input { margin-top: 2px; width: 16px; height: 16px; flex-shrink: 0; cursor: pointer; accent-color: #2563eb; }
+        .radio-option-text p:first-child { font-size: 0.875rem; font-weight: 600; color: #0f172a; margin-bottom: 2px; }
+        .radio-option-text p:last-child { font-size: 0.75rem; color: #64748b; }
+        .btn { width: 100%; padding: 13px 16px; font-size: 0.9rem; font-weight: 700; border: none; border-radius: 10px; cursor: pointer; font-family: inherit; }
+        .btn:disabled { opacity: 0.45; cursor: not-allowed; }
+        .btn-blue { background: #2563eb; color: white; }
+        .upload-note { background: #fffbeb; border: 1px solid #fde68a; border-radius: 10px; padding: 14px; margin-bottom: 16px; }
+        .upload-note p:first-child { font-size: 0.82rem; font-weight: 700; color: #92400e; margin-bottom: 4px; }
+        .upload-note p:last-child { font-size: 0.75rem; color: #a16207; line-height: 1.5; }
+        .file-input { display: none; }
+        .file-drop-zone { border: 2px dashed #cbd5e1; border-radius: 12px; padding: 20px 16px; text-align: center; cursor: pointer; transition: border-color 0.2s, background 0.2s; margin-bottom: 6px; background: #f8fafc; }
+        .file-drop-zone:hover { border-color: #2563eb; background: #eff6ff; }
+        .file-drop-zone.has-file { border-color: #10b981; background: #f0fdf4; }
+        .file-drop-zone .drop-icon { font-size: 26px; margin-bottom: 8px; }
+        .file-drop-zone .drop-label { font-size: 0.82rem; font-weight: 600; color: #475569; margin-bottom: 4px; }
+        .file-drop-zone .drop-sub { font-size: 0.72rem; color: #94a3b8; }
+        .file-drop-zone .drop-chosen { font-size: 0.8rem; font-weight: 700; color: #059669; margin-top: 6px; word-break: break-all; }
+        .error-text { font-size: 0.75rem; color: #ef4444; font-weight: 600; margin-top: 4px; margin-bottom: 8px; display: none; }
+        .status-text { font-size: 0.75rem; text-align: center; margin-bottom: 12px; }
+        .status-ok { color: #10b981; font-weight: 600; }
+        .status-err { color: #ef4444; font-weight: 600; }
+        label.field-label { display: block; font-size: 0.82rem; font-weight: 700; color: #0f172a; margin-bottom: 8px; margin-top: 16px; }
+        textarea.remarks-box { width: 100%; border: 1.5px solid #e2e8f0; border-radius: 10px; padding: 12px 14px; font-size: 0.875rem; color: #0f172a; font-family: inherit; resize: vertical; line-height: 1.6; }
+        textarea.remarks-box:focus { outline: none; border-color: #2563eb; }
+        .char-count { font-size: 0.72rem; color: #94a3b8; margin-top: 4px; margin-bottom: 16px; }
+        .action-error { font-size: 0.78rem; color: #ef4444; text-align: center; margin-top: 10px; font-weight: 600; display: none; }
+        .hidden-section { display: none; }
+        .cie-box { background: #f0f9ff; border: 1.5px solid #bae6fd; border-radius: 12px; padding: 16px; margin-bottom: 16px; }
+        .cie-question { font-size: 0.875rem; font-weight: 600; color: #0f172a; margin-bottom: 12px; }
+        .cie-options { display: flex; gap: 16px; }
+        .cie-radio { display: flex; align-items: center; gap: 8px; cursor: pointer; font-size: 0.875rem; font-weight: 500; color: #0f172a; }
+        .cie-radio input { width: 16px; height: 16px; accent-color: #2563eb; cursor: pointer; }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <img src="https://sssihl-student-service.pages.dev/Examinations_Service.png" alt="SSSIHL Examination Services">
+    </div>
+    <div class="card">
+        ${alreadyActed
+            ? `<div style="text-align:center;padding:16px 0;">
+                   <div class="icon-wrap">&#10003;</div>
+                   <h1>Already Forwarded</h1>
+                   <p class="subtitle">This application has already been forwarded to the Director. No further action is required.</p>
+               </div>`
+            : `<div class="icon-wrap">&#128203;</div>
+               <h1>Review Application</h1>
+               <p class="subtitle">Please classify the case, add your remarks, and forward to the Director.</p>
+
+               <div class="details-box">
+                   <div class="detail-row"><span class="detail-label">Application ID</span><span class="detail-value">${escapeHtml(app.id)}</span></div>
+                   <div class="detail-row"><span class="detail-label">Applicant Name</span><span class="detail-value">${escapeHtml(app.applicant_name)}</span></div>
+                   <div class="detail-row"><span class="detail-label">Form Type</span><span class="detail-value" style="font-size:0.8rem;">${escapeHtml(app.form_type)}</span></div>
+                   <div class="detail-row"><span class="detail-label">Campus</span><span class="detail-value">${escapeHtml(app.campus)}</span></div>
+               </div>
+
+               <p class="section-label">Select Case Type</p>
+               ${caseTypeOptions}
+
+               <div id="regularSection" class="hidden-section">
+                   <label class="field-label">Remarks <span style="color:#94a3b8;font-weight:400;">(optional)</span></label>
+                   <textarea id="regularRemarks" class="remarks-box" rows="3" placeholder="Add any remarks for the Director..."></textarea>
+                   <p class="char-count" id="regularCharCount">0 characters</p>
+                   <button class="btn btn-blue" onclick="submitForward('regular')">&#10145; Forward to Director</button>
+               </div>
+
+               ${isRepeatPaper ? `
+               <div id="repeat_caseSection" class="hidden-section">
+                   <div class="cie-box">
+                       <p class="cie-question">The candidate has completed all the CIE tests satisfactorily:</p>
+                       <div class="cie-options">
+                           <label class="cie-radio"><input type="radio" name="cieSatisfied" value="yes"> Yes</label>
+                           <label class="cie-radio"><input type="radio" name="cieSatisfied" value="no"> No</label>
+                       </div>
+                   </div>
+                   <label class="field-label">Remarks <span style="color:#94a3b8;font-weight:400;">(optional)</span></label>
+                   <textarea id="repeatRemarks" class="remarks-box" rows="3" placeholder="Add any remarks for the Director..."></textarea>
+                   <p class="char-count" id="repeatCharCount">0 characters</p>
+                   <button class="btn btn-blue" onclick="submitForward('repeat_case')">&#10145; Forward to Director</button>
+               </div>` : ''}
+
+               <div id="condonationSection" class="hidden-section">
+                   <div class="upload-note">
+                       <p>Upload Registrar's Letter</p>
+                       <p>Please upload the letter from the Registrar (PDF/JPG/PNG, max 3 MB) before forwarding.</p>
+                   </div>
+                   <input type="file" id="letterFile" accept=".pdf,.jpg,.jpeg,.png" class="file-input" onchange="validateFileSize()">
+                   <div class="file-drop-zone" id="dropZone" onclick="document.getElementById('letterFile').click()" ondragover="event.preventDefault();this.style.borderColor='#2563eb';" ondragleave="this.style.borderColor='';" ondrop="handleDrop(event)">
+                       <div class="drop-icon">&#128196;</div>
+                       <div class="drop-label">Click to choose file or drag &amp; drop here</div>
+                       <div class="drop-sub">PDF, JPG or PNG &mdash; max 3 MB</div>
+                       <div class="drop-chosen" id="chosenFileName"></div>
+                   </div>
+                   <p id="fileSizeError" class="error-text">File must be under 3 MB.</p>
+                   <p id="fileTypeError" class="error-text">Only PDF, JPG, or PNG files are allowed.</p>
+                   <button id="uploadBtn" class="btn btn-blue" style="margin-bottom:12px;" onclick="uploadLetter()" disabled>Upload Letter</button>
+                   <p id="uploadStatus" class="status-text"></p>
+                   <div id="afterUpload" class="hidden-section">
+                       <label class="field-label">Remarks <span style="color:#94a3b8;font-weight:400;">(optional)</span></label>
+                       <textarea id="condonationRemarks" class="remarks-box" rows="3" placeholder="Add any remarks for the Director..."></textarea>
+                       <p class="char-count" id="condonationCharCount">0 characters</p>
+                       <button class="btn btn-blue" onclick="submitForward('condonation')">&#10145; Forward to Director</button>
+                   </div>
+               </div>
+               <p id="actionError" class="action-error"></p>`
+        }
+    </div>
+    <script>
+    var APP_ID = ${JSON.stringify(app.id)};
+    var CSRF_PAYLOAD = ${JSON.stringify(csrfPayload)};
+    var CSRF_SIG = ${JSON.stringify(csrfSig)};
+    var letterUploaded = false;
+
+    document.getElementById('regularRemarks') && document.getElementById('regularRemarks').addEventListener('input', function() {
+        document.getElementById('regularCharCount').textContent = this.value.length + ' characters';
+    });
+    document.getElementById('repeatRemarks') && document.getElementById('repeatRemarks').addEventListener('input', function() {
+        document.getElementById('repeatCharCount').textContent = this.value.length + ' characters';
+    });
+    document.getElementById('condonationRemarks') && document.getElementById('condonationRemarks').addEventListener('input', function() {
+        document.getElementById('condonationCharCount').textContent = this.value.length + ' characters';
+    });
+
+    function showSection(type) {
+        ['regular', 'repeat_case', 'condonation'].forEach(function(s) {
+            var el = document.getElementById(s + 'Section');
+            if (el) el.style.display = (s === type) ? 'block' : 'none';
+        });
+        document.getElementById('actionError').style.display = 'none';
+    }
+
+    function handleDrop(e) {
+        e.preventDefault();
+        var dt = e.dataTransfer;
+        if (dt && dt.files && dt.files.length) {
+            try { var t = new DataTransfer(); t.items.add(dt.files[0]); document.getElementById('letterFile').files = t.files; } catch(ex) {}
+            validateFileSize();
+        }
+    }
+
+    function validateFileSize() {
+        var input = document.getElementById('letterFile');
+        var sizeErr = document.getElementById('fileSizeError');
+        var typeErr = document.getElementById('fileTypeError');
+        var btn = document.getElementById('uploadBtn');
+        var dropZone = document.getElementById('dropZone');
+        var nameEl = document.getElementById('chosenFileName');
+        sizeErr.style.display = 'none'; typeErr.style.display = 'none'; btn.disabled = true;
+        dropZone.classList.remove('has-file'); nameEl.textContent = '';
+        if (!input.files || !input.files.length) return;
+        var file = input.files[0];
+        var allowed = ['application/pdf','image/jpeg','image/png','image/jpg'];
+        if (allowed.indexOf(file.type) === -1) { typeErr.style.display = 'block'; return; }
+        if (file.size > 3 * 1024 * 1024) { sizeErr.style.display = 'block'; return; }
+        dropZone.classList.add('has-file'); nameEl.textContent = '&#10003; ' + file.name; btn.disabled = false;
+    }
+
+    function uploadLetter() {
+        var input = document.getElementById('letterFile');
+        if (!input.files || !input.files.length) return;
+        var statusEl = document.getElementById('uploadStatus');
+        var btn = document.getElementById('uploadBtn');
+        btn.disabled = true; btn.textContent = 'Uploading...'; statusEl.textContent = ''; statusEl.className = 'status-text';
+        var fd = new FormData();
+        fd.append('id', APP_ID); fd.append('file', input.files[0]);
+        fd.append('csrf_payload', CSRF_PAYLOAD); fd.append('csrf_sig', CSRF_SIG);
+        fetch('/campus-exam-upload-letter', { method: 'POST', body: fd })
+            .then(function(res) { return res.json(); })
+            .then(function(data) {
+                if (data.success) {
+                    letterUploaded = true;
+                    statusEl.textContent = 'Letter uploaded successfully.';
+                    statusEl.className = 'status-text status-ok';
+                    document.getElementById('afterUpload').style.display = 'block';
+                    btn.textContent = 'Uploaded';
+                } else {
+                    statusEl.textContent = data.error || 'Upload failed.';
+                    statusEl.className = 'status-text status-err';
+                    btn.disabled = false; btn.textContent = 'Upload Letter';
+                }
+            })
+            .catch(function() {
+                statusEl.textContent = 'Upload failed. Please check your connection.';
+                statusEl.className = 'status-text status-err';
+                btn.disabled = false; btn.textContent = 'Upload Letter';
+            });
+    }
+
+    function submitForward(caseType) {
+        var errEl = document.getElementById('actionError');
+        errEl.style.display = 'none';
+
+        var remarks = '';
+        if (caseType === 'regular' || caseType === 'regular_supplementary') {
+            remarks = (document.getElementById('regularRemarks') || {}).value || '';
+        } else if (caseType === 'repeat_case') {
+            var cieRadio = document.querySelector('input[name="cieSatisfied"]:checked');
+            if (!cieRadio) {
+                errEl.textContent = 'Please select Yes or No for CIE completion status.';
+                errEl.style.display = 'block'; return;
+            }
+            remarks = (document.getElementById('repeatRemarks') || {}).value || '';
+        } else if (caseType === 'condonation') {
+            if (!letterUploaded) {
+                errEl.textContent = 'Please upload the Registrar\'s letter before forwarding.';
+                errEl.style.display = 'block'; return;
+            }
+            remarks = (document.getElementById('condonationRemarks') || {}).value || '';
+        }
+
+        var cieSatisfied = '';
+        if (caseType === 'repeat_case') {
+            var cieRadioEl = document.querySelector('input[name="cieSatisfied"]:checked');
+            cieSatisfied = cieRadioEl ? cieRadioEl.value : '';
+        }
+
+        var fd = new FormData();
+        fd.append('id', APP_ID);
+        fd.append('caseType', caseType);
+        fd.append('cieSatisfied', cieSatisfied);
+        fd.append('remarks', remarks.trim());
+        fd.append('csrf_payload', CSRF_PAYLOAD);
+        fd.append('csrf_sig', CSRF_SIG);
+
+        var btn = document.querySelector('[onclick="submitForward(\'' + caseType + '\')"]');
+        if (btn) { btn.disabled = true; btn.textContent = 'Forwarding...'; }
+
+        fetch('/campus-exam-action', { method: 'POST', body: fd })
+            .then(function(res) {
+                if (res.ok) return res.text().then(function(html) { document.open(); document.write(html); document.close(); });
+                errEl.textContent = 'Action failed. Please try again.';
+                errEl.style.display = 'block';
+                if (btn) { btn.disabled = false; btn.textContent = '&#10145; Forward to Director'; }
+            })
+            .catch(function() {
+                errEl.textContent = 'Request failed. Please check your connection.';
+                errEl.style.display = 'block';
+                if (btn) { btn.disabled = false; btn.textContent = '&#10145; Forward to Director'; }
+            });
+    }
+    </script>
+</body>
+</html>`;
+    return new Response(pageHtml, { headers: { 'Content-Type': 'text/html; charset=utf-8' } });
+}
+
+async function handleCampusExamUploadLetter(request, env, corsHeaders) {
+    const jsonHeaders = { ...corsHeaders, 'Content-Type': 'application/json' };
+    let formData;
+    try { formData = await request.formData(); } catch (e) {
+        return new Response(JSON.stringify({ error: 'Invalid form data' }), { status: 400, headers: jsonHeaders });
+    }
+    const id = (formData.get('id') || '').trim();
+    const csrfPayload = (formData.get('csrf_payload') || '').trim();
+    const csrfSig = (formData.get('csrf_sig') || '').trim();
+    const file = formData.get('file');
+
+    if (!csrfPayload || !csrfSig)
+        return new Response(JSON.stringify({ error: 'Forbidden — missing CSRF token' }), { status: 403, headers: jsonHeaders });
+    const [, expStr] = csrfPayload.split(':');
+    if (!expStr || Date.now() > parseInt(expStr))
+        return new Response(JSON.stringify({ error: 'CSRF token expired' }), { status: 403, headers: jsonHeaders });
+    const sigValid = await hmacVerify(env.CSRF_SECRET || 'fallback-dev-secret', csrfPayload, csrfSig);
+    if (!sigValid)
+        return new Response(JSON.stringify({ error: 'Invalid CSRF token' }), { status: 403, headers: jsonHeaders });
+
+    const app = await env.DB.prepare('SELECT id, status FROM applications WHERE id = ?').bind(id).first();
+    if (!app || app.status !== 'AWAITING_CAMPUS_EXAM')
+        return new Response(JSON.stringify({ error: 'Application not found or not in review state' }), { status: 404, headers: jsonHeaders });
+
+    if (!file || !file.name)
+        return new Response(JSON.stringify({ error: 'No file provided' }), { status: 400, headers: jsonHeaders });
+    if (file.size > 3 * 1024 * 1024)
+        return new Response(JSON.stringify({ error: 'File exceeds 3 MB limit' }), { status: 400, headers: jsonHeaders });
+
+    const allowedTypes = ['application/pdf', 'image/jpeg', 'image/jpg', 'image/png'];
+    if (!allowedTypes.includes(file.type))
+        return new Response(JSON.stringify({ error: 'Only PDF, JPG, or PNG files are allowed' }), { status: 400, headers: jsonHeaders });
+
+    const arrayBuffer = await file.arrayBuffer();
+    const uint8Array = new Uint8Array(arrayBuffer);
+    let binary = '';
+    for (let i = 0; i < uint8Array.length; i++) binary += String.fromCharCode(uint8Array[i]);
+    const base64 = btoa(binary);
+
+    await env.DB.prepare(
+        `INSERT INTO file_blobs (application_id, field_name, file_name, file_type, file_size, file_data, is_response, uploaded_by)
+         VALUES (?, 'campus_exam_condonation_letter', ?, ?, ?, ?, TRUE, 'campus_exam')`
+    ).bind(id, file.name, file.type, file.size, base64).run();
+
+    return new Response(JSON.stringify({ success: true }), { headers: jsonHeaders });
+}
+
+async function handleCampusExamAction(request, env, corsHeaders) {
+    let formData;
+    try { formData = await request.formData(); } catch (e) {
+        return new Response('Invalid form data', { status: 400, headers: corsHeaders });
+    }
+
+    const id = (formData.get('id') || '').trim();
+    const caseType = (formData.get('caseType') || '').trim();
+    const cieSatisfied = (formData.get('cieSatisfied') || '').trim();
+    const remarks = (formData.get('remarks') || '').trim();
+    const csrfPayload = (formData.get('csrf_payload') || '').trim();
+    const csrfSig = (formData.get('csrf_sig') || '').trim();
+
+    if (!csrfPayload || !csrfSig)
+        return new Response('Forbidden — missing CSRF token', { status: 403, headers: corsHeaders });
+    const [, expStr] = csrfPayload.split(':');
+    if (!expStr || Date.now() > parseInt(expStr))
+        return new Response('CSRF token expired', { status: 403, headers: corsHeaders });
+    const sigValid = await hmacVerify(env.CSRF_SECRET || 'fallback-dev-secret', csrfPayload, csrfSig);
+    if (!sigValid)
+        return new Response('Invalid CSRF token', { status: 403, headers: corsHeaders });
+
+    const app = await env.DB.prepare(
+        'SELECT id, applicant_name, form_type, campus, student_email, reg_no, programme, status FROM applications WHERE id = ?'
+    ).bind(id).first();
+
+    if (!app || app.status !== 'AWAITING_CAMPUS_EXAM') {
+        return new Response('Application not found or not in campus exam review state', { status: 400, headers: corsHeaders });
+    }
+
+    if (!['regular_supplementary', 'regular', 'repeat_case', 'condonation'].includes(caseType)) {
+        return new Response('Invalid case type', { status: 400, headers: corsHeaders });
+    }
+
+    await env.DB.prepare(
+        `UPDATE applications SET
+            status = 'AWAITING_DIRECTOR',
+            campus_exam_status = 'FORWARDED',
+            campus_exam_case_type = ?,
+            campus_exam_cie_satisfied = ?,
+            campus_exam_remarks = ?,
+            updated_at = CURRENT_TIMESTAMP
+         WHERE id = ?`
+    ).bind(caseType, cieSatisfied || null, remarks || null, id).run();
+
+    await logAuditEvent(env, 'CampusExam', 'FORWARDED_TO_DIRECTOR', id, { caseType, cieSatisfied });
+
+    try {
+        await sendDirectorNotificationFromCampusExam(
+            env, request, id, app.form_type, app.applicant_name, app.student_email,
+            app.campus, null, app.reg_no, app.programme,
+            caseType, cieSatisfied, remarks
+        );
+    } catch (e) {
+        console.error('Failed to send director notification from campus exam action:', e);
+    }
+
+    const successHtml = `<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Forwarded to Director - SSSIHL</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Outfit:wght@700;800&display=swap" rel="stylesheet">
+    <style>* { margin:0; padding:0; box-sizing:border-box; } body { font-family:'Inter',sans-serif; background:#f1f5f9; min-height:100vh; display:flex; flex-direction:column; align-items:center; justify-content:center; padding:40px 20px; } .card { background:white; border-radius:20px; padding:48px 40px; max-width:500px; width:100%; text-align:center; box-shadow:0 10px 25px -5px rgba(15,23,42,0.08); } .icon { width:80px; height:80px; border-radius:50%; background:#d1fae5; display:flex; align-items:center; justify-content:center; margin:0 auto 24px; font-size:40px; } h1 { font-family:'Outfit',sans-serif; color:#0f172a; font-size:1.8rem; margin-bottom:12px; } p { color:#64748b; font-size:0.95rem; line-height:1.7; } .app-id { display:inline-block; margin-top:20px; background:#f8fafc; border:1px solid #e2e8f0; border-radius:8px; padding:8px 16px; font-size:0.85rem; color:#64748b; font-family:monospace; }</style>
+</head>
+<body>
+    <div class="card">
+        <div class="icon">&#10145;</div>
+        <h1>Forwarded to Director</h1>
+        <p>The application has been forwarded to the Director with your remarks. The Director has been notified by email.</p>
+        <div class="app-id">Application ID: ${escapeHtml(id)}</div>
+    </div>
+</body>
+</html>`;
+    return new Response(successHtml, { headers: { 'Content-Type': 'text/html; charset=utf-8' } });
+}
+
 async function handleDirectorCommentPage(url, env, corsHeaders) {
     const id = url.searchParams.get('id');
     if (!id) return new Response('Missing application ID', { status: 400, headers: corsHeaders });
 
     const app = await env.DB.prepare(
-        'SELECT id, applicant_name, form_type, campus, status FROM applications WHERE id = ?'
+        'SELECT id, applicant_name, form_type, campus, status, campus_exam_case_type, campus_exam_cie_satisfied, campus_exam_remarks FROM applications WHERE id = ?'
     ).bind(id).first();
 
     if (!app) return new Response('Application not found', { status: 404, headers: corsHeaders });
@@ -2360,6 +3440,356 @@ async function handleDirectorCommentPage(url, env, corsHeaders) {
     const exp = Date.now() + 3600000; // 1 hour
     const csrfPayload = `${nonce}:${exp}`;
     const csrfSig = await hmacSign(env.CSRF_SECRET || 'fallback-dev-secret', csrfPayload);
+
+    const REPEAT_PAPER_FORM = 'Application for Repeating Examinations Registration (CIE and ESE)';
+    if (app.form_type === 'Application for Supplementary Examinations Registration' || app.form_type === REPEAT_PAPER_FORM) {
+        const suppHtml = `<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Review Application - SSSIHL Examination Services</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Outfit:wght@700;800&display=swap" rel="stylesheet">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'Inter', sans-serif; background: linear-gradient(135deg, #f1f5f9, #e2e8f0); min-height: 100vh; display: flex; flex-direction: column; align-items: center; justify-content: flex-start; padding: 40px 20px; }
+        .header { text-align: center; margin-bottom: 28px; }
+        .header img { height: 90px; width: auto; }
+        .card { background: white; border-radius: 20px; padding: 36px 32px; max-width: 520px; width: 100%; box-shadow: 0 10px 30px -5px rgba(15,23,42,0.10); border: 1px solid #e2e8f0; }
+        .icon-wrap { width: 64px; height: 64px; border-radius: 50%; background: #eff6ff; display: flex; align-items: center; justify-content: center; margin: 0 auto 20px; font-size: 30px; }
+        h1 { font-family: 'Outfit', sans-serif; color: #0f172a; font-size: 1.5rem; text-align: center; margin-bottom: 6px; }
+        .subtitle { color: #64748b; font-size: 0.875rem; text-align: center; line-height: 1.6; margin-bottom: 24px; }
+        .details-box { background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 12px; padding: 16px; margin-bottom: 24px; }
+        .detail-row { display: flex; justify-content: space-between; align-items: flex-start; padding: 8px 0; border-bottom: 1px solid #e2e8f0; gap: 12px; }
+        .detail-row:last-child { border-bottom: none; padding-bottom: 0; }
+        .detail-label { font-size: 0.72rem; color: #94a3b8; font-weight: 600; text-transform: uppercase; letter-spacing: 0.04em; flex-shrink: 0; }
+        .detail-value { font-size: 0.875rem; color: #0f172a; font-weight: 600; text-align: right; }
+        .section-label { font-size: 0.8rem; font-weight: 700; color: #0f172a; margin-bottom: 12px; }
+        .radio-option { display: flex; align-items: flex-start; gap: 12px; padding: 14px; border: 1.5px solid #e2e8f0; border-radius: 12px; cursor: pointer; margin-bottom: 10px; }
+        .radio-option input { margin-top: 2px; width: 16px; height: 16px; flex-shrink: 0; cursor: pointer; accent-color: #2563eb; }
+        .radio-option-text p:first-child { font-size: 0.875rem; font-weight: 600; color: #0f172a; margin-bottom: 2px; }
+        .radio-option-text p:last-child { font-size: 0.75rem; color: #64748b; }
+        .btn-row { display: flex; gap: 12px; margin-bottom: 16px; }
+        .btn { flex: 1; padding: 12px 16px; font-size: 0.875rem; font-weight: 700; border: none; border-radius: 10px; cursor: pointer; font-family: inherit; }
+        .btn:disabled { opacity: 0.45; cursor: not-allowed; }
+        .btn-green { background: #10b981; color: white; }
+        .btn-red { background: #ef4444; color: white; }
+        .btn-blue { background: #2563eb; color: white; }
+        .upload-note { background: #fffbeb; border: 1px solid #fde68a; border-radius: 10px; padding: 14px; margin-bottom: 16px; }
+        .upload-note p:first-child { font-size: 0.82rem; font-weight: 700; color: #92400e; margin-bottom: 4px; }
+        .upload-note p:last-child { font-size: 0.75rem; color: #a16207; line-height: 1.5; }
+        .file-input { display: none; }
+        .file-drop-zone { border: 2px dashed #cbd5e1; border-radius: 12px; padding: 20px 16px; text-align: center; cursor: pointer; transition: border-color 0.2s, background 0.2s; margin-bottom: 6px; background: #f8fafc; }
+        .file-drop-zone:hover { border-color: #2563eb; background: #eff6ff; }
+        .file-drop-zone.has-file { border-color: #10b981; background: #f0fdf4; }
+        .file-drop-zone .drop-icon { font-size: 26px; margin-bottom: 8px; }
+        .file-drop-zone .drop-label { font-size: 0.82rem; font-weight: 600; color: #475569; margin-bottom: 4px; }
+        .file-drop-zone .drop-sub { font-size: 0.72rem; color: #94a3b8; }
+        .file-drop-zone .drop-chosen { font-size: 0.8rem; font-weight: 700; color: #059669; margin-top: 6px; word-break: break-all; }
+        .error-text { font-size: 0.75rem; color: #ef4444; font-weight: 600; margin-top: 4px; margin-bottom: 8px; display: none; }
+        .status-text { font-size: 0.75rem; text-align: center; margin-bottom: 12px; }
+        .status-ok { color: #10b981; font-weight: 600; }
+        .status-err { color: #ef4444; font-weight: 600; }
+        label.field-label { display: block; font-size: 0.82rem; font-weight: 700; color: #0f172a; margin-bottom: 8px; }
+        textarea { width: 100%; border: 1.5px solid #e2e8f0; border-radius: 10px; padding: 12px 14px; font-size: 0.875rem; color: #0f172a; font-family: inherit; resize: vertical; line-height: 1.6; }
+        textarea:focus { outline: none; border-color: #2563eb; }
+        .char-count { font-size: 0.72rem; color: #94a3b8; margin-top: 4px; margin-bottom: 12px; }
+        .action-error { font-size: 0.78rem; color: #ef4444; text-align: center; margin-top: 10px; font-weight: 600; display: none; }
+        .hidden-section { display: none; }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <img src="https://sssihl-student-service.pages.dev/Examinations_Service.png" alt="SSSIHL Examination Services">
+    </div>
+    <div class="card">
+        ${(() => {
+            if (alreadyActed) {
+                return `<div style="text-align:center;padding:16px 0;">
+                   <div class="icon-wrap">ℹ️</div>
+                   <h1>Already Submitted</h1>
+                   <p class="subtitle">This application has already been acted upon. No further action is required from your end.</p>
+               </div>`;
+            }
+            const hasCampusExamInfo = !!app.campus_exam_case_type;
+            const caseType = app.campus_exam_case_type || '';
+            const cieSatisfied = app.campus_exam_cie_satisfied || '';
+            const campusRemarks = app.campus_exam_remarks || '';
+            const isRepeatCase = caseType === 'repeat_case';
+            const cieYes = isRepeatCase && cieSatisfied === 'yes';
+            const cieNo = isRepeatCase && cieSatisfied === 'no';
+            const caseTypeLabel = caseType === 'regular_supplementary' ? 'Regular Supplementary Case'
+                : caseType === 'regular' ? 'Regular Case'
+                : caseType === 'repeat_case' ? 'Repeat Case'
+                : caseType === 'condonation' ? 'Condonation Case'
+                : '';
+            const cieRemark = cieYes
+                ? 'Yes, the candidate has completed CIE tests satisfactorily.'
+                : cieNo ? 'No, the candidate has not completed CIE tests satisfactorily.' : '';
+
+            const campusExamInfoBox = hasCampusExamInfo ? `
+               <div style="background:#f0f9ff;border:1.5px solid #bae6fd;border-radius:12px;padding:16px;margin-bottom:20px;">
+                   <p style="font-size:0.75rem;font-weight:700;color:#0369a1;text-transform:uppercase;letter-spacing:0.05em;margin-bottom:10px;">&#128203; Campus Examination Section Remarks</p>
+                   ${caseTypeLabel ? `<div style="display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px solid #bae6fd;"><span style="font-size:0.72rem;color:#64748b;font-weight:600;">Case Type</span><span style="font-size:0.875rem;font-weight:700;color:#0f172a;">${escapeHtml(caseTypeLabel)}</span></div>` : ''}
+                   ${cieRemark ? `<div style="display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px solid #bae6fd;"><span style="font-size:0.72rem;color:#64748b;font-weight:600;">CIE Status</span><span style="font-size:0.875rem;font-weight:700;color:${cieYes ? '#059669' : '#dc2626'};">${escapeHtml(cieRemark)}</span></div>` : ''}
+                   ${campusRemarks ? `<div style="padding:6px 0;"><span style="font-size:0.72rem;color:#64748b;font-weight:600;display:block;margin-bottom:4px;">Remarks</span><span style="font-size:0.875rem;color:#0f172a;line-height:1.5;">${escapeHtml(campusRemarks)}</span></div>` : ''}
+               </div>` : '';
+
+            const actionButtons = hasCampusExamInfo
+                ? (cieYes
+                    ? `<div class="btn-row">
+                           <button class="btn btn-green" onclick="submitAction('approve', '${caseType}')">&#10003; Accept</button>
+                       </div>`
+                    : cieNo
+                        ? `<div class="btn-row" id="rejectBtnRow">
+                               <button class="btn btn-red" onclick="showRejectForm('campus')">&#10007; Reject</button>
+                           </div>
+                           <div id="campusRejectForm" class="hidden-section">
+                               <label class="field-label">Reason for Rejection</label>
+                               <textarea id="campusComment" rows="4" placeholder="Please provide the reason for rejection..."></textarea>
+                               <p class="char-count" id="campusCharCount">0 characters</p>
+                               <button class="btn btn-red" style="width:100%;" onclick="submitReject('campus')">Submit Rejection</button>
+                           </div>`
+                        : `<div class="btn-row">
+                               <button class="btn btn-green" onclick="submitAction('approve', '${caseType}')">&#10003; Accept</button>
+                               <button class="btn btn-red" onclick="showRejectForm('campus')">&#10007; Reject</button>
+                           </div>
+                           <div id="campusRejectForm" class="hidden-section">
+                               <label class="field-label">Reason for Rejection</label>
+                               <textarea id="campusComment" rows="4" placeholder="Please provide the reason for rejection..."></textarea>
+                               <p class="char-count" id="campusCharCount">0 characters</p>
+                               <button class="btn btn-red" style="width:100%;" onclick="submitReject('campus')">Submit Rejection</button>
+                           </div>`)
+                : `<p class="section-label">Select Case Type</p>
+               <label class="radio-option">
+                   <input type="radio" name="caseType" value="regular" onchange="showSection('regular')">
+                   <div class="radio-option-text"><p>Regular Supplementary Case</p><p>Standard supplementary examination case</p></div>
+               </label>
+               <label class="radio-option" style="margin-bottom:20px;">
+                   <input type="radio" name="caseType" value="condonation" onchange="showSection('condonation')">
+                   <div class="radio-option-text"><p>Condonation Case</p><p>Requires Registrar's letter upload</p></div>
+               </label>
+
+               <div id="regularSection" class="hidden-section">
+                   <div class="btn-row">
+                       <button class="btn btn-green" onclick="submitAction('approve', 'regular')">&#10003; Accept</button>
+                       <button class="btn btn-red" onclick="showRejectForm('regular')">&#10007; Reject</button>
+                   </div>
+                   <div id="regularRejectForm" class="hidden-section">
+                       <label class="field-label">Reason for Rejection</label>
+                       <textarea id="regularComment" rows="4" placeholder="Please provide the reason for rejection..."></textarea>
+                       <p class="char-count" id="regularCharCount">0 characters</p>
+                       <button class="btn btn-red" style="width:100%;" onclick="submitReject('regular')">Submit Rejection</button>
+                   </div>
+               </div>
+
+               <div id="condonationSection" class="hidden-section">
+                   <div class="upload-note">
+                       <p>Upload Registrar's Letter</p>
+                       <p>Please upload the letter from the Registrar (PDF/JPG/PNG, max 3 MB). Accept/Reject options will appear after upload.</p>
+                   </div>
+                   <input type="file" id="letterFile" accept=".pdf,.jpg,.jpeg,.png" class="file-input" onchange="validateFileSize()">
+                   <div class="file-drop-zone" id="dropZone" onclick="document.getElementById('letterFile').click()" ondragover="event.preventDefault();this.style.borderColor='#2563eb';" ondragleave="this.style.borderColor='';" ondrop="handleDrop(event)">
+                       <div class="drop-icon">&#128196;</div>
+                       <div class="drop-label">Click to choose file or drag &amp; drop here</div>
+                       <div class="drop-sub">PDF, JPG or PNG &mdash; max 3 MB</div>
+                       <div class="drop-chosen" id="chosenFileName"></div>
+                   </div>
+                   <p id="fileSizeError" class="error-text">File must be under 3 MB.</p>
+                   <p id="fileTypeError" class="error-text">Only PDF, JPG, or PNG files are allowed.</p>
+                   <button id="uploadBtn" class="btn btn-blue" style="width:100%;margin-bottom:8px;" onclick="uploadLetter()" disabled>Upload Letter</button>
+                   <p id="uploadStatus" class="status-text"></p>
+                   <div id="afterUpload" class="hidden-section">
+                       <div class="btn-row">
+                           <button class="btn btn-green" onclick="submitAction('approve', 'condonation')">&#10003; Accept</button>
+                           <button class="btn btn-red" onclick="showRejectForm('condonation')">&#10007; Reject</button>
+                       </div>
+                       <div id="condonationRejectForm" class="hidden-section">
+                           <label class="field-label">Reason for Rejection</label>
+                           <textarea id="condonationComment" rows="4" placeholder="Please provide the reason for rejection..."></textarea>
+                           <p class="char-count" id="condonationCharCount">0 characters</p>
+                           <button class="btn btn-red" style="width:100%;" onclick="submitReject('condonation')">Submit Rejection</button>
+                       </div>
+                   </div>
+               </div>`;
+
+            return `<div class="icon-wrap">📋</div>
+               <h1>Review Application</h1>
+               <p class="subtitle">${hasCampusExamInfo ? 'Application forwarded by the Campus Examination Section. Please review and record your decision.' : 'Please classify the case and record your decision below.'}</p>
+
+               <div class="details-box">
+                   <div class="detail-row"><span class="detail-label">Application ID</span><span class="detail-value">${escapeHtml(app.id)}</span></div>
+                   <div class="detail-row"><span class="detail-label">Applicant Name</span><span class="detail-value">${escapeHtml(app.applicant_name)}</span></div>
+                   <div class="detail-row"><span class="detail-label">Form Type</span><span class="detail-value" style="font-size:0.8rem;">${escapeHtml(app.form_type)}</span></div>
+                   <div class="detail-row"><span class="detail-label">Campus</span><span class="detail-value">${escapeHtml(app.campus)}</span></div>
+               </div>
+
+               ${campusExamInfoBox}
+               ${actionButtons}
+               <p id="actionError" class="action-error"></p>`;
+        })()}
+    </div>
+    <script>
+    var APP_ID = ${JSON.stringify(app.id)};
+    var CSRF_PAYLOAD = ${JSON.stringify(csrfPayload)};
+    var CSRF_SIG = ${JSON.stringify(csrfSig)};
+    var currentCaseType = 'regular';
+
+    document.getElementById('regularComment') && document.getElementById('regularComment').addEventListener('input', function() {
+        document.getElementById('regularCharCount').textContent = this.value.length + ' characters';
+    });
+    document.getElementById('condonationComment') && document.getElementById('condonationComment').addEventListener('input', function() {
+        document.getElementById('condonationCharCount').textContent = this.value.length + ' characters';
+    });
+
+    function showSection(type) {
+        currentCaseType = type;
+        document.getElementById('regularSection').style.display = (type === 'regular') ? 'block' : 'none';
+        document.getElementById('condonationSection').style.display = (type === 'condonation') ? 'block' : 'none';
+        document.getElementById('regularRejectForm').style.display = 'none';
+        document.getElementById('condonationRejectForm').style.display = 'none';
+        document.getElementById('afterUpload').style.display = 'none';
+        document.getElementById('actionError').style.display = 'none';
+    }
+
+    function handleDrop(e) {
+        e.preventDefault();
+        var input = document.getElementById('letterFile');
+        var dt = e.dataTransfer;
+        if (dt && dt.files && dt.files.length) {
+            var dummyInput = document.getElementById('letterFile');
+            // Assign dropped files via DataTransfer
+            try {
+                var transfer = new DataTransfer();
+                transfer.items.add(dt.files[0]);
+                dummyInput.files = transfer.files;
+            } catch(ex) {}
+            validateFileSize();
+        }
+    }
+
+    function validateFileSize() {
+        var input = document.getElementById('letterFile');
+        var sizeErr = document.getElementById('fileSizeError');
+        var typeErr = document.getElementById('fileTypeError');
+        var btn = document.getElementById('uploadBtn');
+        var dropZone = document.getElementById('dropZone');
+        var nameEl = document.getElementById('chosenFileName');
+        sizeErr.style.display = 'none';
+        typeErr.style.display = 'none';
+        btn.disabled = true;
+        dropZone.classList.remove('has-file');
+        nameEl.textContent = '';
+        if (!input.files || !input.files.length) return;
+        var file = input.files[0];
+        var allowed = ['application/pdf','image/jpeg','image/png','image/jpg'];
+        if (allowed.indexOf(file.type) === -1) { typeErr.style.display = 'block'; return; }
+        if (file.size > 3 * 1024 * 1024) { sizeErr.style.display = 'block'; return; }
+        dropZone.classList.add('has-file');
+        nameEl.textContent = '&#10003; ' + file.name;
+        btn.disabled = false;
+    }
+
+    function uploadLetter() {
+        var input = document.getElementById('letterFile');
+        if (!input.files || !input.files.length) return;
+        var statusEl = document.getElementById('uploadStatus');
+        var btn = document.getElementById('uploadBtn');
+        btn.disabled = true;
+        btn.textContent = 'Uploading...';
+        statusEl.textContent = '';
+        statusEl.className = 'status-text';
+        var fd = new FormData();
+        fd.append('id', APP_ID);
+        fd.append('file', input.files[0]);
+        fd.append('csrf_payload', CSRF_PAYLOAD);
+        fd.append('csrf_sig', CSRF_SIG);
+        fetch('/director-upload-letter', { method: 'POST', body: fd })
+            .then(function(res) { return res.json(); })
+            .then(function(data) {
+                if (data.success) {
+                    statusEl.textContent = 'Letter uploaded successfully.';
+                    statusEl.className = 'status-text status-ok';
+                    document.getElementById('afterUpload').style.display = 'block';
+                    btn.textContent = 'Uploaded';
+                } else {
+                    statusEl.textContent = data.error || 'Upload failed. Please try again.';
+                    statusEl.className = 'status-text status-err';
+                    btn.disabled = false;
+                    btn.textContent = 'Upload Letter';
+                }
+            })
+            .catch(function() {
+                statusEl.textContent = 'Upload failed. Please check your connection.';
+                statusEl.className = 'status-text status-err';
+                btn.disabled = false;
+                btn.textContent = 'Upload Letter';
+            });
+    }
+
+    document.getElementById('campusComment') && document.getElementById('campusComment').addEventListener('input', function() {
+        document.getElementById('campusCharCount').textContent = this.value.length + ' characters';
+    });
+
+    function showRejectForm(section) {
+        var el = document.getElementById(section + 'RejectForm');
+        if (el) el.style.display = 'block';
+    }
+
+    function doAction(fd) {
+        var errEl = document.getElementById('actionError');
+        errEl.style.display = 'none';
+        fetch('/director-action', { method: 'POST', body: fd })
+            .then(function(res) {
+                if (res.ok) {
+                    return res.text().then(function(html) {
+                        document.open(); document.write(html); document.close();
+                    });
+                } else {
+                    errEl.textContent = 'Action failed. Please try again.';
+                    errEl.style.display = 'block';
+                }
+            })
+            .catch(function() {
+                errEl.textContent = 'Request failed. Please check your connection.';
+                errEl.style.display = 'block';
+            });
+    }
+
+    function submitAction(action, caseType) {
+        var fd = new FormData();
+        fd.append('id', APP_ID);
+        fd.append('action', action);
+        fd.append('caseType', caseType || currentCaseType);
+        fd.append('csrf_payload', CSRF_PAYLOAD);
+        fd.append('csrf_sig', CSRF_SIG);
+        doAction(fd);
+    }
+
+    function submitReject(section) {
+        var commentEl = document.getElementById(section + 'Comment');
+        var comment = commentEl ? commentEl.value.trim() : '';
+        var errEl = document.getElementById('actionError');
+        if (!comment) {
+            errEl.textContent = 'Please enter a reason for rejection before submitting.';
+            errEl.style.display = 'block';
+            return;
+        }
+        var fd = new FormData();
+        fd.append('id', APP_ID);
+        fd.append('action', 'reject');
+        fd.append('caseType', currentCaseType);
+        fd.append('comment', comment);
+        fd.append('csrf_payload', CSRF_PAYLOAD);
+        fd.append('csrf_sig', CSRF_SIG);
+        doAction(fd);
+    }
+    </script>
+</body>
+</html>`;
+        return new Response(suppHtml, { headers: { 'Content-Type': 'text/html; charset=utf-8' } });
+    }
+
     const pageHtml = `<!DOCTYPE html>
 <html lang="en">
 <head>
@@ -2377,7 +3807,7 @@ async function handleDirectorCommentPage(url, env, corsHeaders) {
 
     <!-- Header -->
     <div class="text-center mb-8">
-        <img src="https://student-service.pages.dev/Examinations_Service.png" alt="SSSIHL" class="w-auto h-24 mx-auto">
+        <img src="https://sssihl-student-service.pages.dev/Examinations_Service.png" alt="SSSIHL" class="w-auto h-24 mx-auto">
     </div>
 
     <!-- Card -->
@@ -2442,6 +3872,177 @@ async function handleDirectorCommentPage(url, env, corsHeaders) {
 </html>`;
 
     return new Response(pageHtml, { headers: { 'Content-Type': 'text/html; charset=utf-8' } });
+}
+
+async function handleDirectorUploadLetter(request, env, corsHeaders) {
+    const jsonHeaders = { ...corsHeaders, 'Content-Type': 'application/json' };
+    let formData;
+    try { formData = await request.formData(); } catch (e) {
+        return new Response(JSON.stringify({ error: 'Invalid form data' }), { status: 400, headers: jsonHeaders });
+    }
+    const id = (formData.get('id') || '').trim();
+    const csrfPayload = (formData.get('csrf_payload') || '').trim();
+    const csrfSig = (formData.get('csrf_sig') || '').trim();
+    const file = formData.get('file');
+
+    if (!csrfPayload || !csrfSig)
+        return new Response(JSON.stringify({ error: 'Forbidden — missing CSRF token' }), { status: 403, headers: jsonHeaders });
+    const [, expStr] = csrfPayload.split(':');
+    if (!expStr || Date.now() > parseInt(expStr))
+        return new Response(JSON.stringify({ error: 'CSRF token expired' }), { status: 403, headers: jsonHeaders });
+    const sigValid = await hmacVerify(env.CSRF_SECRET || 'fallback-dev-secret', csrfPayload, csrfSig);
+    if (!sigValid)
+        return new Response(JSON.stringify({ error: 'Invalid CSRF token' }), { status: 403, headers: jsonHeaders });
+
+    const app = await env.DB.prepare('SELECT id, status FROM applications WHERE id = ?').bind(id).first();
+    if (!app || app.status !== 'AWAITING_DIRECTOR')
+        return new Response(JSON.stringify({ error: 'Application not found or already processed' }), { status: 404, headers: jsonHeaders });
+
+    if (!file || !file.name)
+        return new Response(JSON.stringify({ error: 'No file provided' }), { status: 400, headers: jsonHeaders });
+    if (file.size > 3 * 1024 * 1024)
+        return new Response(JSON.stringify({ error: 'File exceeds 3 MB limit' }), { status: 400, headers: jsonHeaders });
+
+    const allowedTypes = ['application/pdf', 'image/jpeg', 'image/jpg', 'image/png'];
+    if (!allowedTypes.includes(file.type))
+        return new Response(JSON.stringify({ error: 'Only PDF, JPG, or PNG files are allowed' }), { status: 400, headers: jsonHeaders });
+
+    const arrayBuffer = await file.arrayBuffer();
+    const uint8Array = new Uint8Array(arrayBuffer);
+    let binary = '';
+    for (let i = 0; i < uint8Array.length; i++) binary += String.fromCharCode(uint8Array[i]);
+    const base64 = btoa(binary);
+
+    await env.DB.prepare(
+        `INSERT INTO file_blobs (application_id, field_name, file_name, file_type, file_size, file_data, is_response, uploaded_by)
+         VALUES (?, 'director_condonation_letter', ?, ?, ?, ?, TRUE, 'director')`
+    ).bind(id, file.name, file.type, file.size, base64).run();
+
+    return new Response(JSON.stringify({ success: true }), { headers: jsonHeaders });
+}
+
+async function handleDirectorAction(request, env, corsHeaders) {
+    let formData;
+    try { formData = await request.formData(); } catch (e) {
+        return new Response('Bad request', { status: 400, headers: corsHeaders });
+    }
+    const id = (formData.get('id') || '').trim();
+    const action = (formData.get('action') || '').trim();
+    const rawComment = (formData.get('comment') || '').trim();
+    const caseType = (formData.get('caseType') || 'regular').trim();
+    const csrfPayload = (formData.get('csrf_payload') || '').trim();
+    const csrfSig = (formData.get('csrf_sig') || '').trim();
+
+    if (!csrfPayload || !csrfSig)
+        return new Response('Forbidden — missing CSRF token', { status: 403, headers: corsHeaders });
+    const [, expStr] = csrfPayload.split(':');
+    if (!expStr || Date.now() > parseInt(expStr))
+        return new Response('Forbidden — CSRF token expired', { status: 403, headers: corsHeaders });
+    const sigValid = await hmacVerify(env.CSRF_SECRET || 'fallback-dev-secret', csrfPayload, csrfSig);
+    if (!sigValid)
+        return new Response('Forbidden — invalid CSRF token', { status: 403, headers: corsHeaders });
+
+    if (!id || !action)
+        return new Response('Missing required fields', { status: 400, headers: corsHeaders });
+
+    const app = await env.DB.prepare('SELECT * FROM applications WHERE id = ?').bind(id).first();
+
+    const alreadyActedHtml = `<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"><title>Already Submitted</title></head><body style="font-family:sans-serif;display:flex;align-items:center;justify-content:center;min-height:100vh;background:#f1f5f9;"><div style="text-align:center;background:white;border-radius:16px;padding:40px;max-width:480px;box-shadow:0 4px 20px rgba(0,0,0,0.08);"><h2 style="color:#0f172a;">Already Processed</h2><p style="color:#64748b;margin-top:12px;">This application has already been acted upon. No further action is required.</p></div></body></html>`;
+
+    if (!app || app.status !== 'AWAITING_DIRECTOR') {
+        return new Response(alreadyActedHtml, { headers: { 'Content-Type': 'text/html; charset=utf-8' } });
+    }
+
+    // Fetch programme + semester for student email
+    let programme = null, semester = null;
+    try {
+        if (app.form_type === 'Application for Repeating Examinations Registration (CIE and ESE)') {
+            const fd = await env.DB.prepare('SELECT Programme, Semester FROM form_repeat_paper WHERE application_id = ?').bind(id).first();
+            if (fd) { programme = fd.Programme || null; semester = fd.Semester || null; }
+        } else {
+            const fd = await env.DB.prepare('SELECT Programme, Semester FROM form_supplementary_exam WHERE application_id = ?').bind(id).first();
+            if (fd) { programme = fd.Programme || null; semester = fd.Semester || null; }
+        }
+    } catch (e) { /* non-critical */ }
+
+    const verification = { ...app, programme, semester };
+
+    if (action === 'approve') {
+        await env.DB.prepare(
+            `UPDATE applications SET director_status = 'APPROVED', status = 'DIRECTOR_APPROVED', updated_at = CURRENT_TIMESTAMP WHERE id = ?`
+        ).bind(id).run();
+        verification.status = 'DIRECTOR_APPROVED';
+        verification.director_status = 'APPROVED';
+
+        try {
+            await sendStudentDecisionEmail(env, verification, true, 'https://sssihl-student-service.pages.dev');
+            await sendAdminNotification(env, id, app.form_type, app.applicant_name, app.student_email);
+        } catch (e) { console.error('Email error in director approve:', e); }
+
+        await logAuditEvent(env, 'Director', 'APPROVED', id, { caseType });
+
+        const successHtml = `<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Application Approved - SSSIHL</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Outfit:wght@700;800&display=swap" rel="stylesheet">
+    <style>* { margin:0; padding:0; box-sizing:border-box; } body { font-family:'Inter',sans-serif; background:#f1f5f9; min-height:100vh; display:flex; flex-direction:column; align-items:center; justify-content:center; padding:40px 20px; } .card { background:white; border-radius:20px; padding:48px 40px; max-width:500px; width:100%; text-align:center; box-shadow:0 10px 25px -5px rgba(15,23,42,0.08); } .icon { width:80px; height:80px; border-radius:50%; background:#d1fae5; display:flex; align-items:center; justify-content:center; margin:0 auto 24px; font-size:40px; } h1 { font-family:'Outfit',sans-serif; color:#0f172a; font-size:1.8rem; margin-bottom:12px; } p { color:#64748b; font-size:0.95rem; line-height:1.7; } .app-id { display:inline-block; margin-top:20px; background:#f8fafc; border:1px solid #e2e8f0; border-radius:8px; padding:8px 16px; font-size:0.85rem; color:#64748b; font-family:monospace; }</style>
+</head>
+<body>
+    <div class="card">
+        <div class="icon">✅</div>
+        <h1>Application Approved</h1>
+        <p>Thank you. The application has been approved and forwarded to the Examination Section. The student has been notified by email.</p>
+        <div class="app-id">Application ID: ${escapeHtml(id)}</div>
+    </div>
+</body>
+</html>`;
+        return new Response(successHtml, { headers: { 'Content-Type': 'text/html; charset=utf-8' } });
+
+    } else if (action === 'reject') {
+        const comment = rawComment.replace(/<[^>]*>/g, '').trim();
+        if (!comment) {
+            return new Response('Comment is required for rejection', { status: 400, headers: corsHeaders });
+        }
+
+        await env.DB.prepare(
+            `UPDATE applications SET director_status = 'REJECTED', status = 'REJECTED', director_comment = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?`
+        ).bind(comment, id).run();
+        verification.status = 'REJECTED';
+        verification.director_status = 'REJECTED';
+
+        try {
+            await sendStudentDecisionEmail(env, verification, false, 'https://sssihl-student-service.pages.dev');
+            await sendAdminNotification(env, id, app.form_type, app.applicant_name, app.student_email);
+        } catch (e) { console.error('Email error in director reject:', e); }
+
+        await logAuditEvent(env, 'Director', 'REJECTED', id, { caseType, hasComment: true });
+
+        const rejectHtml = `<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Application Rejected - SSSIHL</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Outfit:wght@700;800&display=swap" rel="stylesheet">
+    <style>* { margin:0; padding:0; box-sizing:border-box; } body { font-family:'Inter',sans-serif; background:#f1f5f9; min-height:100vh; display:flex; flex-direction:column; align-items:center; justify-content:center; padding:40px 20px; } .card { background:white; border-radius:20px; padding:48px 40px; max-width:500px; width:100%; text-align:center; box-shadow:0 10px 25px -5px rgba(15,23,42,0.08); } .icon { width:80px; height:80px; border-radius:50%; background:#fee2e2; display:flex; align-items:center; justify-content:center; margin:0 auto 24px; font-size:40px; } h1 { font-family:'Outfit',sans-serif; color:#0f172a; font-size:1.8rem; margin-bottom:12px; } p { color:#64748b; font-size:0.95rem; line-height:1.7; } .app-id { display:inline-block; margin-top:20px; background:#f8fafc; border:1px solid #e2e8f0; border-radius:8px; padding:8px 16px; font-size:0.85rem; color:#64748b; font-family:monospace; }</style>
+</head>
+<body>
+    <div class="card">
+        <div class="icon">✗</div>
+        <h1>Application Rejected</h1>
+        <p>Thank you. The application has been rejected and the Examination Section has been notified. The student has been informed by email.</p>
+        <div class="app-id">Application ID: ${escapeHtml(id)}</div>
+    </div>
+</body>
+</html>`;
+        return new Response(rejectHtml, { headers: { 'Content-Type': 'text/html; charset=utf-8' } });
+
+    } else {
+        return new Response('Invalid action', { status: 400, headers: corsHeaders });
+    }
 }
 
 async function handleDirectorCommentSubmit(request, env, corsHeaders) {
@@ -2538,7 +4139,16 @@ async function handleApproval(url, env, corsHeaders) {
     try {
         if (role === 'Director') {
             // Determine overall status based on whether this is a two-step form
-            const app = await env.DB.prepare('SELECT form_type FROM applications WHERE id = ?').bind(id).first();
+            const app = await env.DB.prepare('SELECT form_type, status FROM applications WHERE id = ?').bind(id).first();
+            if (!app) {
+                return new Response('Application not found', { status: 404, headers: corsHeaders });
+            }
+            // Idempotency guard — block only if already acted upon, not on first click
+            if (!['AWAITING_DIRECTOR', 'PENDING'].includes(app.status)) {
+                return new Response(`<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"><title>Already Submitted</title></head><body style="font-family:sans-serif;display:flex;align-items:center;justify-content:center;min-height:100vh;background:#f1f5f9;"><div style="text-align:center;background:white;border-radius:16px;padding:40px;max-width:480px;box-shadow:0 4px 20px rgba(0,0,0,0.08);"><h2 style="color:#0f172a;">Already Processed</h2><p style="color:#64748b;margin-top:12px;">This application has already been acted upon. No further action is required.</p></div></body></html>`, {
+                    headers: { 'Content-Type': 'text/html; charset=utf-8' }
+                });
+            }
             let overallStatus;
             if (statusValue === 'APPROVED') {
                 overallStatus = shouldNotifyDirector(app.form_type) ? 'DIRECTOR_APPROVED' : 'APPROVED';
@@ -2592,7 +4202,7 @@ async function handleApproval(url, env, corsHeaders) {
 
         // Send student notification email
         try {
-            const frontendUrl = 'https://student-service.pages.dev';
+            const frontendUrl = 'https://sssihl-student-service.pages.dev';
             await sendStudentDecisionEmail(env, verification, action === 'Approve', frontendUrl);
             console.log(`Student notification sent for app ${id}`);
 
@@ -2872,7 +4482,7 @@ async function handleApproval(url, env, corsHeaders) {
 </head>
 <body>
     <div class="header">
-        <img src="https://student-service.pages.dev/Examinations_Service.png" alt="SSSIHL Examination Services" style="height: 90px; width: auto;">
+        <img src="https://sssihl-student-service.pages.dev/Examinations_Service.png" alt="SSSIHL Examination Services" style="height: 90px; width: auto;">
     </div>
 
     <div class="glass-card">
@@ -3054,11 +4664,27 @@ async function handleStatusRequest(url, env, corsHeaders) {
 
     try {
         const app = await env.DB.prepare(
-            `SELECT id, student_email, form_type, applicant_name, reg_no, campus, status, director_status, director_comment, controller_status, access_token, created_at, updated_at
+            `SELECT id, student_email, form_type, applicant_name, reg_no, campus, status, director_status, director_comment, controller_status, access_token, campus_exam_status, created_at, updated_at
              FROM applications WHERE id = ?`
         ).bind(id).first();
 
         if (!app) {
+            // Check if the application was archived
+            const archived = await env.DB.prepare(
+                'SELECT id, form_type, applicant_name FROM archived_applications WHERE id = ?'
+            ).bind(id).first();
+            if (archived) {
+                return new Response(JSON.stringify({
+                    archived: true,
+                    id: archived.id,
+                    form_type: archived.form_type,
+                    applicant_name: archived.applicant_name,
+                    message: 'This application has been archived and is no longer available for tracking. Please contact the Examinations Section at coeoffice@sssihl.edu.in if you have any queries.'
+                }), {
+                    status: 200,
+                    headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+                });
+            }
             return new Response(JSON.stringify({ error: 'Application not found' }), {
                 status: 404,
                 headers: { ...corsHeaders, 'Content-Type': 'application/json' }
@@ -3107,9 +4733,15 @@ async function handleStatusRequest(url, env, corsHeaders) {
             }
         }
 
+        const needsCampusExamReview = [
+            'Application for Supplementary Examinations Registration',
+            'Application for Repeating Examinations Registration (CIE and ESE)',
+        ].includes(app.form_type);
+
         return new Response(JSON.stringify({
             ...app,
             needs_director_approval: shouldNotifyDirector(app.form_type),
+            needs_campus_exam_review: needsCampusExamReview,
             formData,
             files: studentFiles.results || [],
             responseDocuments: responseFiles.results || []

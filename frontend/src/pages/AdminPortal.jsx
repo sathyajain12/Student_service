@@ -1,8 +1,18 @@
 import React, { useState, useEffect, useRef } from 'react';
 import DOMPurify from 'dompurify';
-import { LogOut, FileText, Download, Users, Clock, CheckCircle, XCircle, ArrowLeft, RefreshCw, Upload, Trash2, X, AlertTriangle, Search, Eye } from 'lucide-react';
+import { LogOut, FileText, Download, Users, Clock, CheckCircle, XCircle, ArrowLeft, RefreshCw, Upload, Trash2, Archive, X, AlertTriangle, Search, Eye } from 'lucide-react';
 
 const API_URL = import.meta.env.VITE_BACKEND_URL || 'http://localhost:8787';
+
+const getTabTokenKey = () => {
+    let tabId = sessionStorage.getItem('adminTabId');
+    if (!tabId) {
+        tabId = Math.random().toString(36).substring(2);
+        sessionStorage.setItem('adminTabId', tabId);
+    }
+    return `adminToken_${tabId}`;
+};
+const TOKEN_KEY = getTabTokenKey();
 
 const escapeHtml = (str) => String(str ?? '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#x27;');
 
@@ -232,8 +242,9 @@ const getAuditActionStyle = (action) => {
 };
 
 export default function AdminPortal() {
-    const [token, setToken] = useState(localStorage.getItem('adminToken') || '');
-    const [isLoggedIn, setIsLoggedIn] = useState(!!localStorage.getItem('adminToken'));
+    const [token, setToken] = useState(localStorage.getItem(TOKEN_KEY) || '');
+    const [isLoggedIn, setIsLoggedIn] = useState(!!localStorage.getItem(TOKEN_KEY));
+    const [adminRole, setAdminRole] = useState(localStorage.getItem('adminRole') || 'admin');
     const [username, setUsername] = useState('');
     const [password, setPassword] = useState('');
     const [loginError, setLoginError] = useState('');
@@ -259,7 +270,11 @@ export default function AdminPortal() {
     const [currentPage, setCurrentPage] = useState(1);
     const [statusFilter, setStatusFilter] = useState('ALL');
     const [campusFilter, setCampusFilter] = useState('ALL');
-    const [retotalingActive, setRetotalingActive] = useState(null);
+    const [formSettings, setFormSettings] = useState(null);
+    const [formsDrawerOpen, setFormsDrawerOpen] = useState(false);
+    const [showTestEmailModal, setShowTestEmailModal] = useState(false);
+    const [testEmailForm, setTestEmailForm] = useState({ testEmail: '', campus: 'Prashanti Nilayam Campus', formType: 'Application for Supplementary Examinations Registration' });
+    const [testEmailStatus, setTestEmailStatus] = useState(null);
     const urgencySort = true;
 
     const [pdfViewerUrl, setPdfViewerUrl] = useState(null);
@@ -267,6 +282,12 @@ export default function AdminPortal() {
 
     const [showStudentLookup, setShowStudentLookup] = useState(false);
     const [studentLookupQuery, setStudentLookupQuery] = useState('');
+
+    const [showExportModal, setShowExportModal] = useState(false);
+    const [exportTab, setExportTab] = useState('app'); // 'app' | 'formtype'
+    const [exportSearch, setExportSearch] = useState('');
+    const [exportingId, setExportingId] = useState(null);
+    const [exportingFormType, setExportingFormType] = useState(null);
 
     const [showAuditLog, setShowAuditLog] = useState(false);
     const [auditEntries, setAuditEntries] = useState([]);
@@ -335,24 +356,75 @@ export default function AdminPortal() {
         return apps.filter(a => (a.created_at || '').startsWith(ds)).length;
     });
 
-    const exportCSV = (apps) => {
-        const h = ['ID', 'Form Type', 'Applicant', 'Email', 'Campus', 'Status', 'Date'];
-        const rows = apps.map(a => [
-            a.id,
-            `"${(a.form_type || '').replace(/"/g, '""')}"`,
-            `"${(a.applicant_name || '').replace(/"/g, '""')}"`,
-            a.student_email || '',
-            `"${(a.campus || '').replace(/"/g, '""')}"`,
-            a.status || '',
-            a.created_at ? new Date(a.created_at + 'Z').toLocaleDateString('en-IN', { timeZone: 'Asia/Kolkata' }) : ''
-        ]);
-        const csv = [h.join(','), ...rows.map(r => r.join(','))].join('\n');
-        const url = URL.createObjectURL(new Blob([csv], { type: 'text/csv;charset=utf-8;' }));
-        const el = Object.assign(document.createElement('a'), {
-            href: url,
-            download: `applications_${new Date().toISOString().split('T')[0]}.csv`
-        });
-        document.body.appendChild(el); el.click(); document.body.removeChild(el); URL.revokeObjectURL(url);
+    const doExportCSV = async (appId) => {
+        setExportingId(appId);
+        try {
+            const res = await fetch(`${API_URL}/admin/export-application/${appId}`, {
+                headers: { 'Authorization': `Bearer ${token}` }
+            });
+            if (!res.ok) { showToast('Failed to fetch application data', 'error'); return; }
+            const data = await res.json();
+
+            // Merge application fields + form-specific fields into one flat object
+            const flat = { ...data.application, ...data.formData };
+            delete flat.file_data; // never export raw base64
+
+            const escape = (v) => {
+                if (v === null || v === undefined) return '';
+                const s = String(v).replace(/"/g, '""');
+                return /[,"\n]/.test(s) ? `"${s}"` : s;
+            };
+
+            const headers = Object.keys(flat);
+            const values = Object.values(flat);
+            const csv = [headers.map(escape).join(','), values.map(escape).join(',')].join('\n');
+            const url = URL.createObjectURL(new Blob(['﻿' + csv], { type: 'text/csv;charset=utf-8;' }));
+            const a = document.createElement('a');
+            a.href = url; a.download = `${appId}_${new Date().toISOString().split('T')[0]}.csv`;
+            document.body.appendChild(a); a.click(); document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+            setShowExportModal(false);
+            setExportSearch('');
+            showToast('CSV exported successfully!', 'success');
+        } catch (err) {
+            showToast('Export failed. Please try again.', 'error');
+        } finally {
+            setExportingId(null);
+        }
+    };
+
+    const doExportByFormType = async (formType) => {
+        setExportingFormType(formType);
+        try {
+            const res = await fetch(`${API_URL}/admin/export-form-type?formType=${encodeURIComponent(formType)}`, {
+                headers: { 'Authorization': `Bearer ${token}` }
+            });
+            if (!res.ok) { showToast('Failed to fetch data', 'error'); return; }
+            const { rows } = await res.json();
+            if (!rows || rows.length === 0) { showToast('No applications found for this form type', 'error'); return; }
+
+            const escape = (v) => {
+                if (v === null || v === undefined) return '';
+                const s = String(v).replace(/"/g, '""');
+                return /[,"\n]/.test(s) ? `"${s}"` : s;
+            };
+
+            const headers = Object.keys(rows[0]);
+            const csvRows = rows.map(row => headers.map(h => escape(row[h])).join(','));
+            const csv = [headers.map(escape).join(','), ...csvRows].join('\n');
+            const url = URL.createObjectURL(new Blob(['﻿' + csv], { type: 'text/csv;charset=utf-8;' }));
+            const slug = formType.replace(/[^a-z0-9]/gi, '_').replace(/_+/g, '_').toLowerCase();
+            const a = document.createElement('a');
+            a.href = url; a.download = `${slug}_${new Date().toISOString().split('T')[0]}.csv`;
+            document.body.appendChild(a); a.click(); document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+            setShowExportModal(false);
+            showToast(`Exported ${rows.length} application${rows.length !== 1 ? 's' : ''} successfully!`, 'success');
+        } catch (err) {
+            showToast('Export failed. Please try again.', 'error');
+        } finally {
+            setExportingFormType(null);
+        }
     };
 
     const showToast = (message, type = 'success') => {
@@ -403,8 +475,10 @@ export default function AdminPortal() {
             const data = await response.json();
 
             if (data.success) {
-                localStorage.setItem('adminToken', data.token);
+                localStorage.setItem(TOKEN_KEY, data.token);
+                localStorage.setItem('adminRole', data.role || 'admin');
                 setToken(data.token);
+                setAdminRole(data.role || 'admin');
                 setIsLoggedIn(true);
             } else {
                 setLoginError(data.error || 'Login failed');
@@ -417,15 +491,17 @@ export default function AdminPortal() {
     };
 
     const handleLogout = () => {
-        localStorage.removeItem('adminToken');
+        localStorage.removeItem(TOKEN_KEY);
+        localStorage.removeItem('adminRole');
         setToken('');
+        setAdminRole('admin');
         setIsLoggedIn(false);
         setApplications([]);
         setStats(null);
     };
 
     const fetchStats = async () => {
-        const currentToken = localStorage.getItem('adminToken');
+        const currentToken = localStorage.getItem(TOKEN_KEY);
         if (!currentToken) return;
         try {
             const response = await fetch(`${API_URL}/admin/stats`, {
@@ -446,7 +522,7 @@ export default function AdminPortal() {
     };
 
     const fetchApplications = async () => {
-        const currentToken = localStorage.getItem('adminToken');
+        const currentToken = localStorage.getItem(TOKEN_KEY);
         if (!currentToken) return;
         try {
             const response = await fetch(`${API_URL}/admin/applications`, {
@@ -471,7 +547,7 @@ export default function AdminPortal() {
             const response = await fetch(`${API_URL}/form-settings`);
             if (response.ok) {
                 const data = await response.json();
-                setRetotalingActive(data['retotaling'] === true);
+                setFormSettings(data);
             }
         } catch (err) {
             console.error('Failed to fetch form settings:', err);
@@ -481,7 +557,7 @@ export default function AdminPortal() {
     const fetchAuditLog = async (actionFilter = null) => {
         setAuditLoading(true);
         try {
-            const currentToken = localStorage.getItem('adminToken');
+            const currentToken = localStorage.getItem(TOKEN_KEY);
             const qs = actionFilter && actionFilter !== 'ALL' ? `?action=${actionFilter}` : '';
             const res = await fetch(`${API_URL}/admin/audit-log${qs}`, {
                 headers: { 'Authorization': `Bearer ${currentToken}` }
@@ -494,8 +570,9 @@ export default function AdminPortal() {
         }
     };
 
-    const toggleRetotaling = async () => {
-        const currentToken = localStorage.getItem('adminToken');
+    const toggleForm = async (formId, label) => {
+        const currentToken = localStorage.getItem(TOKEN_KEY);
+        const currentActive = formSettings?.[formId] ?? true;
         try {
             const response = await fetch(`${API_URL}/admin/form-settings`, {
                 method: 'POST',
@@ -503,12 +580,12 @@ export default function AdminPortal() {
                     'Authorization': `Bearer ${currentToken}`,
                     'Content-Type': 'application/json'
                 },
-                body: JSON.stringify({ formId: 'retotaling', isActive: !retotalingActive })
+                body: JSON.stringify({ formId, isActive: !currentActive })
             });
             const data = await response.json();
             if (response.ok) {
-                setRetotalingActive(!retotalingActive);
-                showToast(`Re-Totalling form ${!retotalingActive ? 'activated' : 'deactivated'} successfully.`, 'success');
+                setFormSettings(prev => ({ ...prev, [formId]: !currentActive }));
+                showToast(`${label} form ${!currentActive ? 'activated' : 'deactivated'} successfully.`, 'success');
             } else {
                 showToast('Error: ' + (data.error || 'Failed to update'), 'error');
             }
@@ -573,7 +650,7 @@ export default function AdminPortal() {
                 ['city', 'City'],
                 ['postal_code', 'Postal Code'],
             ],
-            'Application for End-Semester Supplementary Examinations Registration': [
+            'Application for Supplementary Examinations Registration': [
                 ['Programme', 'Academic Programme'],
                 ['Period_of_Study', 'Period of Study'],
                 ['Semester', 'Semester'],
@@ -612,7 +689,7 @@ export default function AdminPortal() {
                 ['city', 'City'],
                 ['postal_code', 'Postal Code'],
             ],
-            'Application for repeating a paper for supplementary examinations (CIE and ESE)': [
+            'Application for Repeating Examinations Registration (CIE and ESE)': [
                 ['Programme', 'Academic Programme'],
                 ['Period_of_Study', 'Period of Study'],
                 ['Semester', 'Semester'],
@@ -792,7 +869,7 @@ export default function AdminPortal() {
 
     const viewFile = async (fileId, fileName) => {
         try {
-            const currentToken = localStorage.getItem('adminToken');
+            const currentToken = localStorage.getItem(TOKEN_KEY);
             const response = await fetch(`${API_URL}/admin/file/${fileId}`, {
                 headers: { 'Authorization': `Bearer ${currentToken}` }
             });
@@ -922,21 +999,21 @@ export default function AdminPortal() {
         }
     };
 
-    const deleteApplication = (applicationId) => {
+    const archiveApplication = (applicationId) => {
         setConfirmModal({
-            title: 'Delete Application',
-            message: `Are you sure you want to delete application ${applicationId}? This action cannot be undone.`,
-            confirmText: 'Yes, Delete',
-            confirmColor: '#ef4444',
-            confirmGradient: 'linear-gradient(135deg, #ef4444 0%, #dc2626 100%)',
+            title: 'Archive Application',
+            message: `Are you sure you want to archive application ${applicationId}? The application data will be preserved in the archive, but the student will no longer be able to track it.`,
+            confirmText: 'Yes, Archive',
+            confirmColor: '#f59e0b',
+            confirmGradient: 'linear-gradient(135deg, #f59e0b 0%, #d97706 100%)',
             onConfirm: () => {
                 setConfirmModal(null);
-                doDeleteApplication(applicationId);
+                doArchiveApplication(applicationId);
             }
         });
     };
 
-    const doDeleteApplication = async (applicationId) => {
+    const doArchiveApplication = async (applicationId) => {
         try {
             const response = await fetch(`${API_URL}/admin/application/${applicationId}`, {
                 method: 'DELETE',
@@ -948,17 +1025,17 @@ export default function AdminPortal() {
             const data = await response.json();
 
             if (response.ok) {
-                showToast('Application deleted successfully!', 'success');
+                showToast('Application archived successfully!', 'success');
                 setSelectedApp(null);
                 setAppDetails(null);
                 fetchStats();
                 fetchApplications();
             } else {
-                showToast('Error: ' + (data.error || 'Failed to delete application'), 'error');
+                showToast('Error: ' + (data.error || 'Failed to archive application'), 'error');
             }
         } catch (err) {
-            console.error('Failed to delete application:', err);
-            showToast('Failed to delete application. Please try again.', 'error');
+            console.error('Failed to archive application:', err);
+            showToast('Failed to archive application. Please try again.', 'error');
         }
     };
 
@@ -1742,10 +1819,11 @@ export default function AdminPortal() {
                 .dash-row td { transition: background 0.15s; }
                 .dash-row { border-left-width: 4px; border-left-style: solid; }
                 .dash-row td:first-child { padding-left: 14px; }
-                .btn-complete, .btn-upload, .btn-delete, .btn-download, .btn-back, .det-dl-btn { transition: all 0.2s ease; }
+                .btn-complete, .btn-upload, .btn-delete, .btn-archive, .btn-download, .btn-back, .det-dl-btn { transition: all 0.2s ease; }
                 .btn-complete:hover:not(:disabled) { filter: brightness(1.08); transform: translateY(-1px); }
                 .btn-upload:hover:not(:disabled) { filter: brightness(1.08); transform: translateY(-1px); }
                 .btn-delete:hover { background: rgba(239,68,68,0.08) !important; border-color: #ef4444 !important; }
+                .btn-archive:hover { background: rgba(245,158,11,0.08) !important; border-color: #f59e0b !important; }
                 .det-dl-btn:hover { background: #f8fafc !important; border-color: #94a3b8 !important; }
                 .btn-back-det:hover { color: #0F172A !important; }
                 .btn-back-det { transition: color 0.15s ease; }
@@ -1792,6 +1870,13 @@ export default function AdminPortal() {
                         <RefreshCw size={12} style={{ animation: isRefreshing ? 'spin 1s linear infinite' : 'none' }} />
                         {isRefreshing ? 'Refreshing...' : 'Refresh'}
                     </button>
+                    <button onClick={() => setFormsDrawerOpen(true)}
+                        style={{ display: 'flex', alignItems: 'center', gap: '6px', padding: '5px 12px', background: 'transparent', color: '#94a3b8', border: '1px solid rgba(255,255,255,0.12)', borderRadius: '6px', cursor: 'pointer', fontSize: '0.75rem', fontWeight: 500, fontFamily: 'inherit', flexShrink: 0 }}>
+                        ⚙ Forms
+                    </button>
+                    <span style={{ padding: '3px 10px', borderRadius: '12px', fontSize: '0.7rem', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.05em', background: adminRole === 'ug' ? '#1d4ed8' : adminRole === 'pg' ? '#7c3aed' : adminRole === 'phd' ? '#065f46' : '#1e293b', color: 'white', flexShrink: 0 }}>
+                        {adminRole === 'ug' ? 'UG Team' : adminRole === 'pg' ? 'PG Team' : adminRole === 'phd' ? 'PhD Team' : 'Admin'}
+                    </span>
                     <button onClick={handleLogout}
                         style={{ display: 'flex', alignItems: 'center', gap: '6px', padding: '5px 12px', background: 'transparent', color: '#94a3b8', border: '1px solid rgba(255,255,255,0.12)', borderRadius: '6px', cursor: 'pointer', fontSize: '0.75rem', fontWeight: 500, fontFamily: 'inherit', flexShrink: 0 }}>
                         <LogOut size={12} /> Logout
@@ -1851,6 +1936,14 @@ export default function AdminPortal() {
                                         <div><p style={detailLabelStyle}>Campus</p><p style={detailValueStyle}>{app.campus}</p></div>
                                         <div><p style={detailLabelStyle}>Submitted On</p><p style={detailValueStyle}>{new Date(app.created_at + 'Z').toLocaleString('en-IN', { timeZone: 'Asia/Kolkata' })}</p></div>
                                     </div>
+                                    {appDetails.formData?.delivery_preference && (
+                                        <div style={{ margin: '0 20px 16px 20px' }}>
+                                            <p style={{ fontSize: '0.72rem', fontWeight: 700, color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.06em', margin: '0 0 8px 0' }}>Delivery Preference</p>
+                                            <span style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', padding: '6px 14px', borderRadius: '20px', fontSize: '0.85rem', fontWeight: 600, background: '#eff6ff', color: '#1d4ed8', border: '1px solid #bfdbfe' }}>
+                                                📦 {appDetails.formData.delivery_preference}
+                                            </span>
+                                        </div>
+                                    )}
                                     {appDetails.formData && Object.keys(appDetails.formData).length > 0 && (() => {
                                         const SKIP = new Set([
                                             'id', 'application_id', 'created_at',
@@ -1860,6 +1953,8 @@ export default function AdminPortal() {
                                             // Internal status fields (not student-entered data)
                                             'director_approval_status', 'controller_approval_status',
                                             'director_status', 'controller_status', 'status',
+                                            // Shown separately as a highlighted badge above
+                                            'delivery_preference',
                                         ]);
                                         const entries = Object.entries(appDetails.formData).filter(([k, v]) => !SKIP.has(k) && v !== null && v !== '');
                                         if (entries.length === 0) return null;
@@ -1904,16 +1999,47 @@ export default function AdminPortal() {
                                         {appDetails.files && <span style={{ fontSize: '0.72rem', color: '#94a3b8', fontWeight: 600 }}>{(appDetails.files.length + (appDetails.responseDocuments?.length || 0))} FILES</span>}
                                     </div>
                                     <div style={{ padding: '20px' }}>
-                                        {appDetails.responseDocuments && appDetails.responseDocuments.length > 0 && (
+                                        {appDetails.responseDocuments?.filter(f => f.uploaded_by !== 'director').length > 0 && (
                                             <div style={{ marginBottom: '20px' }}>
                                                 <p style={{ fontSize: '0.7rem', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.06em', color: '#10b981', margin: '0 0 10px 0' }}>Response Documents — Admin Uploaded</p>
-                                                {appDetails.responseDocuments.map((file) => (
+                                                {appDetails.responseDocuments.filter(f => f.uploaded_by !== 'director').map((file) => (
                                                     <div key={file.id} style={{ ...fileRowStyle, borderLeft: '3px solid #10b981' }}>
                                                         <div style={{ display: 'flex', alignItems: 'center', gap: '12px', minWidth: 0 }}>
                                                             <div style={{ background: 'rgba(16,185,129,0.08)', padding: '8px', borderRadius: '6px', flexShrink: 0 }}><FileText size={16} color="#10b981" /></div>
                                                             <div style={{ minWidth: 0 }}>
                                                                 <p style={{ color: '#0F172A', margin: 0, fontWeight: 600, fontSize: '0.875rem', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{file.file_name}</p>
                                                                 <p style={{ color: '#94a3b8', margin: 0, fontSize: '0.75rem' }}>{file.file_type} · {(file.file_size / 1024).toFixed(1)} KB · {file.uploaded_by || 'Admin'}</p>
+                                                            </div>
+                                                        </div>
+                                                        <div style={{ display: 'flex', gap: '8px', flexShrink: 0 }}>
+                                                            <button
+                                                                onClick={() => viewFile(file.id, file.file_name)}
+                                                                style={{
+                                                                    display: 'flex', alignItems: 'center', gap: '5px',
+                                                                    padding: '6px 14px', fontSize: '0.8rem', fontWeight: 600,
+                                                                    background: 'white', border: '1px solid #e0e7ff',
+                                                                    color: '#4F46E5', borderRadius: '8px', cursor: 'pointer',
+                                                                    fontFamily: 'inherit'
+                                                                }}
+                                                            >
+                                                                <Eye size={13} /> View
+                                                            </button>
+                                                            <button className="det-dl-btn" onClick={() => downloadFile(file.id, file.file_name)} style={downloadBtnStyle}><Download size={14} /> Download</button>
+                                                        </div>
+                                                    </div>
+                                                ))}
+                                            </div>
+                                        )}
+                                        {appDetails.responseDocuments?.filter(f => f.uploaded_by === 'director').length > 0 && (
+                                            <div style={{ marginBottom: '20px' }}>
+                                                <p style={{ fontSize: '0.7rem', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.06em', color: '#f59e0b', margin: '0 0 10px 0' }}>Director Documents</p>
+                                                {appDetails.responseDocuments.filter(f => f.uploaded_by === 'director').map((file) => (
+                                                    <div key={file.id} style={{ ...fileRowStyle, borderLeft: '3px solid #f59e0b' }}>
+                                                        <div style={{ display: 'flex', alignItems: 'center', gap: '12px', minWidth: 0 }}>
+                                                            <div style={{ background: 'rgba(245,158,11,0.08)', padding: '8px', borderRadius: '6px', flexShrink: 0 }}><FileText size={16} color="#f59e0b" /></div>
+                                                            <div style={{ minWidth: 0 }}>
+                                                                <p style={{ color: '#0F172A', margin: 0, fontWeight: 600, fontSize: '0.875rem', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{file.file_name}</p>
+                                                                <p style={{ color: '#94a3b8', margin: 0, fontSize: '0.75rem' }}>{file.file_type} · {(file.file_size / 1024).toFixed(1)} KB · Director</p>
                                                             </div>
                                                         </div>
                                                         <div style={{ display: 'flex', gap: '8px', flexShrink: 0 }}>
@@ -2009,9 +2135,9 @@ export default function AdminPortal() {
 
                                         <hr style={{ border: 'none', borderTop: '1px solid #f1f5f9', margin: '4px 0' }} />
 
-                                        {/* Delete */}
-                                        <button className="btn-delete" onClick={() => deleteApplication(app.id)} style={{ ...sidebarBtnBase, background: 'white', color: '#dc2626', border: '1px solid #fca5a5' }}>
-                                            <Trash2 size={16} /> Delete Application
+                                        {/* Archive */}
+                                        <button className="btn-archive" onClick={() => archiveApplication(app.id)} style={{ ...sidebarBtnBase, background: 'white', color: '#d97706', border: '1px solid #fcd34d' }}>
+                                            <Archive size={16} /> Archive Application
                                         </button>
                                     </div>
                                 </div>
@@ -2054,32 +2180,6 @@ export default function AdminPortal() {
                                 </div>
                             </div>
                         )}
-
-                    {/* Re-Totalling Form Availability */}
-                    {retotalingActive !== null && (
-                        <div style={{ background: 'white', borderRadius: '12px', border: '1px solid #e2e8f0', boxShadow: '0 1px 3px rgba(0,0,0,0.05)', marginBottom: '28px', padding: '18px 24px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '16px' }}>
-                            <div>
-                                <h3 style={{ fontSize: '1rem', fontWeight: 700, color: '#0F172A', margin: '0 0 4px 0' }}>Re-Totalling of Marks</h3>
-                                <p style={{ fontSize: '0.8rem', color: '#64748b', margin: 0 }}>
-                                    {retotalingActive
-                                        ? 'Form is currently active — students can submit applications.'
-                                        : 'Form is currently inactive — greyed out in the student portal.'}
-                                </p>
-                            </div>
-                            <button
-                                onClick={toggleRetotaling}
-                                style={{
-                                    padding: '8px 20px', fontSize: '0.85rem', fontWeight: 600, borderRadius: '8px',
-                                    cursor: 'pointer', fontFamily: 'inherit', flexShrink: 0,
-                                    border: retotalingActive ? '1px solid #fca5a5' : '1px solid #86efac',
-                                    background: retotalingActive ? '#fef2f2' : '#f0fdf4',
-                                    color: retotalingActive ? '#dc2626' : '#16a34a',
-                                }}
-                            >
-                                {retotalingActive ? 'Deactivate' : 'Activate'}
-                            </button>
-                        </div>
-                    )}
 
                     {/* Status filter tabs */}
                     <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap', marginBottom: '20px' }}>
@@ -2264,10 +2364,9 @@ export default function AdminPortal() {
                         </div>
                         <div style={{ background: 'white', borderRadius: '12px', border: '1px solid #e2e8f0', boxShadow: '0 1px 3px rgba(0,0,0,0.04)', padding: '16px' }}>
                             <h3 style={{ fontSize: '0.85rem', fontWeight: 700, color: '#0f172a', margin: '0 0 12px' }}>Quick Actions</h3>
-                            <button onClick={() => exportCSV(filteredApplications)}
+                            <button onClick={() => { setShowExportModal(true); setExportSearch(''); }}
                                 style={{ width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px', padding: '8px 14px', background: '#f8fafc', border: '1px solid #e2e8f0', borderRadius: '8px', cursor: 'pointer', fontSize: '0.8rem', fontWeight: 600, color: '#334155', fontFamily: 'inherit' }}>
                                 <Download size={14} /> Export CSV
-                                <span style={{ color: '#94a3b8', fontSize: '0.72rem', fontWeight: 400 }}>({filteredApplications.length})</span>
                             </button>
                             <button
                                 onClick={() => setShowStudentLookup(true)}
@@ -2281,6 +2380,12 @@ export default function AdminPortal() {
                             >
                                 📋 Audit Log
                             </button>
+                            <button
+                                onClick={() => { setShowTestEmailModal(true); setTestEmailStatus(null); }}
+                                style={{ width: '100%', padding: '8px 16px', fontSize: '0.8rem', fontWeight: 600, background: 'white', border: '1px solid #e2e8f0', borderRadius: '8px', cursor: 'pointer', fontFamily: 'inherit', color: '#0f172a', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px', marginTop: '8px' }}
+                            >
+                                📧 Test Director Email
+                            </button>
                         </div>
                     </aside>
                 </div>
@@ -2289,6 +2394,226 @@ export default function AdminPortal() {
                 )}
                 </div>
             </div>
+
+            {/* Export CSV Modal */}
+            {showExportModal && (() => {
+                const q = exportSearch.toLowerCase();
+                const exportFiltered = applications.filter(a =>
+                    !q || a.id.toLowerCase().includes(q) ||
+                    (a.applicant_name || '').toLowerCase().includes(q) ||
+                    (a.student_email || '').toLowerCase().includes(q) ||
+                    (a.form_type || '').toLowerCase().includes(q)
+                );
+                return (
+                    <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.5)', zIndex: 1100, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '20px' }}>
+                        <div style={{ background: 'white', borderRadius: '16px', padding: '28px', width: '100%', maxWidth: '520px', boxShadow: '0 20px 60px rgba(0,0,0,0.2)', display: 'flex', flexDirection: 'column', maxHeight: '82vh' }}>
+                            {/* Header */}
+                            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '16px', flexShrink: 0 }}>
+                                <h3 style={{ margin: 0, fontSize: '1rem', fontWeight: 700, color: '#0f172a' }}>Export as CSV</h3>
+                                <button onClick={() => { setShowExportModal(false); setExportSearch(''); setExportTab('app'); }} style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#94a3b8', padding: '4px' }}>
+                                    <X size={20} />
+                                </button>
+                            </div>
+
+                            {/* Tabs */}
+                            <div style={{ display: 'flex', gap: '4px', background: '#f8fafc', borderRadius: '10px', padding: '4px', marginBottom: '16px', flexShrink: 0 }}>
+                                {[{ key: 'app', label: 'By Application' }, { key: 'formtype', label: 'By Form Type' }].map(t => (
+                                    <button key={t.key} onClick={() => { setExportTab(t.key); setExportSearch(''); }}
+                                        style={{ flex: 1, padding: '7px 0', fontSize: '0.8rem', fontWeight: 600, border: 'none', borderRadius: '7px', cursor: 'pointer', fontFamily: 'inherit', transition: 'all 0.15s', background: exportTab === t.key ? 'white' : 'transparent', color: exportTab === t.key ? '#0f172a' : '#64748b', boxShadow: exportTab === t.key ? '0 1px 4px rgba(0,0,0,0.08)' : 'none' }}>
+                                        {t.label}
+                                    </button>
+                                ))}
+                            </div>
+
+                            {exportTab === 'app' ? (<>
+                                {/* Search */}
+                                <div style={{ position: 'relative', marginBottom: '12px', flexShrink: 0 }}>
+                                    <Search size={15} style={{ position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)', color: '#94a3b8' }} />
+                                    <input autoFocus type="text" placeholder="Search by ID, name, email or form type..."
+                                        value={exportSearch} onChange={e => setExportSearch(e.target.value)}
+                                        style={{ width: '100%', paddingLeft: '36px', paddingRight: '12px', paddingTop: '9px', paddingBottom: '9px', border: '1px solid #e2e8f0', borderRadius: '8px', fontSize: '0.82rem', fontFamily: 'inherit', outline: 'none', color: '#0f172a', boxSizing: 'border-box' }} />
+                                </div>
+                                <div style={{ overflowY: 'auto', flex: 1, borderRadius: '10px', border: '1px solid #f1f5f9' }}>
+                                    {exportFiltered.length === 0
+                                        ? <div style={{ padding: '32px', textAlign: 'center', color: '#94a3b8', fontSize: '0.85rem' }}>No applications found</div>
+                                        : exportFiltered.map(a => (
+                                            <div key={a.id} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '12px 14px', borderBottom: '1px solid #f8fafc', gap: '12px' }}>
+                                                <div style={{ minWidth: 0 }}>
+                                                    <p style={{ margin: 0, fontSize: '0.82rem', fontWeight: 700, color: '#0f172a', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{a.applicant_name || '—'}</p>
+                                                    <p style={{ margin: '2px 0 0', fontSize: '0.72rem', color: '#64748b', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{a.id} · {getShortLabel(a.form_type)}</p>
+                                                </div>
+                                                <button onClick={() => doExportCSV(a.id)} disabled={exportingId === a.id}
+                                                    style={{ flexShrink: 0, display: 'flex', alignItems: 'center', gap: '5px', padding: '6px 14px', background: exportingId === a.id ? '#f1f5f9' : '#0f172a', color: exportingId === a.id ? '#94a3b8' : 'white', border: 'none', borderRadius: '7px', fontSize: '0.76rem', fontWeight: 600, cursor: exportingId === a.id ? 'not-allowed' : 'pointer', fontFamily: 'inherit' }}>
+                                                    <Download size={13} /> {exportingId === a.id ? 'Exporting...' : 'Export'}
+                                                </button>
+                                            </div>
+                                        ))
+                                    }
+                                </div>
+                                <p style={{ margin: '10px 0 0', fontSize: '0.72rem', color: '#94a3b8', textAlign: 'center', flexShrink: 0 }}>
+                                    {exportFiltered.length} application{exportFiltered.length !== 1 ? 's' : ''} shown
+                                </p>
+                            </>) : (<>
+                                {/* Form type list */}
+                                <div style={{ overflowY: 'auto', flex: 1, borderRadius: '10px', border: '1px solid #f1f5f9' }}>
+                                    {Object.entries(FORM_SHORT).map(([fullName, shortLabel]) => {
+                                        const count = applications.filter(a => a.form_type === fullName).length;
+                                        const isExporting = exportingFormType === fullName;
+                                        return (
+                                            <div key={fullName} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '14px 16px', borderBottom: '1px solid #f8fafc', gap: '12px' }}>
+                                                <div style={{ minWidth: 0 }}>
+                                                    <p style={{ margin: 0, fontSize: '0.84rem', fontWeight: 700, color: '#0f172a' }}>{shortLabel}</p>
+                                                    <p style={{ margin: '3px 0 0', fontSize: '0.72rem', color: '#94a3b8' }}>{count} application{count !== 1 ? 's' : ''} in current view</p>
+                                                </div>
+                                                <button onClick={() => doExportByFormType(fullName)} disabled={!!exportingFormType}
+                                                    style={{ flexShrink: 0, display: 'flex', alignItems: 'center', gap: '5px', padding: '6px 14px', background: isExporting ? '#f1f5f9' : '#0f172a', color: isExporting ? '#94a3b8' : 'white', border: 'none', borderRadius: '7px', fontSize: '0.76rem', fontWeight: 600, cursor: exportingFormType ? 'not-allowed' : 'pointer', fontFamily: 'inherit' }}>
+                                                    <Download size={13} /> {isExporting ? 'Exporting...' : 'Export All'}
+                                                </button>
+                                            </div>
+                                        );
+                                    })}
+                                </div>
+                                <p style={{ margin: '10px 0 0', fontSize: '0.72rem', color: '#94a3b8', textAlign: 'center', flexShrink: 0 }}>
+                                    Exports all applications from the database for the selected form type
+                                </p>
+                            </>)}
+                        </div>
+                    </div>
+                );
+            })()}
+
+            {/* Test Director Email Modal */}
+            {showTestEmailModal && (
+                <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.5)', zIndex: 1100, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '20px' }}>
+                    <div style={{ background: 'white', borderRadius: '16px', padding: '28px', width: '100%', maxWidth: '460px', boxShadow: '0 20px 60px rgba(0,0,0,0.2)' }}>
+                        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '20px' }}>
+                            <div>
+                                <h3 style={{ margin: 0, fontSize: '1rem', fontWeight: 700, color: '#0f172a' }}>📧 Test Director Email</h3>
+                                <p style={{ margin: '4px 0 0', fontSize: '0.78rem', color: '#94a3b8' }}>Sends a sample director notification to any email address — real directors are not contacted.</p>
+                            </div>
+                            <button onClick={() => setShowTestEmailModal(false)} style={{ background: 'none', border: 'none', fontSize: '1.1rem', cursor: 'pointer', color: '#64748b', padding: '4px' }}>✕</button>
+                        </div>
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
+                            <div>
+                                <label style={{ fontSize: '0.78rem', fontWeight: 600, color: '#475569', display: 'block', marginBottom: '6px' }}>Send Test Email To</label>
+                                <input
+                                    type="email"
+                                    value={testEmailForm.testEmail}
+                                    onChange={e => setTestEmailForm(p => ({ ...p, testEmail: e.target.value }))}
+                                    placeholder="your@email.com"
+                                    style={{ width: '100%', padding: '8px 12px', border: '1px solid #e2e8f0', borderRadius: '8px', fontSize: '0.875rem', fontFamily: 'inherit', boxSizing: 'border-box', outline: 'none' }}
+                                />
+                            </div>
+                            <div>
+                                <label style={{ fontSize: '0.78rem', fontWeight: 600, color: '#475569', display: 'block', marginBottom: '6px' }}>Campus</label>
+                                <select
+                                    value={testEmailForm.campus}
+                                    onChange={e => setTestEmailForm(p => ({ ...p, campus: e.target.value }))}
+                                    style={{ width: '100%', padding: '8px 12px', border: '1px solid #e2e8f0', borderRadius: '8px', fontSize: '0.875rem', fontFamily: 'inherit', boxSizing: 'border-box', outline: 'none', background: 'white' }}
+                                >
+                                    <option>Prashanti Nilayam Campus</option>
+                                    <option>Anantapur Campus</option>
+                                    <option>Brindavan Campus</option>
+                                    <option>Nandigiri Campus</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label style={{ fontSize: '0.78rem', fontWeight: 600, color: '#475569', display: 'block', marginBottom: '6px' }}>Form Type</label>
+                                <select
+                                    value={testEmailForm.formType}
+                                    onChange={e => setTestEmailForm(p => ({ ...p, formType: e.target.value }))}
+                                    style={{ width: '100%', padding: '8px 12px', border: '1px solid #e2e8f0', borderRadius: '8px', fontSize: '0.875rem', fontFamily: 'inherit', boxSizing: 'border-box', outline: 'none', background: 'white' }}
+                                >
+                                    <option>Application for Duplicate Grade Card</option>
+                                    <option>Application for Supplementary Examinations Registration</option>
+                                    <option>Application for Registration of Student Name change in the Institute Records</option>
+                                    <option>Application for Repeating Examinations Registration (CIE and ESE)</option>
+                                </select>
+                            </div>
+                            {testEmailStatus && (
+                                <div style={{ padding: '10px 14px', borderRadius: '8px', fontSize: '0.82rem', fontWeight: 500, background: testEmailStatus.type === 'success' ? '#f0fdf4' : testEmailStatus.type === 'error' ? '#fef2f2' : '#eff6ff', color: testEmailStatus.type === 'success' ? '#16a34a' : testEmailStatus.type === 'error' ? '#dc2626' : '#1d4ed8', border: `1px solid ${testEmailStatus.type === 'success' ? '#86efac' : testEmailStatus.type === 'error' ? '#fca5a5' : '#bfdbfe'}` }}>
+                                    {testEmailStatus.message}
+                                </div>
+                            )}
+                            <button
+                                disabled={testEmailStatus?.type === 'sending' || !testEmailForm.testEmail}
+                                onClick={async () => {
+                                    setTestEmailStatus({ type: 'sending', message: 'Sending test email...' });
+                                    try {
+                                        const res = await fetch(`${API_URL}/admin/test-director-email`, {
+                                            method: 'POST',
+                                            headers: { 'Authorization': `Bearer ${localStorage.getItem(TOKEN_KEY)}`, 'Content-Type': 'application/json' },
+                                            body: JSON.stringify(testEmailForm)
+                                        });
+                                        const data = await res.json();
+                                        if (res.ok) {
+                                            setTestEmailStatus({ type: 'success', message: `✓ Test email sent to ${testEmailForm.testEmail}` });
+                                        } else {
+                                            setTestEmailStatus({ type: 'error', message: `Error: ${data.error}` });
+                                        }
+                                    } catch (e) {
+                                        setTestEmailStatus({ type: 'error', message: 'Failed to send. Check console for details.' });
+                                    }
+                                }}
+                                style={{ padding: '10px 20px', background: testEmailStatus?.type === 'sending' || !testEmailForm.testEmail ? '#94a3b8' : '#0f172a', color: 'white', border: 'none', borderRadius: '8px', fontSize: '0.875rem', fontWeight: 600, cursor: testEmailStatus?.type === 'sending' || !testEmailForm.testEmail ? 'not-allowed' : 'pointer', fontFamily: 'inherit' }}
+                            >
+                                {testEmailStatus?.type === 'sending' ? 'Sending...' : 'Send Test Email'}
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {/* Form Availability Drawer */}
+            {formsDrawerOpen && (
+                <>
+                    <div onClick={() => setFormsDrawerOpen(false)} style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.25)', zIndex: 999 }} />
+                    <div style={{ position: 'fixed', top: 0, right: 0, height: '100%', width: '360px', background: 'white', zIndex: 1000, boxShadow: '-4px 0 24px rgba(0,0,0,0.12)', display: 'flex', flexDirection: 'column' }}>
+                        <div style={{ padding: '20px 24px', borderBottom: '1px solid #e2e8f0', display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexShrink: 0 }}>
+                            <div>
+                                <h3 style={{ margin: 0, fontSize: '1rem', fontWeight: 700, color: '#0f172a' }}>Form Availability</h3>
+                                <p style={{ margin: '4px 0 0', fontSize: '0.78rem', color: '#94a3b8' }}>Disable a form to grey it out in the student portal.</p>
+                            </div>
+                            <button onClick={() => setFormsDrawerOpen(false)} style={{ background: 'none', border: 'none', fontSize: '1.1rem', cursor: 'pointer', color: '#64748b', padding: '4px', lineHeight: 1 }}>✕</button>
+                        </div>
+                        <div style={{ overflowY: 'auto', flex: 1 }}>
+                            {[
+                                { id: 'duplicate-grade-card',  label: 'Duplicate Grade Card' },
+                                { id: 'cgpa-conversion',       label: 'CGPA to Percentage Conversion' },
+                                { id: 'supplementary-exam',    label: 'Supplementary Examinations Registration' },
+                                { id: 'duplicate-degree',      label: 'Duplicate Degree Certificate' },
+                                { id: 'name-change',           label: 'Student Name Change' },
+                                { id: 'repeat-paper',          label: 'Repeating Examinations Registration' },
+                                { id: 'retotaling',            label: 'Re-Totalling of Marks' },
+                                { id: 'on-request-degree',     label: 'On-Request Degree Certificate' },
+                                { id: 'migration',             label: 'Migration Certificate' },
+                            ].map(({ id, label }, idx, arr) => {
+                                const isActive = formSettings?.[id] !== false;
+                                return (
+                                    <div key={id} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '14px 24px', borderBottom: idx < arr.length - 1 ? '1px solid #f8fafc' : 'none', gap: '16px' }}>
+                                        <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                                            <span style={{ width: '8px', height: '8px', borderRadius: '50%', background: isActive ? '#22c55e' : '#cbd5e1', flexShrink: 0, display: 'inline-block' }} />
+                                            <span style={{ fontSize: '0.9rem', fontWeight: 500, color: isActive ? '#0f172a' : '#94a3b8' }}>{label}</span>
+                                        </div>
+                                        <button
+                                            onClick={() => toggleForm(id, label)}
+                                            style={{
+                                                padding: '6px 16px', fontSize: '0.8rem', fontWeight: 600, borderRadius: '6px',
+                                                cursor: 'pointer', fontFamily: 'inherit', flexShrink: 0,
+                                                border: isActive ? '1px solid #fca5a5' : '1px solid #86efac',
+                                                background: isActive ? '#fef2f2' : '#f0fdf4',
+                                                color: isActive ? '#dc2626' : '#16a34a',
+                                            }}
+                                        >
+                                            {isActive ? 'Disable' : 'Enable'}
+                                        </button>
+                                    </div>
+                                );
+                            })}
+                        </div>
+                    </div>
+                </>
+            )}
         </>
     );
 }

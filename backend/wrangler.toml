@@ -2,17 +2,21 @@ name = "sssihl-student-services-backend"
 main = "src/index.js"
 compatibility_date = "2024-09-23"
 compatibility_flags = ["nodejs_compat"]
-account_id = "ffa4661b29a77f4318b1bb9fe9e95bc0"
+account_id = "774c4f3a97892b2df3880486c64ea908"
+
+[triggers]
+crons = ["30 18 * * SUN"]
 
 [[d1_databases]]
 binding = "DB"
 database_name = "sssihl-student-services"
-database_id = "640c91bf-4c66-484b-afa1-9870996ad70c"
+database_id = "5c1a6457-6da9-4488-936e-2e78b7ef817d"
 
 [vars]
 GOOGLE_SERVICE_ACCOUNT_EMAIL = "sssihl-students-service@examination-service.iam.gserviceaccount.com"
 # GOOGLE_PRIVATE_KEY = "..."
 # GOOGLE_DRIVE_FOLDER_ID = "..."
-ALLOWED_ORIGIN = "https://student-service.pages.dev"
-ADMIN_EMAIL = "saisathyajain@sssihl.edu.in"
+ALLOWED_ORIGIN = "https://sssihl-student-service.pages.dev"
+GOOGLE_DRIVE_BACKUP_FOLDER_ID = "17qtYFjBM8yJnm7DD69JASNcylE9p8kdq"
+ADMIN_EMAIL = "coeoffice@sssihl.edu.in"
 # JWT_SECRET and CSRF_SECRET are stored as Cloudflare secrets (wrangler secret put)
