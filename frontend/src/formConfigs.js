@@ -710,6 +710,7 @@ export const FORM_CONFIGS = {
             { type: 'address', text: 'Candidates are required to send a self-addressed, stamped, waterproof envelope to the address mentioned below. The Institute requires this in order to send the degree certificates back to the candidates by post.', details: CONTROLLER_ADDRESS },
             'The Envelope should state clearly the name and programme of the student.',
             'The envelope must be 16x12 inches in size. The full and complete postal address must be clearly written or typed on it, including the town/city, PIN code, district and state. Lastly, stamps totalling ₹55 must be affixed on the top right hand corner of the envelope. Students of foreign nationality may affix appropriate postage for an envelope weighing 100-120 gms.',
+            'Degree certificates will be dispatched by post (in the submitted envelope) to candidates during the first week of December, after the convocation.',
         ],
         fields: [],
         files: [],

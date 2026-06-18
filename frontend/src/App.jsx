@@ -3,6 +3,7 @@ import Portal from './pages/Portal';
 import AdminPortal from './pages/AdminPortal';
 import FormBuilder from './components/FormBuilder';
 import ConvocationForm from './components/ConvocationForm';
+import ConvocationAdminPortal from './pages/ConvocationAdminPortal';
 import StatusTracker from './components/StatusTracker';
 import LoadingScreen from './components/LoadingScreen';
 import InstructionsScreen from './components/InstructionsScreen';
@@ -54,6 +55,13 @@ function App() {
       return;
     }
 
+    // Convocation admin portal
+    if (window.location.pathname === '/convocation-admin') {
+      setView('convocation-admin');
+      setIsLoading(false);
+      return;
+    }
+
     // Check if URL has #track hash (from email link)
     if (window.location.hash.startsWith('#track')) {
       window.history.replaceState({ view: 'status', currentFormId: null, deliveryPreference: null }, '', window.location.hash);
@@ -96,6 +104,10 @@ function App() {
   // Admin portal (no loading screen)
   if (view === 'admin') {
     return <AdminPortal />;
+  }
+
+  if (view === 'convocation-admin') {
+    return <ConvocationAdminPortal />;
   }
 
   return (

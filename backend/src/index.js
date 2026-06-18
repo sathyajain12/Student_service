@@ -295,6 +295,41 @@ export default {
                     return await handleUpdateApplication(id, request, env, corsHeaders);
                 }
 
+                // Convocation Admin routes
+                if (url.pathname === '/convocation-admin/login' && request.method === 'POST') {
+                    return await handleConvocationAdminLogin(request, env, corsHeaders);
+                }
+                if (url.pathname === '/convocation-admin/applications' && request.method === 'GET') {
+                    return await handleConvocationGetApplications(request, env, corsHeaders);
+                }
+                if (url.pathname.startsWith('/convocation-admin/application/') && request.method === 'GET') {
+                    const id = url.pathname.split('/').pop();
+                    return await handleConvocationGetApplication(id, request, env, corsHeaders);
+                }
+                if (url.pathname.startsWith('/convocation-admin/application/') && request.method === 'PATCH') {
+                    const id = url.pathname.split('/').pop();
+                    return await handleConvocationUpdateStatus(id, request, env, corsHeaders);
+                }
+                if (url.pathname === '/convocation-admin/upload-response' && request.method === 'POST') {
+                    return await handleConvocationUploadResponse(request, env, corsHeaders);
+                }
+                if (url.pathname === '/convocation-admin/notify' && request.method === 'POST') {
+                    return await handleConvocationNotify(request, env, corsHeaders);
+                }
+                if (url.pathname === '/convocation-admin/export' && request.method === 'GET') {
+                    return await handleConvocationExport(request, env, corsHeaders);
+                }
+                if (url.pathname.startsWith('/convocation-admin/file/') && request.method === 'GET') {
+                    const fileId = url.pathname.split('/').pop();
+                    return await handleConvocationGetFile(fileId, request, env, corsHeaders);
+                }
+                if (url.pathname === '/convocation-admin/create-user' && request.method === 'POST') {
+                    return await handleCreateConvocationAdminUser(request, env, corsHeaders);
+                }
+                if (url.pathname === '/convocation-admin/stats' && request.method === 'GET') {
+                    return await handleConvocationStats(request, env, corsHeaders);
+                }
+
                 return new Response('Not Found', { status: 404, headers: corsHeaders });
             } catch (error) {
                 console.error(error);
@@ -1412,6 +1447,261 @@ async function handleDeleteAdminUser(userId, request, env, corsHeaders) {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' }
     });
 }
+
+// ─── Convocation Admin Portal handlers ───────────────────────────────────────
+
+const CONV_FORM_TYPE = 'SSSIHL - XLV Annual Convocation November 2026 - Registration Form';
+
+async function verifyConvocationToken(request, env) {
+    const authHeader = request.headers.get('Authorization');
+    if (!authHeader || !authHeader.startsWith('Bearer ')) return null;
+    const token = authHeader.substring(7);
+    try {
+        const secret = new TextEncoder().encode(env.CONV_JWT_SECRET || env.JWT_SECRET);
+        const { payload } = await jwtVerify(token, secret);
+        if (payload.portal !== 'convocation') return null;
+        const admin = await env.DB.prepare(
+            'SELECT * FROM convocation_admin_users WHERE username = ?'
+        ).bind(payload.username).first();
+        return admin || null;
+    } catch (e) {
+        return null;
+    }
+}
+
+async function handleConvocationAdminLogin(request, env, corsHeaders) {
+    const { username, password } = await request.json();
+    const admin = await env.DB.prepare(
+        'SELECT * FROM convocation_admin_users WHERE username = ?'
+    ).bind(username).first();
+    if (!admin || !admin.salt) {
+        return new Response(JSON.stringify({ error: 'Invalid credentials' }), {
+            status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+        });
+    }
+    const valid = await verifyPassword(password, admin.salt, admin.password_hash);
+    if (!valid) {
+        return new Response(JSON.stringify({ error: 'Invalid credentials' }), {
+            status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+        });
+    }
+    const secret = new TextEncoder().encode(env.CONV_JWT_SECRET || env.JWT_SECRET);
+    const token = await new SignJWT({ username, portal: 'convocation' })
+        .setProtectedHeader({ alg: 'HS256' })
+        .setIssuedAt()
+        .setExpirationTime('24h')
+        .sign(secret);
+    await logAuditEvent(env, username, 'CONV_LOGIN', null, { username });
+    return new Response(JSON.stringify({ success: true, token, username: admin.username }), {
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+    });
+}
+
+async function handleConvocationGetApplications(request, env, corsHeaders) {
+    const admin = await verifyConvocationToken(request, env);
+    if (!admin) return new Response(JSON.stringify({ error: 'Unauthorized' }), { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+
+    const apps = await env.DB.prepare(
+        `SELECT a.id, a.student_email, a.applicant_name, a.reg_no, a.campus, a.status, a.created_at, a.updated_at,
+                f.category, f.programme, f.attendance_type, f.active_mobile
+         FROM applications a
+         LEFT JOIN form_convocation_2026 f ON a.id = f.application_id
+         WHERE a.form_type = ?
+         ORDER BY a.created_at DESC`
+    ).bind(CONV_FORM_TYPE).all();
+
+    return new Response(JSON.stringify(apps.results), {
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+    });
+}
+
+async function handleConvocationGetApplication(id, request, env, corsHeaders) {
+    const admin = await verifyConvocationToken(request, env);
+    if (!admin) return new Response(JSON.stringify({ error: 'Unauthorized' }), { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+
+    const application = await env.DB.prepare('SELECT * FROM applications WHERE id = ? AND form_type = ?').bind(id, CONV_FORM_TYPE).first();
+    if (!application) return new Response(JSON.stringify({ error: 'Application not found' }), { status: 404, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+
+    const formDetails = await env.DB.prepare('SELECT * FROM form_convocation_2026 WHERE application_id = ?').bind(id).first();
+
+    const files = await env.DB.prepare(
+        `SELECT id, field_name, file_name, file_type, file_size, is_response, uploaded_by, created_at
+         FROM file_blobs WHERE application_id = ? ORDER BY created_at ASC`
+    ).bind(id).all();
+
+    return new Response(JSON.stringify({ ...application, formDetails: formDetails || {}, files: files.results }), {
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+    });
+}
+
+async function handleConvocationUpdateStatus(id, request, env, corsHeaders) {
+    const admin = await verifyConvocationToken(request, env);
+    if (!admin) return new Response(JSON.stringify({ error: 'Unauthorized' }), { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+
+    const { status, reason } = await request.json();
+    const allowed = ['APPROVED', 'REJECTED', 'PENDING'];
+    if (!allowed.includes(status)) {
+        return new Response(JSON.stringify({ error: 'Invalid status' }), { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+    }
+
+    const app = await env.DB.prepare('SELECT id FROM applications WHERE id = ? AND form_type = ?').bind(id, CONV_FORM_TYPE).first();
+    if (!app) return new Response(JSON.stringify({ error: 'Application not found' }), { status: 404, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+
+    await env.DB.prepare('UPDATE applications SET status = ?, updated_at = datetime(\'now\') WHERE id = ?').bind(status, id).run();
+    await logAuditEvent(env, admin.username, `CONV_${status}`, id, { reason: reason || null });
+
+    return new Response(JSON.stringify({ success: true }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+}
+
+async function handleConvocationUploadResponse(request, env, corsHeaders) {
+    const admin = await verifyConvocationToken(request, env);
+    if (!admin) return new Response(JSON.stringify({ error: 'Unauthorized' }), { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+
+    const formData = await request.formData();
+    const applicationId = formData.get('applicationId');
+    const file = formData.get('responseDocument');
+    if (!applicationId || !file) return new Response(JSON.stringify({ error: 'applicationId and responseDocument required' }), { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+
+    const app = await env.DB.prepare('SELECT id FROM applications WHERE id = ? AND form_type = ?').bind(applicationId, CONV_FORM_TYPE).first();
+    if (!app) return new Response(JSON.stringify({ error: 'Application not found' }), { status: 404, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+
+    const arrayBuffer = await validateFile(file);
+    const uint8Array = new Uint8Array(arrayBuffer);
+    let binary = '';
+    for (let i = 0; i < uint8Array.length; i++) binary += String.fromCharCode(uint8Array[i]);
+    const base64 = btoa(binary);
+
+    const result = await env.DB.prepare(
+        `INSERT INTO file_blobs (application_id, field_name, file_name, file_type, file_size, file_data, is_response, uploaded_by)
+         VALUES (?, 'response_document', ?, ?, ?, ?, TRUE, ?)`
+    ).bind(applicationId, file.name, file.type, file.size, base64, admin.username).run();
+
+    await logAuditEvent(env, admin.username, 'CONV_RESPONSE_UPLOADED', applicationId, { file: file.name });
+
+    return new Response(JSON.stringify({ success: true, fileId: result.meta.last_row_id }), {
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+    });
+}
+
+async function handleConvocationNotify(request, env, corsHeaders) {
+    const admin = await verifyConvocationToken(request, env);
+    if (!admin) return new Response(JSON.stringify({ error: 'Unauthorized' }), { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+
+    const { applicationId, message } = await request.json();
+    const app = await env.DB.prepare('SELECT * FROM applications WHERE id = ? AND form_type = ?').bind(applicationId, CONV_FORM_TYPE).first();
+    if (!app) return new Response(JSON.stringify({ error: 'Application not found' }), { status: 404, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+
+    const responseFiles = await env.DB.prepare(
+        `SELECT id, file_name FROM file_blobs WHERE application_id = ? AND is_response = TRUE`
+    ).bind(applicationId).all();
+
+    const downloadLinks = responseFiles.results.map(f => ({
+        url: `${env.FRONTEND_URL || 'https://sssihl-student-service.pages.dev'}/download/${f.id}?appId=${applicationId}&token=${applicationId}`,
+        fileName: f.file_name
+    }));
+
+    await sendDocumentDispatchedEmail(env, app, null, null, null, null, downloadLinks);
+    await env.DB.prepare('UPDATE applications SET status = \'DISPATCHED\', updated_at = datetime(\'now\') WHERE id = ?').bind(applicationId).run();
+    await logAuditEvent(env, admin.username, 'CONV_NOTIFIED', applicationId, { message: message || null });
+
+    return new Response(JSON.stringify({ success: true }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+}
+
+async function handleConvocationExport(request, env, corsHeaders) {
+    const admin = await verifyConvocationToken(request, env);
+    if (!admin) return new Response(JSON.stringify({ error: 'Unauthorized' }), { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+
+    const apps = await env.DB.prepare(
+        `SELECT a.id, a.applicant_name, a.reg_no, a.student_email, a.campus, a.status, a.created_at,
+                f.category, f.programme, f.attendance_type, f.date_of_birth, f.postal_address,
+                f.active_mobile, f.alternate_mobile, f.prev_board_university,
+                f.prev_qualification_programme, f.prev_qualification_certificate_no, f.declaration
+         FROM applications a
+         LEFT JOIN form_convocation_2026 f ON a.id = f.application_id
+         WHERE a.form_type = ?
+         ORDER BY a.created_at DESC`
+    ).bind(CONV_FORM_TYPE).all();
+
+    const headers = ['App ID','Name','Reg No','Email','Campus','Status','Submitted','Category','Programme','Attendance','DOB','Postal Address','Mobile','Alt Mobile','Prev Board/Univ','Prev Qual Programme','Cert No','Declaration'];
+    const rows = apps.results.map(r => [
+        r.id, r.applicant_name, r.reg_no, r.student_email, r.campus, r.status, r.created_at,
+        r.category, r.programme, r.attendance_type, r.date_of_birth, r.postal_address,
+        r.active_mobile, r.alternate_mobile, r.prev_board_university,
+        r.prev_qualification_programme, r.prev_qualification_certificate_no, r.declaration
+    ].map(v => `"${(v || '').toString().replace(/"/g, '""')}"`).join(','));
+
+    const csv = [headers.join(','), ...rows].join('\n');
+
+    return new Response(csv, {
+        headers: {
+            ...corsHeaders,
+            'Content-Type': 'text/csv',
+            'Content-Disposition': 'attachment; filename="convocation-2026-registrations.csv"'
+        }
+    });
+}
+
+async function handleConvocationGetFile(fileId, request, env, corsHeaders) {
+    const admin = await verifyConvocationToken(request, env);
+    if (!admin) return new Response(JSON.stringify({ error: 'Unauthorized' }), { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+
+    const file = await env.DB.prepare('SELECT * FROM file_blobs WHERE id = ?').bind(fileId).first();
+    if (!file) return new Response(JSON.stringify({ error: 'File not found' }), { status: 404, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+
+    const verifyApp = await env.DB.prepare('SELECT id FROM applications WHERE id = ? AND form_type = ?').bind(file.application_id, CONV_FORM_TYPE).first();
+    if (!verifyApp) return new Response(JSON.stringify({ error: 'Unauthorized' }), { status: 403, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+
+    const binary = atob(file.file_data);
+    const bytes = new Uint8Array(binary.length);
+    for (let i = 0; i < binary.length; i++) bytes[i] = binary.charCodeAt(i);
+
+    return new Response(bytes, {
+        headers: {
+            ...corsHeaders,
+            'Content-Type': file.file_type || 'application/octet-stream',
+            'Content-Disposition': `inline; filename="${file.file_name}"`,
+        }
+    });
+}
+
+async function handleCreateConvocationAdminUser(request, env, corsHeaders) {
+    const admin = await verifyConvocationToken(request, env);
+    if (!admin) return new Response(JSON.stringify({ error: 'Unauthorized' }), { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+
+    const { username, password } = await request.json();
+    if (!username || !password) return new Response(JSON.stringify({ error: 'username and password are required' }), { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+
+    const existing = await env.DB.prepare('SELECT id FROM convocation_admin_users WHERE username = ?').bind(username).first();
+    if (existing) return new Response(JSON.stringify({ error: 'Username already exists' }), { status: 409, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+
+    const { salt, hash } = await hashPassword(password);
+    await env.DB.prepare('INSERT INTO convocation_admin_users (username, password_hash, salt) VALUES (?, ?, ?)').bind(username, hash, salt).run();
+    await logAuditEvent(env, admin.username, 'CONV_CREATE_USER', null, { created_username: username });
+
+    return new Response(JSON.stringify({ success: true }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+}
+
+async function handleConvocationStats(request, env, corsHeaders) {
+    const admin = await verifyConvocationToken(request, env);
+    if (!admin) return new Response(JSON.stringify({ error: 'Unauthorized' }), { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+
+    const total = await env.DB.prepare('SELECT COUNT(*) as c FROM applications WHERE form_type = ?').bind(CONV_FORM_TYPE).first();
+    const byStatus = await env.DB.prepare('SELECT status, COUNT(*) as c FROM applications WHERE form_type = ? GROUP BY status').bind(CONV_FORM_TYPE).all();
+    const byCategory = await env.DB.prepare('SELECT category, COUNT(*) as c FROM form_convocation_2026 GROUP BY category').all();
+    const byAttendance = await env.DB.prepare('SELECT attendance_type, COUNT(*) as c FROM form_convocation_2026 GROUP BY attendance_type').all();
+
+    const statusMap = {};
+    for (const r of byStatus.results) statusMap[r.status] = r.c;
+
+    return new Response(JSON.stringify({
+        total: total?.c || 0,
+        byStatus: statusMap,
+        byCategory: byCategory.results,
+        byAttendance: byAttendance.results,
+    }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+}
+
+// ─── End Convocation Admin handlers ──────────────────────────────────────────
 
 // Handler for public download (students downloading response documents)
 async function handlePublicDownload(fileId, url, env, corsHeaders) {
