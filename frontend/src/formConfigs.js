@@ -36,7 +36,7 @@ const COMMON_ACADEMIC_FIELDS = [
     { name: 'applicantName', label: 'Candidate Name', type: 'text', required: true },
     { name: 'regNo', label: 'Registered Number', type: 'number', required: true },
     { name: 'abcApaarId', label: 'ABC / APAAR ID', type: 'number', required: false },
-    { name: 'campus', label: 'Campus', type: 'select', options: ['Prashanti Nilayam Campus', 'Anantapur Campus', 'Brindavan Campus', 'Nandigiri Campus'], required: true },
+    { name: 'campus', label: 'Campus', type: 'select', options: ['Prasanthi Nilayam Campus', 'Anantapur Campus', 'Brindavan Campus', 'Nandigiri Campus'], required: true },
     { name: 'program', label: 'Academic Programme', type: 'select', options: PROGRAMME_OPTIONS, required: true },
     { name: 'mobile', label: 'Mobile Number', type: 'number', required: true },
     { name: 'email', label: 'Email Address', type: 'email', required: true },
@@ -116,7 +116,7 @@ export const FORM_CONFIGS = {
             { name: 'applicantName', label: 'Candidate Name', type: 'text', required: true },
             { name: 'regNo', label: 'Registered Number', type: 'number', required: true },
             { name: 'abcApaarId', label: 'ABC / APAAR ID', type: 'number', required: false },
-            { name: 'campus', label: 'Campus', type: 'select', options: ['Prashanti Nilayam Campus', 'Anantapur Campus', 'Brindavan Campus', 'Nandigiri Campus'], required: true },
+            { name: 'campus', label: 'Campus', type: 'select', options: ['Prasanthi Nilayam Campus', 'Anantapur Campus', 'Brindavan Campus', 'Nandigiri Campus'], required: true },
             { name: 'program', label: 'Academic Programme', type: 'select', options: PROGRAMME_OPTIONS, required: true },
             { name: 'periodOfStudy', label: 'Period of Study', type: 'daterange', required: true, placeholder: 'e.g., June 2019 - March 2022' },
             { name: 'semester', label: 'Semester', type: 'select', options: ['I', 'II', 'III', 'IV', 'V', 'VI', 'VII', 'VIII'], required: true },
@@ -161,7 +161,7 @@ export const FORM_CONFIGS = {
         fields: [{ name: 'applicantName', label: 'Candidate Name', type: 'text', required: true },
         { name: 'regNo', label: 'Registered Number', type: 'number', required: true },
         { name: 'abcApaarId', label: 'ABC / APAAR ID', type: 'number', required: false },
-        { name: 'campus', label: 'Campus', type: 'select', options: ['Prashanti Nilayam Campus', 'Anantapur Campus', 'Brindavan Campus', 'Nandigiri Campus'], required: true },
+        { name: 'campus', label: 'Campus', type: 'select', options: ['Prasanthi Nilayam Campus', 'Anantapur Campus', 'Brindavan Campus', 'Nandigiri Campus'], required: true },
         { name: 'program', label: 'Academic Programme', type: 'select', options: PROGRAMME_OPTIONS, required: true },
         {
             name: "periodOfStudy",
@@ -225,7 +225,7 @@ export const FORM_CONFIGS = {
             { name: 'applicantName', label: 'Candidate Name', type: 'text', required: true },
             { name: 'regNo', label: 'Registered Number', type: 'number', required: true },
             { name: 'abcApaarId', label: 'ABC / APAAR ID', type: 'number', required: false },
-            { name: 'campus', label: 'Campus', type: 'select', options: ['Prashanti Nilayam Campus', 'Anantapur Campus', 'Brindavan Campus', 'Nandigiri Campus'], required: true },
+            { name: 'campus', label: 'Campus', type: 'select', options: ['Prasanthi Nilayam Campus', 'Anantapur Campus', 'Brindavan Campus', 'Nandigiri Campus'], required: true },
             { name: 'program', label: 'Academic Programme', type: 'select', options: PROGRAMME_OPTIONS, required: true },
             {
                 name: "periodOfStudy",
@@ -290,7 +290,7 @@ export const FORM_CONFIGS = {
             { name: 'applicantName', label: 'Candidate Name', type: 'text', required: true },
             { name: 'regNo', label: 'Registered Number', type: 'number', required: true },
             { name: 'abcApaarId', label: 'ABC / APAAR ID', type: 'number', required: false },
-            { name: 'campus', label: 'Campus', type: 'select', options: ['Prashanti Nilayam Campus', 'Anantapur Campus', 'Brindavan Campus', 'Nandigiri Campus'], required: true },
+            { name: 'campus', label: 'Campus', type: 'select', options: ['Prasanthi Nilayam Campus', 'Anantapur Campus', 'Brindavan Campus', 'Nandigiri Campus'], required: true },
             { name: 'program', label: 'Academic Programme', type: 'select', options: PROGRAMME_OPTIONS, required: true },
             {
                 name: "periodOfStudy",
@@ -408,7 +408,7 @@ export const FORM_CONFIGS = {
                 name: 'campus',
                 label: 'Campus',
                 type: 'select',
-                options: ['Prashanti Nilayam Campus', 'Anantapur Campus', 'Brindavan Campus', 'Nandigiri Campus'],
+                options: ['Prasanthi Nilayam Campus', 'Anantapur Campus', 'Brindavan Campus', 'Nandigiri Campus'],
                 required: true
             },
             {
@@ -477,7 +477,7 @@ export const FORM_CONFIGS = {
             { name: 'applicantName', label: 'Candidate Name', type: 'text', required: true },
             { name: 'regNo', label: 'Registered Number', type: 'number', required: true },
             { name: 'abcApaarId', label: 'ABC / APAAR ID', type: 'number', required: false },
-            { name: 'campus', label: 'Campus', type: 'select', options: ['Prashanti Nilayam Campus', 'Anantapur Campus', 'Brindavan Campus', 'Nandigiri Campus'], required: true },
+            { name: 'campus', label: 'Campus', type: 'select', options: ['Prasanthi Nilayam Campus', 'Anantapur Campus', 'Brindavan Campus', 'Nandigiri Campus'], required: true },
             { name: 'program', label: 'Academic Programme', type: 'select', options: PROGRAMME_OPTIONS, required: true },
             {
                 name: "periodOfStudy",
@@ -582,7 +582,7 @@ export const FORM_CONFIGS = {
             { name: 'applicantName', label: 'Candidate Name', type: 'text', required: true },
             { name: 'regNo', label: 'Registered Number', type: 'number', required: true },
             { name: 'abcApaarId', label: 'ABC / APAAR ID', type: 'number', required: false },
-            { name: 'campus', label: 'Campus', type: 'select', options: ['Prashanti Nilayam Campus', 'Anantapur Campus', 'Brindavan Campus', 'Nandigiri Campus'], required: true },
+            { name: 'campus', label: 'Campus', type: 'select', options: ['Prasanthi Nilayam Campus', 'Anantapur Campus', 'Brindavan Campus', 'Nandigiri Campus'], required: true },
             { name: 'degreeAppliedFor', label: 'Degree Applied For', type: 'select', options: ['Undergraduate Degree', 'Postgraduate Degree', 'Professional Degree', 'PhD'], required: true },
             { name: 'program', label: 'Academic Programme', type: 'select', options: PROGRAMME_OPTIONS, required: true },
             { name: 'mobile', label: 'Mobile Number', type: 'number', required: true },
@@ -639,7 +639,7 @@ export const FORM_CONFIGS = {
                 name: 'campus',
                 label: 'Campus',
                 type: 'select',
-                options: ['Prashanti Nilayam Campus', 'Anantapur Campus', 'Brindavan Campus', 'Nandigiri Campus'],
+                options: ['Prasanthi Nilayam Campus', 'Anantapur Campus', 'Brindavan Campus', 'Nandigiri Campus'],
                 required: true
             },
             {
@@ -695,6 +695,24 @@ export const FORM_CONFIGS = {
             { name: 'postalCode', label: 'Postal Code', type: 'text', required: true }
         ],
 
-    }
+    },
+    'convocation-2026': {
+        title: 'SSSIHL - XLV Annual Convocation November 2026 - Registration Form',
+        isCustomForm: true,
+        categoryOptions: ['Undergraduate', 'Postgraduate', 'Professional', 'Doctor of Philosophy'],
+        instructions: [
+            'No fee is charged for registration for the Convocation.',
+            'Once the application is submitted, please wait for it to be processed and for a verification acknowledgment to be issued. In case of any queries, Kindly email us at convocation@sssihl.edu.in',
+            'Candidates applying for admission to the convocation for Undergraduate degrees such as B.A. / B.A. (Hons.) / B.Sc. / B.Sc. (Hons.) / B.Com. (Hons.) / B.P.A. / B.B.M. / B.B.A. should upload only the softcopy of the original pass certificate of Intermediate or Pre-University issued by the Board. ',
+            'Candidates applying for admission to the convocation for Postgraduate degrees such as M.A. / M.Sc. / M.B.A. / M.Tech. / B.Ed. should upload only the softcopy of the Original Degree Certificate of the qualifying degree issued by the Institute / University.',
+            'Candidates applying for admission to the convocation for the Ph.D. programme should upload only the softcopy of the Original Post Graduation Degree Certificate issued by the Institute / University.',
+            { type: 'sectionHeader', text: 'Candidates opting for "IN-ABSENTIA"' },
+            { type: 'address', text: 'Candidates are required to send a self-addressed, stamped, waterproof envelope to the address mentioned below. The Institute requires this in order to send the degree certificates back to the candidates by post.', details: CONTROLLER_ADDRESS },
+            'The Envelope should state clearly the name and programme of the student.',
+            'The envelope must be 16x12 inches in size. The full and complete postal address must be clearly written or typed on it, including the town/city, PIN code, district and state. Lastly, stamps totalling ₹55 must be affixed on the top right hand corner of the envelope. Students of foreign nationality may affix appropriate postage for an envelope weighing 100-120 gms.',
+        ],
+        fields: [],
+        files: [],
+    },
 };
 

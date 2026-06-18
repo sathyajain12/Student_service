@@ -62,6 +62,7 @@ export default function InstructionsScreen({ config, onProceed, onCancel }) {
     const [hardCopy, setHardCopy] = useState(false);
     const [softCopy, setSoftCopy] = useState(false);
     const [examType, setExamType] = useState(null);
+    const [selectedCategory, setSelectedCategory] = useState(null);
     const [calcScale, setCalcScale] = useState('5');
     const [calcCgpa, setCalcCgpa] = useState('');
     const [calcTable, setCalcTable] = useState('1');
@@ -204,7 +205,18 @@ export default function InstructionsScreen({ config, onProceed, onCancel }) {
                         const isAddress = isObject && instruction.type === 'address';
                         const isDeliveryOptions = isObject && instruction.type === 'deliveryOptions';
                         const isExamTypeSelector = isObject && instruction.type === 'examTypeSelector';
+                        const isSectionHeader = isObject && instruction.type === 'sectionHeader';
                         const text = isObject ? instruction.text : instruction;
+
+                        if (isSectionHeader) {
+                            return (
+                                <div key={index} style={{ marginTop: '8px', marginBottom: '-4px' }}>
+                                    <h4 style={{ fontSize: '1rem', fontWeight: '700', color: 'var(--accent)', margin: 0, paddingBottom: '6px', borderBottom: '2px solid rgba(37,99,235,0.2)' }}>
+                                        {instruction.text}
+                                    </h4>
+                                </div>
+                            );
+                        }
 
                         return (
                             <div key={index} style={{ display: 'flex', alignItems: 'flex-start', gap: '14px' }}>
@@ -751,8 +763,39 @@ export default function InstructionsScreen({ config, onProceed, onCancel }) {
             </div>
             )}
 
+            {config.categoryOptions && (
+                <div style={{ marginBottom: '28px' }}>
+                    <p style={{ fontWeight: '600', color: 'var(--text-main)', marginBottom: '14px', fontSize: '1rem' }}>
+                        Select your degree category:
+                    </p>
+                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '12px' }}>
+                        {config.categoryOptions.map(cat => (
+                            <button
+                                key={cat}
+                                onClick={() => setSelectedCategory(cat)}
+                                style={{
+                                    padding: '18px 14px',
+                                    borderRadius: '12px',
+                                    border: selectedCategory === cat ? '2px solid #4F46E5' : '2px solid #e2e8f0',
+                                    background: selectedCategory === cat ? 'linear-gradient(135deg, #4F46E5 0%, #7C3AED 100%)' : '#fff',
+                                    color: selectedCategory === cat ? '#fff' : 'var(--text-main)',
+                                    fontWeight: '600',
+                                    fontSize: '0.95rem',
+                                    cursor: 'pointer',
+                                    textAlign: 'center',
+                                    transition: 'all 0.15s',
+                                    boxShadow: selectedCategory === cat ? '0 4px 12px rgba(79,70,229,0.3)' : 'none',
+                                }}
+                            >
+                                {cat}
+                            </button>
+                        ))}
+                    </div>
+                </div>
+            )}
+
             <div style={{ display: 'flex', gap: '15px' }}>
-                {!hideProceedButton && (
+                {!hideProceedButton && !config.categoryOptions && (
                     <button
                         onClick={() => {
                             const hcVal = deliveryOptionsInstruction?.hardCopyValue || 'Hard Copy';
@@ -779,6 +822,26 @@ export default function InstructionsScreen({ config, onProceed, onCancel }) {
                     >
                         <CheckCircle2 size={18} />
                         I Understand, Proceed to Form
+                        <ArrowRight size={18} />
+                    </button>
+                )}
+                {config.categoryOptions && (
+                    <button
+                        onClick={() => onProceed({ category: selectedCategory })}
+                        disabled={!selectedCategory}
+                        className="btn-primary"
+                        style={{
+                            flexGrow: 1,
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            gap: '10px',
+                            opacity: !selectedCategory ? 0.5 : 1,
+                            cursor: !selectedCategory ? 'not-allowed' : 'pointer'
+                        }}
+                    >
+                        <CheckCircle2 size={18} />
+                        Proceed to Registration Form
                         <ArrowRight size={18} />
                     </button>
                 )}

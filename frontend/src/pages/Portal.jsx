@@ -24,6 +24,7 @@ const FORMS = [
   { id: 'retotaling', title: 'Application for Re-Totalling of Marks', Icon: Hash, category: 'Exam'},
   { id: 'on-request-degree', title: 'Application for On-Request Degree Certificate', Icon: ScrollText, category: 'Degree'},
   { id: 'migration', title: 'Application for Migration Certificate', Icon: Send, category: 'Transfer'},
+  { id: 'convocation-2026', title: 'SSSIHL - XLV Annual Convocation November 2026 - Registration Form', Icon: GraduationCap, category: 'Convocation'},
 ];
 
 export default function Portal({ onSelectForm, onTrackStatus }) {

@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import Portal from './pages/Portal';
 import AdminPortal from './pages/AdminPortal';
 import FormBuilder from './components/FormBuilder';
+import ConvocationForm from './components/ConvocationForm';
 import StatusTracker from './components/StatusTracker';
 import LoadingScreen from './components/LoadingScreen';
 import InstructionsScreen from './components/InstructionsScreen';
@@ -132,7 +133,13 @@ function App() {
           {view === 'form' && (
             <div className="container" style={{ maxWidth: '1050px' }}>
               <div className="glass-card" style={{ padding: '40px' }}>
-                {selectedConfig ? (
+                {currentFormId === 'convocation-2026' ? (
+                  <ConvocationForm
+                    onCancel={handleBackToInstructions}
+                    onTrackStatus={() => navigateTo('status', null, null)}
+                    hiddenData={hiddenFormData}
+                  />
+                ) : selectedConfig ? (
                   <FormBuilder
                     config={selectedConfig}
                     onCancel={handleBackToInstructions}

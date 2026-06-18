@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import DOMPurify from 'dompurify';
+import * as XLSX from 'xlsx';
 import { LogOut, FileText, Download, Users, Clock, CheckCircle, XCircle, ArrowLeft, RefreshCw, Upload, Trash2, Archive, X, AlertTriangle, Search, Eye } from 'lucide-react';
 
 const API_URL = import.meta.env.VITE_BACKEND_URL || 'http://localhost:8787';
@@ -262,6 +263,9 @@ export default function AdminPortal() {
     const [uploadSuccess, setUploadSuccess] = useState(false);
     const [toast, setToast] = useState(null);
     const [confirmModal, setConfirmModal] = useState(null);
+    const [showEditModal, setShowEditModal] = useState(false);
+    const [editFields, setEditFields] = useState({});
+    const [editSaving, setEditSaving] = useState(false);
     const [showDispatchModal, setShowDispatchModal] = useState(false);
     const [dispatchAppId, setDispatchAppId] = useState(null);
     const [dispatchFormType, setDispatchFormType] = useState(null);
@@ -273,8 +277,11 @@ export default function AdminPortal() {
     const [formSettings, setFormSettings] = useState(null);
     const [formsDrawerOpen, setFormsDrawerOpen] = useState(false);
     const [showTestEmailModal, setShowTestEmailModal] = useState(false);
-    const [testEmailForm, setTestEmailForm] = useState({ testEmail: '', campus: 'Prashanti Nilayam Campus', formType: 'Application for Supplementary Examinations Registration' });
+    const [testEmailForm, setTestEmailForm] = useState({ testEmail: '', campus: 'Prasanthi Nilayam Campus', formType: 'Application for Supplementary Examinations Registration' });
     const [testEmailStatus, setTestEmailStatus] = useState(null);
+    const [showCampusExamTestModal, setShowCampusExamTestModal] = useState(false);
+    const [campusExamTestForm, setCampusExamTestForm] = useState({ testEmail: '', campus: 'Prasanthi Nilayam Campus', formType: 'Application for Supplementary Examinations Registration', emailVariant: 'campus_exam' });
+    const [campusExamTestStatus, setCampusExamTestStatus] = useState(null);
     const urgencySort = true;
 
     const [pdfViewerUrl, setPdfViewerUrl] = useState(null);
@@ -293,9 +300,12 @@ export default function AdminPortal() {
     const [auditEntries, setAuditEntries] = useState([]);
     const [auditActionFilter, setAuditActionFilter] = useState('ALL');
     const [auditLoading, setAuditLoading] = useState(false);
+    const [showArchivedPanel, setShowArchivedPanel] = useState(false);
+    const [archivedApplications, setArchivedApplications] = useState([]);
+    const [archivedLoading, setArchivedLoading] = useState(false);
 
     const CAMPUS_COLORS = {
-        'Prashanti Nilayam Campus': '#6366f1',
+        'Prasanthi Nilayam Campus': '#6366f1',
         'Anantapur Campus': '#10b981',
         'Brindavan Campus': '#f59e0b',
         'Nandigiri Campus': '#ec4899',
@@ -385,7 +395,7 @@ export default function AdminPortal() {
             URL.revokeObjectURL(url);
             setShowExportModal(false);
             setExportSearch('');
-            showToast('CSV exported successfully!', 'success');
+            showToast('XLSX exported successfully!', 'success');
         } catch (err) {
             showToast('Export failed. Please try again.', 'error');
         } finally {
@@ -403,21 +413,29 @@ export default function AdminPortal() {
             const { rows } = await res.json();
             if (!rows || rows.length === 0) { showToast('No applications found for this form type', 'error'); return; }
 
-            const escape = (v) => {
-                if (v === null || v === undefined) return '';
-                const s = String(v).replace(/"/g, '""');
-                return /[,"\n]/.test(s) ? `"${s}"` : s;
-            };
+            // Build XLSX rows: Registration No | Full Name | Course Code
+            // Each paper code gets its own row; reg no + name only on the first row per student
+            const sheetRows = [['Registration No', 'Full Name', 'Course Code']];
+            for (const row of rows) {
+                const regNo = row.Registration_Number || row.reg_no || '';
+                const name = row.student_name || row.applicant_name || '';
+                const rawCodes = (row.paper_codes || '').trim();
+                const codes = rawCodes
+                    ? rawCodes.split(/[,\n]+/).map(c => c.trim()).filter(Boolean)
+                    : [''];
+                codes.forEach((code, i) => {
+                    sheetRows.push([i === 0 ? regNo : '', i === 0 ? name : '', code]);
+                });
+            }
 
-            const headers = Object.keys(rows[0]);
-            const csvRows = rows.map(row => headers.map(h => escape(row[h])).join(','));
-            const csv = [headers.map(escape).join(','), ...csvRows].join('\n');
-            const url = URL.createObjectURL(new Blob(['﻿' + csv], { type: 'text/csv;charset=utf-8;' }));
+            const ws = XLSX.utils.aoa_to_sheet(sheetRows);
+            // Column widths: A=20, B=30, C=20
+            ws['!cols'] = [{ wch: 20 }, { wch: 30 }, { wch: 20 }];
+            const wb = XLSX.utils.book_new();
             const slug = formType.replace(/[^a-z0-9]/gi, '_').replace(/_+/g, '_').toLowerCase();
-            const a = document.createElement('a');
-            a.href = url; a.download = `${slug}_${new Date().toISOString().split('T')[0]}.csv`;
-            document.body.appendChild(a); a.click(); document.body.removeChild(a);
-            URL.revokeObjectURL(url);
+            XLSX.utils.book_append_sheet(wb, ws, 'Applications');
+            XLSX.writeFile(wb, `${slug}_${new Date().toISOString().split('T')[0]}.xlsx`);
+
             setShowExportModal(false);
             showToast(`Exported ${rows.length} application${rows.length !== 1 ? 's' : ''} successfully!`, 'success');
         } catch (err) {
@@ -570,6 +588,43 @@ export default function AdminPortal() {
         }
     };
 
+    const fetchArchivedApplications = async () => {
+        setArchivedLoading(true);
+        try {
+            const res = await fetch(`${API_URL}/admin/archived`, {
+                headers: { 'Authorization': `Bearer ${localStorage.getItem(TOKEN_KEY)}` }
+            });
+            if (res.ok) {
+                const data = await res.json();
+                setArchivedApplications(data.archived || []);
+            }
+        } catch (e) {
+            console.error('Failed to fetch archived applications:', e);
+        } finally {
+            setArchivedLoading(false);
+        }
+    };
+
+    const unarchiveApplication = async (applicationId) => {
+        try {
+            const res = await fetch(`${API_URL}/admin/unarchive/${applicationId}`, {
+                method: 'POST',
+                headers: { 'Authorization': `Bearer ${localStorage.getItem(TOKEN_KEY)}` }
+            });
+            const data = await res.json();
+            if (res.ok) {
+                showToast(`Application ${applicationId} restored successfully!`, 'success');
+                fetchArchivedApplications();
+                fetchApplications();
+                fetchStats();
+            } else {
+                showToast('Error: ' + (data.error || 'Failed to restore'), 'error');
+            }
+        } catch (e) {
+            showToast('Failed to restore application. Please try again.', 'error');
+        }
+    };
+
     const toggleForm = async (formId, label) => {
         const currentToken = localStorage.getItem(TOKEN_KEY);
         const currentActive = formSettings?.[formId] ?? true;
@@ -620,6 +675,191 @@ export default function AdminPortal() {
         const fd = details.formData || {};
         const files = details.files || [];
         const responseDocuments = details.responseDocuments || [];
+        const stageTimestamps = details.stageTimestamps || {};
+
+        const fmtDate = (ts) => {
+            if (!ts) return '';
+            const d = new Date(ts);
+            return `${String(d.getDate()).padStart(2,'0')}-${String(d.getMonth()+1).padStart(2,'0')}-${d.getFullYear()}`;
+        };
+
+        // ── SUPPLEMENTARY EXAM: OFFICIAL PRINTED FORM LAYOUT ──────────────────
+        if (app.form_type === 'Application for Supplementary Examinations Registration') {
+            const currentYear = new Date().getFullYear();
+            const fullAddress = [fd.address_line1, fd.address_line2].filter(Boolean).join(', ');
+            const submissionDate = fmtDate(app.created_at ? app.created_at + (app.created_at.includes('Z') ? '' : 'Z') : null)
+                || (app.created_at ? new Date(app.created_at).toLocaleDateString('en-IN') : '');
+            const codes = (fd.paper_codes || '').split(/[\n,]+/).map(s => s.trim()).filter(Boolean);
+            const titles = (fd.paper_titles || '').split(/[\n,]+/).map(s => s.trim()).filter(Boolean);
+            const numRows = codes.length || 1;
+            const courseRows = Array.from({ length: numRows }, (_, i) =>
+                `<tr>
+                  <td style="text-align:center">${i + 1}.</td>
+                  <td>${escapeHtml(fd.Semester || '')}</td>
+                  <td>${escapeHtml(codes[i] || '')}</td>
+                  <td>${escapeHtml(titles[i] || '')}</td>
+                </tr>`
+            ).join('');
+
+            const suppHtml = `<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>Supplementary Exam Application – ${escapeHtml(app.id)}</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: 'Times New Roman', Times, serif; font-size: 12px; color: #000; padding: 28px; }
+    .header { text-align: center; margin-bottom: 8px; display: flex; align-items: center; justify-content: center; gap: 16px; }
+    .header-text { text-align: center; }
+    .institute-name { font-size: 15px; font-weight: bold; text-transform: uppercase; letter-spacing: 0.5px; }
+    .deemed { font-size: 11px; margin-top: 2px; }
+    .address { font-size: 11px; margin-top: 4px; }
+    hr { border: none; border-top: 1.5px solid #000; margin: 10px 0 14px 0; }
+    .form-title { text-align: center; font-weight: bold; font-size: 13px; text-transform: uppercase; margin-bottom: 4px; }
+    .form-subtitle { text-align: center; font-size: 12px; margin-bottom: 3px; }
+    .section-label { font-weight: bold; padding: 4px 8px; border: 1px solid #000; border-bottom: none; background: #fff; margin-top: 14px; font-size: 12px; }
+    table { width: 100%; border-collapse: collapse; }
+    td, th { border: 1px solid #000; padding: 5px 8px; font-size: 11px; vertical-align: top; }
+    th { font-weight: bold; text-align: center; background: #fff; }
+    .num-col { width: 28px; text-align: center; }
+    .label-col { width: 44%; }
+    .decl-note { font-size: 10px; font-style: italic; margin-top: 3px; }
+    .course-note { font-size: 11px; margin: 12px 0 5px 0; }
+    @media print { body { padding: 15px; } }
+  </style>
+</head>
+<body>
+  <div class="header">
+    <img src="https://sssihl-student-service.pages.dev/logo.png" alt="SSSIHL Logo" style="height:60px;width:auto;" />
+    <div class="header-text">
+      <div class="institute-name">Sri Sathya Sai Institute of Higher Learning</div>
+      <div class="deemed">(Deemed to be University)</div>
+      <div class="address">Vidyagiri, Prasanthi Nilayam – 515 134, Sri Sathya Sai Dist., A.P.</div>
+    </div>
+  </div>
+  <hr>
+
+  <div class="form-title">Application for Supplementary Examinations Registration</div>
+  <div class="form-subtitle">JUNE / DECEMBER &nbsp; ${currentYear}</div>
+  <div class="form-subtitle">(Application is forwarded through Director of Campus)</div>
+
+  <div class="section-label">Applicant Information:</div>
+  <table>
+    <tbody>
+      <tr>
+        <td class="num-col">1</td>
+        <td class="label-col">Name of Candidate<br><span style="font-size:10px;font-style:italic">(as printed on the Original Grade Card)</span></td>
+        <td>${escapeHtml(app.applicant_name || '')}</td>
+      </tr>
+      <tr>
+        <td class="num-col">2</td>
+        <td class="label-col">Full Address</td>
+        <td>${escapeHtml(fullAddress)}</td>
+      </tr>
+      <tr>
+        <td class="num-col">3</td>
+        <td class="label-col">City</td>
+        <td>${escapeHtml(fd.city || '')}</td>
+      </tr>
+      <tr>
+        <td class="num-col">4</td>
+        <td class="label-col">State / Province</td>
+        <td>${escapeHtml(fd.state_province || '')}</td>
+      </tr>
+      <tr>
+        <td class="num-col">5</td>
+        <td class="label-col">Country</td>
+        <td>${escapeHtml(fd.country || '')}</td>
+      </tr>
+      <tr>
+        <td class="num-col">6</td>
+        <td class="label-col">Postal Code</td>
+        <td>${escapeHtml(fd.postal_code || '')}</td>
+      </tr>
+      <tr>
+        <td class="num-col">7</td>
+        <td class="label-col">Mobile Number</td>
+        <td>${escapeHtml(fd.Mobile_Number || '')}</td>
+      </tr>
+      <tr>
+        <td class="num-col">8</td>
+        <td class="label-col">E-mail ID</td>
+        <td>${escapeHtml(app.student_email || '')}</td>
+      </tr>
+      <tr>
+        <td class="num-col">9</td>
+        <td class="label-col">Declaration</td>
+        <td>
+          ${escapeHtml(fd.declaration || '')}
+          <div class="decl-note">(If on medical Grounds, find it difficult to take the examination, I will duly inform the Director of the Campus and the Controller of Examinations in advance, so that my candidature for the next examination may not stand forfeited.)</div>
+        </td>
+      </tr>
+      <tr>
+        <td class="num-col">10</td>
+        <td class="label-col">Date of Submission</td>
+        <td>${escapeHtml(submissionDate)}</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <div class="section-label">Official Information:</div>
+  <table>
+    <tbody>
+      <tr>
+        <td class="num-col">1</td>
+        <td class="label-col">Campus</td>
+        <td>${escapeHtml(app.campus || '')}</td>
+      </tr>
+      <tr>
+        <td class="num-col">2</td>
+        <td class="label-col">Registered Number</td>
+        <td>${escapeHtml(app.reg_no || '')}</td>
+      </tr>
+      <tr>
+        <td class="num-col">3</td>
+        <td class="label-col">Programme</td>
+        <td>${escapeHtml(fd.Programme || '')}</td>
+      </tr>
+      <tr>
+        <td class="num-col">4</td>
+        <td class="label-col">Period of Study</td>
+        <td>${escapeHtml(fd.Period_of_Study || '')}</td>
+      </tr>
+      <tr>
+        <td class="num-col">5</td>
+        <td class="label-col">Campus forwarded to Director</td>
+        <td>${escapeHtml(fmtDate(stageTimestamps.campusForwardedAt))}</td>
+      </tr>
+      <tr>
+        <td class="num-col">6</td>
+        <td class="label-col">Director Approved on</td>
+        <td>${escapeHtml(fmtDate(stageTimestamps.directorApprovedAt))}</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <p class="course-note">Details of Course(s) in which the candidate intends appearing for the Supplementary Examinations.</p>
+  <table>
+    <thead>
+      <tr>
+        <th style="width:50px;">S. No.</th>
+        <th style="width:110px;">Semester Number</th>
+        <th style="width:110px;">Course Code</th>
+        <th>Title of the Course</th>
+      </tr>
+    </thead>
+    <tbody>${courseRows}</tbody>
+  </table>
+</body>
+</html>`;
+
+            const pw = window.open('', '_blank', 'width=800,height=900');
+            pw.document.documentElement.innerHTML = suppHtml;
+            pw.focus();
+            setTimeout(() => { pw.print(); }, 400);
+            return;
+        }
+        // ───────────────────────────────────────────────────────────────────────
 
         // Human-readable labels for each form table's columns
         const FORM_FIELD_LABELS = {
@@ -654,6 +894,8 @@ export default function AdminPortal() {
                 ['Programme', 'Academic Programme'],
                 ['Period_of_Study', 'Period of Study'],
                 ['Semester', 'Semester'],
+                ['paper_codes', 'Paper Code(s)'],
+                ['paper_titles', 'Paper Title(s)'],
                 ['Mobile_Number', 'Mobile Number'],
                 ['address_line1', 'Address Line 1'],
                 ['address_line2', 'Address Line 2'],
@@ -661,8 +903,7 @@ export default function AdminPortal() {
                 ['state_province', 'State/Province/Region'],
                 ['city', 'City'],
                 ['postal_code', 'Postal Code'],
-                ['paper_codes', 'Paper Code(s)'],
-                ['paper_titles', 'Paper Title(s)'],
+                ['declaration', 'Declaration'],
             ],
             'Application for Duplicate Degree Certificate': [
                 ['Programme', 'Academic Programme'],
@@ -693,6 +934,8 @@ export default function AdminPortal() {
                 ['Programme', 'Academic Programme'],
                 ['Period_of_Study', 'Period of Study'],
                 ['Semester', 'Semester'],
+                ['paper_codes', 'Paper Code(s)'],
+                ['paper_titles', 'Paper Title(s)'],
                 ['Mobile_Number', 'Mobile Number'],
                 ['address_line1', 'Address Line 1'],
                 ['address_line2', 'Address Line 2'],
@@ -700,8 +943,7 @@ export default function AdminPortal() {
                 ['state_province', 'State/Province/Region'],
                 ['city', 'City'],
                 ['postal_code', 'Postal Code'],
-                ['paper_codes', 'Paper Code(s)'],
-                ['paper_titles', 'Paper Title(s)'],
+                ['declaration', 'Declaration'],
             ],
             'Application for Re-Totalling of Marks': [
                 ['Programme', 'Academic Programme'],
@@ -726,13 +968,30 @@ export default function AdminPortal() {
                 ['city', 'City'],
                 ['postal_code', 'Postal Code'],
             ],
+            'SSSIHL - XLV Annual Convocation November 2026 - Registration Form': [
+                ['category', 'Category'],
+                ['programme', 'Programme'],
+                ['registration_number', 'Registered Number'],
+                ['attendance_type', 'Attendance Type'],
+                ['date_of_birth', 'Date of Birth'],
+                ['postal_address', 'Postal Address'],
+                ['active_mobile', 'Active Mobile Number'],
+                ['alternate_mobile', 'Alternate Mobile Number'],
+                ['prev_board_university', 'Previous Board / University'],
+                ['prev_qualification_programme', 'Previous Qualification Programme'],
+                ['prev_qualification_certificate_no', 'Certificate No.'],
+                ['declaration', 'Declaration'],
+            ],
             'Application for Migration Certificate': [
                 ['Registration_Number', 'Registration Number'],
+                ['programme', 'Academic Programme'],
+                ['date_of_birth', 'Date of Birth'],
                 ['admission_year', 'Year of Admission'],
                 ['Campus_of_admission', 'Campus of Admission'],
                 ['last_examination_passed', 'Last Examination Details'],
                 ['degree_recieved', 'Degree Certificate Received'],
                 ['university_to_migrate', 'University/Institute to Join'],
+                ['delivery_preference', 'Delivery Preference'],
                 ['Mobile_Number', 'Mobile Number'],
                 ['address_line1', 'Address Line 1'],
                 ['address_line2', 'Address Line 2'],
@@ -740,16 +999,24 @@ export default function AdminPortal() {
                 ['state_province', 'State/Province/Region'],
                 ['city', 'City'],
                 ['postal_code', 'Postal Code'],
+                ['correspondence_address', 'Correspondence Address'],
             ],
         };
 
         const statusColors = { APPROVED: '#10b981', COMPLETED: '#059669', DISPATCHED: '#0ea5e9', REJECTED: '#ef4444', PENDING: '#f59e0b' };
         const statusColor = statusColors[app.status] || '#64748b';
 
+        const DATE_FIELDS = new Set(['date_of_birth', 'admission_year', 'graduation_year', 'year_of_passing']);
+        const formatDateValue = (key, value) => {
+            if (!DATE_FIELDS.has(key)) return value;
+            const match = String(value).match(/^(\d{4})-(\d{2})-(\d{2})/);
+            return match ? `${match[3]}-${match[2]}-${match[1]}` : value;
+        };
+
         const fieldDefs = FORM_FIELD_LABELS[app.form_type] || [];
         const formFieldRows = fieldDefs
             .filter(([key]) => fd[key] !== null && fd[key] !== undefined && fd[key] !== '')
-            .map(([key, label]) => `<tr><td style="font-weight:600;width:40%">${escapeHtml(label)}</td><td>${escapeHtml(fd[key])}</td></tr>`)
+            .map(([key, label]) => `<tr><td style="font-weight:600;width:40%">${escapeHtml(label)}</td><td>${escapeHtml(formatDateValue(key, fd[key]))}</td></tr>`)
             .join('');
 
         const fileListRows = files.map(f =>
@@ -789,9 +1056,12 @@ export default function AdminPortal() {
 </head>
 <body>
   <div class="header">
-    <div>
-      <div class="institute">Sri Sathya Sai Institute of Higher Learning</div>
-      <div class="sub-institute">Office of the Controller of Examinations</div>
+    <div style="display:flex;align-items:center;gap:14px;">
+      <img src="https://sssihl-student-service.pages.dev/logo.png" alt="SSSIHL Logo" style="height:64px;width:auto;" />
+      <div>
+        <div class="institute">Sri Sathya Sai Institute of Higher Learning</div>
+        <div class="sub-institute">Office of the Controller of Examinations</div>
+      </div>
     </div>
     <div style="text-align:right">
       <div class="form-title">${escapeHtml(app.form_type)}</div>
@@ -807,6 +1077,7 @@ export default function AdminPortal() {
       <div class="info-item"><label>Registration Number</label><span>${escapeHtml(app.reg_no || 'N/A')}</span></div>
       <div class="info-item"><label>Campus</label><span>${escapeHtml(app.campus || 'N/A')}</span></div>
       <div class="info-item"><label>Email Address</label><span>${escapeHtml(app.student_email || 'N/A')}</span></div>
+      ${app.abc_apaar_id ? `<div class="info-item"><label>ABC / APAAR ID</label><span>${escapeHtml(app.abc_apaar_id)}</span></div>` : ''}
       <div class="info-item"><label>Date of Submission</label><span>${new Date(app.created_at + 'Z').toLocaleString('en-IN', { timeZone: 'Asia/Kolkata' })}</span></div>
     </div>
   </div>
@@ -835,6 +1106,12 @@ export default function AdminPortal() {
       <thead><tr><th>File Name</th><th>Type</th><th>Size</th><th>Uploaded By</th></tr></thead>
       <tbody>${responseListRows}</tbody>
     </table>
+  </div>` : ''}
+
+  ${app.director_comment ? `
+  <div class="section">
+    <div class="section-title">Director's Comments</div>
+    <div style="padding:10px 12px;background:#faf5ff;border:1px solid #e9d5ff;border-radius:6px;font-size:13px;color:#4c1d95;">${escapeHtml(app.director_comment)}</div>
   </div>` : ''}
 
   <div class="footer">
@@ -1083,6 +1360,65 @@ export default function AdminPortal() {
         event.target.value = '';
     };
 
+    const FORM_FIELDS_SKIP = new Set([
+        'id', 'application_id', 'created_at', 'updated_at',
+        'student_name', 'applicant_name', 'student_email', 'email',
+        'reg_no', 'registration_number', 'Registration_Number', 'campus', 'Campus', 'programme',
+        'director_approval_status', 'controller_approval_status',
+        'director_status', 'controller_status', 'status',
+        'delivery_preference', 'file_data',
+    ]);
+    const APP_EDIT_KEYS = ['applicant_name', 'reg_no', 'campus', 'programme', 'abc_apaar_id'];
+    const APP_COLUMNS = new Set(APP_EDIT_KEYS);
+
+    const openEditModal = () => {
+        if (!appDetails) return;
+        const { application, formData } = appDetails;
+        const fields = {};
+        for (const key of APP_EDIT_KEYS) {
+            if (application[key] != null) fields[key] = application[key];
+        }
+        if (formData) {
+            for (const [key, value] of Object.entries(formData)) {
+                if (!FORM_FIELDS_SKIP.has(key.toLowerCase()) && value != null && value !== '') {
+                    fields[key] = value;
+                }
+            }
+        }
+        setEditFields(fields);
+        setShowEditModal(true);
+    };
+
+    const saveEdit = async () => {
+        setEditSaving(true);
+        try {
+            const applicationFields = {};
+            const formFields = {};
+            for (const [key, value] of Object.entries(editFields)) {
+                if (APP_COLUMNS.has(key)) applicationFields[key] = value;
+                else formFields[key] = value;
+            }
+            const res = await fetch(`${API_URL}/admin/application/${selectedApp}`, {
+                method: 'PATCH',
+                headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' },
+                body: JSON.stringify({ applicationFields, formFields }),
+            });
+            const data = await res.json();
+            if (res.ok && data.success) {
+                setShowEditModal(false);
+                setEditFields({});
+                fetchAppDetails(selectedApp);
+                showToast('Application updated successfully!', 'success');
+            } else {
+                showToast('Error: ' + (data.error || 'Failed to save changes'), 'error');
+            }
+        } catch (err) {
+            showToast('Failed to save changes. Please try again.', 'error');
+        } finally {
+            setEditSaving(false);
+        }
+    };
+
     // Toast Notification Component
     const ToastNotification = () => {
         if (!toast) return null;
@@ -1310,6 +1646,58 @@ export default function AdminPortal() {
         );
     };
 
+    const EditModal = () => {
+        if (!showEditModal) return null;
+        const TEXTAREA_KEYS = new Set(['paper_codes', 'paper_titles', 'address_line1', 'address_line2', 'Reason', 'declaration']);
+        const formatKey = (k) => k.replace(/_/g, ' ').replace(/([a-z])([A-Z])/g, '$1 $2').replace(/\b\w/g, c => c.toUpperCase());
+        return (
+            <div style={{ position: 'fixed', inset: 0, zIndex: 9999, display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'rgba(15,23,42,0.5)', backdropFilter: 'blur(4px)' }}>
+                <div style={{ background: 'white', borderRadius: '16px', maxWidth: '600px', width: '90%', maxHeight: '82vh', display: 'flex', flexDirection: 'column', boxShadow: '0 25px 50px -12px rgba(0,0,0,0.25)' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '20px 24px', borderBottom: '1px solid #e2e8f0', flexShrink: 0 }}>
+                        <h3 style={{ margin: 0, fontSize: '1rem', fontWeight: 700, color: '#0f172a' }}>Edit Application</h3>
+                        <button onClick={() => { setShowEditModal(false); setEditFields({}); }} style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#94a3b8', padding: '4px' }}>
+                            <X size={18} />
+                        </button>
+                    </div>
+                    <div style={{ overflowY: 'auto', padding: '20px 24px', flex: 1 }}>
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
+                            {Object.entries(editFields).map(([key, value]) => (
+                                <div key={key}>
+                                    <label style={{ display: 'block', fontSize: '0.72rem', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.06em', color: '#64748b', marginBottom: '5px' }}>
+                                        {formatKey(key)}
+                                    </label>
+                                    {TEXTAREA_KEYS.has(key) ? (
+                                        <textarea
+                                            value={value ?? ''}
+                                            onChange={e => setEditFields(prev => ({ ...prev, [key]: e.target.value }))}
+                                            rows={3}
+                                            style={{ width: '100%', boxSizing: 'border-box', padding: '8px 12px', borderRadius: '8px', border: '1px solid #e2e8f0', fontSize: '0.875rem', fontFamily: 'inherit', resize: 'vertical', outline: 'none', color: '#0f172a', lineHeight: 1.5 }}
+                                        />
+                                    ) : (
+                                        <input
+                                            type="text"
+                                            value={value ?? ''}
+                                            onChange={e => setEditFields(prev => ({ ...prev, [key]: e.target.value }))}
+                                            style={{ width: '100%', boxSizing: 'border-box', padding: '8px 12px', borderRadius: '8px', border: '1px solid #e2e8f0', fontSize: '0.875rem', fontFamily: 'inherit', outline: 'none', color: '#0f172a' }}
+                                        />
+                                    )}
+                                </div>
+                            ))}
+                        </div>
+                    </div>
+                    <div style={{ display: 'flex', gap: '10px', justifyContent: 'flex-end', padding: '16px 24px', borderTop: '1px solid #e2e8f0', flexShrink: 0 }}>
+                        <button onClick={() => { setShowEditModal(false); setEditFields({}); }} style={{ padding: '9px 20px', background: '#f1f5f9', color: '#475569', border: '1px solid #e2e8f0', borderRadius: '8px', cursor: 'pointer', fontWeight: 600, fontSize: '0.875rem', fontFamily: 'inherit' }}>
+                            Cancel
+                        </button>
+                        <button onClick={saveEdit} disabled={editSaving} style={{ padding: '9px 20px', background: editSaving ? '#94a3b8' : '#0f172a', color: 'white', border: 'none', borderRadius: '8px', cursor: editSaving ? 'not-allowed' : 'pointer', fontWeight: 600, fontSize: '0.875rem', fontFamily: 'inherit' }}>
+                            {editSaving ? 'Saving...' : 'Save Changes'}
+                        </button>
+                    </div>
+                </div>
+            </div>
+        );
+    };
+
     const PdfViewerModal = () => {
         if (!pdfViewerUrl) return null;
         return (
@@ -1452,6 +1840,66 @@ export default function AdminPortal() {
                             <p style={{ color: '#94a3b8', textAlign: 'center', padding: '48px', fontSize: '0.875rem' }}>
                                 Enter at least 3 characters to search
                             </p>
+                        )}
+                    </div>
+                </div>
+            </div>
+        );
+    };
+
+    const ArchivedPanel = () => {
+        if (!showArchivedPanel) return null;
+        return (
+            <div style={{ position: 'fixed', inset: 0, zIndex: 9998, background: 'rgba(0,0,0,0.5)', display: 'flex', justifyContent: 'flex-end' }}>
+                <div style={{ width: 'min(860px, 95vw)', height: '100%', background: 'white', display: 'flex', flexDirection: 'column', boxShadow: '-4px 0 24px rgba(0,0,0,0.12)' }}>
+                    <div style={{ padding: '20px 24px', borderBottom: '1px solid #e2e8f0', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexShrink: 0 }}>
+                        <div>
+                            <h2 style={{ margin: 0, fontSize: '1.1rem', fontWeight: 700, color: '#0f172a' }}>Archived Applications</h2>
+                            <p style={{ margin: 0, fontSize: '0.8rem', color: '#64748b' }}>{archivedApplications.length} archived application{archivedApplications.length !== 1 ? 's' : ''}</p>
+                        </div>
+                        <button onClick={() => setShowArchivedPanel(false)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#64748b', padding: '4px' }}>✕</button>
+                    </div>
+                    <div style={{ flex: 1, overflow: 'auto', padding: '16px 24px' }}>
+                        {archivedLoading ? (
+                            <p style={{ color: '#64748b', textAlign: 'center', marginTop: '40px' }}>Loading...</p>
+                        ) : archivedApplications.length === 0 ? (
+                            <p style={{ color: '#64748b', textAlign: 'center', marginTop: '40px' }}>No archived applications found.</p>
+                        ) : (
+                            <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '13px' }}>
+                                <thead>
+                                    <tr style={{ background: '#f8fafc' }}>
+                                        {['App ID', 'Form Type', 'Applicant', 'Campus', 'Status', 'Archived By', 'Action'].map(h => (
+                                            <th key={h} style={{ padding: '10px 12px', textAlign: 'left', fontWeight: 700, color: '#475569', borderBottom: '1px solid #e2e8f0', whiteSpace: 'nowrap' }}>{h}</th>
+                                        ))}
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {archivedApplications.map(app => (
+                                        <tr key={app.id} style={{ borderBottom: '1px solid #f1f5f9' }}>
+                                            <td style={{ padding: '10px 12px', fontFamily: 'monospace', fontSize: '12px', color: '#4F46E5', fontWeight: 600 }}>{app.id}</td>
+                                            <td style={{ padding: '10px 12px', color: '#0f172a', maxWidth: '200px' }}>{app.form_type?.replace('Application for ', '')}</td>
+                                            <td style={{ padding: '10px 12px', color: '#0f172a', fontWeight: 600 }}>{app.applicant_name}</td>
+                                            <td style={{ padding: '10px 12px', color: '#64748b' }}>{app.campus?.replace(' Campus', '')}</td>
+                                            <td style={{ padding: '10px 12px' }}>
+                                                <span style={{ padding: '2px 8px', borderRadius: '12px', fontSize: '11px', fontWeight: 700, background: '#f1f5f9', color: '#475569' }}>{app.status}</span>
+                                            </td>
+                                            <td style={{ padding: '10px 12px', color: '#64748b', fontSize: '12px' }}>{app.archived_by || 'Admin'}</td>
+                                            <td style={{ padding: '10px 12px' }}>
+                                                <button
+                                                    onClick={() => {
+                                                        if (window.confirm(`Restore application ${app.id} for ${app.applicant_name}?`)) {
+                                                            unarchiveApplication(app.id);
+                                                        }
+                                                    }}
+                                                    style={{ padding: '5px 12px', background: '#10b981', color: 'white', border: 'none', borderRadius: '6px', cursor: 'pointer', fontSize: '12px', fontWeight: 600 }}
+                                                >
+                                                    Restore
+                                                </button>
+                                            </td>
+                                        </tr>
+                                    ))}
+                                </tbody>
+                            </table>
                         )}
                     </div>
                 </div>
@@ -1722,7 +2170,7 @@ export default function AdminPortal() {
     };
 
     // Dashboard computed values
-    const CAMPUS_ORDER = ['Prashanti Nilayam Campus', 'Anantapur Campus', 'Brindavan Campus', 'Nandigiri Campus'];
+    const CAMPUS_ORDER = ['Prasanthi Nilayam Campus', 'Anantapur Campus', 'Brindavan Campus', 'Nandigiri Campus'];
     const campusBreakdown = CAMPUS_ORDER.map(c => ({ label: c, count: applications.filter(a => a.campus === c).length }));
 
 
@@ -1731,10 +2179,10 @@ export default function AdminPortal() {
             .filter(a => {
                 if (!searchQuery.trim()) return true;
                 const q = searchQuery.toLowerCase();
-                return [a.id, a.applicant_name, a.form_type, a.campus, a.student_email, a.status]
+                return [a.id, a.applicant_name, a.reg_no, a.student_email, a.form_type, a.campus, a.status]
                     .some(f => f?.toLowerCase().includes(q));
             })
-            .filter(a => statusFilter === 'ALL' || a.status === statusFilter)
+            .filter(a => statusFilter === 'ALL' || a.status === statusFilter || (statusFilter === 'APPROVED' && a.status === 'DIRECTOR_APPROVED'))
             .filter(a => campusFilter === 'ALL' || a.campus === campusFilter);
         return urgencySort ? sortByUrgency(list)
             : list.sort((a, b) => new Date((b.created_at || '') + 'Z') - new Date((a.created_at || '') + 'Z'));
@@ -1841,8 +2289,10 @@ export default function AdminPortal() {
             <PdfViewerModal />
             <ConfirmationModal />
             <DispatchModal />
+            <EditModal />
             <StudentLookupPanel />
             <AuditLogPanel />
+            <ArchivedPanel />
 
             <div style={{ minHeight: '100vh', background: '#F8FAFC', fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif' }}>
 
@@ -1855,7 +2305,7 @@ export default function AdminPortal() {
                     <div style={{ flex: 1, maxWidth: '320px', position: 'relative' }}>
                         <Search size={13} style={{ position: 'absolute', left: '10px', top: '50%', transform: 'translateY(-50%)', color: '#64748b', pointerEvents: 'none' }} />
                         <input type="text" value={searchQuery} onChange={e => setSearchQuery(e.target.value)}
-                            placeholder="Search applications..."
+                            placeholder="Search by name, App ID, Reg No..."
                             style={{ width: '100%', height: '32px', paddingLeft: '30px', paddingRight: searchQuery ? '28px' : '10px', background: 'rgba(255,255,255,0.07)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '6px', color: 'white', fontSize: '0.78rem', outline: 'none', boxSizing: 'border-box', fontFamily: 'inherit' }} />
                         {searchQuery && (
                             <button onClick={() => setSearchQuery('')} style={{ position: 'absolute', right: '8px', top: '50%', transform: 'translateY(-50%)', background: 'none', border: 'none', cursor: 'pointer', color: '#64748b', padding: 0 }}>
@@ -1925,6 +2375,48 @@ export default function AdminPortal() {
 
                                 {/* Applicant Information */}
                                 <div style={{ background: 'white', borderRadius: '12px', border: '1px solid #e2e8f0', overflow: 'hidden', boxShadow: '0 1px 3px rgba(0,0,0,0.05)' }}>
+                                    {app.form_type === 'Application for Supplementary Examinations Registration' || app.form_type === 'Application for Repeating Examinations Registration (CIE and ESE)' ? (() => {
+                                        const fd = appDetails.formData || {};
+                                        const st = appDetails.stageTimestamps || {};
+                                        const fmtDate = (d) => d ? new Date(d + (d.includes('T') ? '' : 'Z')).toLocaleString('en-IN', { timeZone: 'Asia/Kolkata', dateStyle: 'medium', timeStyle: 'short' }) : 'N/A';
+                                        const address = [fd.address_line1, fd.address_line2].filter(Boolean).join(', ');
+                                        return (<>
+                                            {/* Section 1: Personal Information */}
+                                            <div style={{ padding: '14px 20px', borderBottom: '1px solid #e2e8f0', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                                                <Users size={16} color="#4F46E5" />
+                                                <h2 style={{ fontSize: '0.9rem', fontWeight: 700, color: '#0F172A', margin: 0 }}>Personal Information</h2>
+                                            </div>
+                                            <div style={{ padding: '20px', display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: '16px' }}>
+                                                <div><p style={detailLabelStyle}>Full Name</p><p style={detailValueStyle}>{app.applicant_name}</p></div>
+                                                {address && <div style={{ gridColumn: '1 / -1' }}><p style={detailLabelStyle}>Address</p><p style={detailValueStyle}>{address}</p></div>}
+                                                <div><p style={detailLabelStyle}>City</p><p style={detailValueStyle}>{fd.city || 'N/A'}</p></div>
+                                                <div><p style={detailLabelStyle}>State / Province</p><p style={detailValueStyle}>{fd.state_province || 'N/A'}</p></div>
+                                                <div><p style={detailLabelStyle}>Country</p><p style={detailValueStyle}>{fd.country || 'N/A'}</p></div>
+                                                <div><p style={detailLabelStyle}>Postal Code</p><p style={detailValueStyle}>{fd.postal_code || 'N/A'}</p></div>
+                                                <div><p style={detailLabelStyle}>Mobile Number</p><p style={detailValueStyle}>{fd.Mobile_Number || 'N/A'}</p></div>
+                                                <div><p style={detailLabelStyle}>Email Address</p><p style={{ ...detailValueStyle, wordBreak: 'break-all' }}>{app.student_email}</p></div>
+                                                <div><p style={detailLabelStyle}>Declaration</p><p style={detailValueStyle}>{fd.declaration || 'N/A'}</p></div>
+                                                <div><p style={detailLabelStyle}>Submitted On</p><p style={detailValueStyle}>{fmtDate(app.created_at)}</p></div>
+                                            </div>
+                                            {/* Section 2: Official Information */}
+                                            <div style={{ padding: '14px 20px', borderTop: '2px solid #f1f5f9', borderBottom: '1px solid #e2e8f0', display: 'flex', alignItems: 'center', gap: '8px', background: '#f8fafc' }}>
+                                                <FileText size={16} color="#0891b2" />
+                                                <h2 style={{ fontSize: '0.9rem', fontWeight: 700, color: '#0F172A', margin: 0 }}>Official Information</h2>
+                                            </div>
+                                            <div style={{ padding: '20px', display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: '16px' }}>
+                                                <div><p style={detailLabelStyle}>Campus</p><p style={detailValueStyle}>{app.campus}</p></div>
+                                                <div><p style={detailLabelStyle}>Registration Number</p><p style={{ ...detailValueStyle, fontFamily: 'monospace' }}>{app.reg_no || 'N/A'}</p></div>
+                                                <div><p style={detailLabelStyle}>Programme</p><p style={detailValueStyle}>{fd.Programme || app.programme || 'N/A'}</p></div>
+                                                <div><p style={detailLabelStyle}>Course Code(s)</p><p style={detailValueStyle}>{fd.paper_codes || 'N/A'}</p></div>
+                                                <div style={{ gridColumn: fd.paper_titles?.length > 40 ? '1 / -1' : undefined }}><p style={detailLabelStyle}>Course Title(s)</p><p style={detailValueStyle}>{fd.paper_titles || 'N/A'}</p></div>
+                                                <div><p style={detailLabelStyle}>Semester</p><p style={detailValueStyle}>{fd.Semester || 'N/A'}</p></div>
+                                                <div><p style={detailLabelStyle}>Period of Study</p><p style={detailValueStyle}>{fd.Period_of_Study || 'N/A'}</p></div>
+                                                <div><p style={detailLabelStyle}>Campus Forwarded to Director</p><p style={detailValueStyle}>{fmtDate(st.campusForwardedAt)}</p></div>
+                                                <div><p style={detailLabelStyle}>Director Approved On</p><p style={detailValueStyle}>{fmtDate(st.directorApprovedAt)}</p></div>
+                                                <div><p style={detailLabelStyle}>Submitted to COE On</p><p style={detailValueStyle}>{fmtDate(st.coeSubmittedAt)}</p></div>
+                                            </div>
+                                        </>);
+                                    })() : (<>
                                     <div style={{ padding: '14px 20px', borderBottom: '1px solid #e2e8f0', display: 'flex', alignItems: 'center', gap: '8px' }}>
                                         <Users size={16} color="#4F46E5" />
                                         <h2 style={{ fontSize: '0.9rem', fontWeight: 700, color: '#0F172A', margin: 0 }}>Applicant Information</h2>
@@ -1935,7 +2427,7 @@ export default function AdminPortal() {
                                         <div><p style={detailLabelStyle}>Registration No</p><p style={{ ...detailValueStyle, fontFamily: 'monospace' }}>{app.reg_no || 'N/A'}</p></div>
                                         <div><p style={detailLabelStyle}>Campus</p><p style={detailValueStyle}>{app.campus}</p></div>
                                         <div><p style={detailLabelStyle}>Submitted On</p><p style={detailValueStyle}>{new Date(app.created_at + 'Z').toLocaleString('en-IN', { timeZone: 'Asia/Kolkata' })}</p></div>
-                                    </div>
+                                    </div></>)}
                                     {appDetails.formData?.delivery_preference && (
                                         <div style={{ margin: '0 20px 16px 20px' }}>
                                             <p style={{ fontSize: '0.72rem', fontWeight: 700, color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.06em', margin: '0 0 8px 0' }}>Delivery Preference</p>
@@ -1944,19 +2436,26 @@ export default function AdminPortal() {
                                             </span>
                                         </div>
                                     )}
-                                    {appDetails.formData && Object.keys(appDetails.formData).length > 0 && (() => {
+                                    {appDetails.formData && Object.keys(appDetails.formData).length > 0 && app.form_type !== 'Application for Supplementary Examinations Registration' && app.form_type !== 'Application for Repeating Examinations Registration (CIE and ESE)' && (() => {
                                         const SKIP = new Set([
                                             'id', 'application_id', 'created_at',
                                             // Already shown in the basic info grid above
                                             'student_name', 'applicant_name', 'student_email', 'email',
-                                            'reg_no', 'registration_number', 'campus',
+                                            'reg_no', 'registration_number', 'Registration_Number', 'campus', 'Campus',
                                             // Internal status fields (not student-entered data)
                                             'director_approval_status', 'controller_approval_status',
                                             'director_status', 'controller_status', 'status',
                                             // Shown separately as a highlighted badge above
                                             'delivery_preference',
                                         ]);
-                                        const entries = Object.entries(appDetails.formData).filter(([k, v]) => !SKIP.has(k) && v !== null && v !== '');
+                                        const PERSONAL_FIRST = new Set(['Mobile_Number', 'mobile_number', 'mobile', 'address_line1', 'address_line2', 'country', 'state_province', 'city', 'postal_code']);
+                                        const ACADEMIC_LAST = new Set(['Period_of_Study', 'period_of_study', 'Registration_Number', 'registration_number', 'Programme', 'programme', 'Semester', 'semester', 'paper_codes', 'paper_titles', 'graduation_year', 'year_of_passing', 'abc_apaar_id', 'abcApaarId']);
+                                        const entries = Object.entries(appDetails.formData)
+                                            .filter(([k, v]) => !SKIP.has(k) && v !== null && v !== '')
+                                            .sort(([a], [b]) => {
+                                                const rank = k => PERSONAL_FIRST.has(k) ? 0 : ACADEMIC_LAST.has(k) ? 2 : 1;
+                                                return rank(a) - rank(b);
+                                            });
                                         if (entries.length === 0) return null;
                                         return (
                                             <>
@@ -2115,9 +2614,9 @@ export default function AdminPortal() {
                                         )}
 
                                         {/* Notify Dispatched / Uploaded */}
-                                        {app.status === 'COMPLETED' && (
+                                        {(app.status === 'COMPLETED' || app.status === 'DISPATCHED') && (
                                             <button onClick={() => notifyDispatched(app.id, app.form_type)} style={{ ...sidebarBtnBase, background: '#0ea5e9', color: 'white' }}>
-                                                &#9993; Notify: Document {app.form_type === 'Application for Migration Certificate' ? 'Uploaded' : 'Dispatched'}
+                                                &#9993; {['Application for Supplementary Examinations Registration', 'Application for Repeating Examinations Registration (CIE and ESE)'].includes(app.form_type) ? 'Notify Student' : app.status === 'DISPATCHED' ? 'Notify: Hard Copy Dispatched' : `Notify: Document ${app.form_type === 'Application for Migration Certificate' ? 'Uploaded' : 'Dispatched'}`}
                                             </button>
                                         )}
 
@@ -2132,6 +2631,11 @@ export default function AdminPortal() {
                                                 {uploadSuccess && <p style={{ color: '#10b981', fontSize: '0.8rem', margin: 0 }}>Uploaded successfully!</p>}
                                             </>
                                         )}
+
+                                        {/* Edit */}
+                                        <button onClick={openEditModal} style={{ ...sidebarBtnBase, background: '#0f172a', color: 'white' }}>
+                                            ✏ Edit Application
+                                        </button>
 
                                         <hr style={{ border: 'none', borderTop: '1px solid #f1f5f9', margin: '4px 0' }} />
 
@@ -2184,14 +2688,15 @@ export default function AdminPortal() {
                     {/* Status filter tabs */}
                     <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap', marginBottom: '20px' }}>
                         {[
-                            { label: 'All',        value: 'ALL',        count: stats?.total,      color: '#4F46E5' },
-                            { label: 'Pending',    value: 'PENDING',    count: stats?.pending,    color: '#f59e0b' },
-                            { label: 'Approved',   value: 'APPROVED',   count: stats?.approved,   color: '#10b981' },
-                            { label: 'Dispatched', value: 'DISPATCHED', count: stats?.dispatched, color: '#0ea5e9' },
-                            { label: 'Completed',  value: 'COMPLETED',  count: stats?.completed,  color: '#10b981' },
-                            { label: 'Rejected',          value: 'REJECTED',          count: stats?.rejected,   color: '#ef4444' },
-                            { label: 'Dir. Comments',     value: 'DIRECTOR_COMMENTED', count: null,              color: '#7c3aed' },
-                            { label: 'Awaiting Director', value: 'AWAITING_DIRECTOR',  count: null,              color: '#8b5cf6' },
+                            { label: 'All',                  value: 'ALL',                  count: stats?.total,              color: '#4F46E5' },
+                            { label: 'Application Received', value: 'PENDING',              count: stats?.pending,            color: '#f59e0b' },
+                            { label: 'Awaiting Campus Exam', value: 'AWAITING_CAMPUS_EXAM', count: stats?.awaitingCampusExam, color: '#f97316' },
+                            { label: 'Awaiting Director',    value: 'AWAITING_DIRECTOR',    count: null,                      color: '#8b5cf6' },
+                            { label: 'Dir. Comments',        value: 'DIRECTOR_COMMENTED',   count: null,                      color: '#7c3aed' },
+                            { label: 'Approved',             value: 'APPROVED',             count: stats?.approved,           color: '#10b981' },
+                            { label: 'Rejected',             value: 'REJECTED',             count: stats?.rejected,           color: '#ef4444' },
+                            { label: 'Completed',            value: 'COMPLETED',            count: stats?.completed,          color: '#10b981' },
+                            { label: 'Dispatched',           value: 'DISPATCHED',           count: stats?.dispatched,         color: '#0ea5e9' },
                         ].map(tab => (
                             <button key={tab.value} onClick={() => setStatusFilter(tab.value)}
                                 style={{
@@ -2366,7 +2871,7 @@ export default function AdminPortal() {
                             <h3 style={{ fontSize: '0.85rem', fontWeight: 700, color: '#0f172a', margin: '0 0 12px' }}>Quick Actions</h3>
                             <button onClick={() => { setShowExportModal(true); setExportSearch(''); }}
                                 style={{ width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px', padding: '8px 14px', background: '#f8fafc', border: '1px solid #e2e8f0', borderRadius: '8px', cursor: 'pointer', fontSize: '0.8rem', fontWeight: 600, color: '#334155', fontFamily: 'inherit' }}>
-                                <Download size={14} /> Export CSV
+                                <Download size={14} /> Export XLSX
                             </button>
                             <button
                                 onClick={() => setShowStudentLookup(true)}
@@ -2381,10 +2886,22 @@ export default function AdminPortal() {
                                 📋 Audit Log
                             </button>
                             <button
+                                onClick={() => { setShowArchivedPanel(true); fetchArchivedApplications(); }}
+                                style={{ width: '100%', padding: '8px 16px', fontSize: '0.8rem', fontWeight: 600, background: 'white', border: '1px solid #e2e8f0', borderRadius: '8px', cursor: 'pointer', fontFamily: 'inherit', color: '#d97706', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px', marginTop: '8px' }}
+                            >
+                                🗄️ Archived Applications
+                            </button>
+                            <button
                                 onClick={() => { setShowTestEmailModal(true); setTestEmailStatus(null); }}
                                 style={{ width: '100%', padding: '8px 16px', fontSize: '0.8rem', fontWeight: 600, background: 'white', border: '1px solid #e2e8f0', borderRadius: '8px', cursor: 'pointer', fontFamily: 'inherit', color: '#0f172a', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px', marginTop: '8px' }}
                             >
                                 📧 Test Director Email
+                            </button>
+                            <button
+                                onClick={() => { setShowCampusExamTestModal(true); setCampusExamTestStatus(null); }}
+                                style={{ width: '100%', padding: '8px 16px', fontSize: '0.8rem', fontWeight: 600, background: 'white', border: '1px solid #e2e8f0', borderRadius: '8px', cursor: 'pointer', fontFamily: 'inherit', color: '#0f172a', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px', marginTop: '8px' }}
+                            >
+                                📋 Test Campus Exam Emails
                             </button>
                         </div>
                     </aside>
@@ -2395,7 +2912,7 @@ export default function AdminPortal() {
                 </div>
             </div>
 
-            {/* Export CSV Modal */}
+            {/* Export XLSX Modal */}
             {showExportModal && (() => {
                 const q = exportSearch.toLowerCase();
                 const exportFiltered = applications.filter(a =>
@@ -2409,7 +2926,7 @@ export default function AdminPortal() {
                         <div style={{ background: 'white', borderRadius: '16px', padding: '28px', width: '100%', maxWidth: '520px', boxShadow: '0 20px 60px rgba(0,0,0,0.2)', display: 'flex', flexDirection: 'column', maxHeight: '82vh' }}>
                             {/* Header */}
                             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '16px', flexShrink: 0 }}>
-                                <h3 style={{ margin: 0, fontSize: '1rem', fontWeight: 700, color: '#0f172a' }}>Export as CSV</h3>
+                                <h3 style={{ margin: 0, fontSize: '1rem', fontWeight: 700, color: '#0f172a' }}>Export as XLSX</h3>
                                 <button onClick={() => { setShowExportModal(false); setExportSearch(''); setExportTab('app'); }} style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#94a3b8', padding: '4px' }}>
                                     <X size={20} />
                                 </button>
@@ -2511,7 +3028,7 @@ export default function AdminPortal() {
                                     onChange={e => setTestEmailForm(p => ({ ...p, campus: e.target.value }))}
                                     style={{ width: '100%', padding: '8px 12px', border: '1px solid #e2e8f0', borderRadius: '8px', fontSize: '0.875rem', fontFamily: 'inherit', boxSizing: 'border-box', outline: 'none', background: 'white' }}
                                 >
-                                    <option>Prashanti Nilayam Campus</option>
+                                    <option>Prasanthi Nilayam Campus</option>
                                     <option>Anantapur Campus</option>
                                     <option>Brindavan Campus</option>
                                     <option>Nandigiri Campus</option>
@@ -2563,6 +3080,104 @@ export default function AdminPortal() {
                     </div>
                 </div>
             )}
+
+            {/* Test Campus Exam Emails Modal */}
+            {showCampusExamTestModal && (() => {
+                const isRepeatPaper = campusExamTestForm.formType === 'Application for Repeating Examinations Registration (CIE and ESE)';
+                const variantOptions = [
+                    { value: 'campus_exam', label: 'Campus Exam Section Notification' },
+                    { value: 'director_regular', label: isRepeatPaper ? 'Director Email — Regular Case' : 'Director Email — Regular Supplementary' },
+                    ...(isRepeatPaper ? [
+                        { value: 'director_repeat_yes', label: 'Director Email — Repeat Case (CIE Satisfied)' },
+                        { value: 'director_repeat_no', label: 'Director Email — Repeat Case (CIE Not Satisfied)' },
+                    ] : []),
+                    { value: 'director_condonation', label: 'Director Email — Condonation Case' },
+                ];
+                const variantMap = {
+                    campus_exam: { emailTarget: 'campus_exam', caseType: null, cieSatisfied: null },
+                    director_regular: { emailTarget: 'director_from_campus_exam', caseType: isRepeatPaper ? 'regular' : 'regular_supplementary', cieSatisfied: null },
+                    director_repeat_yes: { emailTarget: 'director_from_campus_exam', caseType: 'repeat_case', cieSatisfied: 'yes' },
+                    director_repeat_no: { emailTarget: 'director_from_campus_exam', caseType: 'repeat_case', cieSatisfied: 'no' },
+                    director_condonation: { emailTarget: 'director_from_campus_exam', caseType: 'condonation', cieSatisfied: null },
+                };
+                return (
+                    <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.4)', zIndex: 2000, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '16px' }}>
+                        <div style={{ background: 'white', borderRadius: '16px', padding: '24px', width: '100%', maxWidth: '440px', boxShadow: '0 20px 60px rgba(0,0,0,0.15)' }}>
+                            <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: '20px' }}>
+                                <div>
+                                    <h3 style={{ margin: 0, fontSize: '1rem', fontWeight: 700, color: '#0f172a' }}>📋 Test Campus Exam Emails</h3>
+                                    <p style={{ margin: '4px 0 0', fontSize: '0.78rem', color: '#94a3b8' }}>Sends a sample email to your address — real campus exam section and directors are never contacted.</p>
+                                </div>
+                                <button onClick={() => setShowCampusExamTestModal(false)} style={{ background: 'none', border: 'none', fontSize: '1.1rem', cursor: 'pointer', color: '#64748b', padding: '4px' }}>✕</button>
+                            </div>
+                            <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
+                                <div>
+                                    <label style={{ fontSize: '0.78rem', fontWeight: 600, color: '#475569', display: 'block', marginBottom: '6px' }}>Send Test Email To</label>
+                                    <input
+                                        type="email"
+                                        value={campusExamTestForm.testEmail}
+                                        onChange={e => setCampusExamTestForm(p => ({ ...p, testEmail: e.target.value }))}
+                                        placeholder="your@email.com"
+                                        style={{ width: '100%', padding: '8px 12px', border: '1px solid #e2e8f0', borderRadius: '8px', fontSize: '0.875rem', fontFamily: 'inherit', boxSizing: 'border-box', outline: 'none' }}
+                                    />
+                                </div>
+                                <div>
+                                    <label style={{ fontSize: '0.78rem', fontWeight: 600, color: '#475569', display: 'block', marginBottom: '6px' }}>Campus</label>
+                                    <select value={campusExamTestForm.campus} onChange={e => setCampusExamTestForm(p => ({ ...p, campus: e.target.value }))} style={{ width: '100%', padding: '8px 12px', border: '1px solid #e2e8f0', borderRadius: '8px', fontSize: '0.875rem', fontFamily: 'inherit', boxSizing: 'border-box', outline: 'none', background: 'white' }}>
+                                        <option>Prasanthi Nilayam Campus</option>
+                                        <option>Anantapur Campus</option>
+                                        <option>Brindavan Campus</option>
+                                        <option>Nandigiri Campus</option>
+                                    </select>
+                                </div>
+                                <div>
+                                    <label style={{ fontSize: '0.78rem', fontWeight: 600, color: '#475569', display: 'block', marginBottom: '6px' }}>Form Type</label>
+                                    <select value={campusExamTestForm.formType} onChange={e => setCampusExamTestForm(p => ({ ...p, formType: e.target.value, emailVariant: 'campus_exam' }))} style={{ width: '100%', padding: '8px 12px', border: '1px solid #e2e8f0', borderRadius: '8px', fontSize: '0.875rem', fontFamily: 'inherit', boxSizing: 'border-box', outline: 'none', background: 'white' }}>
+                                        <option value="Application for Supplementary Examinations Registration">Supplementary Examinations Registration</option>
+                                        <option value="Application for Repeating Examinations Registration (CIE and ESE)">Repeating Examinations Registration (CIE and ESE)</option>
+                                    </select>
+                                </div>
+                                <div>
+                                    <label style={{ fontSize: '0.78rem', fontWeight: 600, color: '#475569', display: 'block', marginBottom: '6px' }}>Email to Test</label>
+                                    <select value={campusExamTestForm.emailVariant} onChange={e => setCampusExamTestForm(p => ({ ...p, emailVariant: e.target.value }))} style={{ width: '100%', padding: '8px 12px', border: '1px solid #e2e8f0', borderRadius: '8px', fontSize: '0.875rem', fontFamily: 'inherit', boxSizing: 'border-box', outline: 'none', background: 'white' }}>
+                                        {variantOptions.map(o => <option key={o.value} value={o.value}>{o.label}</option>)}
+                                    </select>
+                                </div>
+                            </div>
+                            {campusExamTestStatus && (
+                                <p style={{ margin: '14px 0 0', fontSize: '0.82rem', color: campusExamTestStatus.type === 'success' ? '#059669' : campusExamTestStatus.type === 'error' ? '#dc2626' : '#64748b', fontWeight: 500 }}>
+                                    {campusExamTestStatus.message}
+                                </p>
+                            )}
+                            <button
+                                disabled={campusExamTestStatus?.type === 'sending' || !campusExamTestForm.testEmail}
+                                onClick={async () => {
+                                    setCampusExamTestStatus({ type: 'sending', message: 'Sending test email...' });
+                                    try {
+                                        const { emailTarget, caseType, cieSatisfied } = variantMap[campusExamTestForm.emailVariant] || variantMap['campus_exam'];
+                                        const res = await fetch(`${API_URL}/admin/test-campus-exam-email`, {
+                                            method: 'POST',
+                                            headers: { 'Authorization': `Bearer ${localStorage.getItem(TOKEN_KEY)}`, 'Content-Type': 'application/json' },
+                                            body: JSON.stringify({ testEmail: campusExamTestForm.testEmail, campus: campusExamTestForm.campus, formType: campusExamTestForm.formType, emailTarget, caseType, cieSatisfied })
+                                        });
+                                        const data = await res.json();
+                                        if (res.ok) {
+                                            setCampusExamTestStatus({ type: 'success', message: `✓ Test email sent to ${campusExamTestForm.testEmail}` });
+                                        } else {
+                                            setCampusExamTestStatus({ type: 'error', message: `Error: ${data.error}` });
+                                        }
+                                    } catch (err) {
+                                        setCampusExamTestStatus({ type: 'error', message: 'Network error. Please try again.' });
+                                    }
+                                }}
+                                style={{ marginTop: '16px', width: '100%', padding: '10px 20px', background: campusExamTestStatus?.type === 'sending' || !campusExamTestForm.testEmail ? '#94a3b8' : '#0f172a', color: 'white', border: 'none', borderRadius: '8px', fontSize: '0.875rem', fontWeight: 600, cursor: campusExamTestStatus?.type === 'sending' || !campusExamTestForm.testEmail ? 'not-allowed' : 'pointer', fontFamily: 'inherit' }}
+                            >
+                                {campusExamTestStatus?.type === 'sending' ? 'Sending...' : 'Send Test Email'}
+                            </button>
+                        </div>
+                    </div>
+                );
+            })()}
 
             {/* Form Availability Drawer */}
             {formsDrawerOpen && (
