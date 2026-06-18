@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
+import { User, Lock, ArrowRight, Eye, EyeOff } from 'lucide-react';
 
 const API_URL = import.meta.env.VITE_API_URL || 'https://sssihl-student-services-backend.coeoffice.workers.dev';
 const TOKEN_KEY = 'convAdminToken';
@@ -40,6 +41,7 @@ export default function ConvocationAdminPortal() {
     const [loginError, setLoginError] = useState('');
     const [loggingIn, setLoggingIn] = useState(false);
     const [showPass, setShowPass] = useState(false);
+    const [rememberDevice, setRememberDevice] = useState(false);
 
     // Data
     const [applications, setApplications] = useState([]);
@@ -273,42 +275,348 @@ export default function ConvocationAdminPortal() {
     // ─── Login screen ───────────────────────────────────────────────────────
     if (!isLoggedIn) {
         return (
-            <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'linear-gradient(135deg, #1e1b4b 0%, #312e81 50%, #4338ca 100%)', padding: '20px' }}>
-                <div style={{ background: '#fff', borderRadius: '20px', padding: '48px 40px', width: '100%', maxWidth: '420px', boxShadow: '0 25px 60px rgba(0,0,0,0.3)' }}>
-                    <div style={{ textAlign: 'center', marginBottom: '32px' }}>
-                        <div style={{ width: '64px', height: '64px', background: 'linear-gradient(135deg, #4338ca, #7c3aed)', borderRadius: '16px', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 16px', fontSize: '28px' }}>🎓</div>
-                        <h2 style={{ fontSize: '1.5rem', fontWeight: '800', color: '#1e1b4b', margin: '0 0 4px' }}>Convocation Admin</h2>
-                        <p style={{ color: '#64748b', fontSize: '0.9rem', margin: 0 }}>SSSIHL XLV Annual Convocation 2026</p>
-                    </div>
-                    <form onSubmit={handleLogin}>
-                        <div style={{ marginBottom: '16px' }}>
-                            <label style={{ display: 'block', fontWeight: '600', color: '#374151', marginBottom: '6px', fontSize: '0.9rem' }}>Username</label>
-                            <input type="text" value={loginUser} onChange={e => setLoginUser(e.target.value)} required
-                                style={{ width: '100%', padding: '11px 14px', borderRadius: '10px', border: '1.5px solid #e2e8f0', fontSize: '0.95rem', boxSizing: 'border-box', outline: 'none' }}
-                                placeholder="Enter username" />
+            <div className="login-container">
+                <style dangerouslySetInnerHTML={{ __html: `
+                    .login-container {
+                        min-height: 100vh;
+                        display: flex;
+                        background-color: #ffffff;
+                        font-family: 'Inter', sans-serif;
+                    }
+
+                    .login-left-panel {
+                        flex: 1.1;
+                        position: relative;
+                        background-image: url('/Divine-Benedictions-v2.jpg');
+                        background-size: cover;
+                        background-position: center 20%;
+                        display: block;
+                    }
+
+                    @media (max-width: 1024px) {
+                        .login-left-panel {
+                            display: none;
+                        }
+                    }
+
+                    .login-left-overlay {
+                        position: absolute;
+                        inset: 0;
+                    }
+
+                    .login-right-panel {
+                        flex: 0.9;
+                        display: flex;
+                        align-items: center;
+                        justify-content: center;
+                        background-color: #f8fafc;
+                        padding: 40px;
+                        position: relative;
+                    }
+
+                    @media (max-width: 1024px) {
+                        .login-right-panel {
+                            flex: 1;
+                            padding: 24px;
+                        }
+                    }
+
+                    .login-form-wrapper {
+                        width: 100%;
+                        max-width: 400px;
+                        animation: fadeIn 0.6s ease-out;
+                    }
+
+                    .login-logo-container {
+                        width: 80px;
+                        height: 80px;
+                        border-radius: 50%;
+                        background: #ffffff;
+                        display: flex;
+                        align-items: center;
+                        justify-content: center;
+                        margin: 0 auto 24px;
+                        padding: 12px;
+                        box-shadow: 0 10px 25px -5px rgba(67, 56, 202, 0.15), 0 8px 10px -6px rgba(67, 56, 202, 0.1);
+                        border: 1px solid rgba(226, 232, 240, 0.8);
+                    }
+
+                    .login-title {
+                        font-family: 'Outfit', sans-serif;
+                        font-size: 2.2rem;
+                        font-weight: 700;
+                        color: #1e1b4b;
+                        margin: 0 0 6px;
+                        text-align: center;
+                        letter-spacing: -0.02em;
+                    }
+
+                    .login-subtitle {
+                        color: #64748b;
+                        font-size: 0.9rem;
+                        margin: 0 0 32px;
+                        text-align: center;
+                        font-weight: 500;
+                    }
+
+                    .login-field-group {
+                        margin-bottom: 20px;
+                    }
+
+                    .login-field-label-row {
+                        display: flex;
+                        justify-content: space-between;
+                        align-items: center;
+                        margin-bottom: 6px;
+                    }
+
+                    .login-field-label {
+                        font-size: 0.88rem;
+                        font-weight: 600;
+                        color: #334155;
+                    }
+
+                    .login-forgot-link {
+                        font-size: 0.82rem;
+                        color: #4f46e5;
+                        text-decoration: none;
+                        font-weight: 600;
+                        transition: color 0.2s ease;
+                    }
+
+                    .login-forgot-link:hover {
+                        color: #4338ca;
+                    }
+
+                    .login-input-wrapper {
+                        position: relative;
+                        display: flex;
+                        align-items: center;
+                    }
+
+                    .login-input-icon {
+                        position: absolute;
+                        left: 16px;
+                        color: #94a3b8;
+                        transition: color 0.2s ease;
+                    }
+
+                    .login-input {
+                        width: 100%;
+                        padding: 13px 44px 13px 48px;
+                        border-radius: 12px;
+                        border: 1.5px solid #e2e8f0;
+                        font-size: 0.95rem;
+                        box-sizing: border-box;
+                        outline: none;
+                        transition: all 0.2s ease;
+                        background: #ffffff;
+                        color: #1e293b;
+                    }
+
+                    .login-input:focus {
+                        border-color: #4f46e5;
+                        box-shadow: 0 0 0 4px rgba(79, 70, 229, 0.1);
+                    }
+
+                    .login-input:focus + .login-input-icon {
+                        color: #4f46e5;
+                    }
+
+                    .login-password-toggle {
+                        position: absolute;
+                        right: 16px;
+                        background: none;
+                        border: none;
+                        cursor: pointer;
+                        color: #94a3b8;
+                        padding: 0;
+                        display: flex;
+                        align-items: center;
+                        justify-content: center;
+                        transition: color 0.2s ease;
+                    }
+
+                    .login-password-toggle:hover {
+                        color: #4f46e5;
+                    }
+
+                    .login-checkbox-row {
+                        display: flex;
+                        align-items: center;
+                        margin-bottom: 24px;
+                    }
+
+                    .login-checkbox-label {
+                        display: flex;
+                        align-items: center;
+                        gap: 8px;
+                        font-size: 0.88rem;
+                        color: #475569;
+                        cursor: pointer;
+                        user-select: none;
+                    }
+
+                    .login-checkbox {
+                        width: 16px;
+                        height: 16px;
+                        accent-color: #4f46e5;
+                        cursor: pointer;
+                    }
+
+                    .login-submit-button {
+                        width: 100%;
+                        padding: 14px;
+                        background: #4f46e5;
+                        color: #ffffff;
+                        border: none;
+                        border-radius: 12px;
+                        font-size: 1rem;
+                        font-weight: 700;
+                        cursor: pointer;
+                        display: flex;
+                        align-items: center;
+                        justify-content: center;
+                        gap: 8px;
+                        box-shadow: 0 4px 12px rgba(79, 70, 229, 0.2);
+                        transition: all 0.2s ease;
+                    }
+
+                    .login-submit-button:hover:not(:disabled) {
+                        background: #4338ca;
+                        transform: translateY(-1px);
+                        box-shadow: 0 6px 16px rgba(79, 70, 229, 0.3);
+                    }
+
+                    .login-submit-button:active:not(:disabled) {
+                        transform: translateY(0);
+                    }
+
+                    .login-submit-button:disabled {
+                        opacity: 0.7;
+                        cursor: not-allowed;
+                    }
+
+                    .login-footer-text {
+                        font-size: 0.78rem;
+                        color: #94a3b8;
+                        text-align: center;
+                        margin-top: 32px;
+                        font-weight: 500;
+                        line-height: 1.5;
+                    }
+
+                    @keyframes fadeIn {
+                        from {
+                            opacity: 0;
+                            transform: translateY(10px);
+                        }
+                        to {
+                            opacity: 1;
+                            transform: translateY(0);
+                        }
+                    }
+                ` }} />
+
+                <div className="login-left-panel">
+                    <div className="login-left-overlay" />
+                </div>
+
+                <div className="login-right-panel">
+                    <div className="login-form-wrapper">
+                        <div className="login-logo-container">
+                            <img src="/logo.png" alt="University Logo" style={{ width: '100%', height: '100%', objectFit: 'contain' }} />
                         </div>
-                        <div style={{ marginBottom: '24px' }}>
-                            <label style={{ display: 'block', fontWeight: '600', color: '#374151', marginBottom: '6px', fontSize: '0.9rem' }}>Password</label>
-                            <div style={{ position: 'relative' }}>
-                                <input type={showPass ? 'text' : 'password'} value={loginPass} onChange={e => setLoginPass(e.target.value)} required
-                                    style={{ width: '100%', padding: '11px 42px 11px 14px', borderRadius: '10px', border: '1.5px solid #e2e8f0', fontSize: '0.95rem', boxSizing: 'border-box', outline: 'none' }}
-                                    placeholder="Enter password" />
-                                <button type="button" onClick={() => setShowPass(s => !s)}
-                                    style={{ position: 'absolute', right: '12px', top: '50%', transform: 'translateY(-50%)', background: 'none', border: 'none', cursor: 'pointer', color: '#94a3b8', fontSize: '0.85rem' }}>
-                                    {showPass ? 'Hide' : 'Show'}
-                                </button>
+                        <h2 className="login-title">Convocation Admin</h2>
+                        <p className="login-subtitle">SSSIHL XLV Annual Convocation 2026</p>
+
+                        <form onSubmit={handleLogin}>
+                            <div className="login-field-group">
+                                <div className="login-field-label-row">
+                                    <label className="login-field-label">Username</label>
+                                </div>
+                                <div className="login-input-wrapper">
+                                    <input
+                                        type="text"
+                                        className="login-input"
+                                        value={loginUser}
+                                        onChange={e => setLoginUser(e.target.value)}
+                                        required
+                                        placeholder="Enter your administrative ID"
+                                    />
+                                    <User size={18} className="login-input-icon" />
+                                </div>
                             </div>
-                        </div>
-                        {loginError && <p style={{ color: '#ef4444', fontSize: '0.87rem', marginBottom: '16px', textAlign: 'center' }}>{loginError}</p>}
-                        <button type="submit" disabled={loggingIn}
-                            style={{ width: '100%', padding: '12px', background: 'linear-gradient(135deg, #4338ca, #7c3aed)', color: '#fff', border: 'none', borderRadius: '10px', fontSize: '1rem', fontWeight: '700', cursor: loggingIn ? 'not-allowed' : 'pointer', opacity: loggingIn ? 0.7 : 1 }}>
-                            {loggingIn ? 'Signing in…' : 'Sign In'}
-                        </button>
-                    </form>
+
+                            <div className="login-field-group">
+                                <div className="login-field-label-row">
+                                    <label className="login-field-label">Password</label>
+                                    <a href="#" onClick={e => { e.preventDefault(); alert("Please contact the Administrator to reset your password."); }} className="login-forgot-link">
+                                        Forgot password?
+                                    </a>
+                                </div>
+                                <div className="login-input-wrapper">
+                                    <input
+                                        type={showPass ? 'text' : 'password'}
+                                        className="login-input"
+                                        value={loginPass}
+                                        onChange={e => setLoginPass(e.target.value)}
+                                        required
+                                        placeholder="••••••••"
+                                    />
+                                    <Lock size={18} className="login-input-icon" />
+                                    <button
+                                        type="button"
+                                        onClick={() => setShowPass(s => !s)}
+                                        className="login-password-toggle"
+                                    >
+                                        {showPass ? <EyeOff size={18} /> : <Eye size={18} />}
+                                    </button>
+                                </div>
+                            </div>
+
+                            <div className="login-checkbox-row">
+                                <label className="login-checkbox-label">
+                                    <input
+                                        type="checkbox"
+                                        className="login-checkbox"
+                                        checked={rememberDevice}
+                                        onChange={e => setRememberDevice(e.target.checked)}
+                                    />
+                                    Remember this device
+                                </label>
+                            </div>
+
+                            {loginError && (
+                                <p style={{ color: '#ef4444', fontSize: '0.87rem', marginBottom: '16px', textAlign: 'center', fontWeight: '500' }}>
+                                    {loginError}
+                                </p>
+                            )}
+
+                            <button
+                                type="submit"
+                                disabled={loggingIn}
+                                className="login-submit-button"
+                            >
+                                {loggingIn ? (
+                                    'Signing in…'
+                                ) : (
+                                    <>
+                                        Sign In <ArrowRight size={18} />
+                                    </>
+                                )}
+                            </button>
+                        </form>
+
+                        <p className="login-footer-text">
+                            Authorized Personnel Only. Access is monitored and logged.
+                        </p>
+                    </div>
                 </div>
             </div>
         );
     }
+
 
     const fd = appDetails?.formDetails || {};
 
