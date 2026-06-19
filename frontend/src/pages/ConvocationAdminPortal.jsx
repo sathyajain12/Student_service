@@ -87,14 +87,61 @@ function fmtDate(d) {
     return new Date(d).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' });
 }
 
+const ANIM_STYLES = `
+@keyframes fadeInUp  { from { opacity:0; transform:translateY(10px) } to { opacity:1; transform:translateY(0) } }
+@keyframes slideInR  { from { opacity:0; transform:translateX(40px) } to { opacity:1; transform:translateX(0) } }
+@keyframes slideDown { from { opacity:0; max-height:0 } to { opacity:1; max-height:80px } }
+@keyframes spin      { to { transform:rotate(360deg) } }
+@keyframes pulseRing { 0%,100%{ box-shadow:0 0 0 0 rgba(245,158,11,0.45) } 60%{ box-shadow:0 0 0 7px rgba(245,158,11,0) } }
+@keyframes modalIn   { from { opacity:0; transform:scale(0.92) } to { opacity:1; transform:scale(1) } }
+@keyframes successIn { from { opacity:0; transform:translateY(-8px) } to { opacity:1; transform:translateY(0) } }
+`;
+
+function useCountUp(target, duration = 800) {
+    const [count, setCount] = useState(0);
+    useEffect(() => {
+        if (typeof target !== 'number') { setCount(target); return; }
+        let start = null;
+        const step = (ts) => {
+            if (!start) start = ts;
+            const progress = Math.min((ts - start) / duration, 1);
+            setCount(Math.floor(progress * target));
+            if (progress < 1) requestAnimationFrame(step);
+        };
+        requestAnimationFrame(step);
+    }, [target, duration]);
+    return count;
+}
+
 function StatusBadge({ status }) {
     const s = STATUS_COLORS[status] || { bg: '#f1f5f9', color: '#475569', label: status };
+    const isPending = status === 'PENDING';
     return (
-        <span style={{ background: s.bg, color: s.color, padding: '3px 10px', borderRadius: '20px', fontSize: '0.78rem', fontWeight: '700', whiteSpace: 'nowrap' }}>
+        <span style={{ background: s.bg, color: s.color, padding: '3px 10px', borderRadius: '20px', fontSize: '0.78rem', fontWeight: '700', whiteSpace: 'nowrap',
+            animation: isPending ? 'pulseRing 1.6s ease-in-out infinite' : 'none' }}>
             {s.label}
         </span>
     );
 }
+
+function StatCard({ label, IconComp, iconColor, value }) {
+    const displayed = useCountUp(typeof value === 'number' ? value : 0);
+    return (
+        <div style={{ background: '#fff', border: '1px solid #e5e7eb', padding: '20px 24px', display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+            <div>
+                <p style={{ margin: '0 0 12px', fontSize: '0.72rem', fontWeight: '600', color: '#6b7280', letterSpacing: '0.08em', textTransform: 'uppercase' }}>{label}</p>
+                <p style={{ margin: 0, fontSize: '2.4rem', fontWeight: '700', color: '#111', lineHeight: 1 }}>{typeof value === 'number' ? displayed : value}</p>
+            </div>
+            <IconComp size={22} color={iconColor} />
+        </div>
+    );
+}
+
+const pressProps = {
+    onMouseDown: e => { e.currentTarget.style.transform = 'scale(0.96)'; },
+    onMouseUp:   e => { e.currentTarget.style.transform = 'scale(1)'; },
+    onMouseLeave:e => { e.currentTarget.style.transform = 'scale(1)'; },
+};
 
 export default function ConvocationAdminPortal() {
     const [token, setToken] = useState(localStorage.getItem(TOKEN_KEY) || '');
@@ -143,11 +190,16 @@ export default function ConvocationAdminPortal() {
     const [activeNav, setActiveNav] = useState('applications');
     const [currentPage, setCurrentPage] = useState(1);
 
+    // Animation state
+    const [isRefreshing, setIsRefreshing] = useState(false);
+    const [listKey, setListKey] = useState(0);
+
     const authHeaders = { Authorization: `Bearer ${token}` };
 
     const fetchData = useCallback(async () => {
         if (!token) return;
         setLoading(true);
+        setIsRefreshing(true);
         try {
             const [appsRes, statsRes] = await Promise.all([
                 fetch(`${API_URL}/convocation-admin/applications`, { headers: authHeaders }),
@@ -158,10 +210,12 @@ export default function ConvocationAdminPortal() {
             const st = await statsRes.json();
             setApplications(Array.isArray(apps) ? apps : []);
             setStats(st);
+            setListKey(k => k + 1);
         } catch (e) {
             console.error(e);
         } finally {
             setLoading(false);
+            setIsRefreshing(false);
         }
     }, [token]);
 
@@ -246,6 +300,7 @@ export default function ConvocationAdminPortal() {
             const data = await res.json();
             if (data.success) {
                 setSuccessMsg(`Application ${status.toLowerCase()} successfully.`);
+                setTimeout(() => setSuccessMsg(''), 3500);
                 await refreshDetail();
                 setShowRejectInput(false);
                 setRejectReason('');
@@ -269,6 +324,7 @@ export default function ConvocationAdminPortal() {
             const data = await res.json();
             if (data.success) {
                 setSuccessMsg('Document uploaded successfully.');
+                setTimeout(() => setSuccessMsg(''), 3500);
                 setUploadFile(null);
                 await refreshDetail();
             }
@@ -290,6 +346,7 @@ export default function ConvocationAdminPortal() {
             const data = await res.json();
             if (data.success) {
                 setSuccessMsg('Candidate notified by email.');
+                setTimeout(() => setSuccessMsg(''), 3500);
                 await refreshDetail();
             }
         } catch (e) {
@@ -343,6 +400,9 @@ export default function ConvocationAdminPortal() {
         .filter(a => categoryFilter === 'ALL' || a.category === categoryFilter)
         .filter(a => programmeFilter === 'ALL' || a.programme === programmeFilter)
         .filter(a => campusFilter === 'ALL' || a.campus === campusFilter);
+
+    // Bump listKey when filters change so rows re-mount and stagger animation replays
+    useEffect(() => { setListKey(k => k + 1); }, [searchQuery, statusFilter, categoryFilter, programmeFilter, campusFilter]);
 
     // ─── Login screen ───────────────────────────────────────────────────────
     if (!isLoggedIn) {
@@ -728,6 +788,7 @@ export default function ConvocationAdminPortal() {
     // ─── Main portal ─────────────────────────────────────────────────────────
     return (
         <div style={{ minHeight: '100vh', background: '#fff', fontFamily: "'Inter', system-ui, sans-serif", display: 'flex', flexDirection: 'column' }}>
+            <style>{ANIM_STYLES}</style>
 
             {/* Top Navbar */}
             <header style={{ borderBottom: '1px solid #e5e7eb', padding: '0 32px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', background: '#fff', position: 'sticky', top: 0, zIndex: 100 }}>
@@ -738,7 +799,9 @@ export default function ConvocationAdminPortal() {
                     </nav>
                 </div>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
-                    <button onClick={fetchData} title="Refresh" style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#6b7280', padding: '6px', display: 'flex', alignItems: 'center' }}><IconRefresh size={18} /></button>
+                    <button onClick={fetchData} title="Refresh" style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#6b7280', padding: '6px', display: 'flex', alignItems: 'center' }}>
+                        <span style={{ display: 'inline-flex', animation: isRefreshing ? 'spin 0.8s linear infinite' : 'none' }}><IconRefresh size={18} /></span>
+                    </button>
                     <button onClick={handleExport} title="Export CSV" style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#6b7280', padding: '6px', display: 'flex', alignItems: 'center' }}><IconDownload size={18} /></button>
                     <div style={{ width: '32px', height: '32px', borderRadius: '50%', background: '#d1d5db', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '0.85rem', fontWeight: '700', color: '#374151' }}>
                         {username?.[0]?.toUpperCase() || 'A'}
@@ -754,11 +817,11 @@ export default function ConvocationAdminPortal() {
                     <>
                         {/* Stats row */}
                         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(5, 1fr)', gap: '0', marginBottom: '28px', border: '1px solid #e5e7eb' }}>
-                            {statCard('TOTAL', stats?.total ?? '…', IconBarChart, '#6b7280')}
-                            <div style={{ borderLeft: '1px solid #e5e7eb' }}>{statCard('PENDING', stats?.byStatus?.PENDING ?? 0, IconClipboard, '#f97316')}</div>
-                            <div style={{ borderLeft: '1px solid #e5e7eb' }}>{statCard('APPROVED', stats?.byStatus?.APPROVED ?? 0, IconCheckCircle, '#10b981')}</div>
-                            <div style={{ borderLeft: '1px solid #e5e7eb' }}>{statCard('REJECTED', stats?.byStatus?.REJECTED ?? 0, IconXCircle, '#ef4444')}</div>
-                            <div style={{ borderLeft: '1px solid #e5e7eb' }}>{statCard('NOTIFIED', stats?.byStatus?.DISPATCHED ?? 0, IconBell, '#0ea5e9')}</div>
+                            <StatCard label="TOTAL"   value={stats?.total ?? 0}                    IconComp={IconBarChart}    iconColor="#6b7280" />
+                            <div style={{ borderLeft: '1px solid #e5e7eb' }}><StatCard label="PENDING"  value={stats?.byStatus?.PENDING ?? 0}    IconComp={IconClipboard}   iconColor="#f97316" /></div>
+                            <div style={{ borderLeft: '1px solid #e5e7eb' }}><StatCard label="APPROVED" value={stats?.byStatus?.APPROVED ?? 0}   IconComp={IconCheckCircle} iconColor="#10b981" /></div>
+                            <div style={{ borderLeft: '1px solid #e5e7eb' }}><StatCard label="REJECTED" value={stats?.byStatus?.REJECTED ?? 0}   IconComp={IconXCircle}     iconColor="#ef4444" /></div>
+                            <div style={{ borderLeft: '1px solid #e5e7eb' }}><StatCard label="NOTIFIED" value={stats?.byStatus?.DISPATCHED ?? 0} IconComp={IconBell}        iconColor="#0ea5e9" /></div>
                         </div>
 
                         {/* Search + filters + status tabs */}
@@ -776,6 +839,7 @@ export default function ConvocationAdminPortal() {
                                 {CATEGORIES.map(c => <option key={c} value={c}>{c}</option>)}
                             </select>
                             {categoryFilter !== 'ALL' && (PROGRAMME_MAP[categoryFilter]?.length > 0) && (
+                                <div style={{ animation: 'slideDown 250ms ease forwards', overflow: 'hidden' }}>
                                 <select value={programmeFilter} onChange={e => { setProgrammeFilter(e.target.value); setCurrentPage(1); }}
                                     style={{ padding: '9px 32px 9px 12px', border: '1px solid #d1d5db', borderRadius: '4px', fontSize: '0.88rem', fontWeight: '600', color: '#374151', background: '#fff', cursor: 'pointer', appearance: 'none',
                                         backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%236b7280' stroke-width='2'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E")`,
@@ -783,6 +847,7 @@ export default function ConvocationAdminPortal() {
                                     <option value="ALL">ALL PROGRAMMES</option>
                                     {PROGRAMME_MAP[categoryFilter].map(p => <option key={p} value={p}>{p}</option>)}
                                 </select>
+                                </div>
                             )}
                             <select value={campusFilter} onChange={e => { setCampusFilter(e.target.value); setCurrentPage(1); }}
                                 style={{ padding: '9px 32px 9px 12px', border: '1px solid #d1d5db', borderRadius: '4px', fontSize: '0.88rem', fontWeight: '600', color: '#374151', background: '#fff', cursor: 'pointer', appearance: 'none',
@@ -835,12 +900,12 @@ export default function ConvocationAdminPortal() {
                                                 ))}
                                             </tr>
                                         </thead>
-                                        <tbody>
-                                            {pagedApps.map((app) => (
+                                        <tbody key={listKey}>
+                                            {pagedApps.map((app, index) => (
                                                 <tr key={app.id} onClick={() => openDetail(app)}
-                                                    style={{ borderBottom: '1px solid #f3f4f6', cursor: 'pointer' }}
+                                                    style={{ borderBottom: '1px solid #f3f4f6', cursor: 'pointer', animation: 'fadeInUp 300ms ease forwards', animationDelay: `${index * 40}ms`, opacity: 0 }}
                                                     onMouseEnter={e => e.currentTarget.style.background = '#f9fafb'}
-                                                    onMouseLeave={e => e.currentTarget.style.background = '#fff'}>
+                                                    onMouseLeave={e => e.currentTarget.style.background = 'transparent'}>
                                                     <td style={{ padding: '12px 16px', fontFamily: 'monospace', fontSize: '0.8rem', color: '#4338ca', fontWeight: '700' }}>{app.id}</td>
                                                     <td style={{ padding: '12px 16px', fontWeight: '600', color: '#111' }}>{app.applicant_name}</td>
                                                     <td style={{ padding: '12px 16px', color: '#6b7280' }}>{app.reg_no || '—'}</td>
@@ -878,14 +943,14 @@ export default function ConvocationAdminPortal() {
 
                 {/* ─── DETAIL VIEW ─── */}
                 {selectedApp && (
-                    <div>
+                    <div style={{ animation: 'slideInR 300ms ease forwards' }}>
                         <button onClick={() => { setSelectedApp(null); setAppDetails(null); setSuccessMsg(''); setActiveNav('applications'); }}
                             style={{ background: 'none', border: 'none', cursor: 'pointer', fontWeight: '700', fontSize: '0.85rem', color: '#6b7280', marginBottom: '20px', padding: 0, display: 'flex', alignItems: 'center', gap: '6px' }}>
                             <IconArrowLeft size={16} color="#6b7280" /> Back to Applications
                         </button>
 
                         {successMsg && (
-                            <div style={{ background: '#f0fdf4', border: '1px solid #bbf7d0', borderRadius: '4px', padding: '12px 16px', marginBottom: '20px', color: '#065f46', fontWeight: '600', fontSize: '0.9rem', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                            <div style={{ background: '#f0fdf4', border: '1px solid #bbf7d0', borderRadius: '4px', padding: '12px 16px', marginBottom: '20px', color: '#065f46', fontWeight: '600', fontSize: '0.9rem', display: 'flex', alignItems: 'center', gap: '8px', animation: 'successIn 300ms ease forwards' }}>
                                 <IconCheck size={16} color="#065f46" /> {successMsg}
                             </div>
                         )}
@@ -955,14 +1020,16 @@ export default function ConvocationAdminPortal() {
                                     <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
                                         {selectedApp.status !== 'APPROVED' && (
                                             <button onClick={() => setConfirmModal({ action: 'approve', label: 'Approve this application?' })} disabled={!!actionLoading}
-                                                style={{ padding: '10px', background: '#10b981', color: '#fff', border: 'none', borderRadius: '4px', fontWeight: '700', cursor: 'pointer', fontSize: '0.85rem', letterSpacing: '0.03em', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px' }}>
+                                                {...pressProps}
+                                                style={{ padding: '10px', background: '#10b981', color: '#fff', border: 'none', borderRadius: '4px', fontWeight: '700', cursor: 'pointer', fontSize: '0.85rem', letterSpacing: '0.03em', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px', transition: 'transform 0.1s ease' }}>
                                                 <IconCheck size={15} color="#fff" /> APPROVE
                                             </button>
                                         )}
                                         {selectedApp.status !== 'REJECTED' && (
                                             <>
                                                 <button onClick={() => setShowRejectInput(s => !s)} disabled={!!actionLoading}
-                                                    style={{ padding: '10px', background: '#fff', color: '#ef4444', border: '1px solid #ef4444', borderRadius: '4px', fontWeight: '700', cursor: 'pointer', fontSize: '0.85rem', letterSpacing: '0.03em', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px' }}>
+                                                    {...pressProps}
+                                                    style={{ padding: '10px', background: '#fff', color: '#ef4444', border: '1px solid #ef4444', borderRadius: '4px', fontWeight: '700', cursor: 'pointer', fontSize: '0.85rem', letterSpacing: '0.03em', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px', transition: 'transform 0.1s ease' }}>
                                                     <IconX size={15} color="#ef4444" /> REJECT
                                                 </button>
                                                 {showRejectInput && (
@@ -982,12 +1049,14 @@ export default function ConvocationAdminPortal() {
                                             <input type="file" accept=".pdf,.jpg,.jpeg,.png" onChange={e => setUploadFile(e.target.files[0] || null)}
                                                 style={{ width: '100%', fontSize: '0.8rem', marginBottom: '8px' }} />
                                             <button onClick={handleUploadResponse} disabled={!uploadFile || !!actionLoading}
-                                                style={{ width: '100%', padding: '9px', background: '#111', color: '#fff', border: 'none', borderRadius: '4px', fontWeight: '700', cursor: uploadFile ? 'pointer' : 'not-allowed', opacity: uploadFile ? 1 : 0.4, fontSize: '0.85rem', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px' }}>
+                                                {...pressProps}
+                                                style={{ width: '100%', padding: '9px', background: '#111', color: '#fff', border: 'none', borderRadius: '4px', fontWeight: '700', cursor: uploadFile ? 'pointer' : 'not-allowed', opacity: uploadFile ? 1 : 0.4, fontSize: '0.85rem', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px', transition: 'transform 0.1s ease' }}>
                                                 <IconUpload size={14} color="#fff" /> {actionLoading === 'upload' ? 'Uploading…' : 'UPLOAD'}
                                             </button>
                                         </div>
                                         <button onClick={() => setConfirmModal({ action: 'notify', label: 'Send notification email to candidate?' })} disabled={!!actionLoading}
-                                            style={{ padding: '10px', background: '#0ea5e9', color: '#fff', border: 'none', borderRadius: '4px', fontWeight: '700', cursor: 'pointer', fontSize: '0.85rem', letterSpacing: '0.03em', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px' }}>
+                                            {...pressProps}
+                                            style={{ padding: '10px', background: '#0ea5e9', color: '#fff', border: 'none', borderRadius: '4px', fontWeight: '700', cursor: 'pointer', fontSize: '0.85rem', letterSpacing: '0.03em', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px', transition: 'transform 0.1s ease' }}>
                                             <IconMail size={15} color="#fff" /> NOTIFY CANDIDATE
                                         </button>
                                     </div>
@@ -1018,7 +1087,7 @@ export default function ConvocationAdminPortal() {
             {/* Confirm modal */}
             {confirmModal && (
                 <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.4)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 200 }}>
-                    <div style={{ background: '#fff', borderRadius: '4px', padding: '28px', maxWidth: '380px', width: '90%', textAlign: 'center', border: '1px solid #e5e7eb' }}>
+                    <div style={{ background: '#fff', borderRadius: '4px', padding: '28px', maxWidth: '380px', width: '90%', textAlign: 'center', border: '1px solid #e5e7eb', animation: 'modalIn 200ms ease forwards' }}>
                         <p style={{ fontSize: '1rem', fontWeight: '700', color: '#111', marginBottom: '20px' }}>{confirmModal.label}</p>
                         <div style={{ display: 'flex', gap: '12px', justifyContent: 'center' }}>
                             <button onClick={() => setConfirmModal(null)} style={{ padding: '9px 24px', border: '1px solid #d1d5db', borderRadius: '4px', background: '#fff', cursor: 'pointer', fontWeight: '600', fontSize: '0.85rem' }}>Cancel</button>
