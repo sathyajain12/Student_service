@@ -186,9 +186,17 @@ export default function FormBuilder({ config, onSubmit, onCancel, onTrackStatus,
                 const rows = paperTables[field.name] || [];
                 const hasValidRow = rows.some(r => r.paperCode?.trim() && r.paperTitle?.trim());
                 if (!hasValidRow) missing.push(field.label);
+            } else if (field.type === 'conditionalSelect') {
+                // Value may come from a hidden input seeded by hiddenData (pre-populated from instructions)
+                // rather than React state, so check both sources
+                let val = formData[field.name];
+                if (!val && hiddenData?.[field.dependsOn]) {
+                    val = field.optionsMap?.[hiddenData[field.dependsOn]]?.[0] || '';
+                }
+                if (!val || String(val).trim() === '') missing.push(field.label);
             } else {
                 // Covers text, number, email, textarea, select, countrySelect, stateSelect,
-                // radio, date, daterange (formData is set when both dates are picked), monthyear, conditionalSelect
+                // radio, date, daterange (formData is set when both dates are picked), monthyear
                 const val = formData[field.name];
                 if (!val || String(val).trim() === '') missing.push(field.label);
             }

@@ -329,7 +329,6 @@ export default {
                 if (url.pathname === '/convocation-admin/stats' && request.method === 'GET') {
                     return await handleConvocationStats(request, env, corsHeaders);
                 }
-
                 return new Response('Not Found', { status: 404, headers: corsHeaders });
             } catch (error) {
                 console.error(error);

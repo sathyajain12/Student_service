@@ -1,6 +1,39 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { User, Lock, ArrowRight, Eye, EyeOff } from 'lucide-react';
 
+const Svg = ({ d, size = 16, color = 'currentColor', strokeWidth = 2, fill = 'none', viewBox = '0 0 24 24' }) => (
+    <svg width={size} height={size} viewBox={viewBox} fill={fill} stroke={color} strokeWidth={strokeWidth} strokeLinecap="round" strokeLinejoin="round" style={{ display: 'block', flexShrink: 0 }}>
+        {Array.isArray(d) ? d.map((p, i) => <path key={i} d={p} />) : <path d={d} />}
+    </svg>
+);
+
+const IconRefresh    = (p) => <Svg {...p} d="M23 4v6h-6M1 20v-6h6M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15" />;
+const IconDownload   = (p) => <Svg {...p} d={['M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4','M7 10l5 5 5-5','M12 15V3']} />;
+const IconBarChart   = (p) => <Svg {...p} d={['M18 20V10','M12 20V4','M6 20v-6']} />;
+const IconClipboard  = (p) => <Svg {...p} d={['M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2','M9 2h6a1 1 0 0 1 1 1v2a1 1 0 0 1-1 1H9a1 1 0 0 1-1-1V3a1 1 0 0 1 1-1z']} />;
+const IconCheckCircle= (p) => <Svg {...p} d={['M22 11.08V12a10 10 0 1 1-5.93-9.14','M22 4 12 14.01l-3-3']} />;
+const IconXCircle    = ({ size = 16, color = 'currentColor' }) => (
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ display: 'block', flexShrink: 0 }}>
+        <circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/>
+    </svg>
+);
+const IconBell       = (p) => <Svg {...p} d={['M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9','M13.73 21a2 2 0 0 1-3.46 0']} />;
+const IconSearch     = ({ size = 16, color = 'currentColor' }) => (
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ display: 'block', flexShrink: 0 }}>
+        <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
+    </svg>
+);
+const IconFilter     = (p) => <Svg {...p} d="M22 3H2l8 9.46V19l4 2v-8.54L22 3" />;
+const IconGrid       = (p) => <Svg {...p} d={['M3 3h7v7H3z','M14 3h7v7h-7z','M14 14h7v7h-7z','M3 14h7v7H3z']} />;
+const IconFolder     = (p) => <Svg {...p} d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z" />;
+const IconChevronL   = (p) => <Svg {...p} d="M15 18l-6-6 6-6" />;
+const IconChevronR   = (p) => <Svg {...p} d="M9 18l6-6-6-6" />;
+const IconArrowLeft  = (p) => <Svg {...p} d={['M19 12H5','M12 19l-7-7 7-7']} />;
+const IconCheck      = (p) => <Svg {...p} d="M20 6 9 17l-5-5" />;
+const IconX          = (p) => <Svg {...p} d={['M18 6 6 18','M6 6l12 12']} />;
+const IconMail       = (p) => <Svg {...p} d={['M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z','M22 6l-10 7L2 6']} />;
+const IconUpload     = (p) => <Svg {...p} d={['M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4','M17 8l-5-5-5 5','M12 3v12']} />;
+
 const API_URL = import.meta.env.VITE_API_URL || 'https://sssihl-student-services-backend.coeoffice.workers.dev';
 const TOKEN_KEY = 'convAdminToken';
 const USERNAME_KEY = 'convAdminUsername';
@@ -15,6 +48,39 @@ const STATUS_COLORS = {
 
 const CATEGORIES = ['Undergraduate', 'Postgraduate', 'Professional', 'Doctor of Philosophy'];
 const CAMPUSES = ['Prasanthi Nilayam Campus', 'Anantapur Campus', 'Brindavan Campus', 'Nandigiri Campus'];
+
+const PROGRAMME_MAP = {
+    'Undergraduate': [
+        'Bachelor of Arts (Honours) / (Honours with Research) in Economics',
+        'Bachelor of Arts (Honours) / (Honours with Research) in English Language and Literature',
+        'Bachelor of Business Administration (Honours)',
+        'Bachelor of Commerce (Honours) / (Honours with Research)',
+        'Bachelor of Education',
+        'Bachelor of Science (Honours) / (Honours with Research) in Biosciences',
+        'Bachelor of Science (Honours) / (Honours with Research) in Chemistry',
+        'Bachelor of Science (Honours) / (Honours with Research) in Computer Science',
+        'Bachelor of Science (Honours) / (Honours with Research) in Mathematics',
+        'Bachelor of Science (Honours) / (Honours with Research) in Mathematical Sciences and Computing',
+        'Bachelor of Science (Honours) / (Honours with Research) in Physics',
+    ],
+    'Postgraduate': [
+        'Master of Arts in Economics',
+        'Master of Arts in English Language and Literature',
+        'Master of Science in Biosciences',
+        'Master of Science in Chemistry',
+        'Master of Science in Data Science and Computing',
+        'Master of Science in Food and Nutritional Sciences',
+        'Master of Science in Mathematics',
+        'Master of Science in Physics',
+    ],
+    'Professional': [
+        'Master of Business Administration',
+        'Bachelor of Education',
+        'Master of Technology in Computer Science',
+        'Master of Technology in Optoelectronics and Communications',
+    ],
+    'Doctor of Philosophy': [],
+};
 
 function fmtDate(d) {
     if (!d) return '—';
@@ -52,6 +118,7 @@ export default function ConvocationAdminPortal() {
     const [searchQuery, setSearchQuery] = useState('');
     const [statusFilter, setStatusFilter] = useState('ALL');
     const [categoryFilter, setCategoryFilter] = useState('ALL');
+    const [programmeFilter, setProgrammeFilter] = useState('ALL');
     const [campusFilter, setCampusFilter] = useState('ALL');
 
     // Detail view
@@ -71,6 +138,10 @@ export default function ConvocationAdminPortal() {
     const [showCreateUser, setShowCreateUser] = useState(false);
     const [newUser, setNewUser] = useState({ username: '', password: '' });
     const [createUserMsg, setCreateUserMsg] = useState('');
+
+    // Portal navigation
+    const [activeNav, setActiveNav] = useState('applications');
+    const [currentPage, setCurrentPage] = useState(1);
 
     const authHeaders = { Authorization: `Bearer ${token}` };
 
@@ -270,6 +341,7 @@ export default function ConvocationAdminPortal() {
         })
         .filter(a => statusFilter === 'ALL' || a.status === statusFilter)
         .filter(a => categoryFilter === 'ALL' || a.category === categoryFilter)
+        .filter(a => programmeFilter === 'ALL' || a.programme === programmeFilter)
         .filter(a => campusFilter === 'ALL' || a.campus === campusFilter);
 
     // ─── Login screen ───────────────────────────────────────────────────────
@@ -520,6 +592,17 @@ export default function ConvocationAdminPortal() {
 
                 <div className="login-left-panel">
                     <div className="login-left-overlay" />
+                    <div style={{
+                        position: 'absolute',
+                        bottom: 0,
+                        left: 0,
+                        right: 0,
+                        padding: '28px 32px',
+                        background: 'linear-gradient(to top, rgba(0,0,0,0.75) 0%, transparent 100%)',
+                    }}>
+                        <p style={{ margin: '0 0 4px', color: 'rgba(255,255,255,0.75)', fontSize: '0.78rem', fontWeight: '600', textTransform: 'uppercase', letterSpacing: '0.1em' }}>Sri Sathya Sai Institute of Higher Learning</p>
+                        <h2 style={{ margin: 0, color: '#ffffff', fontSize: '1.4rem', fontWeight: '800', lineHeight: 1.3, letterSpacing: '-0.01em' }}>SSSIHL XLV Annual<br />Convocation 2026</h2>
+                    </div>
                 </div>
 
                 <div className="login-right-panel">
@@ -619,286 +702,328 @@ export default function ConvocationAdminPortal() {
 
 
     const fd = appDetails?.formDetails || {};
+    const PAGE_SIZE = 20;
+    const totalPages = Math.max(1, Math.ceil(filteredApps.length / PAGE_SIZE));
+    const pagedApps = filteredApps.slice((currentPage - 1) * PAGE_SIZE, currentPage * PAGE_SIZE);
+
+    const navBtn = (id, label) => (
+        <button key={id} onClick={() => { setActiveNav(id); setSelectedApp(null); setAppDetails(null); }}
+            style={{ background: 'none', border: 'none', cursor: 'pointer', padding: '20px 4px', fontSize: '0.9rem', fontWeight: activeNav === id ? '600' : '400',
+                color: activeNav === id ? '#111' : '#888',
+                borderBottom: activeNav === id ? '2px solid #111' : '2px solid transparent' }}>
+            {label}
+        </button>
+    );
+
+    const statCard = (label, value, IconComp, iconColor) => (
+        <div style={{ background: '#fff', border: '1px solid #e5e7eb', padding: '20px 24px', display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+            <div>
+                <p style={{ margin: '0 0 12px', fontSize: '0.72rem', fontWeight: '600', color: '#6b7280', letterSpacing: '0.08em', textTransform: 'uppercase' }}>{label}</p>
+                <p style={{ margin: 0, fontSize: '2.4rem', fontWeight: '700', color: '#111', lineHeight: 1 }}>{value}</p>
+            </div>
+            <IconComp size={22} color={iconColor} />
+        </div>
+    );
 
     // ─── Main portal ─────────────────────────────────────────────────────────
     return (
-        <div style={{ minHeight: '100vh', background: '#f1f5f9', fontFamily: 'system-ui, sans-serif' }}>
-            {/* Navbar */}
-            <div style={{ background: 'linear-gradient(135deg, #1e1b4b, #4338ca)', padding: '0 24px', height: '60px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', position: 'sticky', top: 0, zIndex: 100, boxShadow: '0 2px 12px rgba(0,0,0,0.2)' }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-                    {selectedApp && (
-                        <button onClick={() => { setSelectedApp(null); setAppDetails(null); setSuccessMsg(''); }} style={{ background: 'rgba(255,255,255,0.15)', border: 'none', color: '#fff', borderRadius: '8px', padding: '6px 12px', cursor: 'pointer', fontSize: '0.85rem' }}>← Back</button>
-                    )}
-                    <span style={{ color: '#fff', fontWeight: '800', fontSize: '1rem' }}>🎓 Convocation Admin 2026</span>
-                </div>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-                    {!selectedApp && (
-                        <>
-                            <button onClick={fetchData} style={{ background: 'rgba(255,255,255,0.15)', border: 'none', color: '#fff', borderRadius: '8px', padding: '6px 12px', cursor: 'pointer', fontSize: '0.85rem' }}>↻ Refresh</button>
-                            <button onClick={handleExport} style={{ background: 'rgba(255,255,255,0.15)', border: 'none', color: '#fff', borderRadius: '8px', padding: '6px 12px', cursor: 'pointer', fontSize: '0.85rem' }}>⬇ Export CSV</button>
-                            <button onClick={() => setShowCreateUser(s => !s)} style={{ background: 'rgba(255,255,255,0.15)', border: 'none', color: '#fff', borderRadius: '8px', padding: '6px 12px', cursor: 'pointer', fontSize: '0.85rem' }}>+ Add User</button>
-                        </>
-                    )}
-                    <span style={{ color: 'rgba(255,255,255,0.7)', fontSize: '0.85rem' }}>{username}</span>
-                    <button onClick={handleLogout} style={{ background: 'rgba(255,255,255,0.15)', border: 'none', color: '#fff', borderRadius: '8px', padding: '6px 12px', cursor: 'pointer', fontSize: '0.85rem' }}>Logout</button>
-                </div>
-            </div>
+        <div style={{ minHeight: '100vh', background: '#fff', fontFamily: "'Inter', system-ui, sans-serif", display: 'flex', flexDirection: 'column' }}>
 
-            {/* Create user panel */}
-            {showCreateUser && (
-                <div style={{ background: '#fff', borderBottom: '1px solid #e2e8f0', padding: '16px 24px', display: 'flex', gap: '12px', alignItems: 'flex-end', flexWrap: 'wrap' }}>
-                    <div>
-                        <label style={{ display: 'block', fontSize: '0.8rem', fontWeight: '600', color: '#374151', marginBottom: '4px' }}>New Username</label>
-                        <input value={newUser.username} onChange={e => setNewUser(p => ({ ...p, username: e.target.value }))} style={{ padding: '8px 12px', borderRadius: '8px', border: '1.5px solid #e2e8f0', fontSize: '0.9rem', width: '180px' }} />
+            {/* Top Navbar */}
+            <header style={{ borderBottom: '1px solid #e5e7eb', padding: '0 32px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', background: '#fff', position: 'sticky', top: 0, zIndex: 100 }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '40px' }}>
+                    <span style={{ fontWeight: '800', fontSize: '1rem', letterSpacing: '0.04em', color: '#111', whiteSpace: 'nowrap' }}>CONVOCATION ADMIN</span>
+                    <nav style={{ display: 'flex', gap: '28px' }}>
+                        {navBtn('applications', 'Applications')}
+                    </nav>
+                </div>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
+                    <button onClick={fetchData} title="Refresh" style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#6b7280', padding: '6px', display: 'flex', alignItems: 'center' }}><IconRefresh size={18} /></button>
+                    <button onClick={handleExport} title="Export CSV" style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#6b7280', padding: '6px', display: 'flex', alignItems: 'center' }}><IconDownload size={18} /></button>
+                    <div style={{ width: '32px', height: '32px', borderRadius: '50%', background: '#d1d5db', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '0.85rem', fontWeight: '700', color: '#374151' }}>
+                        {username?.[0]?.toUpperCase() || 'A'}
                     </div>
-                    <div>
-                        <label style={{ display: 'block', fontSize: '0.8rem', fontWeight: '600', color: '#374151', marginBottom: '4px' }}>Password</label>
-                        <input type="password" value={newUser.password} onChange={e => setNewUser(p => ({ ...p, password: e.target.value }))} style={{ padding: '8px 12px', borderRadius: '8px', border: '1.5px solid #e2e8f0', fontSize: '0.9rem', width: '180px' }} />
-                    </div>
-                    <button onClick={handleCreateUser} style={{ padding: '8px 20px', background: '#4338ca', color: '#fff', border: 'none', borderRadius: '8px', fontWeight: '600', cursor: 'pointer' }}>Create</button>
-                    {createUserMsg && <span style={{ fontSize: '0.85rem', color: createUserMsg.includes('success') ? '#10b981' : '#ef4444' }}>{createUserMsg}</span>}
+                    <button onClick={handleLogout} style={{ background: 'none', border: 'none', cursor: 'pointer', fontWeight: '700', fontSize: '0.85rem', color: '#111', letterSpacing: '0.04em' }}>LOGOUT</button>
                 </div>
-            )}
+            </header>
 
-            <div style={{ padding: '24px', maxWidth: '1400px', margin: '0 auto' }}>
+            <main style={{ flex: 1, padding: '28px 32px', maxWidth: '1400px', width: '100%', margin: '0 auto', boxSizing: 'border-box' }}>
 
-                {/* ─── LIST VIEW ─── */}
-                {!selectedApp && (
+                {/* ─── APPLICATIONS VIEW ─── */}
+                {activeNav === 'applications' && !selectedApp && (
                     <>
-                        {/* Stats */}
-                        {stats && (
-                            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(130px, 1fr))', gap: '12px', marginBottom: '20px' }}>
-                                {[
-                                    { label: 'Total', value: stats.total, color: '#4338ca' },
-                                    { label: 'Pending', value: stats.byStatus?.PENDING || 0, color: '#f59e0b' },
-                                    { label: 'Approved', value: stats.byStatus?.APPROVED || 0, color: '#10b981' },
-                                    { label: 'Rejected', value: stats.byStatus?.REJECTED || 0, color: '#ef4444' },
-                                    { label: 'Notified', value: stats.byStatus?.DISPATCHED || 0, color: '#0ea5e9' },
-                                ].map(s => (
-                                    <div key={s.label} style={{ background: '#fff', borderRadius: '12px', padding: '16px', boxShadow: '0 1px 4px rgba(0,0,0,0.06)', borderTop: `3px solid ${s.color}`, textAlign: 'center' }}>
-                                        <div style={{ fontSize: '1.8rem', fontWeight: '800', color: s.color }}>{s.value}</div>
-                                        <div style={{ fontSize: '0.8rem', color: '#64748b', fontWeight: '600' }}>{s.label}</div>
-                                    </div>
-                                ))}
-                            </div>
-                        )}
+                        {/* Stats row */}
+                        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(5, 1fr)', gap: '0', marginBottom: '28px', border: '1px solid #e5e7eb' }}>
+                            {statCard('TOTAL', stats?.total ?? '…', IconBarChart, '#6b7280')}
+                            <div style={{ borderLeft: '1px solid #e5e7eb' }}>{statCard('PENDING', stats?.byStatus?.PENDING ?? 0, IconClipboard, '#f97316')}</div>
+                            <div style={{ borderLeft: '1px solid #e5e7eb' }}>{statCard('APPROVED', stats?.byStatus?.APPROVED ?? 0, IconCheckCircle, '#10b981')}</div>
+                            <div style={{ borderLeft: '1px solid #e5e7eb' }}>{statCard('REJECTED', stats?.byStatus?.REJECTED ?? 0, IconXCircle, '#ef4444')}</div>
+                            <div style={{ borderLeft: '1px solid #e5e7eb' }}>{statCard('NOTIFIED', stats?.byStatus?.DISPATCHED ?? 0, IconBell, '#0ea5e9')}</div>
+                        </div>
 
-                        {/* Filters */}
-                        <div style={{ background: '#fff', borderRadius: '12px', padding: '16px 20px', marginBottom: '16px', boxShadow: '0 1px 4px rgba(0,0,0,0.06)', display: 'flex', gap: '12px', flexWrap: 'wrap', alignItems: 'center' }}>
-                            <input value={searchQuery} onChange={e => setSearchQuery(e.target.value)} placeholder="Search by name, reg no, app ID…"
-                                style={{ flex: 1, minWidth: '200px', padding: '8px 12px', borderRadius: '8px', border: '1.5px solid #e2e8f0', fontSize: '0.9rem', outline: 'none' }} />
-                            <select value={categoryFilter} onChange={e => setCategoryFilter(e.target.value)} style={{ padding: '8px 12px', borderRadius: '8px', border: '1.5px solid #e2e8f0', fontSize: '0.9rem' }}>
-                                <option value="ALL">All Categories</option>
+                        {/* Search + filters + status tabs */}
+                        <div style={{ display: 'flex', gap: '12px', alignItems: 'center', marginBottom: '20px', flexWrap: 'wrap' }}>
+                            <div style={{ position: 'relative', flex: 1, minWidth: '260px' }}>
+                                <span style={{ position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)', color: '#9ca3af', display: 'flex' }}><IconSearch size={15} color="#9ca3af" /></span>
+                                <input value={searchQuery} onChange={e => { setSearchQuery(e.target.value); setCurrentPage(1); }} placeholder="Quick search applications..."
+                                    style={{ width: '100%', padding: '9px 12px 9px 36px', border: '1px solid #d1d5db', borderRadius: '4px', fontSize: '0.88rem', outline: 'none', boxSizing: 'border-box' }} />
+                            </div>
+                            <select value={categoryFilter} onChange={e => { setCategoryFilter(e.target.value); setProgrammeFilter('ALL'); setCurrentPage(1); }}
+                                style={{ padding: '9px 32px 9px 12px', border: '1px solid #d1d5db', borderRadius: '4px', fontSize: '0.88rem', fontWeight: '600', color: '#374151', background: '#fff', cursor: 'pointer', appearance: 'none',
+                                    backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%236b7280' stroke-width='2'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E")`,
+                                    backgroundRepeat: 'no-repeat', backgroundPosition: 'right 10px center' }}>
+                                <option value="ALL">CATEGORIES</option>
                                 {CATEGORIES.map(c => <option key={c} value={c}>{c}</option>)}
                             </select>
-                            <select value={campusFilter} onChange={e => setCampusFilter(e.target.value)} style={{ padding: '8px 12px', borderRadius: '8px', border: '1.5px solid #e2e8f0', fontSize: '0.9rem' }}>
-                                <option value="ALL">All Campuses</option>
+                            {categoryFilter !== 'ALL' && (PROGRAMME_MAP[categoryFilter]?.length > 0) && (
+                                <select value={programmeFilter} onChange={e => { setProgrammeFilter(e.target.value); setCurrentPage(1); }}
+                                    style={{ padding: '9px 32px 9px 12px', border: '1px solid #d1d5db', borderRadius: '4px', fontSize: '0.88rem', fontWeight: '600', color: '#374151', background: '#fff', cursor: 'pointer', appearance: 'none',
+                                        backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%236b7280' stroke-width='2'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E")`,
+                                        backgroundRepeat: 'no-repeat', backgroundPosition: 'right 10px center', maxWidth: '260px' }}>
+                                    <option value="ALL">ALL PROGRAMMES</option>
+                                    {PROGRAMME_MAP[categoryFilter].map(p => <option key={p} value={p}>{p}</option>)}
+                                </select>
+                            )}
+                            <select value={campusFilter} onChange={e => { setCampusFilter(e.target.value); setCurrentPage(1); }}
+                                style={{ padding: '9px 32px 9px 12px', border: '1px solid #d1d5db', borderRadius: '4px', fontSize: '0.88rem', fontWeight: '600', color: '#374151', background: '#fff', cursor: 'pointer', appearance: 'none',
+                                    backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%236b7280' stroke-width='2'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E")`,
+                                    backgroundRepeat: 'no-repeat', backgroundPosition: 'right 10px center' }}>
+                                <option value="ALL">CAMPUSES</option>
                                 {CAMPUSES.map(c => <option key={c} value={c}>{c.replace(' Campus', '')}</option>)}
                             </select>
+                            <div style={{ display: 'flex', border: '1px solid #d1d5db', borderRadius: '4px', overflow: 'hidden' }}>
+                                {[{ label: 'ALL', value: 'ALL' }, { label: 'PENDING', value: 'PENDING' }, { label: 'APPROVED', value: 'APPROVED' }, { label: 'REJECTED', value: 'REJECTED' }].map(t => (
+                                    <button key={t.value} onClick={() => { setStatusFilter(t.value); setCurrentPage(1); }}
+                                        style={{ padding: '9px 16px', border: 'none', borderRight: '1px solid #d1d5db', cursor: 'pointer', fontSize: '0.78rem', fontWeight: '700', letterSpacing: '0.04em',
+                                            background: statusFilter === t.value ? '#111' : '#fff',
+                                            color: statusFilter === t.value ? '#fff' : '#6b7280' }}>
+                                        {t.label}
+                                    </button>
+                                ))}
+                            </div>
                         </div>
 
-                        {/* Status filter tabs */}
-                        <div style={{ display: 'flex', gap: '8px', marginBottom: '16px', flexWrap: 'wrap' }}>
-                            {[
-                                { label: 'All', value: 'ALL' },
-                                { label: 'Pending', value: 'PENDING' },
-                                { label: 'Approved', value: 'APPROVED' },
-                                { label: 'Rejected', value: 'REJECTED' },
-                                { label: 'Notified', value: 'DISPATCHED' },
-                            ].map(t => (
-                                <button key={t.value} onClick={() => setStatusFilter(t.value)}
-                                    style={{ padding: '7px 16px', borderRadius: '20px', border: 'none', cursor: 'pointer', fontSize: '0.85rem', fontWeight: '600',
-                                        background: statusFilter === t.value ? '#4338ca' : '#fff',
-                                        color: statusFilter === t.value ? '#fff' : '#475569',
-                                        boxShadow: '0 1px 4px rgba(0,0,0,0.08)' }}>
-                                    {t.label}
-                                </button>
-                            ))}
-                        </div>
+                        {/* Registry table */}
+                        <div style={{ border: '1px solid #e5e7eb', borderRadius: '4px', overflow: 'hidden' }}>
+                            <div style={{ padding: '14px 20px', borderBottom: '1px solid #e5e7eb', display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: '#fff' }}>
+                                <span style={{ fontSize: '0.75rem', fontWeight: '800', color: '#111', letterSpacing: '0.08em', textTransform: 'uppercase' }}>Application Registry</span>
+                                <div style={{ display: 'flex', gap: '16px' }}>
+                                    <button style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: '0.78rem', fontWeight: '600', color: '#6b7280', display: 'flex', alignItems: 'center', gap: '4px' }}><IconFilter size={13} color="#6b7280" /> FILTER</button>
+                                    <button style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: '0.78rem', fontWeight: '600', color: '#6b7280', display: 'flex', alignItems: 'center', gap: '4px' }}><IconGrid size={13} color="#6b7280" /> VIEW</button>
+                                </div>
+                            </div>
 
-                        {/* Applications table */}
-                        <div style={{ background: '#fff', borderRadius: '12px', boxShadow: '0 1px 4px rgba(0,0,0,0.06)', overflow: 'hidden' }}>
                             {loading ? (
-                                <div style={{ padding: '40px', textAlign: 'center', color: '#94a3b8' }}>Loading applications…</div>
-                            ) : filteredApps.length === 0 ? (
-                                <div style={{ padding: '40px', textAlign: 'center', color: '#94a3b8' }}>No applications found.</div>
+                                <div style={{ padding: '80px', textAlign: 'center', color: '#9ca3af', fontSize: '0.9rem' }}>Loading…</div>
+                            ) : pagedApps.length === 0 ? (
+                                <div style={{ padding: '80px 20px', textAlign: 'center' }}>
+                                    <div style={{ width: '72px', height: '72px', background: '#f3f4f6', borderRadius: '8px', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 20px' }}><IconFolder size={32} color="#9ca3af" /></div>
+                                    <h3 style={{ margin: '0 0 8px', fontSize: '1.1rem', fontWeight: '700', color: '#111' }}>System Empty</h3>
+                                    <p style={{ margin: '0 0 24px', color: '#6b7280', fontSize: '0.9rem' }}>There are currently no records matching your active filter configuration.</p>
+                                    <button onClick={() => { setSearchQuery(''); setStatusFilter('ALL'); setCategoryFilter('ALL'); setProgrammeFilter('ALL'); setCampusFilter('ALL'); setCurrentPage(1); }}
+                                        style={{ padding: '10px 24px', background: '#111', color: '#fff', border: 'none', borderRadius: '4px', fontWeight: '700', fontSize: '0.82rem', letterSpacing: '0.05em', cursor: 'pointer' }}>
+                                        RESET REGISTRY VIEW
+                                    </button>
+                                </div>
                             ) : (
                                 <div style={{ overflowX: 'auto' }}>
-                                    <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.88rem' }}>
+                                    <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.85rem' }}>
                                         <thead>
-                                            <tr style={{ background: '#f8fafc', borderBottom: '1px solid #e2e8f0' }}>
+                                            <tr style={{ background: '#f9fafb', borderBottom: '1px solid #e5e7eb' }}>
                                                 {['App ID', 'Name', 'Reg No', 'Category', 'Programme', 'Campus', 'Attendance', 'Status', 'Submitted'].map(h => (
-                                                    <th key={h} style={{ padding: '11px 14px', textAlign: 'left', fontWeight: '700', color: '#374151', whiteSpace: 'nowrap' }}>{h}</th>
+                                                    <th key={h} style={{ padding: '10px 16px', textAlign: 'left', fontWeight: '700', color: '#374151', fontSize: '0.75rem', letterSpacing: '0.04em', textTransform: 'uppercase', whiteSpace: 'nowrap' }}>{h}</th>
                                                 ))}
                                             </tr>
                                         </thead>
                                         <tbody>
-                                            {filteredApps.map((app, i) => (
-                                                <tr key={app.id} onClick={() => openDetail(app)} style={{ borderBottom: '1px solid #f1f5f9', cursor: 'pointer', background: i % 2 === 0 ? '#fff' : '#fafafa' }}
-                                                    onMouseEnter={e => e.currentTarget.style.background = '#f0f4ff'}
-                                                    onMouseLeave={e => e.currentTarget.style.background = i % 2 === 0 ? '#fff' : '#fafafa'}>
-                                                    <td style={{ padding: '11px 14px', fontFamily: 'monospace', fontSize: '0.8rem', color: '#4338ca', fontWeight: '700' }}>{app.id}</td>
-                                                    <td style={{ padding: '11px 14px', fontWeight: '600', color: '#1e293b' }}>{app.applicant_name}</td>
-                                                    <td style={{ padding: '11px 14px', color: '#475569' }}>{app.reg_no || '—'}</td>
-                                                    <td style={{ padding: '11px 14px', color: '#475569' }}>{app.category || '—'}</td>
-                                                    <td style={{ padding: '11px 14px', color: '#475569', maxWidth: '200px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{app.programme || '—'}</td>
-                                                    <td style={{ padding: '11px 14px', color: '#475569' }}>{(app.campus || '—').replace(' Campus', '')}</td>
-                                                    <td style={{ padding: '11px 14px', color: '#475569' }}>{app.attendance_type || '—'}</td>
-                                                    <td style={{ padding: '11px 14px' }}><StatusBadge status={app.status} /></td>
-                                                    <td style={{ padding: '11px 14px', color: '#94a3b8', whiteSpace: 'nowrap' }}>{fmtDate(app.created_at)}</td>
+                                            {pagedApps.map((app) => (
+                                                <tr key={app.id} onClick={() => openDetail(app)}
+                                                    style={{ borderBottom: '1px solid #f3f4f6', cursor: 'pointer' }}
+                                                    onMouseEnter={e => e.currentTarget.style.background = '#f9fafb'}
+                                                    onMouseLeave={e => e.currentTarget.style.background = '#fff'}>
+                                                    <td style={{ padding: '12px 16px', fontFamily: 'monospace', fontSize: '0.8rem', color: '#4338ca', fontWeight: '700' }}>{app.id}</td>
+                                                    <td style={{ padding: '12px 16px', fontWeight: '600', color: '#111' }}>{app.applicant_name}</td>
+                                                    <td style={{ padding: '12px 16px', color: '#6b7280' }}>{app.reg_no || '—'}</td>
+                                                    <td style={{ padding: '12px 16px', color: '#6b7280' }}>{app.category || '—'}</td>
+                                                    <td style={{ padding: '12px 16px', color: '#6b7280', maxWidth: '200px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{app.programme || '—'}</td>
+                                                    <td style={{ padding: '12px 16px', color: '#6b7280', whiteSpace: 'nowrap' }}>{(app.campus || '—').replace(' Campus', '')}</td>
+                                                    <td style={{ padding: '12px 16px', color: '#6b7280', whiteSpace: 'nowrap' }}>{app.attendance_type || '—'}</td>
+                                                    <td style={{ padding: '12px 16px' }}><StatusBadge status={app.status} /></td>
+                                                    <td style={{ padding: '12px 16px', color: '#9ca3af', whiteSpace: 'nowrap' }}>{fmtDate(app.created_at)}</td>
                                                 </tr>
                                             ))}
                                         </tbody>
                                     </table>
                                 </div>
                             )}
+
+                            {/* Table footer */}
+                            <div style={{ padding: '12px 20px', borderTop: '1px solid #e5e7eb', display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: '#fff' }}>
+                                <span style={{ fontSize: '0.75rem', fontWeight: '600', color: '#6b7280', letterSpacing: '0.04em' }}>DISPLAYING {filteredApps.length} RECORDS</span>
+                                <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                                    <button onClick={() => setCurrentPage(p => Math.max(1, p - 1))} disabled={currentPage === 1}
+                                        style={{ background: 'none', border: 'none', cursor: currentPage === 1 ? 'default' : 'pointer', color: currentPage === 1 ? '#d1d5db' : '#374151', display: 'flex', alignItems: 'center', padding: '4px' }}>
+                                        <IconChevronL size={16} color={currentPage === 1 ? '#d1d5db' : '#374151'} />
+                                    </button>
+                                    <span style={{ fontSize: '0.75rem', fontWeight: '700', color: '#374151', letterSpacing: '0.04em' }}>PAGE {String(currentPage).padStart(2,'0')} / {String(totalPages).padStart(2,'0')}</span>
+                                    <button onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))} disabled={currentPage === totalPages}
+                                        style={{ background: 'none', border: 'none', cursor: currentPage === totalPages ? 'default' : 'pointer', color: currentPage === totalPages ? '#d1d5db' : '#374151', display: 'flex', alignItems: 'center', padding: '4px' }}>
+                                        <IconChevronR size={16} color={currentPage === totalPages ? '#d1d5db' : '#374151'} />
+                                    </button>
+                                </div>
+                            </div>
                         </div>
-                        <p style={{ color: '#94a3b8', fontSize: '0.82rem', marginTop: '8px' }}>{filteredApps.length} application{filteredApps.length !== 1 ? 's' : ''} shown</p>
                     </>
                 )}
 
                 {/* ─── DETAIL VIEW ─── */}
                 {selectedApp && (
-                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 320px', gap: '20px', alignItems: 'start' }}>
+                    <div>
+                        <button onClick={() => { setSelectedApp(null); setAppDetails(null); setSuccessMsg(''); setActiveNav('applications'); }}
+                            style={{ background: 'none', border: 'none', cursor: 'pointer', fontWeight: '700', fontSize: '0.85rem', color: '#6b7280', marginBottom: '20px', padding: 0, display: 'flex', alignItems: 'center', gap: '6px' }}>
+                            <IconArrowLeft size={16} color="#6b7280" /> Back to Applications
+                        </button>
 
-                        {/* Left: applicant details */}
-                        <div>
-                            {successMsg && (
-                                <div style={{ background: '#d1fae5', border: '1px solid #a7f3d0', borderRadius: '10px', padding: '12px 16px', marginBottom: '16px', color: '#065f46', fontWeight: '600', fontSize: '0.9rem' }}>
-                                    ✓ {successMsg}
+                        {successMsg && (
+                            <div style={{ background: '#f0fdf4', border: '1px solid #bbf7d0', borderRadius: '4px', padding: '12px 16px', marginBottom: '20px', color: '#065f46', fontWeight: '600', fontSize: '0.9rem', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                                <IconCheck size={16} color="#065f46" /> {successMsg}
+                            </div>
+                        )}
+
+                        <div style={{ display: 'grid', gridTemplateColumns: '1fr 300px', gap: '24px', alignItems: 'start' }}>
+                            {/* Left */}
+                            <div>
+                                <div style={{ border: '1px solid #e5e7eb', borderRadius: '4px', padding: '28px', marginBottom: '20px', background: '#fff' }}>
+                                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px' }}>
+                                        <h3 style={{ margin: 0, fontSize: '1rem', fontWeight: '800', color: '#111', letterSpacing: '0.02em' }}>APPLICANT INFORMATION</h3>
+                                        <StatusBadge status={selectedApp.status} />
+                                    </div>
+                                    {detailLoading ? <p style={{ color: '#9ca3af' }}>Loading…</p> : (
+                                        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '20px' }}>
+                                            {[
+                                                ['Application ID', selectedApp.id],
+                                                ['Student Name', fd.student_name || selectedApp.applicant_name],
+                                                ['Registered Number', fd.registration_number || selectedApp.reg_no],
+                                                ['Category', fd.category],
+                                                ['Programme', fd.programme],
+                                                ['Campus', fd.campus],
+                                                ['Attendance Type', fd.attendance_type],
+                                                ['Email', appDetails?.student_email],
+                                                ['Date of Birth', fd.date_of_birth],
+                                                ['Active Mobile', fd.active_mobile],
+                                                ['Alternate Mobile', fd.alternate_mobile || '—'],
+                                                ['Postal Address', fd.postal_address],
+                                                ['Prev Board / University', fd.prev_board_university],
+                                                ['Prev Qualification', fd.prev_qualification_programme],
+                                                ['Certificate No.', fd.prev_qualification_certificate_no],
+                                                ['Declaration', fd.declaration],
+                                                ['Submitted On', fmtDate(appDetails?.created_at)],
+                                            ].map(([label, value]) => (
+                                                <div key={label}>
+                                                    <p style={{ margin: '0 0 3px', fontSize: '0.7rem', fontWeight: '700', color: '#9ca3af', textTransform: 'uppercase', letterSpacing: '0.07em' }}>{label}</p>
+                                                    <p style={{ margin: 0, color: '#111', fontWeight: '500', fontSize: '0.9rem', wordBreak: 'break-word' }}>{value || '—'}</p>
+                                                </div>
+                                            ))}
+                                        </div>
+                                    )}
                                 </div>
-                            )}
 
-                            <div style={{ background: '#fff', borderRadius: '12px', padding: '24px', boxShadow: '0 1px 4px rgba(0,0,0,0.06)', marginBottom: '16px' }}>
-                                <h3 style={{ margin: '0 0 20px', color: '#1e293b', fontSize: '1.1rem', fontWeight: '700' }}>Applicant Information</h3>
-                                {detailLoading ? (
-                                    <p style={{ color: '#94a3b8' }}>Loading…</p>
-                                ) : (
-                                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: '16px' }}>
-                                        {[
-                                            ['Application ID', selectedApp.id],
-                                            ['Student Name', fd.student_name || selectedApp.applicant_name],
-                                            ['Registered Number', fd.registration_number || selectedApp.reg_no],
-                                            ['Category', fd.category],
-                                            ['Programme', fd.programme],
-                                            ['Campus', fd.campus],
-                                            ['Attendance Type', fd.attendance_type],
-                                            ['Email', appDetails?.student_email],
-                                            ['Date of Birth', fd.date_of_birth],
-                                            ['Active Mobile', fd.active_mobile],
-                                            ['Alternate Mobile', fd.alternate_mobile || '—'],
-                                            ['Postal Address', fd.postal_address],
-                                            ['Prev Board / University', fd.prev_board_university],
-                                            ['Prev Qualification Programme', fd.prev_qualification_programme],
-                                            ['Certificate No.', fd.prev_qualification_certificate_no],
-                                            ['Declaration', fd.declaration],
-                                            ['Submitted On', fmtDate(appDetails?.created_at)],
-                                        ].map(([label, value]) => (
-                                            <div key={label}>
-                                                <p style={{ margin: '0 0 2px', fontSize: '0.78rem', fontWeight: '700', color: '#94a3b8', textTransform: 'uppercase', letterSpacing: '0.04em' }}>{label}</p>
-                                                <p style={{ margin: 0, color: '#1e293b', fontWeight: '500', fontSize: '0.92rem', wordBreak: 'break-word' }}>{value || '—'}</p>
-                                            </div>
-                                        ))}
+                                {appDetails?.files && appDetails.files.length > 0 && (
+                                    <div style={{ border: '1px solid #e5e7eb', borderRadius: '4px', padding: '24px', background: '#fff' }}>
+                                        <h3 style={{ margin: '0 0 16px', fontSize: '0.75rem', fontWeight: '800', color: '#111', letterSpacing: '0.08em', textTransform: 'uppercase' }}>Documents</h3>
+                                        <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                                            {appDetails.files.map(f => (
+                                                <div key={f.id} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '10px 14px', background: f.is_response ? '#f0fdf4' : '#f9fafb', borderRadius: '4px', border: `1px solid ${f.is_response ? '#bbf7d0' : '#e5e7eb'}` }}>
+                                                    <div>
+                                                        <span style={{ fontWeight: '600', color: '#111', fontSize: '0.88rem' }}>{f.file_name}</span>
+                                                        {f.is_response && <span style={{ marginLeft: '8px', fontSize: '0.7rem', color: '#10b981', fontWeight: '800', letterSpacing: '0.04em' }}>RESPONSE</span>}
+                                                        {f.uploaded_by && <span style={{ marginLeft: '8px', fontSize: '0.75rem', color: '#9ca3af' }}>by {f.uploaded_by}</span>}
+                                                    </div>
+                                                    <button onClick={() => window.open(`${API_URL}/convocation-admin/file/${f.id}`, '_blank')}
+                                                        style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: '0.82rem', color: '#4338ca', fontWeight: '700' }}>View ↗</button>
+                                                </div>
+                                            ))}
+                                        </div>
                                     </div>
                                 )}
                             </div>
 
-                            {/* Files */}
-                            {appDetails?.files && appDetails.files.length > 0 && (
-                                <div style={{ background: '#fff', borderRadius: '12px', padding: '24px', boxShadow: '0 1px 4px rgba(0,0,0,0.06)', marginBottom: '16px' }}>
-                                    <h3 style={{ margin: '0 0 16px', fontSize: '1rem', fontWeight: '700', color: '#1e293b' }}>Documents</h3>
+                            {/* Right sidebar */}
+                            <div style={{ position: 'sticky', top: '80px', display: 'flex', flexDirection: 'column', gap: '16px' }}>
+                                <div style={{ border: '1px solid #e5e7eb', borderRadius: '4px', padding: '20px', background: '#fff' }}>
+                                    <p style={{ margin: '0 0 16px', fontSize: '0.7rem', fontWeight: '800', color: '#6b7280', letterSpacing: '0.08em', textTransform: 'uppercase' }}>Actions</p>
                                     <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                                        {appDetails.files.map(f => (
-                                            <div key={f.id} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '10px 14px', background: f.is_response ? '#f0fdf4' : '#f8fafc', borderRadius: '8px', border: `1px solid ${f.is_response ? '#bbf7d0' : '#e2e8f0'}` }}>
-                                                <div>
-                                                    <span style={{ fontWeight: '600', color: '#1e293b', fontSize: '0.9rem' }}>{f.file_name}</span>
-                                                    {f.is_response && <span style={{ marginLeft: '8px', fontSize: '0.75rem', color: '#10b981', fontWeight: '700' }}>RESPONSE</span>}
-                                                    {f.uploaded_by && <span style={{ marginLeft: '8px', fontSize: '0.75rem', color: '#94a3b8' }}>by {f.uploaded_by}</span>}
-                                                </div>
-                                                <a href={`${API_URL}/convocation-admin/file/${f.id}`}
-                                                    onClick={e => { e.preventDefault(); window.open(`${API_URL}/convocation-admin/file/${f.id}`, '_blank'); }}
-                                                    style={{ fontSize: '0.82rem', color: '#4338ca', fontWeight: '600', textDecoration: 'none' }}>View ↗</a>
-                                            </div>
-                                        ))}
-                                    </div>
-                                </div>
-                            )}
-                        </div>
-
-                        {/* Right: actions sidebar */}
-                        <div style={{ position: 'sticky', top: '80px' }}>
-                            <div style={{ background: '#fff', borderRadius: '12px', padding: '20px', boxShadow: '0 1px 4px rgba(0,0,0,0.06)', marginBottom: '16px' }}>
-                                <div style={{ textAlign: 'center', marginBottom: '16px' }}>
-                                    <StatusBadge status={selectedApp.status} />
-                                    <p style={{ margin: '8px 0 0', fontFamily: 'monospace', fontSize: '0.8rem', color: '#94a3b8' }}>{selectedApp.id}</p>
-                                </div>
-
-                                <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
-                                    {/* Approve */}
-                                    {selectedApp.status !== 'APPROVED' && (
-                                        <button onClick={() => setConfirmModal({ action: 'approve', label: 'Approve this application?' })}
-                                            disabled={!!actionLoading}
-                                            style={{ padding: '10px', background: '#10b981', color: '#fff', border: 'none', borderRadius: '8px', fontWeight: '700', cursor: 'pointer', fontSize: '0.9rem' }}>
-                                            ✓ Approve
-                                        </button>
-                                    )}
-
-                                    {/* Reject */}
-                                    {selectedApp.status !== 'REJECTED' && (
-                                        <>
-                                            <button onClick={() => setShowRejectInput(s => !s)}
-                                                disabled={!!actionLoading}
-                                                style={{ padding: '10px', background: '#ef4444', color: '#fff', border: 'none', borderRadius: '8px', fontWeight: '700', cursor: 'pointer', fontSize: '0.9rem' }}>
-                                                ✗ Reject
+                                        {selectedApp.status !== 'APPROVED' && (
+                                            <button onClick={() => setConfirmModal({ action: 'approve', label: 'Approve this application?' })} disabled={!!actionLoading}
+                                                style={{ padding: '10px', background: '#10b981', color: '#fff', border: 'none', borderRadius: '4px', fontWeight: '700', cursor: 'pointer', fontSize: '0.85rem', letterSpacing: '0.03em', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px' }}>
+                                                <IconCheck size={15} color="#fff" /> APPROVE
                                             </button>
-                                            {showRejectInput && (
-                                                <div>
-                                                    <textarea value={rejectReason} onChange={e => setRejectReason(e.target.value)} placeholder="Reason for rejection (optional)" rows={3}
-                                                        style={{ width: '100%', padding: '8px', borderRadius: '8px', border: '1.5px solid #e2e8f0', fontSize: '0.85rem', resize: 'vertical', boxSizing: 'border-box' }} />
-                                                    <button onClick={() => updateStatus('REJECTED', rejectReason)} disabled={!!actionLoading}
-                                                        style={{ width: '100%', marginTop: '6px', padding: '8px', background: '#ef4444', color: '#fff', border: 'none', borderRadius: '8px', fontWeight: '700', cursor: 'pointer', fontSize: '0.87rem' }}>
-                                                        {actionLoading === 'REJECTED' ? 'Rejecting…' : 'Confirm Reject'}
-                                                    </button>
-                                                </div>
-                                            )}
-                                        </>
-                                    )}
-
-                                    <hr style={{ border: 'none', borderTop: '1px solid #f1f5f9', margin: '4px 0' }} />
-
-                                    {/* Upload response */}
-                                    <div>
-                                        <label style={{ display: 'block', fontSize: '0.8rem', fontWeight: '700', color: '#374151', marginBottom: '6px' }}>Upload Response Document</label>
-                                        <input type="file" accept=".pdf,.jpg,.jpeg,.png" onChange={e => setUploadFile(e.target.files[0] || null)}
-                                            style={{ width: '100%', fontSize: '0.82rem', marginBottom: '6px' }} />
-                                        <button onClick={handleUploadResponse} disabled={!uploadFile || !!actionLoading}
-                                            style={{ width: '100%', padding: '8px', background: '#4338ca', color: '#fff', border: 'none', borderRadius: '8px', fontWeight: '700', cursor: uploadFile ? 'pointer' : 'not-allowed', opacity: uploadFile ? 1 : 0.5, fontSize: '0.87rem' }}>
-                                            {actionLoading === 'upload' ? 'Uploading…' : 'Upload'}
+                                        )}
+                                        {selectedApp.status !== 'REJECTED' && (
+                                            <>
+                                                <button onClick={() => setShowRejectInput(s => !s)} disabled={!!actionLoading}
+                                                    style={{ padding: '10px', background: '#fff', color: '#ef4444', border: '1px solid #ef4444', borderRadius: '4px', fontWeight: '700', cursor: 'pointer', fontSize: '0.85rem', letterSpacing: '0.03em', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px' }}>
+                                                    <IconX size={15} color="#ef4444" /> REJECT
+                                                </button>
+                                                {showRejectInput && (
+                                                    <div>
+                                                        <textarea value={rejectReason} onChange={e => setRejectReason(e.target.value)} placeholder="Reason (optional)" rows={3}
+                                                            style={{ width: '100%', padding: '8px', border: '1px solid #d1d5db', borderRadius: '4px', fontSize: '0.85rem', resize: 'vertical', boxSizing: 'border-box', marginBottom: '6px' }} />
+                                                        <button onClick={() => updateStatus('REJECTED', rejectReason)} disabled={!!actionLoading}
+                                                            style={{ width: '100%', padding: '9px', background: '#ef4444', color: '#fff', border: 'none', borderRadius: '4px', fontWeight: '700', cursor: 'pointer', fontSize: '0.85rem' }}>
+                                                            {actionLoading === 'REJECTED' ? 'Rejecting…' : 'Confirm Reject'}
+                                                        </button>
+                                                    </div>
+                                                )}
+                                            </>
+                                        )}
+                                        <div style={{ borderTop: '1px solid #e5e7eb', paddingTop: '12px', marginTop: '4px' }}>
+                                            <p style={{ margin: '0 0 8px', fontSize: '0.75rem', fontWeight: '700', color: '#374151' }}>Upload Response Document</p>
+                                            <input type="file" accept=".pdf,.jpg,.jpeg,.png" onChange={e => setUploadFile(e.target.files[0] || null)}
+                                                style={{ width: '100%', fontSize: '0.8rem', marginBottom: '8px' }} />
+                                            <button onClick={handleUploadResponse} disabled={!uploadFile || !!actionLoading}
+                                                style={{ width: '100%', padding: '9px', background: '#111', color: '#fff', border: 'none', borderRadius: '4px', fontWeight: '700', cursor: uploadFile ? 'pointer' : 'not-allowed', opacity: uploadFile ? 1 : 0.4, fontSize: '0.85rem', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px' }}>
+                                                <IconUpload size={14} color="#fff" /> {actionLoading === 'upload' ? 'Uploading…' : 'UPLOAD'}
+                                            </button>
+                                        </div>
+                                        <button onClick={() => setConfirmModal({ action: 'notify', label: 'Send notification email to candidate?' })} disabled={!!actionLoading}
+                                            style={{ padding: '10px', background: '#0ea5e9', color: '#fff', border: 'none', borderRadius: '4px', fontWeight: '700', cursor: 'pointer', fontSize: '0.85rem', letterSpacing: '0.03em', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px' }}>
+                                            <IconMail size={15} color="#fff" /> NOTIFY CANDIDATE
                                         </button>
                                     </div>
-
-                                    {/* Notify */}
-                                    <button onClick={() => setConfirmModal({ action: 'notify', label: 'Send notification email to candidate?' })}
-                                        disabled={!!actionLoading}
-                                        style={{ padding: '10px', background: '#0ea5e9', color: '#fff', border: 'none', borderRadius: '8px', fontWeight: '700', cursor: 'pointer', fontSize: '0.9rem' }}>
-                                        📧 Notify Candidate
-                                    </button>
+                                </div>
+                                <div style={{ border: '1px solid #e5e7eb', borderRadius: '4px', padding: '16px', background: '#f9fafb' }}>
+                                    <p style={{ margin: '0 0 4px', fontSize: '0.7rem', fontWeight: '700', color: '#9ca3af', letterSpacing: '0.06em' }}>APPLICATION ID</p>
+                                    <p style={{ margin: 0, fontFamily: 'monospace', fontSize: '0.82rem', color: '#374151', fontWeight: '600', wordBreak: 'break-all' }}>{selectedApp.id}</p>
                                 </div>
                             </div>
                         </div>
                     </div>
                 )}
-            </div>
+            </main>
+
+            {/* Footer */}
+            <footer style={{ borderTop: '1px solid #e5e7eb', padding: '20px 32px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '8px' }}>
+                <div>
+                    <p style={{ margin: '0 0 2px', fontWeight: '800', fontSize: '0.82rem', color: '#111', letterSpacing: '0.04em' }}>CONVOCATION ADMIN</p>
+                    <p style={{ margin: 0, fontSize: '0.72rem', color: '#9ca3af' }}>© 2026 SSSIHL. ALL RIGHTS RESERVED.</p>
+                </div>
+                <div style={{ display: 'flex', gap: '20px' }}>
+                    {['PRIVACY', 'TERMS', 'HELP', 'SUPPORT'].map(l => (
+                        <span key={l} style={{ fontSize: '0.72rem', fontWeight: '700', color: '#6b7280', cursor: 'pointer', letterSpacing: '0.04em' }}>{l}</span>
+                    ))}
+                </div>
+            </footer>
 
             {/* Confirm modal */}
             {confirmModal && (
-                <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.5)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 200 }}>
-                    <div style={{ background: '#fff', borderRadius: '16px', padding: '28px', maxWidth: '380px', width: '90%', textAlign: 'center' }}>
-                        <p style={{ fontSize: '1rem', fontWeight: '600', color: '#1e293b', marginBottom: '20px' }}>{confirmModal.label}</p>
+                <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.4)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 200 }}>
+                    <div style={{ background: '#fff', borderRadius: '4px', padding: '28px', maxWidth: '380px', width: '90%', textAlign: 'center', border: '1px solid #e5e7eb' }}>
+                        <p style={{ fontSize: '1rem', fontWeight: '700', color: '#111', marginBottom: '20px' }}>{confirmModal.label}</p>
                         <div style={{ display: 'flex', gap: '12px', justifyContent: 'center' }}>
-                            <button onClick={() => setConfirmModal(null)} style={{ padding: '9px 24px', border: '1.5px solid #e2e8f0', borderRadius: '8px', background: '#fff', cursor: 'pointer', fontWeight: '600' }}>Cancel</button>
+                            <button onClick={() => setConfirmModal(null)} style={{ padding: '9px 24px', border: '1px solid #d1d5db', borderRadius: '4px', background: '#fff', cursor: 'pointer', fontWeight: '600', fontSize: '0.85rem' }}>Cancel</button>
                             <button onClick={() => confirmModal.action === 'notify' ? handleNotify() : updateStatus('APPROVED')}
-                                style={{ padding: '9px 24px', background: '#4338ca', color: '#fff', border: 'none', borderRadius: '8px', cursor: 'pointer', fontWeight: '700' }}>
+                                style={{ padding: '9px 24px', background: '#111', color: '#fff', border: 'none', borderRadius: '4px', cursor: 'pointer', fontWeight: '700', fontSize: '0.85rem' }}>
                                 {actionLoading ? '…' : 'Confirm'}
                             </button>
                         </div>
