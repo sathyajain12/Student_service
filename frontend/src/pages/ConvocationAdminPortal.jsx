@@ -7,32 +7,32 @@ const Svg = ({ d, size = 16, color = 'currentColor', strokeWidth = 2, fill = 'no
     </svg>
 );
 
-const IconRefresh    = (p) => <Svg {...p} d="M23 4v6h-6M1 20v-6h6M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15" />;
-const IconDownload   = (p) => <Svg {...p} d={['M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4','M7 10l5 5 5-5','M12 15V3']} />;
-const IconBarChart   = (p) => <Svg {...p} d={['M18 20V10','M12 20V4','M6 20v-6']} />;
-const IconClipboard  = (p) => <Svg {...p} d={['M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2','M9 2h6a1 1 0 0 1 1 1v2a1 1 0 0 1-1 1H9a1 1 0 0 1-1-1V3a1 1 0 0 1 1-1z']} />;
-const IconCheckCircle= (p) => <Svg {...p} d={['M22 11.08V12a10 10 0 1 1-5.93-9.14','M22 4 12 14.01l-3-3']} />;
-const IconXCircle    = ({ size = 16, color = 'currentColor' }) => (
+const IconRefresh = (p) => <Svg {...p} d="M23 4v6h-6M1 20v-6h6M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15" />;
+const IconDownload = (p) => <Svg {...p} d={['M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4', 'M7 10l5 5 5-5', 'M12 15V3']} />;
+const IconBarChart = (p) => <Svg {...p} d={['M18 20V10', 'M12 20V4', 'M6 20v-6']} />;
+const IconClipboard = (p) => <Svg {...p} d={['M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2', 'M9 2h6a1 1 0 0 1 1 1v2a1 1 0 0 1-1 1H9a1 1 0 0 1-1-1V3a1 1 0 0 1 1-1z']} />;
+const IconCheckCircle = (p) => <Svg {...p} d={['M22 11.08V12a10 10 0 1 1-5.93-9.14', 'M22 4 12 14.01l-3-3']} />;
+const IconXCircle = ({ size = 16, color = 'currentColor' }) => (
     <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ display: 'block', flexShrink: 0 }}>
-        <circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/>
+        <circle cx="12" cy="12" r="10" /><line x1="15" y1="9" x2="9" y2="15" /><line x1="9" y1="9" x2="15" y2="15" />
     </svg>
 );
-const IconBell       = (p) => <Svg {...p} d={['M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9','M13.73 21a2 2 0 0 1-3.46 0']} />;
-const IconSearch     = ({ size = 16, color = 'currentColor' }) => (
+const IconBell = (p) => <Svg {...p} d={['M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9', 'M13.73 21a2 2 0 0 1-3.46 0']} />;
+const IconSearch = ({ size = 16, color = 'currentColor' }) => (
     <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ display: 'block', flexShrink: 0 }}>
-        <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
+        <circle cx="11" cy="11" r="8" /><line x1="21" y1="21" x2="16.65" y2="16.65" />
     </svg>
 );
-const IconFilter     = (p) => <Svg {...p} d="M22 3H2l8 9.46V19l4 2v-8.54L22 3" />;
-const IconGrid       = (p) => <Svg {...p} d={['M3 3h7v7H3z','M14 3h7v7h-7z','M14 14h7v7h-7z','M3 14h7v7H3z']} />;
-const IconFolder     = (p) => <Svg {...p} d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z" />;
-const IconChevronL   = (p) => <Svg {...p} d="M15 18l-6-6 6-6" />;
-const IconChevronR   = (p) => <Svg {...p} d="M9 18l6-6-6-6" />;
-const IconArrowLeft  = (p) => <Svg {...p} d={['M19 12H5','M12 19l-7-7 7-7']} />;
-const IconCheck      = (p) => <Svg {...p} d="M20 6 9 17l-5-5" />;
-const IconX          = (p) => <Svg {...p} d={['M18 6 6 18','M6 6l12 12']} />;
-const IconMail       = (p) => <Svg {...p} d={['M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z','M22 6l-10 7L2 6']} />;
-const IconUpload     = (p) => <Svg {...p} d={['M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4','M17 8l-5-5-5 5','M12 3v12']} />;
+const IconFilter = (p) => <Svg {...p} d="M22 3H2l8 9.46V19l4 2v-8.54L22 3" />;
+const IconGrid = (p) => <Svg {...p} d={['M3 3h7v7H3z', 'M14 3h7v7h-7z', 'M14 14h7v7h-7z', 'M3 14h7v7H3z']} />;
+const IconFolder = (p) => <Svg {...p} d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z" />;
+const IconChevronL = (p) => <Svg {...p} d="M15 18l-6-6 6-6" />;
+const IconChevronR = (p) => <Svg {...p} d="M9 18l6-6-6-6" />;
+const IconArrowLeft = (p) => <Svg {...p} d={['M19 12H5', 'M12 19l-7-7 7-7']} />;
+const IconCheck = (p) => <Svg {...p} d="M20 6 9 17l-5-5" />;
+const IconX = (p) => <Svg {...p} d={['M18 6 6 18', 'M6 6l12 12']} />;
+const IconMail = (p) => <Svg {...p} d={['M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z', 'M22 6l-10 7L2 6']} />;
+const IconUpload = (p) => <Svg {...p} d={['M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4', 'M17 8l-5-5-5 5', 'M12 3v12']} />;
 
 const API_URL = import.meta.env.VITE_API_URL || 'https://sssihl-student-services-backend.coeoffice.workers.dev';
 const TOKEN_KEY = 'convAdminToken';
@@ -117,8 +117,10 @@ function StatusBadge({ status }) {
     const s = STATUS_COLORS[status] || { bg: '#f1f5f9', color: '#475569', label: status };
     const isPending = status === 'PENDING';
     return (
-        <span style={{ background: s.bg, color: s.color, padding: '3px 10px', borderRadius: '20px', fontSize: '0.78rem', fontWeight: '700', whiteSpace: 'nowrap',
-            animation: isPending ? 'pulseRing 1.6s ease-in-out infinite' : 'none' }}>
+        <span style={{
+            background: s.bg, color: s.color, padding: '3px 10px', borderRadius: '20px', fontSize: '0.78rem', fontWeight: '700', whiteSpace: 'nowrap',
+            animation: isPending ? 'pulseRing 1.6s ease-in-out infinite' : 'none'
+        }}>
             {s.label}
         </span>
     );
@@ -139,8 +141,8 @@ function StatCard({ label, IconComp, iconColor, value }) {
 
 const pressProps = {
     onMouseDown: e => { e.currentTarget.style.transform = 'scale(0.96)'; },
-    onMouseUp:   e => { e.currentTarget.style.transform = 'scale(1)'; },
-    onMouseLeave:e => { e.currentTarget.style.transform = 'scale(1)'; },
+    onMouseUp: e => { e.currentTarget.style.transform = 'scale(1)'; },
+    onMouseLeave: e => { e.currentTarget.style.transform = 'scale(1)'; },
 };
 
 export default function ConvocationAdminPortal() {
@@ -154,7 +156,7 @@ export default function ConvocationAdminPortal() {
     const [loginError, setLoginError] = useState('');
     const [loggingIn, setLoggingIn] = useState(false);
     const [showPass, setShowPass] = useState(false);
-    const [rememberDevice, setRememberDevice] = useState(false);
+
 
     // Data
     const [applications, setApplications] = useState([]);
@@ -228,6 +230,18 @@ export default function ConvocationAdminPortal() {
         setLoggingIn(true);
         setLoginError('');
         try {
+            // Local dev bypass — only active on localhost
+            if (window.location.hostname === 'localhost' && loginUser === 'admin' && loginPass === 'admin123') {
+                const devToken = 'dev-local-token';
+                localStorage.setItem(TOKEN_KEY, devToken);
+                localStorage.setItem(USERNAME_KEY, loginUser);
+                setToken(devToken);
+                setUsername(loginUser);
+                setIsLoggedIn(true);
+                setLoggingIn(false);
+                return;
+            }
+
             const res = await fetch(`${API_URL}/convocation-admin/login`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
@@ -408,7 +422,8 @@ export default function ConvocationAdminPortal() {
     if (!isLoggedIn) {
         return (
             <div className="login-container">
-                <style dangerouslySetInnerHTML={{ __html: `
+                <style dangerouslySetInnerHTML={{
+                    __html: `
                     .login-container {
                         min-height: 100vh;
                         display: flex;
@@ -423,6 +438,8 @@ export default function ConvocationAdminPortal() {
                         background-size: cover;
                         background-position: center 20%;
                         display: block;
+                        box-shadow: 8px 0 32px 0 rgba(0, 0, 0, 0.35);
+                        z-index: 1;
                     }
 
                     @media (max-width: 1024px) {
@@ -694,9 +711,6 @@ export default function ConvocationAdminPortal() {
                             <div className="login-field-group">
                                 <div className="login-field-label-row">
                                     <label className="login-field-label">Password</label>
-                                    <a href="#" onClick={e => { e.preventDefault(); alert("Please contact the Administrator to reset your password."); }} className="login-forgot-link">
-                                        Forgot password?
-                                    </a>
                                 </div>
                                 <div className="login-input-wrapper">
                                     <input
@@ -718,17 +732,7 @@ export default function ConvocationAdminPortal() {
                                 </div>
                             </div>
 
-                            <div className="login-checkbox-row">
-                                <label className="login-checkbox-label">
-                                    <input
-                                        type="checkbox"
-                                        className="login-checkbox"
-                                        checked={rememberDevice}
-                                        onChange={e => setRememberDevice(e.target.checked)}
-                                    />
-                                    Remember this device
-                                </label>
-                            </div>
+
 
                             {loginError && (
                                 <p style={{ color: '#ef4444', fontSize: '0.87rem', marginBottom: '16px', textAlign: 'center', fontWeight: '500' }}>
@@ -751,9 +755,7 @@ export default function ConvocationAdminPortal() {
                             </button>
                         </form>
 
-                        <p className="login-footer-text">
-                            Authorized Personnel Only. Access is monitored and logged.
-                        </p>
+
                     </div>
                 </div>
             </div>
@@ -768,9 +770,11 @@ export default function ConvocationAdminPortal() {
 
     const navBtn = (id, label) => (
         <button key={id} onClick={() => { setActiveNav(id); setSelectedApp(null); setAppDetails(null); }}
-            style={{ background: 'none', border: 'none', cursor: 'pointer', padding: '20px 4px', fontSize: '0.9rem', fontWeight: activeNav === id ? '600' : '400',
+            style={{
+                background: 'none', border: 'none', cursor: 'pointer', padding: '20px 4px', fontSize: '0.9rem', fontWeight: activeNav === id ? '600' : '400',
                 color: activeNav === id ? '#111' : '#888',
-                borderBottom: activeNav === id ? '2px solid #111' : '2px solid transparent' }}>
+                borderBottom: activeNav === id ? '2px solid #111' : '2px solid transparent'
+            }}>
             {label}
         </button>
     );
@@ -817,11 +821,11 @@ export default function ConvocationAdminPortal() {
                     <>
                         {/* Stats row */}
                         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(5, 1fr)', gap: '0', marginBottom: '28px', border: '1px solid #e5e7eb' }}>
-                            <StatCard label="TOTAL"   value={stats?.total ?? 0}                    IconComp={IconBarChart}    iconColor="#6b7280" />
-                            <div style={{ borderLeft: '1px solid #e5e7eb' }}><StatCard label="PENDING"  value={stats?.byStatus?.PENDING ?? 0}    IconComp={IconClipboard}   iconColor="#f97316" /></div>
-                            <div style={{ borderLeft: '1px solid #e5e7eb' }}><StatCard label="APPROVED" value={stats?.byStatus?.APPROVED ?? 0}   IconComp={IconCheckCircle} iconColor="#10b981" /></div>
-                            <div style={{ borderLeft: '1px solid #e5e7eb' }}><StatCard label="REJECTED" value={stats?.byStatus?.REJECTED ?? 0}   IconComp={IconXCircle}     iconColor="#ef4444" /></div>
-                            <div style={{ borderLeft: '1px solid #e5e7eb' }}><StatCard label="NOTIFIED" value={stats?.byStatus?.DISPATCHED ?? 0} IconComp={IconBell}        iconColor="#0ea5e9" /></div>
+                            <StatCard label="TOTAL" value={stats?.total ?? 0} IconComp={IconBarChart} iconColor="#6b7280" />
+                            <div style={{ borderLeft: '1px solid #e5e7eb' }}><StatCard label="PENDING" value={stats?.byStatus?.PENDING ?? 0} IconComp={IconClipboard} iconColor="#f97316" /></div>
+                            <div style={{ borderLeft: '1px solid #e5e7eb' }}><StatCard label="APPROVED" value={stats?.byStatus?.APPROVED ?? 0} IconComp={IconCheckCircle} iconColor="#10b981" /></div>
+                            <div style={{ borderLeft: '1px solid #e5e7eb' }}><StatCard label="REJECTED" value={stats?.byStatus?.REJECTED ?? 0} IconComp={IconXCircle} iconColor="#ef4444" /></div>
+                            <div style={{ borderLeft: '1px solid #e5e7eb' }}><StatCard label="NOTIFIED" value={stats?.byStatus?.DISPATCHED ?? 0} IconComp={IconBell} iconColor="#0ea5e9" /></div>
                         </div>
 
                         {/* Search + filters + status tabs */}
@@ -832,36 +836,44 @@ export default function ConvocationAdminPortal() {
                                     style={{ width: '100%', padding: '9px 12px 9px 36px', border: '1px solid #d1d5db', borderRadius: '4px', fontSize: '0.88rem', outline: 'none', boxSizing: 'border-box' }} />
                             </div>
                             <select value={categoryFilter} onChange={e => { setCategoryFilter(e.target.value); setProgrammeFilter('ALL'); setCurrentPage(1); }}
-                                style={{ padding: '9px 32px 9px 12px', border: '1px solid #d1d5db', borderRadius: '4px', fontSize: '0.88rem', fontWeight: '600', color: '#374151', background: '#fff', cursor: 'pointer', appearance: 'none',
+                                style={{
+                                    padding: '9px 32px 9px 12px', border: '1px solid #d1d5db', borderRadius: '4px', fontSize: '0.88rem', fontWeight: '600', color: '#374151', background: '#fff', cursor: 'pointer', appearance: 'none',
                                     backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%236b7280' stroke-width='2'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E")`,
-                                    backgroundRepeat: 'no-repeat', backgroundPosition: 'right 10px center' }}>
+                                    backgroundRepeat: 'no-repeat', backgroundPosition: 'right 10px center'
+                                }}>
                                 <option value="ALL">CATEGORIES</option>
                                 {CATEGORIES.map(c => <option key={c} value={c}>{c}</option>)}
                             </select>
                             {categoryFilter !== 'ALL' && (PROGRAMME_MAP[categoryFilter]?.length > 0) && (
                                 <div style={{ animation: 'slideDown 250ms ease forwards', overflow: 'hidden' }}>
-                                <select value={programmeFilter} onChange={e => { setProgrammeFilter(e.target.value); setCurrentPage(1); }}
-                                    style={{ padding: '9px 32px 9px 12px', border: '1px solid #d1d5db', borderRadius: '4px', fontSize: '0.88rem', fontWeight: '600', color: '#374151', background: '#fff', cursor: 'pointer', appearance: 'none',
-                                        backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%236b7280' stroke-width='2'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E")`,
-                                        backgroundRepeat: 'no-repeat', backgroundPosition: 'right 10px center', maxWidth: '260px' }}>
-                                    <option value="ALL">ALL PROGRAMMES</option>
-                                    {PROGRAMME_MAP[categoryFilter].map(p => <option key={p} value={p}>{p}</option>)}
-                                </select>
+                                    <select value={programmeFilter} onChange={e => { setProgrammeFilter(e.target.value); setCurrentPage(1); }}
+                                        style={{
+                                            padding: '9px 32px 9px 12px', border: '1px solid #d1d5db', borderRadius: '4px', fontSize: '0.88rem', fontWeight: '600', color: '#374151', background: '#fff', cursor: 'pointer', appearance: 'none',
+                                            backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%236b7280' stroke-width='2'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E")`,
+                                            backgroundRepeat: 'no-repeat', backgroundPosition: 'right 10px center', maxWidth: '260px'
+                                        }}>
+                                        <option value="ALL">ALL PROGRAMMES</option>
+                                        {PROGRAMME_MAP[categoryFilter].map(p => <option key={p} value={p}>{p}</option>)}
+                                    </select>
                                 </div>
                             )}
                             <select value={campusFilter} onChange={e => { setCampusFilter(e.target.value); setCurrentPage(1); }}
-                                style={{ padding: '9px 32px 9px 12px', border: '1px solid #d1d5db', borderRadius: '4px', fontSize: '0.88rem', fontWeight: '600', color: '#374151', background: '#fff', cursor: 'pointer', appearance: 'none',
+                                style={{
+                                    padding: '9px 32px 9px 12px', border: '1px solid #d1d5db', borderRadius: '4px', fontSize: '0.88rem', fontWeight: '600', color: '#374151', background: '#fff', cursor: 'pointer', appearance: 'none',
                                     backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%236b7280' stroke-width='2'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E")`,
-                                    backgroundRepeat: 'no-repeat', backgroundPosition: 'right 10px center' }}>
+                                    backgroundRepeat: 'no-repeat', backgroundPosition: 'right 10px center'
+                                }}>
                                 <option value="ALL">CAMPUSES</option>
                                 {CAMPUSES.map(c => <option key={c} value={c}>{c.replace(' Campus', '')}</option>)}
                             </select>
                             <div style={{ display: 'flex', border: '1px solid #d1d5db', borderRadius: '4px', overflow: 'hidden' }}>
                                 {[{ label: 'ALL', value: 'ALL' }, { label: 'PENDING', value: 'PENDING' }, { label: 'APPROVED', value: 'APPROVED' }, { label: 'REJECTED', value: 'REJECTED' }].map(t => (
                                     <button key={t.value} onClick={() => { setStatusFilter(t.value); setCurrentPage(1); }}
-                                        style={{ padding: '9px 16px', border: 'none', borderRight: '1px solid #d1d5db', cursor: 'pointer', fontSize: '0.78rem', fontWeight: '700', letterSpacing: '0.04em',
+                                        style={{
+                                            padding: '9px 16px', border: 'none', borderRight: '1px solid #d1d5db', cursor: 'pointer', fontSize: '0.78rem', fontWeight: '700', letterSpacing: '0.04em',
                                             background: statusFilter === t.value ? '#111' : '#fff',
-                                            color: statusFilter === t.value ? '#fff' : '#6b7280' }}>
+                                            color: statusFilter === t.value ? '#fff' : '#6b7280'
+                                        }}>
                                         {t.label}
                                     </button>
                                 ))}
@@ -930,7 +942,7 @@ export default function ConvocationAdminPortal() {
                                         style={{ background: 'none', border: 'none', cursor: currentPage === 1 ? 'default' : 'pointer', color: currentPage === 1 ? '#d1d5db' : '#374151', display: 'flex', alignItems: 'center', padding: '4px' }}>
                                         <IconChevronL size={16} color={currentPage === 1 ? '#d1d5db' : '#374151'} />
                                     </button>
-                                    <span style={{ fontSize: '0.75rem', fontWeight: '700', color: '#374151', letterSpacing: '0.04em' }}>PAGE {String(currentPage).padStart(2,'0')} / {String(totalPages).padStart(2,'0')}</span>
+                                    <span style={{ fontSize: '0.75rem', fontWeight: '700', color: '#374151', letterSpacing: '0.04em' }}>PAGE {String(currentPage).padStart(2, '0')} / {String(totalPages).padStart(2, '0')}</span>
                                     <button onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))} disabled={currentPage === totalPages}
                                         style={{ background: 'none', border: 'none', cursor: currentPage === totalPages ? 'default' : 'pointer', color: currentPage === totalPages ? '#d1d5db' : '#374151', display: 'flex', alignItems: 'center', padding: '4px' }}>
                                         <IconChevronR size={16} color={currentPage === totalPages ? '#d1d5db' : '#374151'} />
