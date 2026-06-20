@@ -4,6 +4,13 @@ const API_URL = import.meta.env.VITE_API_URL || 'https://sssihl-student-services
 
 const CAMPUSES = ['Prasanthi Nilayam Campus', 'Anantapur Campus', 'Brindavan Campus', 'Nandigiri Campus'];
 
+const CAMPUS_NAME_MAP = {
+    'Prasanthi Nilayam': 'Prasanthi Nilayam Campus',
+    'Anantapur': 'Anantapur Campus',
+    'Brindavan': 'Brindavan Campus',
+    'Nandigiri': 'Nandigiri Campus',
+};
+
 const UG_PROGRAMMES = [
     'Bachelor of Arts (Honours) / (Honours with Research) in Economics',
     'Bachelor of Arts (Honours) / (Honours with Research) in English Language and Literature',
@@ -54,16 +61,10 @@ const PROGRAMME_MAP = {
 const FORM_TYPE = 'SSSIHL - XLV Annual Convocation November 2026 - Registration Form';
 
 export default function ConvocationForm({ onCancel, onTrackStatus, hiddenData }) {
-    const category = hiddenData?.category || 'Undergraduate';
+    const [category, setCategory] = useState('');
     const isPhD = category === 'Doctor of Philosophy';
     const programmes = PROGRAMME_MAP[category] || [];
-
-    // step 1 = programme selection (skipped for PhD)
-    // step 2 = academic details
-    // step 3 = personal details
-    // step 4 = previous qualification
-    const firstStep = isPhD ? 2 : 1;
-    const [step, setStep] = useState(firstStep);
+    const [step, setStep] = useState(1);
     const [submitting, setSubmitting] = useState(false);
     const [submitted, setSubmitted] = useState(false);
     const [appId, setAppId] = useState('');
@@ -88,27 +89,53 @@ export default function ConvocationForm({ onCancel, onTrackStatus, hiddenData })
         declaration: false,
     });
     const [docFile, setDocFile] = useState(null);
+    const [lookupStatus, setLookupStatus] = useState('idle'); // idle | loading | found | not_found
+    const [prefilledFields, setPrefilledFields] = useState([]);
 
     const set = (field, value) => {
         setFormData(prev => ({ ...prev, [field]: value }));
         setFieldErrors(prev => ({ ...prev, [field]: '' }));
     };
 
+    const lookupStudent = async (regNo) => {
+        if (!regNo || regNo.trim().length < 3) return;
+        setLookupStatus('loading');
+        try {
+            const res = await fetch(`${API_URL}/convocation/student-lookup?regNo=${encodeURIComponent(regNo.trim())}`);
+            const data = await res.json();
+            if (data.found) {
+                const filled = [];
+                if (data.category)      { setCategory(data.category);          filled.push('category'); }
+                if (data.name)          { set('studentName', data.name);        filled.push('studentName'); }
+                if (data.email)         { set('email', data.email);             filled.push('email'); }
+                if (data.campus)        { set('campus', CAMPUS_NAME_MAP[data.campus] || data.campus); filled.push('campus'); }
+                if (data.programme)     { set('programme', data.programme);     filled.push('programme'); }
+                setPrefilledFields(filled);
+                setLookupStatus('found');
+            } else {
+                setPrefilledFields([]);
+                setLookupStatus('not_found');
+            }
+        } catch {
+            setLookupStatus('idle');
+        }
+    };
+
     const validateStep = () => {
         const errs = {};
         if (step === 1) {
-            if (!formData.programme) errs.programme = 'Please select a programme.';
-        } else if (step === 2) {
             if (!formData.regNo) errs.regNo = 'Registered number is required.';
+            if (!category) errs.category = 'Please select your degree category.';
+            if (!isPhD && !formData.programme) errs.programme = 'Please select a programme.';
             if (!formData.studentName) errs.studentName = 'Student name is required.';
             if (!formData.campus) errs.campus = 'Campus is required.';
             if (!formData.email) errs.email = 'Email address is required.';
             if (!formData.attendanceType) errs.attendanceType = 'Please select In Person or In Absentia.';
-        } else if (step === 3) {
+        } else if (step === 2) {
             if (!formData.dob) errs.dob = 'Date of birth is required.';
             if (!formData.postalAddress) errs.postalAddress = 'Postal address is required.';
             if (!formData.activeMobile) errs.activeMobile = 'Active mobile number is required.';
-        } else if (step === 4) {
+        } else if (step === 3) {
             if (!docFile) errs.docFile = 'Please upload scanned documents.';
             if (!formData.prevBoardUniversity) errs.prevBoardUniversity = 'Board / university name is required.';
             if (!formData.prevQualProgramme) errs.prevQualProgramme = 'Previous qualification programme is required.';
@@ -126,10 +153,7 @@ export default function ConvocationForm({ onCancel, onTrackStatus, hiddenData })
     };
 
     const handleBack = () => {
-        setStep(s => {
-            const prev = s - 1;
-            return prev < firstStep ? firstStep : prev;
-        });
+        setStep(s => Math.max(s - 1, 1));
         window.scrollTo(0, 0);
     };
 
@@ -172,22 +196,19 @@ export default function ConvocationForm({ onCancel, onTrackStatus, hiddenData })
         }
     };
 
+    const isPrefilled = (field) => prefilledFields.includes(field);
     const inputStyle = (field) => ({
         width: '100%', padding: '10px 12px', borderRadius: '8px',
-        border: `1.5px solid ${fieldErrors[field] ? '#ef4444' : '#e2e8f0'}`,
+        border: `1.5px solid ${fieldErrors[field] ? '#ef4444' : isPrefilled(field) ? '#6ee7b7' : '#e2e8f0'}`,
         fontSize: '0.95rem', fontFamily: 'inherit', outline: 'none',
-        background: '#fff', boxSizing: 'border-box',
+        background: isPrefilled(field) ? '#f0fdf4' : '#fff', boxSizing: 'border-box',
     });
     const labelStyle = { display: 'block', fontWeight: '600', marginBottom: '6px', color: '#374151', fontSize: '0.9rem' };
     const errorStyle = { color: '#ef4444', fontSize: '0.8rem', marginTop: '4px' };
     const fieldWrap = { marginBottom: '18px' };
 
-    const stepTitles = isPhD
-        ? ['Academic Details', 'Personal Details', 'Previous Qualification']
-        : ['Programme Selection', 'Academic Details', 'Personal Details', 'Previous Qualification'];
-    const stepNumbers = isPhD ? [2, 3, 4] : [1, 2, 3, 4];
-    const totalSteps = isPhD ? 3 : 4;
-    const currentStepIndex = stepNumbers.indexOf(step);
+    const stepTitles = ['Registration & Academic Details', 'Personal Details', 'Previous Qualification'];
+    const currentStepIndex = step - 1;
 
     if (submitted) {
         return (
@@ -215,7 +236,7 @@ export default function ConvocationForm({ onCancel, onTrackStatus, hiddenData })
                 <h2 style={{ fontSize: '1.4rem', fontWeight: '700', color: '#0f172a', marginBottom: '4px' }}>
                     SSSIHL - XLV Annual Convocation November 2026
                 </h2>
-                <p style={{ color: '#64748b', fontSize: '0.9rem' }}>Category: <strong>{category}</strong></p>
+                {category && <p style={{ color: '#64748b', fontSize: '0.9rem' }}>Category: <strong>{category}</strong></p>}
             </div>
 
             {/* Step progress */}
@@ -236,30 +257,60 @@ export default function ConvocationForm({ onCancel, onTrackStatus, hiddenData })
 
             <div style={{ background: '#f8fafc', borderRadius: '12px', padding: '24px', border: '1px solid #e2e8f0' }}>
 
-                {/* Step 1 — Programme Selection */}
+                {/* Step 1 — Registration & Academic Details */}
                 {step === 1 && (
                     <div>
-                        <h3 style={{ marginBottom: '20px', color: '#1e293b' }}>Programme Selection</h3>
-                        <div style={fieldWrap}>
-                            <label style={labelStyle}>Which academic programme are you applying for? <span style={{ color: '#ef4444' }}>*</span></label>
-                            <select value={formData.programme} onChange={e => set('programme', e.target.value)} style={inputStyle('programme')}>
-                                <option value="">-- Select Programme --</option>
-                                {programmes.map(p => <option key={p} value={p}>{p}</option>)}
-                            </select>
-                            {fieldErrors.programme && <p style={errorStyle}>{fieldErrors.programme}</p>}
-                        </div>
-                    </div>
-                )}
-
-                {/* Step 2 — Academic Details */}
-                {step === 2 && (
-                    <div>
-                        <h3 style={{ marginBottom: '20px', color: '#1e293b' }}>Academic Details</h3>
+                        <h3 style={{ marginBottom: '20px', color: '#1e293b' }}>Registration & Academic Details</h3>
                         <div style={fieldWrap}>
                             <label style={labelStyle}>Registered Number <span style={{ color: '#ef4444' }}>*</span></label>
-                            <input type="text" value={formData.regNo} onChange={e => set('regNo', e.target.value)} style={inputStyle('regNo')} placeholder="Enter your registered number" />
+                            <input
+                                type="text"
+                                value={formData.regNo}
+                                onChange={e => { set('regNo', e.target.value); setLookupStatus('idle'); setPrefilledFields([]); setCategory(''); }}
+                                onBlur={e => lookupStudent(e.target.value)}
+                                style={inputStyle('regNo')}
+                                placeholder="Enter your registered number"
+                            />
+                            {lookupStatus === 'loading' && (
+                                <div style={{ display: 'flex', alignItems: 'center', gap: '8px', margin: '8px 0 0' }}>
+                                    <style>{`@keyframes cfSpin{to{transform:rotate(360deg)}}@keyframes cfPulse{0%,100%{opacity:1}50%{opacity:0.4}}`}</style>
+                                    <div style={{ width: '16px', height: '16px', border: '2px solid #e2e8f0', borderTopColor: '#4F46E5', borderRadius: '50%', animation: 'cfSpin 0.7s linear infinite', flexShrink: 0 }} />
+                                    <span style={{ color: '#4F46E5', fontSize: '0.82rem', fontWeight: '600', animation: 'cfPulse 1.2s ease infinite' }}>Fetching student record…</span>
+                                </div>
+                            )}
+                            {lookupStatus === 'found'     && <p style={{ color: '#059669', fontSize: '0.8rem', margin: '6px 0 0', fontWeight: '600' }}>✓ Student record found — fields have been pre-filled</p>}
+                            {lookupStatus === 'not_found' && <p style={{ color: '#92400e', background: '#fffbeb', border: '1px solid #fde68a', borderRadius: '6px', padding: '6px 10px', fontSize: '0.82rem', margin: '6px 0 0' }}>Your registration number was not found in our records. You may still proceed — please fill in all details below manually.</p>}
                             {fieldErrors.regNo && <p style={errorStyle}>{fieldErrors.regNo}</p>}
                         </div>
+                        <div style={fieldWrap}>
+                            <label style={labelStyle}>Degree Category <span style={{ color: '#ef4444' }}>*</span></label>
+                            <select
+                                value={category}
+                                onChange={e => { setCategory(e.target.value); set('programme', ''); setFieldErrors(prev => ({ ...prev, category: '' })); }}
+                                style={{
+                                    width: '100%', padding: '10px 12px', borderRadius: '8px',
+                                    border: `1.5px solid ${fieldErrors.category ? '#ef4444' : isPrefilled('category') ? '#6ee7b7' : '#e2e8f0'}`,
+                                    fontSize: '0.95rem', fontFamily: 'inherit', outline: 'none',
+                                    background: isPrefilled('category') ? '#f0fdf4' : '#fff', boxSizing: 'border-box',
+                                }}
+                            >
+                                <option value="">-- Select Category --</option>
+                                {['Undergraduate', 'Postgraduate', 'Professional', 'Doctor of Philosophy'].map(c => (
+                                    <option key={c} value={c}>{c}</option>
+                                ))}
+                            </select>
+                            {fieldErrors.category && <p style={errorStyle}>{fieldErrors.category}</p>}
+                        </div>
+                        {category && !isPhD && (
+                            <div style={fieldWrap}>
+                                <label style={labelStyle}>Programme <span style={{ color: '#ef4444' }}>*</span></label>
+                                <select value={formData.programme} onChange={e => set('programme', e.target.value)} style={inputStyle('programme')}>
+                                    <option value="">-- Select Programme --</option>
+                                    {programmes.map(p => <option key={p} value={p}>{p}</option>)}
+                                </select>
+                                {fieldErrors.programme && <p style={errorStyle}>{fieldErrors.programme}</p>}
+                            </div>
+                        )}
                         <div style={fieldWrap}>
                             <label style={labelStyle}>Student Name <span style={{ color: '#ef4444' }}>*</span></label>
                             <input type="text" value={formData.studentName} onChange={e => set('studentName', e.target.value)} style={inputStyle('studentName')} placeholder="As per official records" />
@@ -293,8 +344,8 @@ export default function ConvocationForm({ onCancel, onTrackStatus, hiddenData })
                     </div>
                 )}
 
-                {/* Step 3 — Personal Details */}
-                {step === 3 && (
+                {/* Step 2 — Personal Details */}
+                {step === 2 && (
                     <div>
                         <h3 style={{ marginBottom: '20px', color: '#1e293b' }}>Personal Details</h3>
                         <div style={fieldWrap}>
@@ -319,8 +370,8 @@ export default function ConvocationForm({ onCancel, onTrackStatus, hiddenData })
                     </div>
                 )}
 
-                {/* Step 4 — Previous Qualification */}
-                {step === 4 && (
+                {/* Step 3 — Previous Qualification */}
+                {step === 3 && (
                     <div>
                         <h3 style={{ marginBottom: '20px', color: '#1e293b' }}>Details of Previous Qualification</h3>
                         <div style={fieldWrap}>
@@ -360,10 +411,10 @@ export default function ConvocationForm({ onCancel, onTrackStatus, hiddenData })
 
             {/* Navigation */}
             <div style={{ display: 'flex', gap: '12px', marginTop: '24px' }}>
-                {step > firstStep && (
+                {step > 1 && (
                     <button onClick={handleBack} className="btn-secondary" style={{ minWidth: '100px' }}>← Back</button>
                 )}
-                {step < 4 ? (
+                {step < 3 ? (
                     <button onClick={handleNext} className="btn-primary" style={{ flexGrow: 1 }}>Next →</button>
                 ) : (
                     <button onClick={handleSubmit} disabled={submitting} className="btn-primary" style={{ flexGrow: 1, opacity: submitting ? 0.7 : 1 }}>

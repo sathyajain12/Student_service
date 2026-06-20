@@ -1016,7 +1016,7 @@ export default function ConvocationAdminPortal() {
                                                         {f.is_response && <span style={{ marginLeft: '8px', fontSize: '0.7rem', color: '#10b981', fontWeight: '800', letterSpacing: '0.04em' }}>RESPONSE</span>}
                                                         {f.uploaded_by && <span style={{ marginLeft: '8px', fontSize: '0.75rem', color: '#9ca3af' }}>by {f.uploaded_by}</span>}
                                                     </div>
-                                                    <button onClick={() => window.open(`${API_URL}/convocation-admin/file/${f.id}`, '_blank')}
+                                                    <button onClick={() => window.open(`${API_URL}/convocation-admin/file/${f.id}?token=${encodeURIComponent(token)}`, '_blank')}
                                                         style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: '0.82rem', color: '#4338ca', fontWeight: '700' }}>View ↗</button>
                                                 </div>
                                             ))}

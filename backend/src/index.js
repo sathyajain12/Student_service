@@ -143,6 +143,17 @@ export default {
         const response = await (async () => {
             try {
                 // Public routes
+                if (url.pathname === '/convocation/student-lookup' && request.method === 'GET') {
+                    const regNo = url.searchParams.get('regNo')?.trim();
+                    if (!regNo) return new Response(JSON.stringify({ found: false }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+                    const student = await env.DB.prepare(
+                        'SELECT reg_no, name, email, programme, category, campus FROM convocation_students WHERE reg_no = ?'
+                    ).bind(regNo).first();
+                    return new Response(JSON.stringify({ found: !!student, ...(student || {}) }), {
+                        headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+                    });
+                }
+
                 if (url.pathname === '/submit' && request.method === 'POST') {
                     return await handleSubmission(request, env, corsHeaders);
                 }
@@ -1453,8 +1464,11 @@ const CONV_FORM_TYPE = 'SSSIHL - XLV Annual Convocation November 2026 - Registra
 
 async function verifyConvocationToken(request, env) {
     const authHeader = request.headers.get('Authorization');
-    if (!authHeader || !authHeader.startsWith('Bearer ')) return null;
-    const token = authHeader.substring(7);
+    const url = new URL(request.url);
+    const token = (authHeader && authHeader.startsWith('Bearer '))
+        ? authHeader.substring(7)
+        : url.searchParams.get('token');
+    if (!token) return null;
     try {
         const secret = new TextEncoder().encode(env.CONV_JWT_SECRET || env.JWT_SECRET);
         const { payload } = await jwtVerify(token, secret);
@@ -1543,13 +1557,87 @@ async function handleConvocationUpdateStatus(id, request, env, corsHeaders) {
         return new Response(JSON.stringify({ error: 'Invalid status' }), { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
     }
 
-    const app = await env.DB.prepare('SELECT id FROM applications WHERE id = ? AND form_type = ?').bind(id, CONV_FORM_TYPE).first();
+    const app = await env.DB.prepare(
+        `SELECT a.id, a.student_email, a.applicant_name, a.campus, a.reg_no,
+                f.category, f.programme, f.attendance_type
+         FROM applications a
+         LEFT JOIN form_convocation_2026 f ON a.id = f.application_id
+         WHERE a.id = ? AND a.form_type = ?`
+    ).bind(id, CONV_FORM_TYPE).first();
     if (!app) return new Response(JSON.stringify({ error: 'Application not found' }), { status: 404, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
 
     await env.DB.prepare('UPDATE applications SET status = ?, updated_at = datetime(\'now\') WHERE id = ?').bind(status, id).run();
     await logAuditEvent(env, admin.username, `CONV_${status}`, id, { reason: reason || null });
 
+    if (status === 'APPROVED' || status === 'REJECTED') {
+        await sendConvocationStatusEmail(env, app, status, reason || null);
+    }
+
     return new Response(JSON.stringify({ success: true }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+}
+
+async function sendConvocationStatusEmail(env, app, status, reason) {
+    try {
+        const accessToken = await getGoogleAuth(env);
+        const changedOn = new Date().toLocaleString('en-IN', { dateStyle: 'long', timeStyle: 'short', timeZone: 'Asia/Kolkata' });
+        const appId = escapeHtml(app.id);
+
+        let htmlBody;
+        let subject;
+
+        if (status === 'APPROVED') {
+            subject = `Annual Convocation 2026 - Your Application has been Accepted`;
+            htmlBody = renderEmailTemplate({
+                title: 'Annual Convocation 2026 — Registration Confirmed',
+                greeting: `Dear ${escapeHtml(app.applicant_name)},<br><br>Sairam!<br><br>Greetings from the Examination Section, SSSIHL.`,
+                content: `
+                    <p style="margin:0 0 14px 0;">This is to inform you that your Application Form for Admission to the Annual Convocation 2026 is found to be complete in all aspects.</p>
+                    <p style="margin:0 0 14px 0;">The list of the registered candidates for the Annual Convocation 2026 (both in-person and in-absentia) and a common circular giving all details of the Convocation for the registrants, will be uploaded on our Institute website <a href="https://www.sssihl.edu.in" style="color:#2563eb;text-decoration:none;">www.sssihl.edu.in</a> in the first week of November 2026.</p>
+                    <p style="margin:0 0 14px 0;">You are therefore required to refer to the above list (when it is uploaded), to ascertain about your registration for the Convocation and refer to the circular for other details.</p>
+                    <p style="margin:0;"><strong>No individual circular will be sent to the registered candidates.</strong></p>
+                `,
+                details: [],
+                importantNote: `
+                    <p style="margin:0 0 4px 0;">Warm regards</p>
+                    <p style="margin:0 0 12px 0;"><strong>P. Chandra Sekhar</strong><br>
+                    Deputy Manager (Examinations)<br>
+                    Office of the Controller of Examinations<br>
+                    Sri Sathya Sai Institute of Higher Learning (Deemed to be University)<br>
+                    Prasanthi Nilayam - 515 134, Sri Sathya Sai District, Andhra Pradesh, India<br>
+                    <a href="https://www.sssihl.edu.in" style="color:#2563eb;text-decoration:none;">www.sssihl.edu.in</a> &nbsp;Ph: 08555 - 287191</p>
+                `,
+                actionButtons: [],
+            });
+        } else {
+            subject = `Convocation Application - Action Required - ${app.id}`;
+            const reasonBlock = reason
+                ? `<div style="margin:16px 0 0 0;background:#fef2f2;border:1px solid #fecaca;border-radius:8px;padding:14px;">
+                       <p style="margin:0 0 4px 0;font-weight:700;color:#991b1b;font-size:13px;text-transform:uppercase;letter-spacing:0.5px;">Reason for Non-Approval</p>
+                       <p style="margin:0;color:#7f1d1d;font-size:15px;">${escapeHtml(reason)}</p>
+                   </div>`
+                : '';
+            htmlBody = renderEmailTemplate({
+                title: 'Application Not Approved',
+                greeting: `Dear ${escapeHtml(app.applicant_name)},<br><br>Sairam!<br><br>Greetings from the Examinations Section, SSSIHL.`,
+                content: `We regret to inform you that your convocation registration could not be approved at this time. Please review the details below and contact us if you have any questions.${reasonBlock}`,
+                details: [
+                    { label: 'Application ID', value: appId },
+                    { label: 'Applicant Name', value: escapeHtml(app.applicant_name) },
+                    { label: 'Category', value: escapeHtml(app.category || 'N/A') },
+                    { label: 'Campus', value: escapeHtml(app.campus || 'N/A') },
+                    { label: 'Status', value: '<span style="color:#dc2626;font-weight:700;">NOT APPROVED</span>' },
+                    { label: 'Reviewed On', value: changedOn },
+                ],
+                importantNote: `<p style="margin:0;">For queries, please contact: <a href="mailto:coeoffice@sssihl.edu.in" style="color:#2563eb;text-decoration:none;">coeoffice@sssihl.edu.in</a></p>`,
+                actionButtons: [],
+            });
+        }
+
+        await sendEmail(accessToken, { to: app.student_email, subject, htmlBody });
+        console.log(`Convocation status email sent (${status}) for app ${app.id}`);
+    } catch (e) {
+        console.error('Failed to send convocation status email:', e);
+    }
 }
 
 async function handleConvocationUploadResponse(request, env, corsHeaders) {
@@ -3660,7 +3748,11 @@ async function handleConvocation2026(formData, request, env, corsHeaders) {
     const programme = formData.get('program') || '';
     const formType = formData.get('formType');
 
-    const appId = generateAppId('CONV');
+    const now = new Date();
+    const yy = String(now.getFullYear()).slice(-2);
+    const mm = String(now.getMonth() + 1).padStart(2, '0');
+    const regSuffix = (regNo || '').replace(/[^A-Z0-9]/gi, '').toUpperCase();
+    const appId = `CONV${yy}${mm}${regSuffix}`;
 
     await env.DB.prepare(
         `INSERT INTO applications (id, student_email, form_type, applicant_name, reg_no, campus, programme)
