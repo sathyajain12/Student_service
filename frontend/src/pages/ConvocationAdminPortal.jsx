@@ -1010,10 +1010,10 @@ export default function ConvocationAdminPortal() {
                                         <h3 style={{ margin: '0 0 16px', fontSize: '0.75rem', fontWeight: '800', color: '#111', letterSpacing: '0.08em', textTransform: 'uppercase' }}>Documents</h3>
                                         <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
                                             {appDetails.files.map(f => (
-                                                <div key={f.id} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '10px 14px', background: f.is_response ? '#f0fdf4' : '#f9fafb', borderRadius: '4px', border: `1px solid ${f.is_response ? '#bbf7d0' : '#e5e7eb'}` }}>
+                                                <div key={f.id} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '10px 14px', background: !!f.is_response ? '#f0fdf4' : '#f9fafb', borderRadius: '4px', border: `1px solid ${!!f.is_response ? '#bbf7d0' : '#e5e7eb'}` }}>
                                                     <div>
                                                         <span style={{ fontWeight: '600', color: '#111', fontSize: '0.88rem' }}>{f.file_name}</span>
-                                                        {f.is_response && <span style={{ marginLeft: '8px', fontSize: '0.7rem', color: '#10b981', fontWeight: '800', letterSpacing: '0.04em' }}>RESPONSE</span>}
+                                                        {!!f.is_response && <span style={{ marginLeft: '8px', fontSize: '0.7rem', color: '#10b981', fontWeight: '800', letterSpacing: '0.04em' }}>RESPONSE</span>}
                                                         {f.uploaded_by && <span style={{ marginLeft: '8px', fontSize: '0.75rem', color: '#9ca3af' }}>by {f.uploaded_by}</span>}
                                                     </div>
                                                     <button onClick={() => window.open(`${API_URL}/convocation-admin/file/${f.id}?token=${encodeURIComponent(token)}`, '_blank')}
@@ -1056,21 +1056,6 @@ export default function ConvocationAdminPortal() {
                                                 )}
                                             </>
                                         )}
-                                        <div style={{ borderTop: '1px solid #e5e7eb', paddingTop: '12px', marginTop: '4px' }}>
-                                            <p style={{ margin: '0 0 8px', fontSize: '0.75rem', fontWeight: '700', color: '#374151' }}>Upload Response Document</p>
-                                            <input type="file" accept=".pdf,.jpg,.jpeg,.png" onChange={e => setUploadFile(e.target.files[0] || null)}
-                                                style={{ width: '100%', fontSize: '0.8rem', marginBottom: '8px' }} />
-                                            <button onClick={handleUploadResponse} disabled={!uploadFile || !!actionLoading}
-                                                {...pressProps}
-                                                style={{ width: '100%', padding: '9px', background: '#111', color: '#fff', border: 'none', borderRadius: '4px', fontWeight: '700', cursor: uploadFile ? 'pointer' : 'not-allowed', opacity: uploadFile ? 1 : 0.4, fontSize: '0.85rem', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px', transition: 'transform 0.1s ease' }}>
-                                                <IconUpload size={14} color="#fff" /> {actionLoading === 'upload' ? 'Uploading…' : 'UPLOAD'}
-                                            </button>
-                                        </div>
-                                        <button onClick={() => setConfirmModal({ action: 'notify', label: 'Send notification email to candidate?' })} disabled={!!actionLoading}
-                                            {...pressProps}
-                                            style={{ padding: '10px', background: '#0ea5e9', color: '#fff', border: 'none', borderRadius: '4px', fontWeight: '700', cursor: 'pointer', fontSize: '0.85rem', letterSpacing: '0.03em', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px', transition: 'transform 0.1s ease' }}>
-                                            <IconMail size={15} color="#fff" /> NOTIFY CANDIDATE
-                                        </button>
                                     </div>
                                 </div>
                                 <div style={{ border: '1px solid #e5e7eb', borderRadius: '4px', padding: '16px', background: '#f9fafb' }}>
