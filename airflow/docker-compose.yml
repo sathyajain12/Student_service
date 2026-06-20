@@ -1,0 +1,27 @@
+version: "3.8"
+
+services:
+  airflow:
+    build: .
+    env_file:
+      - .env
+    environment:
+      - AIRFLOW__CORE__EXECUTOR=SequentialExecutor
+      - AIRFLOW__DATABASE__SQL_ALCHEMY_CONN=sqlite:////opt/airflow/airflow.db
+      - AIRFLOW__CORE__LOAD_EXAMPLES=False
+      - AIRFLOW__WEBSERVER__SECRET_KEY=convocation_airflow_secret
+      - AIRFLOW__WEBSERVER__WORKERS=1
+      - AIRFLOW__WEBSERVER__WEB_SERVER_MASTER_TIMEOUT=300
+      - AIRFLOW__WEBSERVER__WEB_SERVER_WORKER_TIMEOUT=300
+      - AIRFLOW__SCHEDULER__MIN_FILE_PROCESS_INTERVAL=60
+    volumes:
+      - ./dags:/opt/airflow/dags
+      - ./data:/opt/airflow/data
+      - airflow_db:/opt/airflow
+    ports:
+      - "8080:8080"
+    command: standalone
+    restart: unless-stopped
+
+volumes:
+  airflow_db:
