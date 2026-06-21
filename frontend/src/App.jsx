@@ -3,6 +3,7 @@ import Portal from './pages/Portal';
 import AdminPortal from './pages/AdminPortal';
 import FormBuilder from './components/FormBuilder';
 import ConvocationForm from './components/ConvocationForm';
+import ConvocationLanding from './components/ConvocationLanding';
 import ConvocationAdminPortal from './pages/ConvocationAdminPortal';
 import StatusTracker from './components/StatusTracker';
 import LoadingScreen from './components/LoadingScreen';
@@ -11,8 +12,15 @@ import { FORM_CONFIGS } from './formConfigs';
 import './index.css';
 
 function App() {
-  const [isLoading, setIsLoading] = useState(true);
-  const [view, setView] = useState('portal'); // 'portal' | 'instructions' | 'form' | 'status' | 'admin'
+  const getInitialView = () => {
+    const p = window.location.pathname;
+    if (p === '/admin') return 'admin';
+    if (p === '/convocation-admin') return 'convocation-admin';
+    if (p === '/convocation' || p === '/convocation/register') return 'convocation-landing';
+    return 'portal';
+  };
+  const [isLoading, setIsLoading] = useState(() => !['admin', 'convocation-admin', 'convocation-landing'].includes(getInitialView()));
+  const [view, setView] = useState(getInitialView); // 'portal' | 'instructions' | 'form' | 'status' | 'admin'
   const [currentFormId, setCurrentFormId] = useState(null);
   const [hiddenFormData, setHiddenFormData] = useState(null);
 
@@ -62,6 +70,13 @@ function App() {
       return;
     }
 
+    // Convocation landing page (and form)
+    if (window.location.pathname === '/convocation' || window.location.pathname === '/convocation/register') {
+      setView('convocation-landing');
+      setIsLoading(false);
+      return;
+    }
+
     // Check if URL has #track hash (from email link)
     if (window.location.hash.startsWith('#track')) {
       window.history.replaceState({ view: 'status', currentFormId: null, deliveryPreference: null }, '', window.location.hash);
@@ -86,6 +101,10 @@ function App() {
   const selectedConfig = FORM_CONFIGS[currentFormId];
 
   const handleSelectForm = (id) => {
+    if (id === 'convocation-2026') {
+      window.location.href = '/convocation';
+      return;
+    }
     navigateTo('instructions', id, null);
   };
 
@@ -108,6 +127,14 @@ function App() {
 
   if (view === 'convocation-admin') {
     return <ConvocationAdminPortal />;
+  }
+
+  if (view === 'convocation-landing') {
+    return (
+      <ConvocationLanding
+        onTrackStatus={() => navigateTo('status', null, null)}
+      />
+    );
   }
 
   return (

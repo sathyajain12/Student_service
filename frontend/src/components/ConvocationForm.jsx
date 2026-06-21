@@ -1,4 +1,4 @@
-import React, { useState, useRef } from 'react';
+import { useState, useRef, useEffect } from 'react';
 
 const API_URL = import.meta.env.VITE_API_URL || 'https://sssihl-student-services-backend.coeoffice.workers.dev';
 
@@ -60,7 +60,7 @@ const PROGRAMME_MAP = {
 
 const FORM_TYPE = 'SSSIHL - XLV Annual Convocation November 2026 - Registration Form';
 
-export default function ConvocationForm({ onCancel, onTrackStatus, hiddenData }) {
+export default function ConvocationForm({ onCancel, onTrackStatus, hiddenData, onStepChange }) {
     const [category, setCategory] = useState('');
     const isPhD = category === 'Doctor of Philosophy';
     const programmes = PROGRAMME_MAP[category] || [];
@@ -92,6 +92,16 @@ export default function ConvocationForm({ onCancel, onTrackStatus, hiddenData })
     const [lookupStatus, setLookupStatus] = useState('idle'); // idle | loading | found | not_found
     const [prefilledFields, setPrefilledFields] = useState([]);
 
+    useEffect(() => {
+        if (!hiddenData) return;
+        if (hiddenData.category) setCategory(hiddenData.category);
+        if (hiddenData.regNo) {
+            set('regNo', hiddenData.regNo);
+            lookupStudent(hiddenData.regNo);
+        }
+        set('attendanceType', hiddenData.inAbsentia ? 'In Absentia' : 'In Person');
+    }, []);  // eslint-disable-line react-hooks/exhaustive-deps
+
     const set = (field, value) => {
         setFormData(prev => ({ ...prev, [field]: value }));
         setFieldErrors(prev => ({ ...prev, [field]: '' }));
@@ -101,6 +111,11 @@ export default function ConvocationForm({ onCancel, onTrackStatus, hiddenData })
         if (!regNo || regNo.trim().length < 3) return;
         setLookupStatus('loading');
         try {
+            if (window.location.hostname === 'localhost') {
+                await new Promise(r => setTimeout(r, 600));
+                setLookupStatus('not_found');
+                return;
+            }
             const res = await fetch(`${API_URL}/convocation/student-lookup?regNo=${encodeURIComponent(regNo.trim())}`);
             const data = await res.json();
             if (data.found) {
@@ -148,12 +163,16 @@ export default function ConvocationForm({ onCancel, onTrackStatus, hiddenData })
 
     const handleNext = () => {
         if (!validateStep()) return;
-        setStep(s => s + 1);
+        const next = step + 1;
+        setStep(next);
+        onStepChange?.(next);
         window.scrollTo(0, 0);
     };
 
     const handleBack = () => {
-        setStep(s => Math.max(s - 1, 1));
+        const prev = Math.max(step - 1, 1);
+        setStep(prev);
+        onStepChange?.(prev);
         window.scrollTo(0, 0);
     };
 
@@ -161,6 +180,14 @@ export default function ConvocationForm({ onCancel, onTrackStatus, hiddenData })
         if (!validateStep()) return;
         setSubmitting(true);
         setError('');
+
+        if (window.location.hostname === 'localhost') {
+            await new Promise(r => setTimeout(r, 1200));
+            setAppId('DEV-' + Math.random().toString(36).slice(2, 9).toUpperCase());
+            setSubmitted(true);
+            setSubmitting(false);
+            return;
+        }
         try {
             const fd = new FormData();
             fd.append('formType', FORM_TYPE);
@@ -212,16 +239,63 @@ export default function ConvocationForm({ onCancel, onTrackStatus, hiddenData })
 
     if (submitted) {
         return (
-            <div style={{ textAlign: 'center', padding: '40px 20px' }}>
-                <div style={{ fontSize: '48px', marginBottom: '16px' }}>✅</div>
-                <h2 style={{ color: '#10b981', marginBottom: '12px' }}>Registration Submitted!</h2>
-                <p style={{ color: '#374151', marginBottom: '8px' }}>Your convocation registration has been received.</p>
-                <div style={{ background: '#f0fdf4', border: '1px solid #bbf7d0', borderRadius: '10px', padding: '16px', display: 'inline-block', margin: '16px 0' }}>
-                    <p style={{ margin: 0, fontWeight: '700', color: '#065f46', fontSize: '1.1rem' }}>Application ID: {appId}</p>
-                    <p style={{ margin: '4px 0 0', color: '#047857', fontSize: '0.85rem' }}>Save this ID to track your application status.</p>
+            <div style={{
+                position: 'fixed', inset: 0, zIndex: 300,
+                background: 'rgba(10,0,0,0.65)',
+                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                padding: '24px',
+                fontFamily: "'Inter', -apple-system, sans-serif",
+                animation: 'fadeIn 0.3s ease both',
+            }}>
+                <style>{`@keyframes fadeIn{from{opacity:0}to{opacity:1}} @keyframes slideUp{from{opacity:0;transform:translateY(24px)}to{opacity:1;transform:translateY(0)}}`}</style>
+                <div style={{
+                    background: '#fff', borderRadius: '20px', maxWidth: '440px', width: '100%',
+                    boxShadow: '0 32px 80px rgba(0,0,0,0.3)',
+                    overflow: 'hidden',
+                    animation: 'slideUp 0.4s cubic-bezier(0.22,1,0.36,1) both',
+                }}>
+                    {/* Maroon top band */}
+                    <div style={{ background: '#7f1d1d', padding: '20px 28px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                            <img src="/SSSIHL-Logo_White.png" alt="SSSIHL" style={{ width: '32px', height: '32px', objectFit: 'contain' }} />
+                            <p style={{ color: '#fff', fontWeight: '700', fontSize: '0.82rem', margin: 0 }}>Sri Sathya Sai Institute of Higher Learning</p>
+                        </div>
+                        <button onClick={onCancel} style={{ background: 'rgba(255,255,255,0.15)', border: 'none', color: '#fff', width: '28px', height: '28px', borderRadius: '50%', cursor: 'pointer', fontSize: '1rem', lineHeight: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>✕</button>
+                    </div>
+
+                    <div style={{ padding: '32px 28px' }}>
+                        {/* Success indicator */}
+                        <div style={{ textAlign: 'center', marginBottom: '24px' }}>
+                            <div style={{ width: '52px', height: '52px', background: '#f0fdf4', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 12px', fontSize: '24px' }}>✅</div>
+                            <h2 style={{ color: '#0f172a', fontSize: '1.15rem', fontWeight: '700', margin: '0 0 4px' }}>Registration Submitted!</h2>
+                            <p style={{ color: '#64748b', fontSize: '0.82rem', margin: 0 }}>Your convocation registration has been received.</p>
+                        </div>
+
+                        {/* App ID */}
+                        <div style={{ background: '#f8fafc', border: '1px solid #e2e8f0', borderRadius: '10px', padding: '12px 16px', textAlign: 'center', marginBottom: '24px' }}>
+                            <p style={{ color: '#64748b', fontSize: '0.72rem', margin: '0 0 3px', letterSpacing: '0.06em' }}>APPLICATION ID</p>
+                            <p style={{ color: '#0f172a', fontWeight: '800', fontSize: '1.1rem', margin: 0, letterSpacing: '0.04em' }}>{appId}</p>
+                            <p style={{ color: '#94a3b8', fontSize: '0.7rem', margin: '4px 0 0' }}>Save this to track your status</p>
+                        </div>
+
+                        {/* Quote */}
+                        <div style={{ borderTop: '1px solid #f1f5f9', borderBottom: '1px solid #f1f5f9', padding: '20px 0', textAlign: 'center', marginBottom: '24px' }}>
+                            <p style={{ color: '#991b1b', fontSize: '0.6rem', fontWeight: '700', letterSpacing: '0.12em', margin: '0 0 10px' }}>❝</p>
+                            <p style={{ color: '#1e293b', fontSize: '1rem', fontWeight: '600', fontStyle: 'italic', lineHeight: 1.55, margin: '0 0 14px' }}>
+                                My students are My only property
+                            </p>
+                            <p style={{ color: '#991b1b', fontWeight: '700', fontSize: '0.78rem', margin: '0 0 2px' }}>Sri Sathya Sai Baba</p>
+                            <p style={{ color: '#64748b', fontSize: '0.7rem', margin: 0 }}>Revered Founder Chancellor, SSSIHL</p>
+                        </div>
+
+                        <button
+                            onClick={onTrackStatus}
+                            style={{ width: '100%', background: '#991b1b', color: '#fff', border: 'none', borderRadius: '10px', padding: '13px', fontWeight: '700', fontSize: '0.9rem', cursor: 'pointer' }}
+                        >
+                            Track Application Status
+                        </button>
+                    </div>
                 </div>
-                <br />
-                <button onClick={onTrackStatus} className="btn-primary" style={{ marginTop: '12px' }}>Track Application Status</button>
             </div>
         );
     }
@@ -230,9 +304,6 @@ export default function ConvocationForm({ onCancel, onTrackStatus, hiddenData })
         <div>
             {/* Header */}
             <div style={{ marginBottom: '28px' }}>
-                <button onClick={onCancel} style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#6366f1', display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '12px', fontSize: '0.9rem', fontWeight: '600', padding: 0 }}>
-                    ← Back
-                </button>
                 <h2 style={{ fontSize: '1.4rem', fontWeight: '700', color: '#0f172a', marginBottom: '4px' }}>
                     SSSIHL - XLV Annual Convocation November 2026
                 </h2>
@@ -246,10 +317,10 @@ export default function ConvocationForm({ onCancel, onTrackStatus, hiddenData })
                         <div style={{
                             width: '26px', height: '26px', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center',
                             fontSize: '0.75rem', fontWeight: '700',
-                            background: i < currentStepIndex ? '#10b981' : i === currentStepIndex ? '#4F46E5' : '#e2e8f0',
+                            background: i < currentStepIndex ? '#10b981' : i === currentStepIndex ? '#991b1b' : '#e2e8f0',
                             color: i <= currentStepIndex ? '#fff' : '#94a3b8',
                         }}>{i < currentStepIndex ? '✓' : i + 1}</div>
-                        <span style={{ fontSize: '0.82rem', fontWeight: i === currentStepIndex ? '700' : '400', color: i === currentStepIndex ? '#4F46E5' : '#64748b' }}>{title}</span>
+                        <span style={{ fontSize: '0.82rem', fontWeight: i === currentStepIndex ? '700' : '400', color: i === currentStepIndex ? '#991b1b' : '#64748b' }}>{title}</span>
                         {i < stepTitles.length - 1 && <span style={{ color: '#e2e8f0', marginLeft: '4px' }}>›</span>}
                     </div>
                 ))}
@@ -263,19 +334,25 @@ export default function ConvocationForm({ onCancel, onTrackStatus, hiddenData })
                         <h3 style={{ marginBottom: '20px', color: '#1e293b' }}>Registration & Academic Details</h3>
                         <div style={fieldWrap}>
                             <label style={labelStyle}>Registered Number <span style={{ color: '#ef4444' }}>*</span></label>
-                            <input
-                                type="text"
-                                value={formData.regNo}
-                                onChange={e => { set('regNo', e.target.value); setLookupStatus('idle'); setPrefilledFields([]); setCategory(''); }}
-                                onBlur={e => lookupStudent(e.target.value)}
-                                style={inputStyle('regNo')}
-                                placeholder="Enter your registered number"
-                            />
+                            {hiddenData?.regNo ? (
+                                <div style={{ padding: '10px 12px', borderRadius: '8px', border: '1.5px solid #6ee7b7', background: '#f0fdf4', fontSize: '0.95rem', color: '#065f46', fontWeight: '600' }}>
+                                    {formData.regNo} <span style={{ fontWeight: '400', color: '#059669', fontSize: '0.82rem' }}>✓ pre-filled</span>
+                                </div>
+                            ) : (
+                                <input
+                                    type="text"
+                                    value={formData.regNo}
+                                    onChange={e => { set('regNo', e.target.value); setLookupStatus('idle'); setPrefilledFields([]); setCategory(''); }}
+                                    onBlur={e => lookupStudent(e.target.value)}
+                                    style={inputStyle('regNo')}
+                                    placeholder="Enter your registered number"
+                                />
+                            )}
                             {lookupStatus === 'loading' && (
                                 <div style={{ display: 'flex', alignItems: 'center', gap: '8px', margin: '8px 0 0' }}>
                                     <style>{`@keyframes cfSpin{to{transform:rotate(360deg)}}@keyframes cfPulse{0%,100%{opacity:1}50%{opacity:0.4}}`}</style>
-                                    <div style={{ width: '16px', height: '16px', border: '2px solid #e2e8f0', borderTopColor: '#4F46E5', borderRadius: '50%', animation: 'cfSpin 0.7s linear infinite', flexShrink: 0 }} />
-                                    <span style={{ color: '#4F46E5', fontSize: '0.82rem', fontWeight: '600', animation: 'cfPulse 1.2s ease infinite' }}>Fetching student record…</span>
+                                    <div style={{ width: '16px', height: '16px', border: '2px solid #e2e8f0', borderTopColor: '#991b1b', borderRadius: '50%', animation: 'cfSpin 0.7s linear infinite', flexShrink: 0 }} />
+                                    <span style={{ color: '#991b1b', fontSize: '0.82rem', fontWeight: '600', animation: 'cfPulse 1.2s ease infinite' }}>Fetching student record…</span>
                                 </div>
                             )}
                             {lookupStatus === 'found'     && <p style={{ color: '#059669', fontSize: '0.8rem', margin: '6px 0 0', fontWeight: '600' }}>✓ Student record found — fields have been pre-filled</p>}
@@ -329,18 +406,20 @@ export default function ConvocationForm({ onCancel, onTrackStatus, hiddenData })
                             <input type="email" value={formData.email} onChange={e => set('email', e.target.value)} style={inputStyle('email')} placeholder="Your active email address" />
                             {fieldErrors.email && <p style={errorStyle}>{fieldErrors.email}</p>}
                         </div>
-                        <div style={fieldWrap}>
-                            <label style={labelStyle}>Attendance Type <span style={{ color: '#ef4444' }}>*</span></label>
-                            <div style={{ display: 'flex', gap: '20px', marginTop: '6px' }}>
-                                {['In Person', 'In Absentia'].map(opt => (
-                                    <label key={opt} style={{ display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer', fontWeight: '500', color: '#374151' }}>
-                                        <input type="radio" name="attendanceType" value={opt} checked={formData.attendanceType === opt} onChange={e => set('attendanceType', e.target.value)} />
-                                        {opt}
-                                    </label>
-                                ))}
+                        {!hiddenData?.inAbsentia && (
+                            <div style={fieldWrap}>
+                                <label style={labelStyle}>Attendance Type <span style={{ color: '#ef4444' }}>*</span></label>
+                                <div style={{ display: 'flex', gap: '20px', marginTop: '6px' }}>
+                                    {['In Person', 'In Absentia'].map(opt => (
+                                        <label key={opt} style={{ display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer', fontWeight: '500', color: '#374151' }}>
+                                            <input type="radio" name="attendanceType" value={opt} checked={formData.attendanceType === opt} onChange={e => set('attendanceType', e.target.value)} />
+                                            {opt}
+                                        </label>
+                                    ))}
+                                </div>
+                                {fieldErrors.attendanceType && <p style={errorStyle}>{fieldErrors.attendanceType}</p>}
                             </div>
-                            {fieldErrors.attendanceType && <p style={errorStyle}>{fieldErrors.attendanceType}</p>}
-                        </div>
+                        )}
                     </div>
                 )}
 
@@ -415,9 +494,9 @@ export default function ConvocationForm({ onCancel, onTrackStatus, hiddenData })
                     <button onClick={handleBack} className="btn-secondary" style={{ minWidth: '100px' }}>← Back</button>
                 )}
                 {step < 3 ? (
-                    <button onClick={handleNext} className="btn-primary" style={{ flexGrow: 1 }}>Next →</button>
+                    <button onClick={handleNext} className="btn-primary" style={{ flexGrow: 1, background: '#991b1b', boxShadow: '0 4px 12px rgba(153,27,27,0.3)' }}>Next →</button>
                 ) : (
-                    <button onClick={handleSubmit} disabled={submitting} className="btn-primary" style={{ flexGrow: 1, opacity: submitting ? 0.7 : 1 }}>
+                    <button onClick={handleSubmit} disabled={submitting} className="btn-primary" style={{ flexGrow: 1, background: '#991b1b', boxShadow: '0 4px 12px rgba(153,27,27,0.3)', opacity: submitting ? 0.7 : 1 }}>
                         {submitting ? 'Submitting…' : 'Submit Registration'}
                     </button>
                 )}
