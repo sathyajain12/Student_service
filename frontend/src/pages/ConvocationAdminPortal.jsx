@@ -130,10 +130,10 @@ function StatusBadge({ status }) {
 function StatCard({ label, IconComp, iconColor, value }) {
     const displayed = useCountUp(typeof value === 'number' ? value : 0);
     return (
-        <div style={{ background: '#fff', border: '1px solid #e5e7eb', padding: '20px 24px', display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+        <div style={{ background: '#dde1e7', borderRadius: '16px', padding: '20px 24px', display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', boxShadow: '6px 6px 12px #b2bec9, -6px -6px 12px #ffffff' }}>
             <div>
-                <p style={{ margin: '0 0 12px', fontSize: '0.72rem', fontWeight: '600', color: '#6b7280', letterSpacing: '0.08em', textTransform: 'uppercase' }}>{label}</p>
-                <p style={{ margin: 0, fontSize: '2.4rem', fontWeight: '700', color: '#111', lineHeight: 1 }}>{typeof value === 'number' ? displayed : value}</p>
+                <p style={{ margin: '0 0 12px', fontSize: '0.72rem', fontWeight: '600', color: '#718096', letterSpacing: '0.08em', textTransform: 'uppercase' }}>{label}</p>
+                <p style={{ margin: 0, fontSize: '2.6rem', fontWeight: '700', color: '#2d3748', lineHeight: 1 }}>{typeof value === 'number' ? displayed : value}</p>
             </div>
             <IconComp size={22} color={iconColor} />
         </div>
@@ -145,6 +145,68 @@ const pressProps = {
     onMouseUp: e => { e.currentTarget.style.transform = 'scale(1)'; },
     onMouseLeave: e => { e.currentTarget.style.transform = 'scale(1)'; },
 };
+
+function NeuSelect({ value, onChange, options, placeholder }) {
+    const [open, setOpen] = useState(false);
+    const ref = React.useRef(null);
+
+    useEffect(() => {
+        const handler = (e) => { if (ref.current && !ref.current.contains(e.target)) setOpen(false); };
+        document.addEventListener('mousedown', handler);
+        return () => document.removeEventListener('mousedown', handler);
+    }, []);
+
+    const selected = options.find(o => o.value === value);
+
+    return (
+        <div ref={ref} style={{ position: 'relative', userSelect: 'none' }}>
+            <button
+                type="button"
+                onClick={() => setOpen(o => !o)}
+                style={{
+                    display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '10px',
+                    padding: '10px 14px', border: 'none', borderRadius: '12px', cursor: 'pointer',
+                    background: '#dde1e7', color: value === (options[0]?.value) ? '#718096' : '#2d3748',
+                    fontWeight: value === (options[0]?.value) ? '500' : '600', fontSize: '0.88rem',
+                    minWidth: '140px', whiteSpace: 'nowrap',
+                    boxShadow: open
+                        ? 'inset 4px 4px 8px #b2bec9, inset -4px -4px 8px #ffffff'
+                        : '4px 4px 8px #b2bec9, -4px -4px 8px #ffffff',
+                    transition: 'box-shadow 0.2s',
+                }}>
+                <span>{selected?.label || placeholder}</span>
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#718096" strokeWidth="2.5" style={{ transform: open ? 'rotate(180deg)' : 'rotate(0)', transition: 'transform 0.2s', flexShrink: 0 }}>
+                    <polyline points="6 9 12 15 18 9" />
+                </svg>
+            </button>
+            {open && (
+                <div style={{
+                    position: 'absolute', top: 'calc(100% + 8px)', left: 0, zIndex: 999, minWidth: '100%',
+                    background: '#dde1e7', borderRadius: '14px', overflow: 'hidden',
+                    boxShadow: '10px 10px 20px #b2bec9, -10px -10px 20px #ffffff',
+                    animation: 'fadeInUp 150ms ease forwards',
+                }}>
+                    {options.map(o => (
+                        <div key={o.value}
+                            onClick={() => { onChange(o.value); setOpen(false); }}
+                            style={{
+                                padding: '10px 16px', fontSize: '0.88rem', cursor: 'pointer', whiteSpace: 'nowrap',
+                                fontWeight: o.value === value ? '700' : '400',
+                                color: o.value === value ? '#1e40af' : '#2d3748',
+                                background: o.value === value ? 'rgba(30,64,175,0.06)' : 'transparent',
+                                transition: 'background 0.15s',
+                            }}
+                            onMouseEnter={e => { if (o.value !== value) e.currentTarget.style.background = 'rgba(178,190,201,0.3)'; }}
+                            onMouseLeave={e => { e.currentTarget.style.background = o.value === value ? 'rgba(30,64,175,0.06)' : 'transparent'; }}
+                        >
+                            {o.label}
+                        </div>
+                    ))}
+                </div>
+            )}
+        </div>
+    );
+}
 
 export default function ConvocationAdminPortal() {
     const [token, setToken] = useState(localStorage.getItem(TOKEN_KEY) || '');
@@ -459,7 +521,7 @@ export default function ConvocationAdminPortal() {
                     .login-container {
                         min-height: 100vh;
                         display: flex;
-                        background-color: #ffffff;
+                        background-color: #dde1e7;
                         font-family: 'Inter', sans-serif;
                     }
 
@@ -490,7 +552,7 @@ export default function ConvocationAdminPortal() {
                         display: flex;
                         align-items: center;
                         justify-content: center;
-                        background-color: #f8fafc;
+                        background-color: #dde1e7;
                         padding: 40px;
                         position: relative;
                     }
@@ -512,21 +574,21 @@ export default function ConvocationAdminPortal() {
                         width: 80px;
                         height: 80px;
                         border-radius: 50%;
-                        background: #ffffff;
+                        background: #dde1e7;
                         display: flex;
                         align-items: center;
                         justify-content: center;
                         margin: 0 auto 24px;
                         padding: 12px;
-                        box-shadow: 0 10px 25px -5px rgba(67, 56, 202, 0.15), 0 8px 10px -6px rgba(67, 56, 202, 0.1);
-                        border: 1px solid rgba(226, 232, 240, 0.8);
+                        box-shadow: 8px 8px 16px #b2bec9, -8px -8px 16px #ffffff;
+                        border: none;
                     }
 
                     .login-title {
                         font-family: 'Outfit', sans-serif;
                         font-size: 2.2rem;
                         font-weight: 700;
-                        color: #1e1b4b;
+                        color: #1e40af;
                         margin: 0 0 6px;
                         text-align: center;
                         letter-spacing: -0.02em;
@@ -559,14 +621,14 @@ export default function ConvocationAdminPortal() {
 
                     .login-forgot-link {
                         font-size: 0.82rem;
-                        color: #4f46e5;
+                        color: #1e40af;
                         text-decoration: none;
                         font-weight: 600;
                         transition: color 0.2s ease;
                     }
 
                     .login-forgot-link:hover {
-                        color: #4338ca;
+                        color: #1d4ed8;
                     }
 
                     .login-input-wrapper {
@@ -586,22 +648,22 @@ export default function ConvocationAdminPortal() {
                         width: 100%;
                         padding: 13px 44px 13px 48px;
                         border-radius: 12px;
-                        border: 1.5px solid #e2e8f0;
+                        border: none;
                         font-size: 0.95rem;
                         box-sizing: border-box;
                         outline: none;
                         transition: all 0.2s ease;
-                        background: #ffffff;
-                        color: #1e293b;
+                        background: #dde1e7;
+                        color: #2d3748;
+                        box-shadow: inset 5px 5px 10px #b2bec9, inset -5px -5px 10px #ffffff;
                     }
 
                     .login-input:focus {
-                        border-color: #4f46e5;
-                        box-shadow: 0 0 0 4px rgba(79, 70, 229, 0.1);
+                        box-shadow: inset 6px 6px 12px #b2bec9, inset -6px -6px 12px #ffffff;
                     }
 
                     .login-input:focus + .login-input-icon {
-                        color: #4f46e5;
+                        color: #1e40af;
                     }
 
                     .login-password-toggle {
@@ -619,7 +681,7 @@ export default function ConvocationAdminPortal() {
                     }
 
                     .login-password-toggle:hover {
-                        color: #4f46e5;
+                        color: #b45309;
                     }
 
                     .login-checkbox-row {
@@ -641,15 +703,15 @@ export default function ConvocationAdminPortal() {
                     .login-checkbox {
                         width: 16px;
                         height: 16px;
-                        accent-color: #4f46e5;
+                        accent-color: #1e40af;
                         cursor: pointer;
                     }
 
                     .login-submit-button {
                         width: 100%;
                         padding: 14px;
-                        background: #4f46e5;
-                        color: #ffffff;
+                        background: #dde1e7;
+                        color: #1e40af;
                         border: none;
                         border-radius: 12px;
                         font-size: 1rem;
@@ -659,14 +721,16 @@ export default function ConvocationAdminPortal() {
                         align-items: center;
                         justify-content: center;
                         gap: 8px;
-                        box-shadow: 0 4px 12px rgba(79, 70, 229, 0.2);
+                        box-shadow: 6px 6px 12px #b2bec9, -6px -6px 12px #ffffff;
                         transition: all 0.2s ease;
                     }
 
                     .login-submit-button:hover:not(:disabled) {
-                        background: #4338ca;
-                        transform: translateY(-1px);
-                        box-shadow: 0 6px 16px rgba(79, 70, 229, 0.3);
+                        box-shadow: 8px 8px 16px #b2bec9, -8px -8px 16px #ffffff;
+                    }
+
+                    .login-submit-button:active:not(:disabled) {
+                        box-shadow: inset 4px 4px 8px #b2bec9, inset -4px -4px 8px #ffffff;
                     }
 
                     .login-submit-button:active:not(:disabled) {
@@ -700,7 +764,7 @@ export default function ConvocationAdminPortal() {
                 ` }} />
 
                 <div className="login-left-panel">
-                    <div className="login-left-overlay" />
+                    <div className="login-left-overlay" style={{ background: 'linear-gradient(135deg, rgba(30,64,175,0.78) 0%, rgba(15,23,42,0.6) 100%)' }} />
                     <div style={{
                         position: 'absolute',
                         bottom: 0,
@@ -803,9 +867,9 @@ export default function ConvocationAdminPortal() {
     const navBtn = (id, label) => (
         <button key={id} onClick={() => { setActiveNav(id); setSelectedApp(null); setAppDetails(null); }}
             style={{
-                background: 'none', border: 'none', cursor: 'pointer', padding: '20px 4px', fontSize: '0.9rem', fontWeight: activeNav === id ? '600' : '400',
-                color: activeNav === id ? '#111' : '#888',
-                borderBottom: activeNav === id ? '2px solid #111' : '2px solid transparent'
+                background: 'none', border: 'none', cursor: 'pointer', padding: '20px 4px', fontSize: '0.9rem', fontWeight: activeNav === id ? '700' : '400',
+                color: activeNav === id ? '#1e40af' : '#718096',
+                borderBottom: activeNav === id ? '2px solid #1e40af' : '2px solid transparent'
             }}>
             {label}
         </button>
@@ -823,39 +887,48 @@ export default function ConvocationAdminPortal() {
 
     // ─── Main portal ─────────────────────────────────────────────────────────
     return (
-        <div style={{ minHeight: '100vh', background: '#fff', fontFamily: "'Inter', system-ui, sans-serif", display: 'flex', flexDirection: 'column' }}>
+        <div style={{ minHeight: '100vh', background: '#dde1e7', fontFamily: "'Inter', system-ui, sans-serif", display: 'flex', flexDirection: 'column' }}>
             <style>{ANIM_STYLES}</style>
 
             {/* Top Navbar */}
-            <header style={{ borderBottom: '1px solid #e5e7eb', padding: '0 32px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', background: '#fff', position: 'sticky', top: 0, zIndex: 100 }}>
+            <header style={{ padding: '0 32px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', background: '#dde1e7', position: 'sticky', top: 0, zIndex: 100, boxShadow: '0 4px 12px #b2bec9' }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '40px' }}>
-                    <span style={{ fontWeight: '800', fontSize: '1rem', letterSpacing: '0.04em', color: '#111', whiteSpace: 'nowrap' }}>CONVOCATION ADMIN</span>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                        <div style={{ width: '38px', height: '38px', borderRadius: '50%', background: '#dde1e7', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '4px 4px 8px #b2bec9, -4px -4px 8px #ffffff', padding: '5px', flexShrink: 0 }}>
+                            <img src="/logo.png" alt="SSSIHL" style={{ width: '100%', height: '100%', objectFit: 'contain' }} />
+                        </div>
+                        <div>
+                            <div style={{ fontWeight: '800', fontSize: '0.95rem', letterSpacing: '0.04em', color: '#1e40af', whiteSpace: 'nowrap', lineHeight: 1.2 }}>CONVOCATION ADMIN</div>
+                            <div style={{ fontSize: '0.68rem', color: '#718096', fontWeight: '500', letterSpacing: '0.03em', lineHeight: 1.2 }}>SSSIHL · XLV Annual Convocation 2026</div>
+                        </div>
+                    </div>
                     <nav style={{ display: 'flex', gap: '28px' }}>
                         {navBtn('applications', 'Applications')}
                     </nav>
                 </div>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
-                    <button onClick={fetchData} title="Refresh" style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#6b7280', padding: '6px', display: 'flex', alignItems: 'center' }}>
-                        <span style={{ display: 'inline-flex', animation: isRefreshing ? 'spin 0.8s linear infinite' : 'none' }}><IconRefresh size={18} /></span>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                    <button onClick={fetchData} title="Refresh" style={{ background: '#dde1e7', border: 'none', cursor: 'pointer', color: '#718096', padding: '8px', borderRadius: '10px', display: 'flex', alignItems: 'center', boxShadow: '3px 3px 6px #b2bec9, -3px -3px 6px #ffffff' }}>
+                        <span style={{ display: 'inline-flex', animation: isRefreshing ? 'spin 0.8s linear infinite' : 'none' }}><IconRefresh size={16} color="#718096" /></span>
                     </button>
-                    <button onClick={handleExport} title="Export CSV" style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#6b7280', padding: '6px', display: 'flex', alignItems: 'center' }}><IconDownload size={18} /></button>
+                    <button onClick={handleExport} title="Export CSV" style={{ background: '#dde1e7', border: 'none', cursor: 'pointer', color: '#718096', padding: '8px', borderRadius: '10px', display: 'flex', alignItems: 'center', boxShadow: '3px 3px 6px #b2bec9, -3px -3px 6px #ffffff' }}><IconDownload size={16} color="#718096" /></button>
                     <button
                         onClick={handleToggleForm}
                         disabled={togglingForm}
                         style={{
-                            padding: '6px 14px', borderRadius: '6px', fontWeight: '700', fontSize: '0.78rem',
+                            padding: '7px 14px', borderRadius: '10px', fontWeight: '700', fontSize: '0.78rem',
                             cursor: togglingForm ? 'not-allowed' : 'pointer', opacity: togglingForm ? 0.7 : 1,
-                            border: formEnabled ? '1.5px solid #dc2626' : '1.5px solid #16a34a',
-                            background: formEnabled ? '#fef2f2' : '#f0fdf4',
+                            border: 'none',
+                            background: '#dde1e7',
                             color: formEnabled ? '#dc2626' : '#16a34a',
                             letterSpacing: '0.04em', transition: 'all 0.2s',
+                            boxShadow: '3px 3px 6px #b2bec9, -3px -3px 6px #ffffff',
                         }}>
                         {togglingForm ? '…' : formEnabled ? 'DISABLE FORM' : 'ENABLE FORM'}
                     </button>
-                    <div style={{ width: '32px', height: '32px', borderRadius: '50%', background: '#d1d5db', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '0.85rem', fontWeight: '700', color: '#374151' }}>
+                    <div style={{ width: '34px', height: '34px', borderRadius: '50%', background: '#dde1e7', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '0.85rem', fontWeight: '700', color: '#1e40af', boxShadow: '3px 3px 6px #b2bec9, -3px -3px 6px #ffffff' }}>
                         {username?.[0]?.toUpperCase() || 'A'}
                     </div>
-                    <button onClick={handleLogout} style={{ background: 'none', border: 'none', cursor: 'pointer', fontWeight: '700', fontSize: '0.85rem', color: '#111', letterSpacing: '0.04em' }}>LOGOUT</button>
+                    <button onClick={handleLogout} style={{ background: 'none', border: 'none', cursor: 'pointer', fontWeight: '700', fontSize: '0.85rem', color: '#718096', letterSpacing: '0.04em' }}>LOGOUT</button>
                 </div>
             </header>
 
@@ -865,59 +938,60 @@ export default function ConvocationAdminPortal() {
                 {activeNav === 'applications' && !selectedApp && (
                     <>
                         {/* Stats row */}
-                        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(5, 1fr)', gap: '0', marginBottom: '28px', border: '1px solid #e5e7eb' }}>
-                            <StatCard label="TOTAL" value={stats?.total ?? 0} IconComp={IconBarChart} iconColor="#6b7280" />
-                            <div style={{ borderLeft: '1px solid #e5e7eb' }}><StatCard label="PENDING" value={stats?.byStatus?.PENDING ?? 0} IconComp={IconClipboard} iconColor="#f97316" /></div>
-                            <div style={{ borderLeft: '1px solid #e5e7eb' }}><StatCard label="APPROVED" value={stats?.byStatus?.APPROVED ?? 0} IconComp={IconCheckCircle} iconColor="#10b981" /></div>
-                            <div style={{ borderLeft: '1px solid #e5e7eb' }}><StatCard label="REJECTED" value={stats?.byStatus?.REJECTED ?? 0} IconComp={IconXCircle} iconColor="#ef4444" /></div>
-                            <div style={{ borderLeft: '1px solid #e5e7eb' }}><StatCard label="NOTIFIED" value={stats?.byStatus?.DISPATCHED ?? 0} IconComp={IconBell} iconColor="#0ea5e9" /></div>
+                        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(5, 1fr)', gap: '16px', marginBottom: '28px' }}>
+                            <StatCard label="TOTAL" value={stats?.total ?? 0} IconComp={IconBarChart} iconColor="#1e40af" />
+                            <StatCard label="PENDING" value={stats?.byStatus?.PENDING ?? 0} IconComp={IconClipboard} iconColor="#b45309" />
+                            <StatCard label="APPROVED" value={stats?.byStatus?.APPROVED ?? 0} IconComp={IconCheckCircle} iconColor="#15803d" />
+                            <StatCard label="REJECTED" value={stats?.byStatus?.REJECTED ?? 0} IconComp={IconXCircle} iconColor="#dc2626" />
+                            <StatCard label="NOTIFIED" value={stats?.byStatus?.DISPATCHED ?? 0} IconComp={IconBell} iconColor="#6d28d9" />
                         </div>
 
                         {/* Search + filters + status tabs */}
                         <div style={{ display: 'flex', gap: '12px', alignItems: 'center', marginBottom: '20px', flexWrap: 'wrap' }}>
                             <div style={{ position: 'relative', flex: 1, minWidth: '260px' }}>
-                                <span style={{ position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)', color: '#9ca3af', display: 'flex' }}><IconSearch size={15} color="#9ca3af" /></span>
+                                <span style={{ position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)', color: '#718096', display: 'flex' }}><IconSearch size={15} color="#718096" /></span>
                                 <input value={searchQuery} onChange={e => { setSearchQuery(e.target.value); setCurrentPage(1); }} placeholder="Quick search applications..."
-                                    style={{ width: '100%', padding: '9px 12px 9px 36px', border: '1px solid #d1d5db', borderRadius: '4px', fontSize: '0.88rem', outline: 'none', boxSizing: 'border-box' }} />
+                                    style={{ width: '100%', padding: '10px 12px 10px 36px', border: 'none', borderRadius: '12px', fontSize: '0.88rem', outline: 'none', boxSizing: 'border-box', background: '#dde1e7', color: '#2d3748', boxShadow: 'inset 4px 4px 8px #b2bec9, inset -4px -4px 8px #ffffff' }} />
                             </div>
-                            <select value={categoryFilter} onChange={e => { setCategoryFilter(e.target.value); setProgrammeFilter('ALL'); setCurrentPage(1); }}
-                                style={{
-                                    padding: '9px 32px 9px 12px', border: '1px solid #d1d5db', borderRadius: '4px', fontSize: '0.88rem', fontWeight: '600', color: '#374151', background: '#fff', cursor: 'pointer', appearance: 'none',
-                                    backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%236b7280' stroke-width='2'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E")`,
-                                    backgroundRepeat: 'no-repeat', backgroundPosition: 'right 10px center'
-                                }}>
-                                <option value="ALL">CATEGORIES</option>
-                                {CATEGORIES.map(c => <option key={c} value={c}>{c}</option>)}
-                            </select>
+                            <NeuSelect
+                                value={categoryFilter}
+                                onChange={v => { setCategoryFilter(v); setProgrammeFilter('ALL'); setCurrentPage(1); }}
+                                placeholder="CATEGORIES"
+                                options={[
+                                    { value: 'ALL', label: 'CATEGORIES' },
+                                    ...CATEGORIES.map(c => ({ value: c, label: c }))
+                                ]}
+                            />
                             {categoryFilter !== 'ALL' && (PROGRAMME_MAP[categoryFilter]?.length > 0) && (
-                                <div style={{ animation: 'slideDown 250ms ease forwards', overflow: 'hidden' }}>
-                                    <select value={programmeFilter} onChange={e => { setProgrammeFilter(e.target.value); setCurrentPage(1); }}
-                                        style={{
-                                            padding: '9px 32px 9px 12px', border: '1px solid #d1d5db', borderRadius: '4px', fontSize: '0.88rem', fontWeight: '600', color: '#374151', background: '#fff', cursor: 'pointer', appearance: 'none',
-                                            backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%236b7280' stroke-width='2'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E")`,
-                                            backgroundRepeat: 'no-repeat', backgroundPosition: 'right 10px center', maxWidth: '260px'
-                                        }}>
-                                        <option value="ALL">ALL PROGRAMMES</option>
-                                        {PROGRAMME_MAP[categoryFilter].map(p => <option key={p} value={p}>{p}</option>)}
-                                    </select>
-                                </div>
+                                <NeuSelect
+                                    value={programmeFilter}
+                                    onChange={v => { setProgrammeFilter(v); setCurrentPage(1); }}
+                                    placeholder="ALL PROGRAMMES"
+                                    options={[
+                                        { value: 'ALL', label: 'ALL PROGRAMMES' },
+                                        ...PROGRAMME_MAP[categoryFilter].map(p => ({ value: p, label: p }))
+                                    ]}
+                                />
                             )}
-                            <select value={campusFilter} onChange={e => { setCampusFilter(e.target.value); setCurrentPage(1); }}
-                                style={{
-                                    padding: '9px 32px 9px 12px', border: '1px solid #d1d5db', borderRadius: '4px', fontSize: '0.88rem', fontWeight: '600', color: '#374151', background: '#fff', cursor: 'pointer', appearance: 'none',
-                                    backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%236b7280' stroke-width='2'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E")`,
-                                    backgroundRepeat: 'no-repeat', backgroundPosition: 'right 10px center'
-                                }}>
-                                <option value="ALL">CAMPUSES</option>
-                                {CAMPUSES.map(c => <option key={c} value={c}>{c.replace(' Campus', '')}</option>)}
-                            </select>
-                            <div style={{ display: 'flex', border: '1px solid #d1d5db', borderRadius: '4px', overflow: 'hidden' }}>
+                            <NeuSelect
+                                value={campusFilter}
+                                onChange={v => { setCampusFilter(v); setCurrentPage(1); }}
+                                placeholder="CAMPUSES"
+                                options={[
+                                    { value: 'ALL', label: 'CAMPUSES' },
+                                    ...CAMPUSES.map(c => ({ value: c, label: c.replace(' Campus', '') }))
+                                ]}
+                            />
+                            <div style={{ display: 'flex', borderRadius: '12px', overflow: 'hidden', boxShadow: 'inset 4px 4px 8px #b2bec9, inset -4px -4px 8px #ffffff', background: '#dde1e7' }}>
                                 {[{ label: 'ALL', value: 'ALL' }, { label: 'PENDING', value: 'PENDING' }, { label: 'APPROVED', value: 'APPROVED' }, { label: 'REJECTED', value: 'REJECTED' }, { label: 'ARCHIVED', value: 'ARCHIVED' }].map(t => (
                                     <button key={t.value} onClick={() => { setStatusFilter(t.value); setCurrentPage(1); }}
                                         style={{
-                                            padding: '9px 16px', border: 'none', borderRight: '1px solid #d1d5db', cursor: 'pointer', fontSize: '0.78rem', fontWeight: '700', letterSpacing: '0.04em',
-                                            background: statusFilter === t.value ? '#111' : '#fff',
-                                            color: statusFilter === t.value ? '#fff' : '#6b7280'
+                                            padding: '9px 14px', border: 'none', cursor: 'pointer', fontSize: '0.78rem', fontWeight: '700', letterSpacing: '0.04em', transition: 'all 0.2s',
+                                            background: statusFilter === t.value ? '#dde1e7' : 'transparent',
+                                            color: statusFilter === t.value ? '#1e40af' : '#718096',
+                                            boxShadow: statusFilter === t.value ? '3px 3px 6px #b2bec9, -3px -3px 6px #ffffff' : 'none',
+                                            borderRadius: statusFilter === t.value ? '10px' : '0',
+                                            margin: statusFilter === t.value ? '3px' : '0',
                                         }}>
                                         {t.label}
                                     </button>
@@ -926,12 +1000,12 @@ export default function ConvocationAdminPortal() {
                         </div>
 
                         {/* Registry table */}
-                        <div style={{ border: '1px solid #e5e7eb', borderRadius: '4px', overflow: 'hidden' }}>
-                            <div style={{ padding: '14px 20px', borderBottom: '1px solid #e5e7eb', display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: '#fff' }}>
-                                <span style={{ fontSize: '0.75rem', fontWeight: '800', color: '#111', letterSpacing: '0.08em', textTransform: 'uppercase' }}>Application Registry</span>
+                        <div style={{ borderRadius: '20px', overflow: 'hidden', boxShadow: '10px 10px 20px #b2bec9, -10px -10px 20px #ffffff', background: '#dde1e7' }}>
+                            <div style={{ padding: '16px 20px', borderBottom: '1px solid rgba(178,190,201,0.4)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                                <span style={{ fontSize: '0.75rem', fontWeight: '800', color: '#2d3748', letterSpacing: '0.08em', textTransform: 'uppercase' }}>Application Registry</span>
                                 <div style={{ display: 'flex', gap: '16px' }}>
-                                    <button style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: '0.78rem', fontWeight: '600', color: '#6b7280', display: 'flex', alignItems: 'center', gap: '4px' }}><IconFilter size={13} color="#6b7280" /> FILTER</button>
-                                    <button style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: '0.78rem', fontWeight: '600', color: '#6b7280', display: 'flex', alignItems: 'center', gap: '4px' }}><IconGrid size={13} color="#6b7280" /> VIEW</button>
+                                    <button style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: '0.78rem', fontWeight: '600', color: '#718096', display: 'flex', alignItems: 'center', gap: '4px' }}><IconFilter size={13} color="#718096" /> FILTER</button>
+                                    <button style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: '0.78rem', fontWeight: '600', color: '#718096', display: 'flex', alignItems: 'center', gap: '4px' }}><IconGrid size={13} color="#718096" /> VIEW</button>
                                 </div>
                             </div>
 
@@ -943,7 +1017,7 @@ export default function ConvocationAdminPortal() {
                                     <h3 style={{ margin: '0 0 8px', fontSize: '1.1rem', fontWeight: '700', color: '#111' }}>System Empty</h3>
                                     <p style={{ margin: '0 0 24px', color: '#6b7280', fontSize: '0.9rem' }}>There are currently no records matching your active filter configuration.</p>
                                     <button onClick={() => { setSearchQuery(''); setStatusFilter('ALL'); setCategoryFilter('ALL'); setProgrammeFilter('ALL'); setCampusFilter('ALL'); setCurrentPage(1); }}
-                                        style={{ padding: '10px 24px', background: '#111', color: '#fff', border: 'none', borderRadius: '4px', fontWeight: '700', fontSize: '0.82rem', letterSpacing: '0.05em', cursor: 'pointer' }}>
+                                        style={{ padding: '10px 24px', background: '#dde1e7', color: '#1e40af', border: 'none', borderRadius: '12px', fontWeight: '700', fontSize: '0.82rem', letterSpacing: '0.05em', cursor: 'pointer', boxShadow: '4px 4px 8px #b2bec9, -4px -4px 8px #ffffff' }}>
                                         RESET REGISTRY VIEW
                                     </button>
                                 </div>
@@ -951,9 +1025,9 @@ export default function ConvocationAdminPortal() {
                                 <div style={{ overflowX: 'auto' }}>
                                     <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.85rem' }}>
                                         <thead>
-                                            <tr style={{ background: '#f9fafb', borderBottom: '1px solid #e5e7eb' }}>
+                                            <tr style={{ background: '#c8d0db' }}>
                                                 {['App ID', 'Name', 'Reg No', 'Category', 'Programme', 'Campus', 'Attendance', 'Status', 'Submitted'].map(h => (
-                                                    <th key={h} style={{ padding: '10px 16px', textAlign: 'left', fontWeight: '700', color: '#374151', fontSize: '0.75rem', letterSpacing: '0.04em', textTransform: 'uppercase', whiteSpace: 'nowrap' }}>{h}</th>
+                                                    <th key={h} style={{ padding: '10px 16px', textAlign: 'left', fontWeight: '700', color: '#2d3748', fontSize: '0.75rem', letterSpacing: '0.04em', textTransform: 'uppercase', whiteSpace: 'nowrap' }}>{h}</th>
                                                 ))}
                                             </tr>
                                         </thead>
@@ -961,15 +1035,15 @@ export default function ConvocationAdminPortal() {
                                             {pagedApps.map((app, index) => (
                                                 <tr key={app.id} onClick={() => openDetail(app)}
                                                     style={{ borderBottom: '1px solid #f3f4f6', cursor: 'pointer', animation: 'fadeInUp 300ms ease forwards', animationDelay: `${index * 40}ms`, opacity: 0 }}
-                                                    onMouseEnter={e => e.currentTarget.style.background = '#f9fafb'}
+                                                    onMouseEnter={e => e.currentTarget.style.background = '#d5dae2'}
                                                     onMouseLeave={e => e.currentTarget.style.background = 'transparent'}>
-                                                    <td style={{ padding: '12px 16px', fontFamily: 'monospace', fontSize: '0.8rem', color: '#4338ca', fontWeight: '700' }}>{app.id}</td>
-                                                    <td style={{ padding: '12px 16px', fontWeight: '600', color: '#111' }}>{app.applicant_name}</td>
-                                                    <td style={{ padding: '12px 16px', color: '#6b7280' }}>{app.reg_no || '—'}</td>
-                                                    <td style={{ padding: '12px 16px', color: '#6b7280' }}>{app.category || '—'}</td>
-                                                    <td style={{ padding: '12px 16px', color: '#6b7280', maxWidth: '200px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{app.programme || '—'}</td>
-                                                    <td style={{ padding: '12px 16px', color: '#6b7280', whiteSpace: 'nowrap' }}>{(app.campus || '—').replace(' Campus', '')}</td>
-                                                    <td style={{ padding: '12px 16px', color: '#6b7280', whiteSpace: 'nowrap' }}>{app.attendance_type || '—'}</td>
+                                                    <td style={{ padding: '12px 16px', fontFamily: 'monospace', fontSize: '0.8rem', color: '#1e40af', fontWeight: '700' }}>{app.id}</td>
+                                                    <td style={{ padding: '12px 16px', fontWeight: '600', color: '#2d3748' }}>{app.applicant_name}</td>
+                                                    <td style={{ padding: '12px 16px', color: '#718096' }}>{app.reg_no || '—'}</td>
+                                                    <td style={{ padding: '12px 16px', color: '#718096' }}>{app.category || '—'}</td>
+                                                    <td style={{ padding: '12px 16px', color: '#718096', maxWidth: '200px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{app.programme || '—'}</td>
+                                                    <td style={{ padding: '12px 16px', color: '#718096', whiteSpace: 'nowrap' }}>{(app.campus || '—').replace(' Campus', '')}</td>
+                                                    <td style={{ padding: '12px 16px', color: '#718096', whiteSpace: 'nowrap' }}>{app.attendance_type || '—'}</td>
                                                     <td style={{ padding: '12px 16px' }}><StatusBadge status={app.status} /></td>
                                                     <td style={{ padding: '12px 16px', color: '#9ca3af', whiteSpace: 'nowrap' }}>{fmtDate(app.created_at)}</td>
                                                 </tr>
@@ -980,8 +1054,8 @@ export default function ConvocationAdminPortal() {
                             )}
 
                             {/* Table footer */}
-                            <div style={{ padding: '12px 20px', borderTop: '1px solid #e5e7eb', display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: '#fff' }}>
-                                <span style={{ fontSize: '0.75rem', fontWeight: '600', color: '#6b7280', letterSpacing: '0.04em' }}>DISPLAYING {filteredApps.length} RECORDS</span>
+                            <div style={{ padding: '12px 20px', borderTop: '1px solid rgba(178,190,201,0.4)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                                <span style={{ fontSize: '0.75rem', fontWeight: '600', color: '#718096', letterSpacing: '0.04em' }}>DISPLAYING {filteredApps.length} RECORDS</span>
                                 <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
                                     <button onClick={() => setCurrentPage(p => Math.max(1, p - 1))} disabled={currentPage === 1}
                                         style={{ background: 'none', border: 'none', cursor: currentPage === 1 ? 'default' : 'pointer', color: currentPage === 1 ? '#d1d5db' : '#374151', display: 'flex', alignItems: 'center', padding: '4px' }}>
@@ -1015,9 +1089,9 @@ export default function ConvocationAdminPortal() {
                         <div style={{ display: 'grid', gridTemplateColumns: '1fr 300px', gap: '24px', alignItems: 'start' }}>
                             {/* Left */}
                             <div>
-                                <div style={{ border: '1px solid #e5e7eb', borderRadius: '4px', padding: '28px', marginBottom: '20px', background: '#fff' }}>
+                                <div style={{ borderRadius: '20px', padding: '28px', marginBottom: '20px', background: '#dde1e7', boxShadow: '8px 8px 16px #b2bec9, -8px -8px 16px #ffffff' }}>
                                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px' }}>
-                                        <h3 style={{ margin: 0, fontSize: '1rem', fontWeight: '800', color: '#111', letterSpacing: '0.02em' }}>APPLICANT INFORMATION</h3>
+                                        <h3 style={{ margin: 0, fontSize: '1rem', fontWeight: '800', color: '#2d3748', letterSpacing: '0.02em' }}>APPLICANT INFORMATION</h3>
                                         <StatusBadge status={selectedApp.status} />
                                     </div>
                                     {detailLoading ? <p style={{ color: '#9ca3af' }}>Loading…</p> : (
@@ -1042,8 +1116,8 @@ export default function ConvocationAdminPortal() {
                                                 ['Submitted On', fmtDate(appDetails?.created_at)],
                                             ].map(([label, value]) => (
                                                 <div key={label}>
-                                                    <p style={{ margin: '0 0 3px', fontSize: '0.7rem', fontWeight: '700', color: '#9ca3af', textTransform: 'uppercase', letterSpacing: '0.07em' }}>{label}</p>
-                                                    <p style={{ margin: 0, color: '#111', fontWeight: '500', fontSize: '0.9rem', wordBreak: 'break-word' }}>{value || '—'}</p>
+                                                    <p style={{ margin: '0 0 3px', fontSize: '0.7rem', fontWeight: '700', color: '#718096', textTransform: 'uppercase', letterSpacing: '0.07em' }}>{label}</p>
+                                                    <p style={{ margin: 0, color: '#2d3748', fontWeight: '500', fontSize: '0.9rem', wordBreak: 'break-word' }}>{value || '—'}</p>
                                                 </div>
                                             ))}
                                         </div>
@@ -1051,11 +1125,11 @@ export default function ConvocationAdminPortal() {
                                 </div>
 
                                 {appDetails?.files && appDetails.files.length > 0 && (
-                                    <div style={{ border: '1px solid #e5e7eb', borderRadius: '4px', padding: '24px', background: '#fff' }}>
-                                        <h3 style={{ margin: '0 0 16px', fontSize: '0.75rem', fontWeight: '800', color: '#111', letterSpacing: '0.08em', textTransform: 'uppercase' }}>Documents</h3>
+                                    <div style={{ borderRadius: '20px', padding: '24px', background: '#dde1e7', boxShadow: '8px 8px 16px #b2bec9, -8px -8px 16px #ffffff' }}>
+                                        <h3 style={{ margin: '0 0 16px', fontSize: '0.75rem', fontWeight: '800', color: '#2d3748', letterSpacing: '0.08em', textTransform: 'uppercase' }}>Documents</h3>
                                         <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
                                             {appDetails.files.map(f => (
-                                                <div key={f.id} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '10px 14px', background: !!f.is_response ? '#f0fdf4' : '#f9fafb', borderRadius: '4px', border: `1px solid ${!!f.is_response ? '#bbf7d0' : '#e5e7eb'}` }}>
+                                                <div key={f.id} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '10px 14px', background: '#dde1e7', borderRadius: '12px', boxShadow: !!f.is_response ? 'inset 3px 3px 6px #b2bec9, inset -3px -3px 6px #ffffff' : '3px 3px 6px #b2bec9, -3px -3px 6px #ffffff' }}>
                                                     <div>
                                                         <span style={{ fontWeight: '600', color: '#111', fontSize: '0.88rem' }}>{f.file_name}</span>
                                                         {!!f.is_response && <span style={{ marginLeft: '8px', fontSize: '0.7rem', color: '#10b981', fontWeight: '800', letterSpacing: '0.04em' }}>RESPONSE</span>}
@@ -1072,27 +1146,27 @@ export default function ConvocationAdminPortal() {
 
                             {/* Right sidebar */}
                             <div style={{ position: 'sticky', top: '80px', display: 'flex', flexDirection: 'column', gap: '16px' }}>
-                                <div style={{ border: '1px solid #e5e7eb', borderRadius: '4px', padding: '20px', background: '#fff' }}>
-                                    <p style={{ margin: '0 0 16px', fontSize: '0.7rem', fontWeight: '800', color: '#6b7280', letterSpacing: '0.08em', textTransform: 'uppercase' }}>Actions</p>
-                                    <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                                <div style={{ borderRadius: '20px', padding: '20px', background: '#dde1e7', boxShadow: '8px 8px 16px #b2bec9, -8px -8px 16px #ffffff' }}>
+                                    <p style={{ margin: '0 0 16px', fontSize: '0.7rem', fontWeight: '800', color: '#718096', letterSpacing: '0.08em', textTransform: 'uppercase' }}>Actions</p>
+                                    <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
                                         {selectedApp.status !== 'APPROVED' && (
                                             <button onClick={() => setConfirmModal({ action: 'approve', label: 'Approve this application?' })} disabled={!!actionLoading}
                                                 {...pressProps}
-                                                style={{ padding: '10px', background: '#10b981', color: '#fff', border: 'none', borderRadius: '4px', fontWeight: '700', cursor: 'pointer', fontSize: '0.85rem', letterSpacing: '0.03em', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px', transition: 'transform 0.1s ease' }}>
-                                                <IconCheck size={15} color="#fff" /> APPROVE
+                                                style={{ padding: '11px', background: '#dde1e7', color: '#15803d', border: 'none', borderRadius: '12px', fontWeight: '700', cursor: 'pointer', fontSize: '0.85rem', letterSpacing: '0.03em', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px', transition: 'transform 0.1s ease', boxShadow: '4px 4px 8px #b2bec9, -4px -4px 8px #ffffff' }}>
+                                                <IconCheck size={15} color="#15803d" /> APPROVE
                                             </button>
                                         )}
                                         {selectedApp.status !== 'ARCHIVED' && (
                                             <button onClick={() => setConfirmModal({ action: 'archive', label: 'Archive this application? It will be hidden from the main list.' })} disabled={!!actionLoading}
                                                 {...pressProps}
-                                                style={{ padding: '10px', background: '#fff', color: '#6b7280', border: '1px solid #d1d5db', borderRadius: '4px', fontWeight: '700', cursor: 'pointer', fontSize: '0.85rem', letterSpacing: '0.03em', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px', transition: 'transform 0.1s ease' }}>
-                                                <Svg d="M5 8h14M5 8a2 2 0 1 0 0-4h14a2 2 0 1 0 0 4M5 8v10a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8" size={15} color="#6b7280" /> {actionLoading === 'ARCHIVED' ? 'Archiving…' : 'ARCHIVE'}
+                                                style={{ padding: '11px', background: '#dde1e7', color: '#718096', border: 'none', borderRadius: '12px', fontWeight: '700', cursor: 'pointer', fontSize: '0.85rem', letterSpacing: '0.03em', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px', transition: 'transform 0.1s ease', boxShadow: '4px 4px 8px #b2bec9, -4px -4px 8px #ffffff' }}>
+                                                <Svg d="M5 8h14M5 8a2 2 0 1 0 0-4h14a2 2 0 1 0 0 4M5 8v10a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8" size={15} color="#718096" /> {actionLoading === 'ARCHIVED' ? 'Archiving…' : 'ARCHIVE'}
                                             </button>
                                         )}
                                         {selectedApp.status === 'ARCHIVED' && (
                                             <button onClick={() => updateStatus('PENDING')} disabled={!!actionLoading}
                                                 {...pressProps}
-                                                style={{ padding: '10px', background: '#fff', color: '#6b7280', border: '1px solid #d1d5db', borderRadius: '4px', fontWeight: '700', cursor: 'pointer', fontSize: '0.85rem', letterSpacing: '0.03em', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px', transition: 'transform 0.1s ease' }}>
+                                                style={{ padding: '11px', background: '#dde1e7', color: '#1e40af', border: 'none', borderRadius: '12px', fontWeight: '700', cursor: 'pointer', fontSize: '0.85rem', letterSpacing: '0.03em', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px', transition: 'transform 0.1s ease', boxShadow: '4px 4px 8px #b2bec9, -4px -4px 8px #ffffff' }}>
                                                 {actionLoading === 'PENDING' ? 'Restoring…' : 'RESTORE'}
                                             </button>
                                         )}
@@ -1100,15 +1174,15 @@ export default function ConvocationAdminPortal() {
                                             <>
                                                 <button onClick={() => setShowRejectInput(s => !s)} disabled={!!actionLoading}
                                                     {...pressProps}
-                                                    style={{ padding: '10px', background: '#fff', color: '#ef4444', border: '1px solid #ef4444', borderRadius: '4px', fontWeight: '700', cursor: 'pointer', fontSize: '0.85rem', letterSpacing: '0.03em', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px', transition: 'transform 0.1s ease' }}>
-                                                    <IconX size={15} color="#ef4444" /> REJECT
+                                                    style={{ padding: '11px', background: '#dde1e7', color: '#dc2626', border: 'none', borderRadius: '12px', fontWeight: '700', cursor: 'pointer', fontSize: '0.85rem', letterSpacing: '0.03em', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px', transition: 'transform 0.1s ease', boxShadow: '4px 4px 8px #b2bec9, -4px -4px 8px #ffffff' }}>
+                                                    <IconX size={15} color="#dc2626" /> REJECT
                                                 </button>
                                                 {showRejectInput && (
                                                     <div>
                                                         <textarea value={rejectReason} onChange={e => setRejectReason(e.target.value)} placeholder="Reason (optional)" rows={3}
-                                                            style={{ width: '100%', padding: '8px', border: '1px solid #d1d5db', borderRadius: '4px', fontSize: '0.85rem', resize: 'vertical', boxSizing: 'border-box', marginBottom: '6px' }} />
+                                                            style={{ width: '100%', padding: '8px', border: 'none', borderRadius: '10px', fontSize: '0.85rem', resize: 'vertical', boxSizing: 'border-box', marginBottom: '8px', background: '#dde1e7', color: '#2d3748', outline: 'none', boxShadow: 'inset 3px 3px 6px #b2bec9, inset -3px -3px 6px #ffffff' }} />
                                                         <button onClick={() => updateStatus('REJECTED', rejectReason)} disabled={!!actionLoading}
-                                                            style={{ width: '100%', padding: '9px', background: '#ef4444', color: '#fff', border: 'none', borderRadius: '4px', fontWeight: '700', cursor: 'pointer', fontSize: '0.85rem' }}>
+                                                            style={{ width: '100%', padding: '10px', background: '#dde1e7', color: '#dc2626', border: 'none', borderRadius: '10px', fontWeight: '700', cursor: 'pointer', fontSize: '0.85rem', boxShadow: '4px 4px 8px #b2bec9, -4px -4px 8px #ffffff' }}>
                                                             {actionLoading === 'REJECTED' ? 'Rejecting…' : 'Confirm Reject'}
                                                         </button>
                                                     </div>
@@ -1117,9 +1191,9 @@ export default function ConvocationAdminPortal() {
                                         )}
                                     </div>
                                 </div>
-                                <div style={{ border: '1px solid #e5e7eb', borderRadius: '4px', padding: '16px', background: '#f9fafb' }}>
-                                    <p style={{ margin: '0 0 4px', fontSize: '0.7rem', fontWeight: '700', color: '#9ca3af', letterSpacing: '0.06em' }}>APPLICATION ID</p>
-                                    <p style={{ margin: 0, fontFamily: 'monospace', fontSize: '0.82rem', color: '#374151', fontWeight: '600', wordBreak: 'break-all' }}>{selectedApp.id}</p>
+                                <div style={{ borderRadius: '16px', padding: '16px', background: '#dde1e7', boxShadow: 'inset 4px 4px 8px #b2bec9, inset -4px -4px 8px #ffffff' }}>
+                                    <p style={{ margin: '0 0 4px', fontSize: '0.7rem', fontWeight: '700', color: '#718096', letterSpacing: '0.06em' }}>APPLICATION ID</p>
+                                    <p style={{ margin: 0, fontFamily: 'monospace', fontSize: '0.82rem', color: '#1e40af', fontWeight: '600', wordBreak: 'break-all' }}>{selectedApp.id}</p>
                                 </div>
                             </div>
                         </div>
@@ -1131,12 +1205,12 @@ export default function ConvocationAdminPortal() {
             {/* Confirm modal */}
             {confirmModal && (
                 <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.4)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 200 }}>
-                    <div style={{ background: '#fff', borderRadius: '4px', padding: '28px', maxWidth: '380px', width: '90%', textAlign: 'center', border: '1px solid #e5e7eb', animation: 'modalIn 200ms ease forwards' }}>
-                        <p style={{ fontSize: '1rem', fontWeight: '700', color: '#111', marginBottom: '20px' }}>{confirmModal.label}</p>
+                    <div style={{ background: '#dde1e7', borderRadius: '24px', padding: '28px', maxWidth: '380px', width: '90%', textAlign: 'center', boxShadow: '20px 20px 40px #b2bec9, -20px -20px 40px #ffffff', animation: 'modalIn 200ms ease forwards' }}>
+                        <p style={{ fontSize: '1rem', fontWeight: '700', color: '#2d3748', marginBottom: '20px' }}>{confirmModal.label}</p>
                         <div style={{ display: 'flex', gap: '12px', justifyContent: 'center' }}>
-                            <button onClick={() => setConfirmModal(null)} style={{ padding: '9px 24px', border: '1px solid #d1d5db', borderRadius: '4px', background: '#fff', cursor: 'pointer', fontWeight: '600', fontSize: '0.85rem' }}>Cancel</button>
+                            <button onClick={() => setConfirmModal(null)} style={{ padding: '10px 24px', border: 'none', borderRadius: '12px', background: '#dde1e7', cursor: 'pointer', fontWeight: '600', fontSize: '0.85rem', color: '#718096', boxShadow: '4px 4px 8px #b2bec9, -4px -4px 8px #ffffff' }}>Cancel</button>
                             <button onClick={() => confirmModal.action === 'notify' ? handleNotify() : confirmModal.action === 'archive' ? updateStatus('ARCHIVED') : updateStatus('APPROVED')}
-                                style={{ padding: '9px 24px', background: '#111', color: '#fff', border: 'none', borderRadius: '4px', cursor: 'pointer', fontWeight: '700', fontSize: '0.85rem' }}>
+                                style={{ padding: '10px 24px', background: '#dde1e7', color: '#1e40af', border: 'none', borderRadius: '12px', cursor: 'pointer', fontWeight: '700', fontSize: '0.85rem', boxShadow: '4px 4px 8px #b2bec9, -4px -4px 8px #ffffff' }}>
                                 {actionLoading ? '…' : 'Confirm'}
                             </button>
                         </div>

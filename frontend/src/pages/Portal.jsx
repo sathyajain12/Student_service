@@ -24,7 +24,6 @@ const FORMS = [
   { id: 'retotaling', title: 'Application for Re-Totalling of Marks', Icon: Hash, category: 'Exam'},
   { id: 'on-request-degree', title: 'Application for On-Request Degree Certificate', Icon: ScrollText, category: 'Degree'},
   { id: 'migration', title: 'Application for Migration Certificate', Icon: Send, category: 'Transfer'},
-  { id: 'convocation-2026', title: 'SSSIHL - XLV Annual Convocation November 2026 - Registration Form', Icon: GraduationCap, category: 'Convocation'},
 ];
 
 export default function Portal({ onSelectForm, onTrackStatus }) {
@@ -96,6 +95,94 @@ export default function Portal({ onSelectForm, onTrackStatus }) {
         </div>
       </div>
 
+      {/* Convocation announcement banner — hidden when admin disables the form */}
+      {formSettings['convocation-2026'] !== false && (
+        <>
+          <style>{`
+            @keyframes convoBannerIn {
+              from { opacity: 0; transform: translateY(18px); }
+              to   { opacity: 1; transform: translateY(0); }
+            }
+            @keyframes convoPulse {
+              0%, 100% { box-shadow: 0 0 0 0 rgba(250,204,21,0.7); }
+              50%       { box-shadow: 0 0 0 7px rgba(250,204,21,0); }
+            }
+            @keyframes convoFloat {
+              0%, 100% { transform: translateY(0px); }
+              50%       { transform: translateY(-5px); }
+            }
+            @keyframes convoOrb1 {
+              0%, 100% { transform: translate(0, 0) scale(1); }
+              50%       { transform: translate(-15px, 10px) scale(1.08); }
+            }
+            @keyframes convoOrb2 {
+              0%, 100% { transform: translate(0, 0) scale(1); }
+              50%       { transform: translate(12px, -8px) scale(1.05); }
+            }
+          `}</style>
+          <div style={{
+            marginBottom: '40px',
+            borderRadius: '20px',
+            background: 'linear-gradient(135deg, #0f2d6e 0%, #1a4db8 55%, #2563eb 100%)',
+            padding: '28px 36px',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+            gap: '24px',
+            flexWrap: 'wrap',
+            boxShadow: '0 12px 40px -8px rgba(15,45,110,0.45)',
+            position: 'relative',
+            overflow: 'hidden',
+            animation: 'convoBannerIn 0.6s cubic-bezier(0.22,1,0.36,1) both',
+          }}>
+            {/* animated orbs */}
+            <div style={{ position: 'absolute', right: '-40px', top: '-40px', width: '180px', height: '180px', borderRadius: '50%', background: 'rgba(255,255,255,0.07)', pointerEvents: 'none', animation: 'convoOrb1 6s ease-in-out infinite' }} />
+            <div style={{ position: 'absolute', right: '100px', bottom: '-60px', width: '220px', height: '220px', borderRadius: '50%', background: 'rgba(255,255,255,0.05)', pointerEvents: 'none', animation: 'convoOrb2 8s ease-in-out infinite' }} />
+            <div style={{ position: 'absolute', left: '38%', top: '-30px', width: '120px', height: '120px', borderRadius: '50%', background: 'rgba(255,255,255,0.04)', pointerEvents: 'none', animation: 'convoOrb1 10s ease-in-out infinite reverse' }} />
+
+
+            <div style={{ display: 'flex', alignItems: 'center', gap: '18px', position: 'relative' }}>
+              {/* floating icon */}
+              <div style={{ width: '52px', height: '52px', borderRadius: '14px', background: 'rgba(255,255,255,0.12)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, animation: 'convoFloat 3s ease-in-out infinite' }}>
+                <GraduationCap size={28} color="#ffffff" />
+              </div>
+              <div>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '4px' }}>
+                  <span style={{ background: '#facc15', color: '#0f2d6e', fontSize: '0.65rem', fontWeight: '800', letterSpacing: '0.1em', padding: '3px 8px', borderRadius: '20px', textTransform: 'uppercase', animation: 'convoPulse 2s ease-in-out infinite' }}>Now Open</span>
+                </div>
+                <p style={{ margin: 0, fontSize: '1.15rem', fontWeight: '800', color: '#ffffff', lineHeight: 1.3 }}>XLV Annual Convocation — November 2026</p>
+                <p style={{ margin: '4px 0 0', fontSize: '0.88rem', color: 'rgba(255,255,255,0.75)', fontWeight: '400' }}>Eligible graduates may register for in-person or in-absentia participation.</p>
+              </div>
+            </div>
+
+            <button
+              onClick={() => onSelectForm('convocation-2026')}
+              style={{
+                background: '#ffffff',
+                color: '#0f2d6e',
+                border: 'none',
+                borderRadius: '12px',
+                padding: '13px 28px',
+                fontWeight: '800',
+                fontSize: '0.92rem',
+                cursor: 'pointer',
+                flexShrink: 0,
+                whiteSpace: 'nowrap',
+                boxShadow: '0 4px 12px rgba(0,0,0,0.15)',
+                transition: 'transform 0.15s ease, box-shadow 0.15s ease',
+                position: 'relative',
+              }}
+              onMouseEnter={e => { e.currentTarget.style.transform = 'translateY(-2px) scale(1.03)'; e.currentTarget.style.boxShadow = '0 8px 24px rgba(0,0,0,0.25)'; }}
+              onMouseLeave={e => { e.currentTarget.style.transform = 'translateY(0) scale(1)'; e.currentTarget.style.boxShadow = '0 4px 12px rgba(0,0,0,0.15)'; }}
+              onMouseDown={e => { e.currentTarget.style.transform = 'scale(0.97)'; }}
+              onMouseUp={e => { e.currentTarget.style.transform = 'translateY(-2px) scale(1.03)'; }}
+            >
+              Register Now →
+            </button>
+          </div>
+        </>
+      )}
+
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(340px, 1fr))', gap: '30px' }}>
         {FORMS.map((form) => {
           const Icon = form.Icon;
@@ -111,7 +198,7 @@ export default function Portal({ onSelectForm, onTrackStatus }) {
                 flexDirection: 'column',
                 position: 'relative',
                 background: isDisabled ? '#f8fafc' : 'white',
-                border: '1px solid var(--glass-border)',
+                border: form.id === 'convocation-2026' && !isDisabled ? '2px solid #1a4db8' : '1px solid var(--glass-border)',
                 opacity: isDisabled ? 0.55 : 1,
                 pointerEvents: isDisabled ? 'none' : 'auto',
                 transition: 'all 0.3s ease'
@@ -128,11 +215,19 @@ export default function Portal({ onSelectForm, onTrackStatus }) {
                 e.currentTarget.style.boxShadow = 'var(--card-shadow)';
               }}
             >
+              {form.id === 'convocation-2026' && !isDisabled && (
+                <span style={{
+                  position: 'absolute', top: '16px', right: '16px',
+                  background: '#1a4db8', color: '#ffffff',
+                  fontSize: '0.62rem', fontWeight: '800', letterSpacing: '0.1em',
+                  padding: '3px 9px', borderRadius: '20px', textTransform: 'uppercase'
+                }}>NOW OPEN</span>
+              )}
               <div style={{
                 width: '60px',
                 height: '60px',
                 borderRadius: '16px',
-                background: 'rgba(37, 99, 235, 0.05)',
+                background: form.id === 'convocation-2026' && !isDisabled ? 'rgba(26,77,184,0.08)' : 'rgba(37, 99, 235, 0.05)',
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
