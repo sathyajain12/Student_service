@@ -340,6 +340,9 @@ export default {
                 if (url.pathname === '/convocation-admin/stats' && request.method === 'GET') {
                     return await handleConvocationStats(request, env, corsHeaders);
                 }
+                if (url.pathname === '/convocation-admin/toggle-form' && request.method === 'POST') {
+                    return await handleConvocationToggleForm(request, env, corsHeaders);
+                }
                 return new Response('Not Found', { status: 404, headers: corsHeaders });
             } catch (error) {
                 console.error(error);
@@ -1205,6 +1208,7 @@ async function handleArchiveApplication(id, request, env, corsHeaders) {
             'Application for Re-Totalling of Marks': 'form_retotaling',
             'Application for On-Request Degree Certificate': 'form_on_request_degree',
             'Application for Migration Certificate': 'form_migration_certificate',
+            'SSSIHL - XLV Annual Convocation November 2026 - Registration Form': 'form_convocation_2026',
         };
 
         // Fetch and preserve form-specific data as JSON
@@ -1237,8 +1241,9 @@ async function handleArchiveApplication(id, request, env, corsHeaders) {
             await env.DB.prepare(`DELETE FROM ${formTable} WHERE application_id = ?`).bind(id).run();
         }
 
-        // Remove file_blobs first (FK references applications), then remove the application
+        // Remove all child rows (FK references to applications) before deleting parent
         await env.DB.prepare('DELETE FROM file_blobs WHERE application_id = ?').bind(id).run();
+        await env.DB.prepare('DELETE FROM file_attachments WHERE application_id = ?').bind(id).run();
         await env.DB.prepare('DELETE FROM applications WHERE id = ?').bind(id).run();
 
         await logAuditEvent(env, admin.username, 'ARCHIVED', id, { form_type: application.form_type });
@@ -1520,8 +1525,14 @@ async function handleConvocationGetApplications(request, env, corsHeaders) {
          FROM applications a
          LEFT JOIN form_convocation_2026 f ON a.id = f.application_id
          WHERE a.form_type = ?
-         ORDER BY a.created_at DESC`
-    ).bind(CONV_FORM_TYPE).all();
+         UNION ALL
+         SELECT ar.id, ar.student_email, ar.applicant_name, ar.reg_no, ar.campus, 'ARCHIVED' as status, ar.created_at, ar.archived_at as updated_at,
+                f.category, f.programme, f.attendance_type, f.active_mobile
+         FROM archived_applications ar
+         LEFT JOIN form_convocation_2026 f ON ar.id = f.application_id
+         WHERE ar.form_type = ?
+         ORDER BY created_at DESC`
+    ).bind(CONV_FORM_TYPE, CONV_FORM_TYPE).all();
 
     return new Response(JSON.stringify(apps.results), {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' }
@@ -1532,7 +1543,11 @@ async function handleConvocationGetApplication(id, request, env, corsHeaders) {
     const admin = await verifyConvocationToken(request, env);
     if (!admin) return new Response(JSON.stringify({ error: 'Unauthorized' }), { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
 
-    const application = await env.DB.prepare('SELECT * FROM applications WHERE id = ? AND form_type = ?').bind(id, CONV_FORM_TYPE).first();
+    let application = await env.DB.prepare('SELECT * FROM applications WHERE id = ? AND form_type = ?').bind(id, CONV_FORM_TYPE).first();
+    if (!application) {
+        const archived = await env.DB.prepare('SELECT * FROM archived_applications WHERE id = ? AND form_type = ?').bind(id, CONV_FORM_TYPE).first();
+        if (archived) application = { ...archived, status: 'ARCHIVED' };
+    }
     if (!application) return new Response(JSON.stringify({ error: 'Application not found' }), { status: 404, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
 
     const formDetails = await env.DB.prepare('SELECT * FROM form_convocation_2026 WHERE application_id = ?').bind(id).first();
@@ -1552,28 +1567,83 @@ async function handleConvocationUpdateStatus(id, request, env, corsHeaders) {
     if (!admin) return new Response(JSON.stringify({ error: 'Unauthorized' }), { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
 
     const { status, reason } = await request.json();
-    const allowed = ['APPROVED', 'REJECTED', 'PENDING'];
+    const allowed = ['APPROVED', 'REJECTED', 'PENDING', 'ARCHIVED'];
     if (!allowed.includes(status)) {
         return new Response(JSON.stringify({ error: 'Invalid status' }), { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
     }
 
-    const app = await env.DB.prepare(
-        `SELECT a.id, a.student_email, a.applicant_name, a.campus, a.reg_no,
+    // Check if app is in the live table or the archived table
+    const liveApp = await env.DB.prepare(
+        `SELECT a.id, a.student_email, a.applicant_name, a.campus, a.reg_no, a.form_type,
                 f.category, f.programme, f.attendance_type
          FROM applications a
          LEFT JOIN form_convocation_2026 f ON a.id = f.application_id
          WHERE a.id = ? AND a.form_type = ?`
     ).bind(id, CONV_FORM_TYPE).first();
+
+    const archivedApp = !liveApp
+        ? await env.DB.prepare('SELECT * FROM archived_applications WHERE id = ? AND form_type = ?').bind(id, CONV_FORM_TYPE).first()
+        : null;
+
+    const app = liveApp || archivedApp;
     if (!app) return new Response(JSON.stringify({ error: 'Application not found' }), { status: 404, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
 
-    await env.DB.prepare('UPDATE applications SET status = ?, updated_at = datetime(\'now\') WHERE id = ?').bind(status, id).run();
+    try {
+        if (status === 'ARCHIVED' && liveApp) {
+            // Fetch full row from applications
+            const fullRow = await env.DB.prepare('SELECT * FROM applications WHERE id = ?').bind(id).first();
+            // Preserve form-specific data as JSON before deleting
+            let formDataJson = null;
+            try {
+                const fd = await env.DB.prepare('SELECT * FROM form_convocation_2026 WHERE application_id = ?').bind(id).first();
+                if (fd) formDataJson = JSON.stringify(fd);
+            } catch (e) { /* non-critical */ }
+            // Insert into archived_applications
+            await env.DB.prepare(
+                `INSERT OR REPLACE INTO archived_applications
+                 (id, form_type, student_email, applicant_name, campus, reg_no, status, created_at, archived_by, form_data_json)
+                 VALUES (?, ?, ?, ?, ?, ?, 'ARCHIVED', ?, ?, ?)`
+            ).bind(fullRow.id, fullRow.form_type, fullRow.student_email, fullRow.applicant_name,
+                   fullRow.campus, fullRow.reg_no, fullRow.created_at, admin.username, formDataJson).run();
+            // Delete child rows before deleting parent (FK constraint order)
+            await env.DB.prepare('DELETE FROM form_convocation_2026 WHERE application_id = ?').bind(id).run();
+            await env.DB.prepare('DELETE FROM file_blobs WHERE application_id = ?').bind(id).run();
+            await env.DB.prepare('DELETE FROM applications WHERE id = ?').bind(id).run();
+        } else if (status !== 'ARCHIVED' && archivedApp) {
+            // Restore from archived_applications → applications
+            await env.DB.prepare(
+                `INSERT INTO applications (id, form_type, student_email, applicant_name, campus, reg_no, status, created_at, updated_at)
+                 VALUES (?, ?, ?, ?, ?, ?, ?, ?, datetime('now'))`
+            ).bind(archivedApp.id, archivedApp.form_type, archivedApp.student_email, archivedApp.applicant_name,
+                   archivedApp.campus, archivedApp.reg_no, status, archivedApp.created_at).run();
+            // Restore form-specific data if preserved
+            if (archivedApp.form_data_json) {
+                try {
+                    const fd = JSON.parse(archivedApp.form_data_json);
+                    const cols = Object.keys(fd).join(', ');
+                    const placeholders = Object.keys(fd).map(() => '?').join(', ');
+                    const vals = Object.values(fd);
+                    await env.DB.prepare(`INSERT OR IGNORE INTO form_convocation_2026 (${cols}) VALUES (${placeholders})`).bind(...vals).run();
+                } catch (e) { console.error('Failed to restore form data:', e); }
+            }
+            await env.DB.prepare('DELETE FROM archived_applications WHERE id = ?').bind(id).run();
+        } else if (liveApp) {
+            await env.DB.prepare('UPDATE applications SET status = ?, updated_at = datetime(\'now\') WHERE id = ?').bind(status, id).run();
+        }
+    } catch (dbErr) {
+        console.error('Archive/status update error:', dbErr);
+        return new Response(JSON.stringify({ error: dbErr.message || 'Database error' }), {
+            status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+        });
+    }
+
     await logAuditEvent(env, admin.username, `CONV_${status}`, id, { reason: reason || null });
 
     if (status === 'APPROVED' || status === 'REJECTED') {
         await sendConvocationStatusEmail(env, app, status, reason || null);
     }
 
-    return new Response(JSON.stringify({ success: true }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+    return new Response(JSON.stringify({ success: true, status }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
 }
 
 async function sendConvocationStatusEmail(env, app, status, reason) {
@@ -1786,6 +1856,16 @@ async function handleConvocationStats(request, env, corsHeaders) {
         byCategory: byCategory.results,
         byAttendance: byAttendance.results,
     }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+}
+
+async function handleConvocationToggleForm(request, env, corsHeaders) {
+    const admin = await verifyConvocationToken(request, env);
+    if (!admin) return new Response(JSON.stringify({ error: 'Unauthorized' }), { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+    const { isActive } = await request.json();
+    if (typeof isActive !== 'boolean') return new Response(JSON.stringify({ error: 'isActive boolean required' }), { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+    await env.DB.prepare('UPDATE form_settings SET is_active = ?, updated_at = CURRENT_TIMESTAMP WHERE form_id = ?').bind(isActive ? 1 : 0, 'convocation-2026').run();
+    await logAuditEvent(env, admin.username, isActive ? 'CONV_FORM_ENABLED' : 'CONV_FORM_DISABLED', 'convocation-2026', {});
+    return new Response(JSON.stringify({ success: true, is_active: isActive }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
 }
 
 // ─── End Convocation Admin handlers ──────────────────────────────────────────
@@ -4779,10 +4859,11 @@ async function handleDirectorAction(request, env, corsHeaders) {
     const verification = { ...app, programme, semester };
 
     if (action === 'approve') {
+        // Director approval goes straight to APPROVED — no intermediate student action needed
         await env.DB.prepare(
-            `UPDATE applications SET director_status = 'APPROVED', status = 'DIRECTOR_APPROVED', updated_at = CURRENT_TIMESTAMP WHERE id = ?`
+            `UPDATE applications SET director_status = 'APPROVED', status = 'APPROVED', updated_at = CURRENT_TIMESTAMP WHERE id = ?`
         ).bind(id).run();
-        verification.status = 'DIRECTOR_APPROVED';
+        verification.status = 'APPROVED';
         verification.director_status = 'APPROVED';
 
         try {
@@ -5449,7 +5530,7 @@ async function handleSubmitToCOE(request, env, corsHeaders) {
         ).bind(appId).run();
 
         await sendAdminNotification(env, appId, app.form_type, app.applicant_name, app.student_email);
-        await sendStudentConfirmationEmail(env, appId, app.form_type, app.applicant_name, app.student_email, app.campus, null, null);
+        // Note: no student email here — student already received the director-approval decision email
 
         return new Response(JSON.stringify({ success: true }), {
             headers: { ...corsHeaders, 'Content-Type': 'application/json' }

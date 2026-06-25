@@ -859,6 +859,316 @@ export default function AdminPortal() {
             setTimeout(() => { pw.print(); }, 400);
             return;
         }
+
+        // ── CGPA TO PERCENTAGE CONVERSION: OFFICIAL PRINTED FORM LAYOUT ──────
+        if (app.form_type === 'Application for CGPA to Percentage Conversion') {
+            const fullAddress = [fd.address_line1, fd.address_line2].filter(Boolean).join(', ');
+            const submissionDate = fmtDate(app.created_at ? app.created_at + (app.created_at.includes('Z') ? '' : 'Z') : null)
+                || (app.created_at ? new Date(app.created_at).toLocaleDateString('en-IN') : '');
+
+            const cgpaHtml = `<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>CGPA to Percentage Conversion – ${escapeHtml(app.id)}</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: 'Times New Roman', Times, serif; font-size: 12px; color: #000; padding: 28px; }
+    .header { text-align: center; margin-bottom: 8px; display: flex; align-items: center; justify-content: center; gap: 16px; }
+    .header-text { text-align: center; }
+    .institute-name { font-size: 15px; font-weight: bold; text-transform: uppercase; letter-spacing: 0.5px; }
+    .deemed { font-size: 11px; margin-top: 2px; }
+    .address { font-size: 11px; margin-top: 4px; }
+    hr { border: none; border-top: 1.5px solid #000; margin: 10px 0 14px 0; }
+    .form-title { text-align: center; font-weight: bold; font-size: 13px; text-transform: uppercase; margin-bottom: 14px; }
+    .section-label { font-weight: bold; padding: 4px 8px; border: 1px solid #000; border-bottom: none; background: #fff; margin-top: 14px; font-size: 12px; }
+    table { width: 100%; border-collapse: collapse; }
+    td { border: 1px solid #000; padding: 5px 8px; font-size: 11px; vertical-align: top; }
+    .num-col { width: 28px; text-align: center; }
+    .label-col { width: 44%; }
+    @media print { body { padding: 15px; } }
+  </style>
+</head>
+<body>
+  <div class="header">
+    <img src="https://sssihl-student-service.pages.dev/logo.png" alt="SSSIHL Logo" style="height:60px;width:auto;" />
+    <div class="header-text">
+      <div class="institute-name">Sri Sathya Sai Institute of Higher Learning</div>
+      <div class="deemed">(Deemed to be University)</div>
+      <div class="address">Vidyagiri, Prasanthi Nilayam – 515 134, Sri Sathya Sai Dist., A.P.</div>
+    </div>
+  </div>
+  <hr>
+  <div class="form-title">Application for CGPA to Percentage Conversion</div>
+
+  <div class="section-label">Applicant Information:</div>
+  <table>
+    <tbody>
+      <tr>
+        <td class="num-col">1</td>
+        <td class="label-col">Name of Candidate<br><span style="font-size:10px;font-style:italic">(as printed on the Original Grade Card)</span></td>
+        <td>${escapeHtml(app.applicant_name || '')}</td>
+      </tr>
+      <tr>
+        <td class="num-col">2</td>
+        <td class="label-col">Full Address</td>
+        <td>${escapeHtml(fullAddress)}</td>
+      </tr>
+      <tr>
+        <td class="num-col">3</td>
+        <td class="label-col">City</td>
+        <td>${escapeHtml(fd.city || '')}</td>
+      </tr>
+      <tr>
+        <td class="num-col">4</td>
+        <td class="label-col">State / Province</td>
+        <td>${escapeHtml(fd.state_province || '')}</td>
+      </tr>
+      <tr>
+        <td class="num-col">5</td>
+        <td class="label-col">Country</td>
+        <td>${escapeHtml(fd.country || '')}</td>
+      </tr>
+      <tr>
+        <td class="num-col">6</td>
+        <td class="label-col">Postal Code</td>
+        <td>${escapeHtml(fd.postal_code || '')}</td>
+      </tr>
+      <tr>
+        <td class="num-col">7</td>
+        <td class="label-col">Mobile Number</td>
+        <td>${escapeHtml(fd.Mobile_Number || '')}</td>
+      </tr>
+      <tr>
+        <td class="num-col">8</td>
+        <td class="label-col">E-mail Address</td>
+        <td>${escapeHtml(app.student_email || '')}</td>
+      </tr>
+      <tr>
+        <td class="num-col">9</td>
+        <td class="label-col">Date of Submission</td>
+        <td>${escapeHtml(submissionDate)}</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <div class="section-label">Official Information:</div>
+  <table>
+    <tbody>
+      <tr>
+        <td class="num-col">1</td>
+        <td class="label-col">Campus</td>
+        <td>${escapeHtml(app.campus || '')}</td>
+      </tr>
+      <tr>
+        <td class="num-col">2</td>
+        <td class="label-col">Registered Number</td>
+        <td>${escapeHtml(fd.Registration_Number || app.reg_no || '')}</td>
+      </tr>
+      <tr>
+        <td class="num-col">3</td>
+        <td class="label-col">Programme</td>
+        <td>${escapeHtml(fd.Programme || app.programme || '')}</td>
+      </tr>
+      <tr>
+        <td class="num-col">4</td>
+        <td class="label-col">Period of Study</td>
+        <td>${escapeHtml(fd.Period_of_Study || '')}</td>
+      </tr>
+      <tr>
+        <td class="num-col">5</td>
+        <td class="label-col">Month and Year of Passing</td>
+        <td>${escapeHtml(fd.graduation_year || '')}</td>
+      </tr>
+      <tr>
+        <td class="num-col">6</td>
+        <td class="label-col">CGPA</td>
+        <td>${escapeHtml(fd.CGPA || '')}</td>
+      </tr>
+    </tbody>
+  </table>
+</body>
+</html>`;
+
+            const pw = window.open('', '_blank', 'width=800,height=900');
+            pw.document.documentElement.innerHTML = cgpaHtml;
+            pw.focus();
+            setTimeout(() => { pw.print(); }, 400);
+            return;
+        }
+
+        // ── RE-TOTALLING: OFFICIAL PRINTED FORM LAYOUT ────────────────────────
+        if (app.form_type === 'Application for Re-Totalling of Marks') {
+            const fullAddress = [fd.address_line1, fd.address_line2].filter(Boolean).join(', ');
+            const submissionDate = fmtDate(app.created_at ? app.created_at + (app.created_at.includes('Z') ? '' : 'Z') : null)
+                || (app.created_at ? new Date(app.created_at).toLocaleDateString('en-IN') : '');
+            const examPeriod = fd.period_of_examination || '';
+            const sbiUploaded = files.some(f => f.field_name === 'sbiReceipt') ? 'Yes' : 'No';
+
+            // Parse paperTable JSON for courses
+            let courseRows = '';
+            try {
+                const courses = JSON.parse(fd.paper_codes_titles_for_retotaling || '[]');
+                if (Array.isArray(courses) && courses.length > 0) {
+                    courseRows = courses.map((c, i) => `
+                      <tr>
+                        <td class="num-col">${6 + i}</td>
+                        <td class="label-col">Course Code</td>
+                        <td>${escapeHtml(c.code || c.Code || '')}</td>
+                      </tr>
+                      <tr>
+                        <td class="num-col"></td>
+                        <td class="label-col">Title of the Course</td>
+                        <td>${escapeHtml(c.title || c.Title || '')}</td>
+                      </tr>
+                      <tr>
+                        <td class="num-col"></td>
+                        <td class="label-col">Semester</td>
+                        <td>${escapeHtml(String(c.semester || c.Semester || ''))}</td>
+                      </tr>`).join('');
+                } else {
+                    // Fallback: display raw value
+                    courseRows = `
+                      <tr><td class="num-col">6</td><td class="label-col">Course Details</td><td>${escapeHtml(fd.paper_codes_titles_for_retotaling || '')}</td></tr>`;
+                }
+            } catch {
+                courseRows = `
+                  <tr><td class="num-col">6</td><td class="label-col">Course Code</td><td>${escapeHtml(fd.paper_codes_titles_for_retotaling || '')}</td></tr>`;
+            }
+
+            const retotalHtml = `<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>Re-Totalling Application – ${escapeHtml(app.id)}</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: 'Times New Roman', Times, serif; font-size: 12px; color: #000; padding: 28px; }
+    .header { text-align: center; margin-bottom: 8px; display: flex; align-items: center; justify-content: center; gap: 16px; }
+    .header-text { text-align: center; }
+    .institute-name { font-size: 15px; font-weight: bold; text-transform: uppercase; letter-spacing: 0.5px; }
+    .deemed { font-size: 11px; margin-top: 2px; }
+    .address { font-size: 11px; margin-top: 4px; }
+    hr { border: none; border-top: 1.5px solid #000; margin: 10px 0 14px 0; }
+    .form-title { text-align: center; font-weight: bold; font-size: 13px; text-transform: uppercase; margin-bottom: 4px; }
+    .form-subtitle { text-align: center; font-size: 11px; font-style: italic; margin-bottom: 14px; }
+    .section-label { font-weight: bold; padding: 4px 8px; border: 1px solid #000; border-bottom: none; background: #fff; margin-top: 14px; font-size: 12px; }
+    table { width: 100%; border-collapse: collapse; }
+    td { border: 1px solid #000; padding: 5px 8px; font-size: 11px; vertical-align: top; }
+    .num-col { width: 28px; text-align: center; }
+    .label-col { width: 44%; }
+    @media print { body { padding: 15px; } }
+  </style>
+</head>
+<body>
+  <div class="header">
+    <img src="https://sssihl-student-service.pages.dev/logo.png" alt="SSSIHL Logo" style="height:60px;width:auto;" />
+    <div class="header-text">
+      <div class="institute-name">Sri Sathya Sai Institute of Higher Learning</div>
+      <div class="deemed">(Deemed to be University)</div>
+      <div class="address">Vidyagiri, Prasanthi Nilayam – 515 134, Sri Sathya Sai Dist., A.P.</div>
+    </div>
+  </div>
+  <hr>
+  <div class="form-title">Application for Re-Totalling${examPeriod ? ' – ' + escapeHtml(examPeriod) : ''}</div>
+  <div class="form-subtitle">(Application for re-totalling is submitted by the candidate, directly to the Controller of Examinations)</div>
+
+  <div class="section-label">Applicant Information:</div>
+  <table>
+    <tbody>
+      <tr>
+        <td class="num-col">1</td>
+        <td class="label-col">Name of Candidate</td>
+        <td>${escapeHtml(app.applicant_name || '')}</td>
+      </tr>
+      <tr>
+        <td class="num-col">2</td>
+        <td class="label-col">Full Postal Address</td>
+        <td>${escapeHtml(fullAddress)}</td>
+      </tr>
+      <tr>
+        <td class="num-col">3</td>
+        <td class="label-col">City</td>
+        <td>${escapeHtml(fd.city || '')}</td>
+      </tr>
+      <tr>
+        <td class="num-col">4</td>
+        <td class="label-col">State / Province</td>
+        <td>${escapeHtml(fd.state_province || '')}</td>
+      </tr>
+      <tr>
+        <td class="num-col">5</td>
+        <td class="label-col">Country</td>
+        <td>${escapeHtml(fd.country || '')}</td>
+      </tr>
+      <tr>
+        <td class="num-col">6</td>
+        <td class="label-col">Postal Code</td>
+        <td>${escapeHtml(fd.postal_code || '')}</td>
+      </tr>
+      <tr>
+        <td class="num-col">7</td>
+        <td class="label-col">Mobile Number</td>
+        <td>${escapeHtml(fd.Mobile_Number || '')}</td>
+      </tr>
+      <tr>
+        <td class="num-col">8</td>
+        <td class="label-col">E-mail ID</td>
+        <td>${escapeHtml(app.student_email || '')}</td>
+      </tr>
+      <tr>
+        <td class="num-col">9</td>
+        <td class="label-col">ABC / APAAR ID</td>
+        <td>${escapeHtml(app.abc_apaar_id || '')}</td>
+      </tr>
+      <tr>
+        <td class="num-col">10</td>
+        <td class="label-col">Date of Submission</td>
+        <td>${escapeHtml(submissionDate)}</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <div class="section-label">Official Information:</div>
+  <table>
+    <tbody>
+      <tr>
+        <td class="num-col">1</td>
+        <td class="label-col">Campus</td>
+        <td>${escapeHtml(app.campus || '')}</td>
+      </tr>
+      <tr>
+        <td class="num-col">2</td>
+        <td class="label-col">Registered Number</td>
+        <td>${escapeHtml(String(app.reg_no || fd.reg_no || ''))}</td>
+      </tr>
+      <tr>
+        <td class="num-col">3</td>
+        <td class="label-col">Academic Programme</td>
+        <td>${escapeHtml(fd.Programme || app.programme || '')}</td>
+      </tr>
+      <tr>
+        <td class="num-col">4</td>
+        <td class="label-col">Examination Type</td>
+        <td>${escapeHtml(fd.exam_type || '')}</td>
+      </tr>
+      <tr>
+        <td class="num-col">5</td>
+        <td class="label-col">SBI Collect Receipt uploaded</td>
+        <td>${sbiUploaded}</td>
+      </tr>
+      ${courseRows}
+    </tbody>
+  </table>
+</body>
+</html>`;
+
+            const pw = window.open('', '_blank', 'width=800,height=900');
+            pw.document.documentElement.innerHTML = retotalHtml;
+            pw.focus();
+            setTimeout(() => { pw.print(); }, 400);
+            return;
+        }
         // ───────────────────────────────────────────────────────────────────────
 
         // Human-readable labels for each form table's columns
@@ -2375,7 +2685,92 @@ export default function AdminPortal() {
 
                                 {/* Applicant Information */}
                                 <div style={{ background: 'white', borderRadius: '12px', border: '1px solid #e2e8f0', overflow: 'hidden', boxShadow: '0 1px 3px rgba(0,0,0,0.05)' }}>
-                                    {app.form_type === 'Application for Supplementary Examinations Registration' || app.form_type === 'Application for Repeating Examinations Registration (CIE and ESE)' ? (() => {
+                                    {app.form_type === 'Application for Re-Totalling of Marks' ? (() => {
+                                        const fd = appDetails.formData || {};
+                                        const address = [fd.address_line1, fd.address_line2].filter(Boolean).join(', ');
+                                        let courses = [];
+                                        try { courses = JSON.parse(fd.paper_codes_titles_for_retotaling || '[]'); if (!Array.isArray(courses)) courses = []; } catch { courses = []; }
+                                        return (<>
+                                            {/* Section 1: Applicant Information */}
+                                            <div style={{ padding: '14px 20px', borderBottom: '1px solid #e2e8f0', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                                                <Users size={16} color="#4F46E5" />
+                                                <h2 style={{ fontSize: '0.9rem', fontWeight: 700, color: '#0F172A', margin: 0 }}>Applicant Information</h2>
+                                            </div>
+                                            <div style={{ padding: '20px', display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: '16px' }}>
+                                                <div><p style={detailLabelStyle}>Full Name</p><p style={detailValueStyle}>{app.applicant_name || 'N/A'}</p></div>
+                                                {address && <div style={{ gridColumn: '1 / -1' }}><p style={detailLabelStyle}>Full Postal Address</p><p style={detailValueStyle}>{address}</p></div>}
+                                                <div><p style={detailLabelStyle}>City</p><p style={detailValueStyle}>{fd.city || 'N/A'}</p></div>
+                                                <div><p style={detailLabelStyle}>State / Province</p><p style={detailValueStyle}>{fd.state_province || 'N/A'}</p></div>
+                                                <div><p style={detailLabelStyle}>Country</p><p style={detailValueStyle}>{fd.country || 'N/A'}</p></div>
+                                                <div><p style={detailLabelStyle}>Postal Code</p><p style={detailValueStyle}>{fd.postal_code || 'N/A'}</p></div>
+                                                <div><p style={detailLabelStyle}>Mobile Number</p><p style={detailValueStyle}>{fd.Mobile_Number || 'N/A'}</p></div>
+                                                <div><p style={detailLabelStyle}>Email</p><p style={{ ...detailValueStyle, wordBreak: 'break-all' }}>{app.student_email || 'N/A'}</p></div>
+                                                <div><p style={detailLabelStyle}>ABC / APAAR ID</p><p style={detailValueStyle}>{app.abc_apaar_id || 'N/A'}</p></div>
+                                                <div><p style={detailLabelStyle}>Date of Submission</p><p style={detailValueStyle}>{app.created_at ? new Date(app.created_at + (app.created_at.includes('Z') ? '' : 'Z')).toLocaleString('en-IN', { timeZone: 'Asia/Kolkata' }) : 'N/A'}</p></div>
+                                            </div>
+                                            {/* Section 2: Official Information */}
+                                            <div style={{ padding: '14px 20px', borderTop: '2px solid #f1f5f9', borderBottom: '1px solid #e2e8f0', display: 'flex', alignItems: 'center', gap: '8px', background: '#f8fafc' }}>
+                                                <FileText size={16} color="#0891b2" />
+                                                <h2 style={{ fontSize: '0.9rem', fontWeight: 700, color: '#0F172A', margin: 0 }}>Official Information</h2>
+                                            </div>
+                                            <div style={{ padding: '20px', display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: '16px' }}>
+                                                <div><p style={detailLabelStyle}>Campus</p><p style={detailValueStyle}>{app.campus || 'N/A'}</p></div>
+                                                <div><p style={detailLabelStyle}>Registered Number</p><p style={{ ...detailValueStyle, fontFamily: 'monospace' }}>{app.reg_no || fd.reg_no || 'N/A'}</p></div>
+                                                <div><p style={detailLabelStyle}>Academic Programme</p><p style={detailValueStyle}>{fd.Programme || app.programme || 'N/A'}</p></div>
+                                                <div><p style={detailLabelStyle}>Examination Type</p><p style={detailValueStyle}>{fd.exam_type || 'N/A'}</p></div>
+                                                <div><p style={detailLabelStyle}>Examination Period</p><p style={detailValueStyle}>{fd.period_of_examination || 'N/A'}</p></div>
+                                                <div><p style={detailLabelStyle}>SBI Receipt Uploaded</p><p style={detailValueStyle}>{appDetails.files?.some(f => f.field_name === 'sbiReceipt') ? 'Yes' : 'No'}</p></div>
+                                            </div>
+                                            {courses.length > 0 && (
+                                                <div style={{ padding: '0 20px 20px' }}>
+                                                    <p style={{ ...detailLabelStyle, marginBottom: '8px' }}>Courses for Re-Totalling</p>
+                                                    <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.85rem' }}>
+                                                        <thead><tr style={{ background: '#f8fafc' }}>
+                                                            <th style={{ border: '1px solid #e2e8f0', padding: '6px 10px', textAlign: 'left', fontWeight: 600, color: '#64748b' }}>Code</th>
+                                                            <th style={{ border: '1px solid #e2e8f0', padding: '6px 10px', textAlign: 'left', fontWeight: 600, color: '#64748b' }}>Title</th>
+                                                            <th style={{ border: '1px solid #e2e8f0', padding: '6px 10px', textAlign: 'left', fontWeight: 600, color: '#64748b' }}>Semester</th>
+                                                        </tr></thead>
+                                                        <tbody>{courses.map((c, i) => (
+                                                            <tr key={i}><td style={{ border: '1px solid #e2e8f0', padding: '6px 10px', fontFamily: 'monospace' }}>{c.code || c.Code || ''}</td><td style={{ border: '1px solid #e2e8f0', padding: '6px 10px' }}>{c.title || c.Title || ''}</td><td style={{ border: '1px solid #e2e8f0', padding: '6px 10px' }}>{c.semester || c.Semester || ''}</td></tr>
+                                                        ))}</tbody>
+                                                    </table>
+                                                </div>
+                                            )}
+                                        </>);
+                                    })() : app.form_type === 'Application for CGPA to Percentage Conversion' ? (() => {
+                                        const fd = appDetails.formData || {};
+                                        const address = [fd.address_line1, fd.address_line2].filter(Boolean).join(', ');
+                                        return (<>
+                                            {/* Section 1: Applicant Information */}
+                                            <div style={{ padding: '14px 20px', borderBottom: '1px solid #e2e8f0', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                                                <Users size={16} color="#4F46E5" />
+                                                <h2 style={{ fontSize: '0.9rem', fontWeight: 700, color: '#0F172A', margin: 0 }}>Applicant Information</h2>
+                                            </div>
+                                            <div style={{ padding: '20px', display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: '16px' }}>
+                                                <div><p style={detailLabelStyle}>Full Name</p><p style={detailValueStyle}>{app.applicant_name || 'N/A'}</p></div>
+                                                {address && <div style={{ gridColumn: '1 / -1' }}><p style={detailLabelStyle}>Address</p><p style={detailValueStyle}>{address}</p></div>}
+                                                <div><p style={detailLabelStyle}>City</p><p style={detailValueStyle}>{fd.city || 'N/A'}</p></div>
+                                                <div><p style={detailLabelStyle}>State</p><p style={detailValueStyle}>{fd.state_province || 'N/A'}</p></div>
+                                                <div><p style={detailLabelStyle}>Country</p><p style={detailValueStyle}>{fd.country || 'N/A'}</p></div>
+                                                <div><p style={detailLabelStyle}>Postal Code</p><p style={detailValueStyle}>{fd.postal_code || 'N/A'}</p></div>
+                                                <div><p style={detailLabelStyle}>Mobile Number</p><p style={detailValueStyle}>{fd.Mobile_Number || 'N/A'}</p></div>
+                                                <div><p style={detailLabelStyle}>Email</p><p style={{ ...detailValueStyle, wordBreak: 'break-all' }}>{app.student_email || 'N/A'}</p></div>
+                                            </div>
+                                            {/* Section 2: Official Information */}
+                                            <div style={{ padding: '14px 20px', borderTop: '2px solid #f1f5f9', borderBottom: '1px solid #e2e8f0', display: 'flex', alignItems: 'center', gap: '8px', background: '#f8fafc' }}>
+                                                <FileText size={16} color="#0891b2" />
+                                                <h2 style={{ fontSize: '0.9rem', fontWeight: 700, color: '#0F172A', margin: 0 }}>Official Information</h2>
+                                            </div>
+                                            <div style={{ padding: '20px', display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: '16px' }}>
+                                                <div><p style={detailLabelStyle}>Campus</p><p style={detailValueStyle}>{app.campus || 'N/A'}</p></div>
+                                                <div><p style={detailLabelStyle}>Registered Number</p><p style={{ ...detailValueStyle, fontFamily: 'monospace' }}>{fd.Registration_Number || app.reg_no || 'N/A'}</p></div>
+                                                <div><p style={detailLabelStyle}>Programme</p><p style={detailValueStyle}>{fd.Programme || app.programme || 'N/A'}</p></div>
+                                                <div><p style={detailLabelStyle}>Period of Study</p><p style={detailValueStyle}>{fd.Period_of_Study || 'N/A'}</p></div>
+                                                <div><p style={detailLabelStyle}>Graduation Year</p><p style={detailValueStyle}>{fd.graduation_year || 'N/A'}</p></div>
+                                                <div><p style={detailLabelStyle}>CGPA</p><p style={detailValueStyle}>{fd.CGPA || 'N/A'}</p></div>
+                                            </div>
+                                        </>);
+                                    })() : app.form_type === 'Application for Supplementary Examinations Registration' || app.form_type === 'Application for Repeating Examinations Registration (CIE and ESE)' ? (() => {
                                         const fd = appDetails.formData || {};
                                         const st = appDetails.stageTimestamps || {};
                                         const fmtDate = (d) => d ? new Date(d + (d.includes('T') ? '' : 'Z')).toLocaleString('en-IN', { timeZone: 'Asia/Kolkata', dateStyle: 'medium', timeStyle: 'short' }) : 'N/A';
@@ -2436,7 +2831,7 @@ export default function AdminPortal() {
                                             </span>
                                         </div>
                                     )}
-                                    {appDetails.formData && Object.keys(appDetails.formData).length > 0 && app.form_type !== 'Application for Supplementary Examinations Registration' && app.form_type !== 'Application for Repeating Examinations Registration (CIE and ESE)' && (() => {
+                                    {appDetails.formData && Object.keys(appDetails.formData).length > 0 && app.form_type !== 'Application for Supplementary Examinations Registration' && app.form_type !== 'Application for Repeating Examinations Registration (CIE and ESE)' && app.form_type !== 'Application for CGPA to Percentage Conversion' && app.form_type !== 'Application for Re-Totalling of Marks' && (() => {
                                         const SKIP = new Set([
                                             'id', 'application_id', 'created_at',
                                             // Already shown in the basic info grid above
@@ -3193,6 +3588,7 @@ export default function AdminPortal() {
                         </div>
                         <div style={{ overflowY: 'auto', flex: 1 }}>
                             {[
+                                { id: 'convocation-2026',      label: 'Convocation Registration 2026' },
                                 { id: 'duplicate-grade-card',  label: 'Duplicate Grade Card' },
                                 { id: 'cgpa-conversion',       label: 'CGPA to Percentage Conversion' },
                                 { id: 'supplementary-exam',    label: 'Supplementary Examinations Registration' },

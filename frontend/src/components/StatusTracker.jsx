@@ -22,8 +22,6 @@ export default function StatusTracker({ onBack }) {
     const [loading, setLoading] = useState(false);
     const [application, setApplication] = useState(null);
     const [error, setError] = useState(null);
-    const [submittingToCOE, setSubmittingToCOE] = useState(false);
-    const [coeSubmitStatus, setCoeSubmitStatus] = useState(null);
 
     const fetchApplication = async (id) => {
         setLoading(true);
@@ -91,43 +89,13 @@ export default function StatusTracker({ onBack }) {
         }
     };
 
-    const handleSubmitToCOE = async (applicationId) => {
-        setSubmittingToCOE(true);
-        setCoeSubmitStatus(null);
-
-        try {
-            const backendUrl = import.meta.env.VITE_BACKEND_URL || 'http://localhost:8787';
-            const response = await fetch(`${backendUrl}/submit-to-coe`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ appId: applicationId })
-            });
-            const result = await response.json();
-
-            if (result.success) {
-                setCoeSubmitStatus({ type: 'success', message: 'Your application has been successfully submitted to COE for processing!' });
-                const token = localStorage.getItem(`access_token_${applicationId}`);
-                const statusResponse = await fetch(`${backendUrl}/status?id=${applicationId}${token ? `&token=${token}` : ''}`);
-                const updatedApp = await statusResponse.json();
-                if (statusResponse.ok) {
-                    setApplication(updatedApp);
-                }
-            } else {
-                throw new Error(result.error || 'Failed to submit to COE');
-            }
-        } catch (err) {
-            setCoeSubmitStatus({ type: 'error', message: err.message });
-        } finally {
-            setSubmittingToCOE(false);
-        }
-    };
 
     const getStatusLabel = (status, formType = null) => {
         switch (status) {
             case 'PENDING': return 'Pending Review';
             case 'AWAITING_CAMPUS_EXAM': return 'Awaiting Campus Examination Review';
             case 'AWAITING_DIRECTOR': return 'Awaiting Director Approval';
-            case 'DIRECTOR_APPROVED': return 'Director Approved — Submit to COE';
+            case 'DIRECTOR_APPROVED': return 'Under Process';
             case 'DIRECTOR_COMMENTED': return 'On Hold';
             case 'APPROVED': return 'Under Process';
             case 'COMPLETED': return 'Completed';
@@ -417,51 +385,6 @@ export default function StatusTracker({ onBack }) {
                         </div>
                     </div>
 
-                    {/* Submit to COE button - shown when director has approved */}
-                    {application.needs_director_approval && application.status === 'DIRECTOR_APPROVED' && (
-                        <div className="glass-card" style={{
-                            padding: '30px',
-                            marginTop: '30px',
-                            borderLeft: '4px solid var(--success)',
-                            textAlign: 'center'
-                        }}>
-                            <CheckCircle2 size={40} style={{ color: 'var(--success)', marginBottom: '15px' }} />
-                            <h4 style={{ fontSize: '1.2rem', color: 'var(--text-main)', marginBottom: '10px' }}>
-                                Director's Approval Received!
-                            </h4>
-                            <p style={{ color: 'var(--text-muted)', fontSize: '0.95rem', marginBottom: '20px' }}>
-                                Your application has been approved by the Director. Please click the button below to submit your application to the Controller of Examinations (COE) for further processing.
-                            </p>
-                            <button
-                                onClick={() => handleSubmitToCOE(application.id)}
-                                className="btn-primary"
-                                disabled={submittingToCOE}
-                                style={{
-                                    padding: '14px 32px',
-                                    fontSize: '1rem',
-                                    display: 'inline-flex',
-                                    alignItems: 'center',
-                                    gap: '10px'
-                                }}
-                            >
-                                {submittingToCOE && <Loader2 size={18} className="animate-spin" />}
-                                {submittingToCOE ? 'Submitting...' : 'Submit to COE'}
-                            </button>
-
-                            {coeSubmitStatus && (
-                                <div style={{
-                                    marginTop: '15px',
-                                    padding: '12px 20px',
-                                    borderRadius: '12px',
-                                    background: coeSubmitStatus.type === 'success' ? 'rgba(5, 150, 105, 0.08)' : 'rgba(220, 38, 38, 0.08)',
-                                    color: coeSubmitStatus.type === 'success' ? 'var(--success)' : 'var(--error)',
-                                    fontWeight: '600'
-                                }}>
-                                    {coeSubmitStatus.message}
-                                </div>
-                            )}
-                        </div>
-                    )}
 
                     {/* View Application Form Section */}
                     {application.formData && (

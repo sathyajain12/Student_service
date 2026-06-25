@@ -44,6 +44,7 @@ const STATUS_COLORS = {
     REJECTED: { bg: '#fee2e2', color: '#991b1b', label: 'Rejected' },
     DISPATCHED: { bg: '#dbeafe', color: '#1e40af', label: 'Notified' },
     COMPLETED: { bg: '#d1fae5', color: '#065f46', label: 'Completed' },
+    ARCHIVED: { bg: '#f3f4f6', color: '#4b5563', label: 'Archived' },
 };
 
 const CATEGORIES = ['Undergraduate', 'Postgraduate', 'Professional', 'Doctor of Philosophy'];
@@ -196,6 +197,10 @@ export default function ConvocationAdminPortal() {
     const [isRefreshing, setIsRefreshing] = useState(false);
     const [listKey, setListKey] = useState(0);
 
+    // Form enable/disable
+    const [formEnabled, setFormEnabled] = useState(true);
+    const [togglingForm, setTogglingForm] = useState(false);
+
     const authHeaders = { Authorization: `Bearer ${token}` };
 
     const fetchData = useCallback(async () => {
@@ -222,8 +227,31 @@ export default function ConvocationAdminPortal() {
     }, [token]);
 
     useEffect(() => {
-        if (isLoggedIn) fetchData();
+        if (isLoggedIn) {
+            fetchData();
+            fetch(`${API_URL}/form-settings`)
+                .then(r => r.json())
+                .then(data => { if (typeof data['convocation-2026'] === 'boolean') setFormEnabled(data['convocation-2026']); })
+                .catch(() => {});
+        }
     }, [isLoggedIn, fetchData]);
+
+    const handleToggleForm = async () => {
+        setTogglingForm(true);
+        try {
+            const res = await fetch(`${API_URL}/convocation-admin/toggle-form`, {
+                method: 'POST',
+                headers: { ...authHeaders, 'Content-Type': 'application/json' },
+                body: JSON.stringify({ isActive: !formEnabled }),
+            });
+            const data = await res.json();
+            if (data.success) setFormEnabled(!formEnabled);
+        } catch (e) {
+            console.error(e);
+        } finally {
+            setTogglingForm(false);
+        }
+    };
 
     const handleLogin = async (e) => {
         e.preventDefault();
@@ -316,11 +344,15 @@ export default function ConvocationAdminPortal() {
                 setSuccessMsg(`Application ${status.toLowerCase()} successfully.`);
                 setTimeout(() => setSuccessMsg(''), 3500);
                 await refreshDetail();
+                await fetchData();
                 setShowRejectInput(false);
                 setRejectReason('');
+            } else {
+                alert(`Action failed: ${data.error || 'Unknown error'}`);
             }
         } catch (e) {
             console.error(e);
+            alert('Network error. Please try again.');
         } finally {
             setActionLoading('');
             setConfirmModal(null);
@@ -410,7 +442,7 @@ export default function ConvocationAdminPortal() {
             return [a.id, a.applicant_name, a.reg_no, a.student_email, a.category, a.programme]
                 .some(f => f?.toLowerCase().includes(q));
         })
-        .filter(a => statusFilter === 'ALL' || a.status === statusFilter)
+        .filter(a => statusFilter === 'ALL' ? a.status !== 'ARCHIVED' : a.status === statusFilter)
         .filter(a => categoryFilter === 'ALL' || a.category === categoryFilter)
         .filter(a => programmeFilter === 'ALL' || a.programme === programmeFilter)
         .filter(a => campusFilter === 'ALL' || a.campus === campusFilter);
@@ -807,6 +839,19 @@ export default function ConvocationAdminPortal() {
                         <span style={{ display: 'inline-flex', animation: isRefreshing ? 'spin 0.8s linear infinite' : 'none' }}><IconRefresh size={18} /></span>
                     </button>
                     <button onClick={handleExport} title="Export CSV" style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#6b7280', padding: '6px', display: 'flex', alignItems: 'center' }}><IconDownload size={18} /></button>
+                    <button
+                        onClick={handleToggleForm}
+                        disabled={togglingForm}
+                        style={{
+                            padding: '6px 14px', borderRadius: '6px', fontWeight: '700', fontSize: '0.78rem',
+                            cursor: togglingForm ? 'not-allowed' : 'pointer', opacity: togglingForm ? 0.7 : 1,
+                            border: formEnabled ? '1.5px solid #dc2626' : '1.5px solid #16a34a',
+                            background: formEnabled ? '#fef2f2' : '#f0fdf4',
+                            color: formEnabled ? '#dc2626' : '#16a34a',
+                            letterSpacing: '0.04em', transition: 'all 0.2s',
+                        }}>
+                        {togglingForm ? '…' : formEnabled ? 'DISABLE FORM' : 'ENABLE FORM'}
+                    </button>
                     <div style={{ width: '32px', height: '32px', borderRadius: '50%', background: '#d1d5db', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '0.85rem', fontWeight: '700', color: '#374151' }}>
                         {username?.[0]?.toUpperCase() || 'A'}
                     </div>
@@ -867,7 +912,7 @@ export default function ConvocationAdminPortal() {
                                 {CAMPUSES.map(c => <option key={c} value={c}>{c.replace(' Campus', '')}</option>)}
                             </select>
                             <div style={{ display: 'flex', border: '1px solid #d1d5db', borderRadius: '4px', overflow: 'hidden' }}>
-                                {[{ label: 'ALL', value: 'ALL' }, { label: 'PENDING', value: 'PENDING' }, { label: 'APPROVED', value: 'APPROVED' }, { label: 'REJECTED', value: 'REJECTED' }].map(t => (
+                                {[{ label: 'ALL', value: 'ALL' }, { label: 'PENDING', value: 'PENDING' }, { label: 'APPROVED', value: 'APPROVED' }, { label: 'REJECTED', value: 'REJECTED' }, { label: 'ARCHIVED', value: 'ARCHIVED' }].map(t => (
                                     <button key={t.value} onClick={() => { setStatusFilter(t.value); setCurrentPage(1); }}
                                         style={{
                                             padding: '9px 16px', border: 'none', borderRight: '1px solid #d1d5db', cursor: 'pointer', fontSize: '0.78rem', fontWeight: '700', letterSpacing: '0.04em',
@@ -1037,6 +1082,20 @@ export default function ConvocationAdminPortal() {
                                                 <IconCheck size={15} color="#fff" /> APPROVE
                                             </button>
                                         )}
+                                        {selectedApp.status !== 'ARCHIVED' && (
+                                            <button onClick={() => setConfirmModal({ action: 'archive', label: 'Archive this application? It will be hidden from the main list.' })} disabled={!!actionLoading}
+                                                {...pressProps}
+                                                style={{ padding: '10px', background: '#fff', color: '#6b7280', border: '1px solid #d1d5db', borderRadius: '4px', fontWeight: '700', cursor: 'pointer', fontSize: '0.85rem', letterSpacing: '0.03em', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px', transition: 'transform 0.1s ease' }}>
+                                                <Svg d="M5 8h14M5 8a2 2 0 1 0 0-4h14a2 2 0 1 0 0 4M5 8v10a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8" size={15} color="#6b7280" /> {actionLoading === 'ARCHIVED' ? 'Archiving…' : 'ARCHIVE'}
+                                            </button>
+                                        )}
+                                        {selectedApp.status === 'ARCHIVED' && (
+                                            <button onClick={() => updateStatus('PENDING')} disabled={!!actionLoading}
+                                                {...pressProps}
+                                                style={{ padding: '10px', background: '#fff', color: '#6b7280', border: '1px solid #d1d5db', borderRadius: '4px', fontWeight: '700', cursor: 'pointer', fontSize: '0.85rem', letterSpacing: '0.03em', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px', transition: 'transform 0.1s ease' }}>
+                                                {actionLoading === 'PENDING' ? 'Restoring…' : 'RESTORE'}
+                                            </button>
+                                        )}
                                         {selectedApp.status !== 'REJECTED' && (
                                             <>
                                                 <button onClick={() => setShowRejectInput(s => !s)} disabled={!!actionLoading}
@@ -1068,18 +1127,6 @@ export default function ConvocationAdminPortal() {
                 )}
             </main>
 
-            {/* Footer */}
-            <footer style={{ borderTop: '1px solid #e5e7eb', padding: '20px 32px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '8px' }}>
-                <div>
-                    <p style={{ margin: '0 0 2px', fontWeight: '800', fontSize: '0.82rem', color: '#111', letterSpacing: '0.04em' }}>CONVOCATION ADMIN</p>
-                    <p style={{ margin: 0, fontSize: '0.72rem', color: '#9ca3af' }}>© 2026 SSSIHL. ALL RIGHTS RESERVED.</p>
-                </div>
-                <div style={{ display: 'flex', gap: '20px' }}>
-                    {['PRIVACY', 'TERMS', 'HELP', 'SUPPORT'].map(l => (
-                        <span key={l} style={{ fontSize: '0.72rem', fontWeight: '700', color: '#6b7280', cursor: 'pointer', letterSpacing: '0.04em' }}>{l}</span>
-                    ))}
-                </div>
-            </footer>
 
             {/* Confirm modal */}
             {confirmModal && (
@@ -1088,7 +1135,7 @@ export default function ConvocationAdminPortal() {
                         <p style={{ fontSize: '1rem', fontWeight: '700', color: '#111', marginBottom: '20px' }}>{confirmModal.label}</p>
                         <div style={{ display: 'flex', gap: '12px', justifyContent: 'center' }}>
                             <button onClick={() => setConfirmModal(null)} style={{ padding: '9px 24px', border: '1px solid #d1d5db', borderRadius: '4px', background: '#fff', cursor: 'pointer', fontWeight: '600', fontSize: '0.85rem' }}>Cancel</button>
-                            <button onClick={() => confirmModal.action === 'notify' ? handleNotify() : updateStatus('APPROVED')}
+                            <button onClick={() => confirmModal.action === 'notify' ? handleNotify() : confirmModal.action === 'archive' ? updateStatus('ARCHIVED') : updateStatus('APPROVED')}
                                 style={{ padding: '9px 24px', background: '#111', color: '#fff', border: 'none', borderRadius: '4px', cursor: 'pointer', fontWeight: '700', fontSize: '0.85rem' }}>
                                 {actionLoading ? '…' : 'Confirm'}
                             </button>

@@ -8,10 +8,13 @@ const sectionIdx = allInstructions.findIndex(i => i?.type === 'sectionHeader');
 const generalItems = sectionIdx === -1 ? allInstructions : allInstructions.slice(0, sectionIdx);
 const inAbsentiaItems = sectionIdx === -1 ? [] : allInstructions.slice(sectionIdx + 1);
 
+const API_URL = import.meta.env.VITE_BACKEND_URL || 'http://localhost:8787';
+
 export default function ConvocationLanding({ onTrackStatus }) {
     const [showForm, setShowForm] = useState(() => window.location.pathname === '/convocation/register');
     const [loadingForm, setLoadingForm] = useState(false);
     const [formStep, setFormStep] = useState(1);
+    const [formEnabled, setFormEnabled] = useState(true);
 
     const STEP_IMAGES = [
         '/SSSIHL-Convocation-Discourses-1980s.jpg',
@@ -39,6 +42,13 @@ export default function ConvocationLanding({ onTrackStatus }) {
         setShowForm(false);
         window.scrollTo(0, 0);
     };
+
+    useEffect(() => {
+        fetch(`${API_URL}/form-settings`)
+            .then(r => r.json())
+            .then(data => { if (typeof data['convocation-2026'] === 'boolean') setFormEnabled(data['convocation-2026']); })
+            .catch(() => {});
+    }, []);
 
     useEffect(() => {
         if (showForm) return;
@@ -311,18 +321,25 @@ export default function ConvocationLanding({ onTrackStatus }) {
             <div ref={ctaRef} style={{ background: '#fff', padding: '56px 32px', textAlign: 'center', borderTop: '1px solid #e5e7eb', opacity: ctaVisible ? 1 : 0, transform: ctaVisible ? 'translateY(0)' : 'translateY(24px)', transition: 'opacity 0.6s ease, transform 0.6s ease' }}>
                 <h2 style={{ fontSize: '1.6rem', fontWeight: '700', color: '#0f172a', marginBottom: '10px' }}>Ready to Register?</h2>
                 <p style={{ color: '#64748b', marginBottom: '28px', fontSize: '0.95rem' }}>Complete your convocation registration online in a few simple steps.</p>
-                <button
-                    onClick={openForm}
-                    onMouseEnter={() => setBtnHover(true)}
-                    onMouseLeave={() => setBtnHover(false)}
-                    style={{
-                        background: '#991b1b', color: '#fff', border: 'none', borderRadius: '8px',
-                        padding: '14px 36px', fontWeight: '700', fontSize: '1rem', cursor: 'pointer',
-                        transition: 'box-shadow 0.2s ease',
-                        boxShadow: btnHover ? '0 0 0 4px rgba(153,27,27,0.25)' : 'none',
-                    }}>
-                    Register Now →
-                </button>
+                {formEnabled ? (
+                    <button
+                        onClick={openForm}
+                        onMouseEnter={() => setBtnHover(true)}
+                        onMouseLeave={() => setBtnHover(false)}
+                        style={{
+                            background: '#991b1b', color: '#fff', border: 'none', borderRadius: '8px',
+                            padding: '14px 36px', fontWeight: '700', fontSize: '1rem', cursor: 'pointer',
+                            transition: 'box-shadow 0.2s ease',
+                            boxShadow: btnHover ? '0 0 0 4px rgba(153,27,27,0.25)' : 'none',
+                        }}>
+                        Register Now →
+                    </button>
+                ) : (
+                    <div style={{ display: 'inline-block', background: '#fef2f2', border: '1px solid #fecaca', borderRadius: '10px', padding: '16px 32px' }}>
+                        <p style={{ margin: 0, fontWeight: '700', color: '#991b1b', fontSize: '1rem' }}>Registration is currently closed</p>
+                        <p style={{ margin: '6px 0 0', color: '#7f1d1d', fontSize: '0.88rem' }}>The convocation registration form is not accepting new applications at this time. Please check back later or contact convocation@sssihl.edu.in.</p>
+                    </div>
+                )}
             </div>
 
             {/* ── Quote ── */}
