@@ -167,7 +167,7 @@ export default function ConvocationLanding({ onTrackStatus }) {
                 }} />
                 <div style={{
                     position: 'absolute', inset: 0,
-                    background: 'linear-gradient(to right, rgba(90,5,5,0.72) 0%, rgba(90,5,5,0.35) 55%, rgba(0,0,0,0.1) 100%)',
+                    background: 'linear-gradient(to right, rgba(90,5,5,0.42) 0%, rgba(90,5,5,0.18) 55%, rgba(0,0,0,0.05) 100%)',
                 }} />
                 {/* Top branding bar */}
                 <div style={{
