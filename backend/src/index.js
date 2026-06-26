@@ -3828,6 +3828,14 @@ async function handleConvocation2026(formData, request, env, corsHeaders) {
     const programme = formData.get('program') || '';
     const formType = formData.get('formType');
 
+    // Require at least one uploaded document
+    const hasFile = [...formData.entries()].some(([, v]) => v instanceof File && v.size > 0);
+    if (!hasFile) {
+        return new Response(JSON.stringify({ error: 'At least one scanned document is required.' }), {
+            status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+        });
+    }
+
     const now = new Date();
     const yy = String(now.getFullYear()).slice(-2);
     const mm = String(now.getMonth() + 1).padStart(2, '0');

@@ -127,15 +127,24 @@ function StatusBadge({ status }) {
     );
 }
 
-function StatCard({ label, IconComp, iconColor, value }) {
+function StatCard({ label, IconComp, iconColor, tintColor, value }) {
     const displayed = useCountUp(typeof value === 'number' ? value : 0);
+    const isZero = value === 0;
     return (
-        <div style={{ background: '#dde1e7', borderRadius: '16px', padding: '20px 24px', display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', boxShadow: '6px 6px 12px #b2bec9, -6px -6px 12px #ffffff' }}>
+        <div style={{
+            background: isZero ? '#dde1e7' : `color-mix(in srgb, ${tintColor} 8%, #dde1e7)`,
+            borderRadius: '16px', padding: '20px 24px',
+            display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start',
+            boxShadow: isZero ? '4px 4px 8px #b2bec9, -4px -4px 8px #ffffff' : `6px 6px 14px #b2bec9, -6px -6px 14px #ffffff`,
+            opacity: isZero ? 0.5 : 1,
+            transition: 'opacity 0.3s',
+            borderLeft: isZero ? 'none' : `3px solid ${tintColor}`,
+        }}>
             <div>
-                <p style={{ margin: '0 0 12px', fontSize: '0.72rem', fontWeight: '600', color: '#718096', letterSpacing: '0.08em', textTransform: 'uppercase' }}>{label}</p>
-                <p style={{ margin: 0, fontSize: '2.6rem', fontWeight: '700', color: '#2d3748', lineHeight: 1 }}>{typeof value === 'number' ? displayed : value}</p>
+                <p style={{ margin: '0 0 10px', fontSize: '0.72rem', fontWeight: '700', color: isZero ? '#718096' : tintColor, letterSpacing: '0.08em', textTransform: 'uppercase' }}>{label}</p>
+                <p style={{ margin: 0, fontSize: '2.6rem', fontWeight: '800', color: isZero ? '#4a5568' : tintColor, lineHeight: 1 }}>{typeof value === 'number' ? displayed : value}</p>
             </div>
-            <IconComp size={22} color={iconColor} />
+            <IconComp size={22} color={isZero ? '#a0aec0' : tintColor} />
         </div>
     );
 }
@@ -764,17 +773,31 @@ export default function ConvocationAdminPortal() {
                 ` }} />
 
                 <div className="login-left-panel">
-                    <div className="login-left-overlay" style={{ background: 'linear-gradient(135deg, rgba(30,64,175,0.78) 0%, rgba(15,23,42,0.6) 100%)' }} />
                     <div style={{
                         position: 'absolute',
                         bottom: 0,
                         left: 0,
                         right: 0,
                         padding: '28px 32px',
-                        background: 'linear-gradient(to top, rgba(0,0,0,0.75) 0%, transparent 100%)',
+                        background: 'linear-gradient(to top, rgba(0,0,0,0.70) 0%, rgba(0,0,0,0.15) 55%, transparent 100%)',
+                        display: 'flex',
+                        alignItems: 'flex-end',
+                        gap: '16px',
                     }}>
-                        <p style={{ margin: '0 0 4px', color: 'rgba(255,255,255,0.75)', fontSize: '0.78rem', fontWeight: '600', textTransform: 'uppercase', letterSpacing: '0.1em' }}>Sri Sathya Sai Institute of Higher Learning</p>
-                        <h2 style={{ margin: 0, color: '#ffffff', fontSize: '1.4rem', fontWeight: '800', lineHeight: 1.3, letterSpacing: '-0.01em' }}>SSSIHL XLV Annual<br />Convocation 2026</h2>
+                        {/* University logo on the left panel */}
+                        <div style={{
+                            width: '56px', height: '56px', borderRadius: '50%',
+                            background: 'rgba(255,255,255,0.92)',
+                            display: 'flex', alignItems: 'center', justifyContent: 'center',
+                            flexShrink: 0, padding: '6px', boxSizing: 'border-box',
+                            boxShadow: '0 4px 16px rgba(0,0,0,0.35)',
+                        }}>
+                            <img src="/logo.png" alt="SSSIHL" style={{ width: '100%', height: '100%', objectFit: 'contain' }} />
+                        </div>
+                        <div>
+                            <p style={{ margin: '0 0 4px', color: 'rgba(255,255,255,0.82)', fontSize: '0.78rem', fontWeight: '600', textTransform: 'uppercase', letterSpacing: '0.1em' }}>Sri Sathya Sai Institute of Higher Learning</p>
+                            <h2 style={{ margin: 0, color: '#ffffff', fontSize: '1.4rem', fontWeight: '800', lineHeight: 1.3, letterSpacing: '-0.01em' }}>SSSIHL XLV Annual<br />Convocation 2026</h2>
+                        </div>
                     </div>
                 </div>
 
@@ -899,7 +922,7 @@ export default function ConvocationAdminPortal() {
                         </div>
                         <div>
                             <div style={{ fontWeight: '800', fontSize: '0.95rem', letterSpacing: '0.04em', color: '#1e40af', whiteSpace: 'nowrap', lineHeight: 1.2 }}>CONVOCATION ADMIN</div>
-                            <div style={{ fontSize: '0.68rem', color: '#718096', fontWeight: '500', letterSpacing: '0.03em', lineHeight: 1.2 }}>SSSIHL · XLV Annual Convocation 2026</div>
+                            <div style={{ fontSize: '0.68rem', color: '#4a5568', fontWeight: '600', letterSpacing: '0.03em', lineHeight: 1.2 }}>SSSIHL · XLV Annual Convocation 2026</div>
                         </div>
                     </div>
                     <nav style={{ display: 'flex', gap: '28px' }}>
@@ -907,23 +930,31 @@ export default function ConvocationAdminPortal() {
                     </nav>
                 </div>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-                    <button onClick={fetchData} title="Refresh" style={{ background: '#dde1e7', border: 'none', cursor: 'pointer', color: '#718096', padding: '8px', borderRadius: '10px', display: 'flex', alignItems: 'center', boxShadow: '3px 3px 6px #b2bec9, -3px -3px 6px #ffffff' }}>
-                        <span style={{ display: 'inline-flex', animation: isRefreshing ? 'spin 0.8s linear infinite' : 'none' }}><IconRefresh size={16} color="#718096" /></span>
+                    <button onClick={fetchData} title="Refresh data"
+                        style={{ background: '#dde1e7', border: 'none', cursor: 'pointer', color: '#4a5568', padding: '7px 12px', borderRadius: '10px', display: 'flex', alignItems: 'center', gap: '5px', boxShadow: '3px 3px 6px #b2bec9, -3px -3px 6px #ffffff', fontSize: '0.72rem', fontWeight: '600', letterSpacing: '0.04em' }}>
+                        <span style={{ display: 'inline-flex', animation: isRefreshing ? 'spin 0.8s linear infinite' : 'none' }}><IconRefresh size={14} color="#4a5568" /></span>
+                        REFRESH
                     </button>
-                    <button onClick={handleExport} title="Export CSV" style={{ background: '#dde1e7', border: 'none', cursor: 'pointer', color: '#718096', padding: '8px', borderRadius: '10px', display: 'flex', alignItems: 'center', boxShadow: '3px 3px 6px #b2bec9, -3px -3px 6px #ffffff' }}><IconDownload size={16} color="#718096" /></button>
+                    <button onClick={handleExport} title="Export to CSV"
+                        style={{ background: '#dde1e7', border: 'none', cursor: 'pointer', color: '#4a5568', padding: '7px 12px', borderRadius: '10px', display: 'flex', alignItems: 'center', gap: '5px', boxShadow: '3px 3px 6px #b2bec9, -3px -3px 6px #ffffff', fontSize: '0.72rem', fontWeight: '600', letterSpacing: '0.04em' }}>
+                        <IconDownload size={14} color="#4a5568" /> EXPORT
+                    </button>
                     <button
                         onClick={handleToggleForm}
                         disabled={togglingForm}
+                        title={formEnabled ? 'Click to close registration' : 'Click to open registration'}
                         style={{
                             padding: '7px 14px', borderRadius: '10px', fontWeight: '700', fontSize: '0.78rem',
                             cursor: togglingForm ? 'not-allowed' : 'pointer', opacity: togglingForm ? 0.7 : 1,
-                            border: 'none',
+                            border: `1.5px solid ${formEnabled ? '#15803d' : '#b45309'}`,
                             background: '#dde1e7',
-                            color: formEnabled ? '#dc2626' : '#16a34a',
+                            color: formEnabled ? '#15803d' : '#b45309',
                             letterSpacing: '0.04em', transition: 'all 0.2s',
                             boxShadow: '3px 3px 6px #b2bec9, -3px -3px 6px #ffffff',
+                            display: 'flex', alignItems: 'center', gap: '6px',
                         }}>
-                        {togglingForm ? '…' : formEnabled ? 'DISABLE FORM' : 'ENABLE FORM'}
+                        <span style={{ width: '7px', height: '7px', borderRadius: '50%', background: formEnabled ? '#15803d' : '#b45309', flexShrink: 0 }} />
+                        {togglingForm ? '…' : `Form: ${formEnabled ? 'Open' : 'Closed'}`}
                     </button>
                     <div style={{ width: '34px', height: '34px', borderRadius: '50%', background: '#dde1e7', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '0.85rem', fontWeight: '700', color: '#1e40af', boxShadow: '3px 3px 6px #b2bec9, -3px -3px 6px #ffffff' }}>
                         {username?.[0]?.toUpperCase() || 'A'}
@@ -939,11 +970,11 @@ export default function ConvocationAdminPortal() {
                     <>
                         {/* Stats row */}
                         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(5, 1fr)', gap: '16px', marginBottom: '28px' }}>
-                            <StatCard label="TOTAL" value={stats?.total ?? 0} IconComp={IconBarChart} iconColor="#1e40af" />
-                            <StatCard label="PENDING" value={stats?.byStatus?.PENDING ?? 0} IconComp={IconClipboard} iconColor="#b45309" />
-                            <StatCard label="APPROVED" value={stats?.byStatus?.APPROVED ?? 0} IconComp={IconCheckCircle} iconColor="#15803d" />
-                            <StatCard label="REJECTED" value={stats?.byStatus?.REJECTED ?? 0} IconComp={IconXCircle} iconColor="#dc2626" />
-                            <StatCard label="NOTIFIED" value={stats?.byStatus?.DISPATCHED ?? 0} IconComp={IconBell} iconColor="#6d28d9" />
+                            <StatCard label="TOTAL"    value={stats?.total ?? 0}                IconComp={IconBarChart}    iconColor="#1e40af" tintColor="#1e40af" />
+                            <StatCard label="PENDING"  value={stats?.byStatus?.PENDING ?? 0}    IconComp={IconClipboard}   iconColor="#b45309" tintColor="#b45309" />
+                            <StatCard label="APPROVED" value={stats?.byStatus?.APPROVED ?? 0}   IconComp={IconCheckCircle} iconColor="#15803d" tintColor="#15803d" />
+                            <StatCard label="REJECTED" value={stats?.byStatus?.REJECTED ?? 0}   IconComp={IconXCircle}     iconColor="#dc2626" tintColor="#dc2626" />
+                            <StatCard label="NOTIFIED" value={stats?.byStatus?.DISPATCHED ?? 0} IconComp={IconBell}        iconColor="#6d28d9" tintColor="#6d28d9" />
                         </div>
 
                         {/* Search + filters + status tabs */}
@@ -983,12 +1014,18 @@ export default function ConvocationAdminPortal() {
                                 ]}
                             />
                             <div style={{ display: 'flex', borderRadius: '12px', overflow: 'hidden', boxShadow: 'inset 4px 4px 8px #b2bec9, inset -4px -4px 8px #ffffff', background: '#dde1e7' }}>
-                                {[{ label: 'ALL', value: 'ALL' }, { label: 'PENDING', value: 'PENDING' }, { label: 'APPROVED', value: 'APPROVED' }, { label: 'REJECTED', value: 'REJECTED' }, { label: 'ARCHIVED', value: 'ARCHIVED' }].map(t => (
+                                {[
+                                    { label: 'ALL',      value: 'ALL',      activeColor: '#1e40af' },
+                                    { label: 'PENDING',  value: 'PENDING',  activeColor: '#b45309' },
+                                    { label: 'APPROVED', value: 'APPROVED', activeColor: '#15803d' },
+                                    { label: 'REJECTED', value: 'REJECTED', activeColor: '#dc2626' },
+                                    { label: 'ARCHIVED', value: 'ARCHIVED', activeColor: '#4a5568' },
+                                ].map(t => (
                                     <button key={t.value} onClick={() => { setStatusFilter(t.value); setCurrentPage(1); }}
                                         style={{
                                             padding: '9px 14px', border: 'none', cursor: 'pointer', fontSize: '0.78rem', fontWeight: '700', letterSpacing: '0.04em', transition: 'all 0.2s',
                                             background: statusFilter === t.value ? '#dde1e7' : 'transparent',
-                                            color: statusFilter === t.value ? '#1e40af' : '#718096',
+                                            color: statusFilter === t.value ? t.activeColor : '#718096',
                                             boxShadow: statusFilter === t.value ? '3px 3px 6px #b2bec9, -3px -3px 6px #ffffff' : 'none',
                                             borderRadius: statusFilter === t.value ? '10px' : '0',
                                             margin: statusFilter === t.value ? '3px' : '0',
@@ -1000,13 +1037,10 @@ export default function ConvocationAdminPortal() {
                         </div>
 
                         {/* Registry table */}
-                        <div style={{ borderRadius: '20px', overflow: 'hidden', boxShadow: '10px 10px 20px #b2bec9, -10px -10px 20px #ffffff', background: '#dde1e7' }}>
+                        <div style={{ borderRadius: '20px', overflow: 'hidden', boxShadow: '12px 12px 24px #a8b4c2, -12px -12px 24px #ffffff', background: '#dde1e7', border: '1px solid rgba(178,190,201,0.25)' }}>
                             <div style={{ padding: '16px 20px', borderBottom: '1px solid rgba(178,190,201,0.4)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                                 <span style={{ fontSize: '0.75rem', fontWeight: '800', color: '#2d3748', letterSpacing: '0.08em', textTransform: 'uppercase' }}>Application Registry</span>
-                                <div style={{ display: 'flex', gap: '16px' }}>
-                                    <button style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: '0.78rem', fontWeight: '600', color: '#718096', display: 'flex', alignItems: 'center', gap: '4px' }}><IconFilter size={13} color="#718096" /> FILTER</button>
-                                    <button style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: '0.78rem', fontWeight: '600', color: '#718096', display: 'flex', alignItems: 'center', gap: '4px' }}><IconGrid size={13} color="#718096" /> VIEW</button>
-                                </div>
+                                <span style={{ fontSize: '0.72rem', fontWeight: '600', color: '#4a5568', letterSpacing: '0.04em' }}>{filteredApps.length} record{filteredApps.length !== 1 ? 's' : ''}</span>
                             </div>
 
                             {loading ? (
@@ -1027,7 +1061,7 @@ export default function ConvocationAdminPortal() {
                                         <thead>
                                             <tr style={{ background: '#c8d0db' }}>
                                                 {['App ID', 'Name', 'Reg No', 'Category', 'Programme', 'Campus', 'Attendance', 'Status', 'Submitted'].map(h => (
-                                                    <th key={h} style={{ padding: '10px 16px', textAlign: 'left', fontWeight: '700', color: '#2d3748', fontSize: '0.75rem', letterSpacing: '0.04em', textTransform: 'uppercase', whiteSpace: 'nowrap' }}>{h}</th>
+                                                    <th key={h} style={{ padding: '11px 16px', textAlign: 'left', fontWeight: '800', color: '#1e3a5f', fontSize: '0.72rem', letterSpacing: '0.06em', textTransform: 'uppercase', whiteSpace: 'nowrap' }}>{h}</th>
                                                 ))}
                                             </tr>
                                         </thead>
@@ -1037,15 +1071,17 @@ export default function ConvocationAdminPortal() {
                                                     style={{ borderBottom: '1px solid #f3f4f6', cursor: 'pointer', animation: 'fadeInUp 300ms ease forwards', animationDelay: `${index * 40}ms`, opacity: 0 }}
                                                     onMouseEnter={e => e.currentTarget.style.background = '#d5dae2'}
                                                     onMouseLeave={e => e.currentTarget.style.background = 'transparent'}>
-                                                    <td style={{ padding: '12px 16px', fontFamily: 'monospace', fontSize: '0.8rem', color: '#1e40af', fontWeight: '700' }}>{app.id}</td>
+                                                    <td style={{ padding: '12px 16px' }}>
+                                                        <span title={app.id} style={{ fontFamily: 'monospace', fontSize: '0.75rem', color: '#1e40af', fontWeight: '700', display: 'block', maxWidth: '100px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{app.id}</span>
+                                                    </td>
                                                     <td style={{ padding: '12px 16px', fontWeight: '600', color: '#2d3748' }}>{app.applicant_name}</td>
-                                                    <td style={{ padding: '12px 16px', color: '#718096' }}>{app.reg_no || '—'}</td>
-                                                    <td style={{ padding: '12px 16px', color: '#718096' }}>{app.category || '—'}</td>
-                                                    <td style={{ padding: '12px 16px', color: '#718096', maxWidth: '200px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{app.programme || '—'}</td>
-                                                    <td style={{ padding: '12px 16px', color: '#718096', whiteSpace: 'nowrap' }}>{(app.campus || '—').replace(' Campus', '')}</td>
-                                                    <td style={{ padding: '12px 16px', color: '#718096', whiteSpace: 'nowrap' }}>{app.attendance_type || '—'}</td>
+                                                    <td style={{ padding: '12px 16px', color: '#4a5568', fontFamily: 'monospace', fontSize: '0.82rem' }}>{app.reg_no || '—'}</td>
+                                                    <td style={{ padding: '12px 16px', color: '#4a5568' }}>{app.category || '—'}</td>
+                                                    <td style={{ padding: '12px 16px', color: '#4a5568', maxWidth: '180px' }} title={app.programme || ''}><span style={{ display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden', lineHeight: 1.35 }}>{app.programme || '—'}</span></td>
+                                                    <td style={{ padding: '12px 16px', color: '#4a5568', whiteSpace: 'nowrap' }}>{(app.campus || '—').replace(' Campus', '')}</td>
+                                                    <td style={{ padding: '12px 16px', color: '#4a5568', whiteSpace: 'nowrap' }}>{app.attendance_type || '—'}</td>
                                                     <td style={{ padding: '12px 16px' }}><StatusBadge status={app.status} /></td>
-                                                    <td style={{ padding: '12px 16px', color: '#9ca3af', whiteSpace: 'nowrap' }}>{fmtDate(app.created_at)}</td>
+                                                    <td style={{ padding: '12px 16px', color: '#64748b', whiteSpace: 'nowrap', fontSize: '0.82rem' }}>{fmtDate(app.created_at)}</td>
                                                 </tr>
                                             ))}
                                         </tbody>
@@ -1055,7 +1091,7 @@ export default function ConvocationAdminPortal() {
 
                             {/* Table footer */}
                             <div style={{ padding: '12px 20px', borderTop: '1px solid rgba(178,190,201,0.4)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                                <span style={{ fontSize: '0.75rem', fontWeight: '600', color: '#718096', letterSpacing: '0.04em' }}>DISPLAYING {filteredApps.length} RECORDS</span>
+                                <span style={{ fontSize: '0.75rem', fontWeight: '600', color: '#4a5568', letterSpacing: '0.04em' }}>DISPLAYING {filteredApps.length} RECORDS</span>
                                 <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
                                     <button onClick={() => setCurrentPage(p => Math.max(1, p - 1))} disabled={currentPage === 1}
                                         style={{ background: 'none', border: 'none', cursor: currentPage === 1 ? 'default' : 'pointer', color: currentPage === 1 ? '#d1d5db' : '#374151', display: 'flex', alignItems: 'center', padding: '4px' }}>
