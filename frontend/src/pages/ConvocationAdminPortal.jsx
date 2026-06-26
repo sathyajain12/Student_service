@@ -596,19 +596,22 @@ export default function ConvocationAdminPortal() {
                     .login-title {
                         font-family: 'Outfit', sans-serif;
                         font-size: 2.2rem;
-                        font-weight: 700;
+                        font-weight: 800;
                         color: #1e40af;
                         margin: 0 0 6px;
                         text-align: center;
-                        letter-spacing: -0.02em;
+                        letter-spacing: 0.01em;
+                        text-shadow: 4px 4px 8px rgba(30,64,175,0.35), -3px -3px 6px rgba(255,255,255,0.9);
                     }
 
                     .login-subtitle {
-                        color: #64748b;
-                        font-size: 0.9rem;
+                        color: #3b5fc0;
+                        font-size: 0.88rem;
                         margin: 0 0 32px;
                         text-align: center;
-                        font-weight: 500;
+                        font-weight: 600;
+                        letter-spacing: 0.04em;
+                        text-shadow: 3px 3px 6px rgba(30,64,175,0.25), -2px -2px 5px rgba(255,255,255,0.9);
                     }
 
                     .login-field-group {

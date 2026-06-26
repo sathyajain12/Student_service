@@ -447,15 +447,19 @@ async function handleGetApplications(request, env, corsHeaders) {
     const role = admin.role || 'admin';
     const phd_forms = `('Application for On-Request Degree Certificate', 'Application for Migration Certificate')`;
 
+    const convExclude = `form_type != '${CONV_FORM_TYPE}'`;
+
     let roleFilter = '';
     if (role === 'ug') {
         roleFilter = `WHERE programme LIKE 'Bachelor%' AND programme != 'Bachelor of Education'
-                      AND form_type NOT IN ${phd_forms}`;
+                      AND form_type NOT IN ${phd_forms} AND ${convExclude}`;
     } else if (role === 'pg') {
         roleFilter = `WHERE (programme LIKE 'Master%' OR programme = 'Bachelor of Education')
-                      AND form_type NOT IN ${phd_forms}`;
+                      AND form_type NOT IN ${phd_forms} AND ${convExclude}`;
     } else if (role === 'phd') {
-        roleFilter = `WHERE form_type IN ${phd_forms}`;
+        roleFilter = `WHERE form_type IN ${phd_forms} AND ${convExclude}`;
+    } else {
+        roleFilter = `WHERE ${convExclude}`;
     }
 
     const applications = await env.DB.prepare(
@@ -615,17 +619,20 @@ async function handleGetStats(request, env, corsHeaders) {
 
     const role = admin.role || 'admin';
     const phd_forms = `('Application for On-Request Degree Certificate', 'Application for Migration Certificate')`;
+    const convExclude = `form_type != '${CONV_FORM_TYPE}'`;
     let roleWhere = '';
     if (role === 'ug') {
-        roleWhere = `programme LIKE 'Bachelor%' AND programme != 'Bachelor of Education' AND form_type NOT IN ${phd_forms}`;
+        roleWhere = `programme LIKE 'Bachelor%' AND programme != 'Bachelor of Education' AND form_type NOT IN ${phd_forms} AND ${convExclude}`;
     } else if (role === 'pg') {
-        roleWhere = `(programme LIKE 'Master%' OR programme = 'Bachelor of Education') AND form_type NOT IN ${phd_forms}`;
+        roleWhere = `(programme LIKE 'Master%' OR programme = 'Bachelor of Education') AND form_type NOT IN ${phd_forms} AND ${convExclude}`;
     } else if (role === 'phd') {
-        roleWhere = `form_type IN ${phd_forms}`;
+        roleWhere = `form_type IN ${phd_forms} AND ${convExclude}`;
+    } else {
+        roleWhere = convExclude;
     }
 
-    const w = roleWhere ? `WHERE ${roleWhere}` : '';
-    const ws = roleWhere ? `WHERE ${roleWhere} AND` : 'WHERE';
+    const w = `WHERE ${roleWhere}`;
+    const ws = `WHERE ${roleWhere} AND`;
 
     const total            = await env.DB.prepare(`SELECT COUNT(*) as count FROM applications ${w}`).first();
     const pending          = await env.DB.prepare(`SELECT COUNT(*) as count FROM applications ${ws} status = 'PENDING'`).first();

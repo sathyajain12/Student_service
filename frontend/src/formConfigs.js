@@ -183,11 +183,11 @@ export const FORM_CONFIGS = {
             label: 'CGPA',
             type: 'number',
             required: true,
-            placeholder: 'Enter your CGPA',
+            placeholder: 'Enter your CGPA (5-point or 10-point scale)',
             step: '0.01',
             min: '0',
-            max: '5',
-            maxError: 'Applicable only for students who have completed their Programme in March 2009 or earlier.'
+            max: '10',
+            maxError: 'CGPA must be within your grading scale (maximum 10).'
         },
         { name: 'mobile', label: 'Mobile Number', type: 'number', required: true },
         { name: 'email', label: 'Email Address', type: 'email', required: true },
