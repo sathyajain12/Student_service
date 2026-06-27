@@ -31,7 +31,7 @@ function generateAppId(prefix) {
     const yy = String(now.getFullYear()).slice(-2);
     const mm = String(now.getMonth() + 1).padStart(2, '0');
     const dd = String(now.getDate()).padStart(2, '0');
-    const random = String(Math.floor(Math.random() * 1000)).padStart(3, '0');
+    const random = String(Math.floor(Math.random() * 1000000)).padStart(6, '0');
     return `${prefix}${yy}${mm}${dd}${random}`;
 }
 
@@ -3945,7 +3945,7 @@ async function handleCampusExamReviewPage(url, env, corsHeaders) {
     const nonce = Array.from(crypto.getRandomValues(new Uint8Array(16))).map(b => b.toString(16).padStart(2, '0')).join('');
     const exp = Date.now() + 3600000;
     const csrfPayload = `${nonce}:${exp}`;
-    const csrfSig = await hmacSign(env.CSRF_SECRET || 'fallback-dev-secret', csrfPayload);
+    const csrfSig = await hmacSign(env.CSRF_SECRET , csrfPayload);
 
     const REPEAT_PAPER_FORM = 'Application for Repeating Examinations Registration (CIE and ESE)';
     const isRepeatPaper = app.form_type === REPEAT_PAPER_FORM;
@@ -4257,7 +4257,7 @@ async function handleCampusExamUploadLetter(request, env, corsHeaders) {
     const [, expStr] = csrfPayload.split(':');
     if (!expStr || Date.now() > parseInt(expStr))
         return new Response(JSON.stringify({ error: 'CSRF token expired' }), { status: 403, headers: jsonHeaders });
-    const sigValid = await hmacVerify(env.CSRF_SECRET || 'fallback-dev-secret', csrfPayload, csrfSig);
+    const sigValid = await hmacVerify(env.CSRF_SECRET , csrfPayload, csrfSig);
     if (!sigValid)
         return new Response(JSON.stringify({ error: 'Invalid CSRF token' }), { status: 403, headers: jsonHeaders });
 
@@ -4306,7 +4306,7 @@ async function handleCampusExamAction(request, env, corsHeaders) {
     const [, expStr] = csrfPayload.split(':');
     if (!expStr || Date.now() > parseInt(expStr))
         return new Response('CSRF token expired', { status: 403, headers: corsHeaders });
-    const sigValid = await hmacVerify(env.CSRF_SECRET || 'fallback-dev-secret', csrfPayload, csrfSig);
+    const sigValid = await hmacVerify(env.CSRF_SECRET , csrfPayload, csrfSig);
     if (!sigValid)
         return new Response('Invalid CSRF token', { status: 403, headers: corsHeaders });
 
@@ -4383,7 +4383,7 @@ async function handleDirectorCommentPage(url, env, corsHeaders) {
     const nonce = Array.from(crypto.getRandomValues(new Uint8Array(16))).map(b => b.toString(16).padStart(2, '0')).join('');
     const exp = Date.now() + 3600000; // 1 hour
     const csrfPayload = `${nonce}:${exp}`;
-    const csrfSig = await hmacSign(env.CSRF_SECRET || 'fallback-dev-secret', csrfPayload);
+    const csrfSig = await hmacSign(env.CSRF_SECRET , csrfPayload);
 
     const REPEAT_PAPER_FORM = 'Application for Repeating Examinations Registration (CIE and ESE)';
     if (app.form_type === 'Application for Supplementary Examinations Registration' || app.form_type === REPEAT_PAPER_FORM) {
@@ -4834,7 +4834,7 @@ async function handleDirectorUploadLetter(request, env, corsHeaders) {
     const [, expStr] = csrfPayload.split(':');
     if (!expStr || Date.now() > parseInt(expStr))
         return new Response(JSON.stringify({ error: 'CSRF token expired' }), { status: 403, headers: jsonHeaders });
-    const sigValid = await hmacVerify(env.CSRF_SECRET || 'fallback-dev-secret', csrfPayload, csrfSig);
+    const sigValid = await hmacVerify(env.CSRF_SECRET , csrfPayload, csrfSig);
     if (!sigValid)
         return new Response(JSON.stringify({ error: 'Invalid CSRF token' }), { status: 403, headers: jsonHeaders });
 
@@ -4882,7 +4882,7 @@ async function handleDirectorAction(request, env, corsHeaders) {
     const [, expStr] = csrfPayload.split(':');
     if (!expStr || Date.now() > parseInt(expStr))
         return new Response('Forbidden — CSRF token expired', { status: 403, headers: corsHeaders });
-    const sigValid = await hmacVerify(env.CSRF_SECRET || 'fallback-dev-secret', csrfPayload, csrfSig);
+    const sigValid = await hmacVerify(env.CSRF_SECRET , csrfPayload, csrfSig);
     if (!sigValid)
         return new Response('Forbidden — invalid CSRF token', { status: 403, headers: corsHeaders });
 
@@ -5005,7 +5005,7 @@ async function handleDirectorCommentSubmit(request, env, corsHeaders) {
     if (!expStr || Date.now() > parseInt(expStr)) {
         return new Response('Forbidden — CSRF token expired', { status: 403, headers: corsHeaders });
     }
-    const sigValid = await hmacVerify(env.CSRF_SECRET || 'fallback-dev-secret', csrfPayload, csrfSig);
+    const sigValid = await hmacVerify(env.CSRF_SECRET , csrfPayload, csrfSig);
     if (!sigValid) {
         return new Response('Forbidden — invalid CSRF token', { status: 403, headers: corsHeaders });
     }
@@ -5609,7 +5609,7 @@ async function handleStatusRequest(url, env, corsHeaders) {
 
     try {
         const app = await env.DB.prepare(
-            `SELECT id, student_email, form_type, applicant_name, reg_no, campus, status, director_status, director_comment, controller_status, access_token, campus_exam_status, created_at, updated_at
+            `SELECT id, form_type, applicant_name, campus, status, director_status, director_comment, controller_status, campus_exam_status, created_at, updated_at
              FROM applications WHERE id = ?`
         ).bind(id).first();
 
@@ -5684,7 +5684,17 @@ async function handleStatusRequest(url, env, corsHeaders) {
         ].includes(app.form_type);
 
         return new Response(JSON.stringify({
-            ...app,
+            id: app.id,
+            form_type: app.form_type,
+            applicant_name: app.applicant_name,
+            campus: app.campus,
+            status: app.status,
+            director_status: app.director_status,
+            director_comment: app.director_comment,
+            controller_status: app.controller_status,
+            campus_exam_status: app.campus_exam_status,
+            created_at: app.created_at,
+            updated_at: app.updated_at,
             needs_director_approval: shouldNotifyDirector(app.form_type),
             needs_campus_exam_review: needsCampusExamReview,
             formData,
