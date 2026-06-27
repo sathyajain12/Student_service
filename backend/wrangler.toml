@@ -17,6 +17,6 @@ GOOGLE_SERVICE_ACCOUNT_EMAIL = "sssihl-students-service@examination-service.iam.
 # GOOGLE_PRIVATE_KEY = "..."
 # GOOGLE_DRIVE_FOLDER_ID = "..."
 ALLOWED_ORIGIN = "https://sssihl-student-service.pages.dev"
-GOOGLE_DRIVE_BACKUP_FOLDER_ID = "17qtYFjBM8yJnm7DD69JASNcylE9p8kdq"
+GOOGLE_DRIVE_BACKUP_FOLDER_ID = "1caH6tZBKE6svIvqR9PQsUV8siCK4PvvJ"
 ADMIN_EMAIL = "coeoffice@sssihl.edu.in"
 # JWT_SECRET and CSRF_SECRET are stored as Cloudflare secrets (wrangler secret put)

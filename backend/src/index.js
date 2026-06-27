@@ -1,4 +1,4 @@
-import { getGoogleAuth, sendEmail, createMonthlyBackupSheet } from './google-api';
+import { getGoogleAuth, sendEmail, createMonthlyBackupSheet, uploadFileToDrive } from './google-api';
 import { SignJWT, jwtVerify } from 'jose';
 
 const CAMPUS_CONTACTS = {
@@ -109,11 +109,46 @@ async function performMonthlyBackup(env) {
     ];
     const data = {};
     for (const table of tables) {
-        const result = await env.DB.prepare(`SELECT * FROM ${table}`).all();
-        data[table] = result.results || [];
+        try {
+            const result = await env.DB.prepare(`SELECT * FROM ${table}`).all();
+            data[table] = result.results || [];
+            console.log(`Backup: fetched ${data[table].length} rows from ${table}`);
+        } catch (err) {
+            console.error(`Backup: skipping table ${table} — ${err.message}`);
+            data[table] = [];
+        }
     }
-    await createMonthlyBackupSheet(env, data);
-    console.log('Monthly backup completed successfully');
+    try {
+        await createMonthlyBackupSheet(env, data);
+        console.log('Backup sheet created successfully');
+    } catch (err) {
+        console.error('Backup sheet creation failed:', err.message);
+    }
+
+    // Upload all stored documents to Google Drive as actual downloadable files
+    try {
+        const files = await env.DB.prepare(
+            'SELECT application_id, field_name, file_name, file_type, file_data FROM file_blobs WHERE file_data IS NOT NULL'
+        ).all();
+        const rows = files.results || [];
+        console.log(`Backup: uploading ${rows.length} documents to Google Drive`);
+        for (const f of rows) {
+            try {
+                await uploadFileToDrive(env, {
+                    appId: f.application_id,
+                    fieldName: f.field_name,
+                    fileName: f.file_name,
+                    fileType: f.file_type,
+                    base64Data: f.file_data
+                });
+            } catch (err) {
+                console.error(`Drive upload failed for ${f.file_name}: ${err.message}`);
+            }
+        }
+        console.log('Document backup to Drive completed');
+    } catch (err) {
+        console.error('Document Drive backup failed:', err.message);
+    }
 }
 
 export default {
@@ -2026,6 +2061,9 @@ async function storeFileBlob(env, appId, fieldName, file) {
         ).bind(appId, fieldName, file.name, file.type, file.size, base64).run();
 
         console.log(`Stored file blob: ${file.name} for app ${appId}`);
+
+        uploadFileToDrive(env, { appId, fieldName, fileName: file.name, fileType: file.type, base64Data: base64 })
+            .catch(err => console.error(`Drive upload failed (non-critical): ${err.message}`));
     } catch (error) {
         console.error(`Failed to store file blob: ${error.message}`);
         throw error;

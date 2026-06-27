@@ -13,6 +13,35 @@ import {
     Palette
 } from 'lucide-react';
 
+function CopyButton({ text }) {
+    const [copied, setCopied] = React.useState(false);
+    const handleCopy = () => {
+        const plain = typeof text === 'string' ? text.replace(/\*\*/g, '') : text;
+        navigator.clipboard.writeText(plain).then(() => {
+            setCopied(true);
+            setTimeout(() => setCopied(false), 2000);
+        });
+    };
+    return (
+        <button
+            onClick={handleCopy}
+            title="Copy to clipboard"
+            style={{
+                position: 'absolute', top: '10px', right: '10px', zIndex: 1,
+                display: 'flex', alignItems: 'center', gap: '5px',
+                background: copied ? '#dcfce7' : '#eff6ff',
+                color: copied ? '#15803d' : '#2563eb',
+                border: `1px solid ${copied ? '#86efac' : '#bfdbfe'}`,
+                borderRadius: '6px', padding: '4px 10px',
+                fontSize: '0.75rem', fontWeight: '600', cursor: 'pointer',
+                transition: 'all 0.15s ease',
+            }}
+        >
+            {copied ? '✓ Copied' : '⧉ Copy'}
+        </button>
+    );
+}
+
 // Helper function to parse **bold** text and signature blocks
 const formatText = (text) => {
     if (!text || typeof text !== 'string') return text;
@@ -237,20 +266,23 @@ export default function InstructionsScreen({ config, onProceed, onCancel }) {
                                     {index + 1}
                                 </div>
                                 {isFormat ? (
-                                    <div style={{
-                                        flex: 1,
-                                        background: 'rgba(37, 99, 235, 0.06)',
-                                        border: '2px solid rgba(37, 99, 235, 0.35)',
-                                        borderRadius: '10px',
-                                        padding: '16px 20px',
-                                        fontFamily: 'monospace',
-                                        fontSize: '0.875rem',
-                                        fontWeight: '500',
-                                        lineHeight: '1.7',
-                                        color: 'var(--text-main)',
-                                        whiteSpace: 'pre-wrap'
-                                    }}>
-                                        {formatText(text)}
+                                    <div style={{ flex: 1, position: 'relative' }}>
+                                        <CopyButton text={text} />
+                                        <div style={{
+                                            background: 'rgba(37, 99, 235, 0.06)',
+                                            border: '2px solid rgba(37, 99, 235, 0.35)',
+                                            borderRadius: '10px',
+                                            padding: '16px 20px',
+                                            paddingTop: '40px',
+                                            fontFamily: 'monospace',
+                                            fontSize: '0.875rem',
+                                            fontWeight: '500',
+                                            lineHeight: '1.7',
+                                            color: 'var(--text-main)',
+                                            whiteSpace: 'pre-wrap'
+                                        }}>
+                                            {formatText(text)}
+                                        </div>
                                     </div>
                                 ) : isTextWithFormat ? (
                                     <div style={{ flex: 1 }}>

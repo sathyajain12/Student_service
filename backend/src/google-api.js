@@ -92,6 +92,57 @@ export async function createMonthlyBackupSheet(env, data) {
   return spreadsheetId;
 }
 
+export async function uploadFileToDrive(env, { appId, fieldName, fileName, fileType, base64Data }) {
+  if (!env.GOOGLE_CLIENT_ID || !env.GOOGLE_CLIENT_SECRET || !env.GOOGLE_REFRESH_TOKEN || !env.GOOGLE_DRIVE_DOCS_FOLDER_ID) {
+    console.log('Drive upload skipped: missing credentials or docs folder ID');
+    return;
+  }
+
+  const accessToken = await getGoogleAuth(env);
+
+  // Decode base64 to binary bytes
+  const binaryStr = atob(base64Data);
+  const bytes = new Uint8Array(binaryStr.length);
+  for (let i = 0; i < binaryStr.length; i++) {
+    bytes[i] = binaryStr.charCodeAt(i);
+  }
+
+  const boundary = '----DriveUpload' + Math.random().toString(36).substr(2, 8);
+  const metadata = JSON.stringify({
+    name: `${appId} — ${fieldName} — ${fileName}`,
+    parents: [env.GOOGLE_DRIVE_DOCS_FOLDER_ID]
+  });
+
+  const enc = new TextEncoder();
+  const metaPart    = enc.encode(`--${boundary}\r\nContent-Type: application/json\r\n\r\n${metadata}\r\n`);
+  const mediaHeader = enc.encode(`--${boundary}\r\nContent-Type: ${fileType || 'application/octet-stream'}\r\n\r\n`);
+  const ending      = enc.encode(`\r\n--${boundary}--`);
+
+  const body = new Uint8Array(metaPart.length + mediaHeader.length + bytes.length + ending.length);
+  body.set(metaPart, 0);
+  body.set(mediaHeader, metaPart.length);
+  body.set(bytes, metaPart.length + mediaHeader.length);
+  body.set(ending, metaPart.length + mediaHeader.length + bytes.length);
+
+  const res = await fetch('https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart', {
+    method: 'POST',
+    headers: {
+      'Authorization': `Bearer ${accessToken}`,
+      'Content-Type': `multipart/related; boundary=${boundary}`
+    },
+    body
+  });
+
+  if (!res.ok) {
+    const err = await res.json();
+    throw new Error(`Drive upload failed: ${JSON.stringify(err)}`);
+  }
+
+  const result = await res.json();
+  console.log(`File uploaded to Drive: ${result.id} (${fileName}) for app ${appId}`);
+  return result.id;
+}
+
 export async function sendEmail(accessToken, { to, subject, htmlBody, attachments = [] }) {
   console.log('Sending email, subject:', subject);
   console.log('Attachments:', attachments.length);
