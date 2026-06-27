@@ -28,16 +28,23 @@ const FORMS = [
 
 export default function Portal({ onSelectForm, onTrackStatus }) {
   const [formSettings, setFormSettings] = React.useState({});
+  const [navigating, setNavigating] = React.useState(false);
 
   React.useEffect(() => {
     fetch(`${import.meta.env.VITE_BACKEND_URL || 'http://localhost:8787'}/form-settings`)
       .then(r => r.json())
       .then(settings => setFormSettings(settings))
-      .catch(() => {}); // on error, keep showing (fail-open)
+      .catch(() => {});
   }, []);
+
+  const handleConvocationRegister = () => {
+    setNavigating(true);
+    setTimeout(() => onSelectForm('convocation-2026'), 1400);
+  };
 
 
   return (
+    <>
     <div className="container animate-fade-in">
       <header style={{ textAlign: 'center', marginBottom: '80px', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
         <div style={{ marginBottom: '25px', display: 'flex', justifyContent: 'center' }}>
@@ -156,7 +163,8 @@ export default function Portal({ onSelectForm, onTrackStatus }) {
             </div>
 
             <button
-              onClick={() => onSelectForm('convocation-2026')}
+              onClick={handleConvocationRegister}
+              disabled={navigating}
               style={{
                 background: '#ffffff',
                 color: '#0f2d6e',
@@ -165,19 +173,19 @@ export default function Portal({ onSelectForm, onTrackStatus }) {
                 padding: '13px 28px',
                 fontWeight: '800',
                 fontSize: '0.92rem',
-                cursor: 'pointer',
+                cursor: navigating ? 'default' : 'pointer',
                 flexShrink: 0,
                 whiteSpace: 'nowrap',
                 boxShadow: '0 4px 12px rgba(0,0,0,0.15)',
                 transition: 'transform 0.15s ease, box-shadow 0.15s ease',
                 position: 'relative',
               }}
-              onMouseEnter={e => { e.currentTarget.style.transform = 'translateY(-2px) scale(1.03)'; e.currentTarget.style.boxShadow = '0 8px 24px rgba(0,0,0,0.25)'; }}
+              onMouseEnter={e => { if (!navigating) { e.currentTarget.style.transform = 'translateY(-2px) scale(1.03)'; e.currentTarget.style.boxShadow = '0 8px 24px rgba(0,0,0,0.25)'; }}}
               onMouseLeave={e => { e.currentTarget.style.transform = 'translateY(0) scale(1)'; e.currentTarget.style.boxShadow = '0 4px 12px rgba(0,0,0,0.15)'; }}
-              onMouseDown={e => { e.currentTarget.style.transform = 'scale(0.97)'; }}
-              onMouseUp={e => { e.currentTarget.style.transform = 'translateY(-2px) scale(1.03)'; }}
+              onMouseDown={e => { if (!navigating) e.currentTarget.style.transform = 'scale(0.97)'; }}
+              onMouseUp={e => { if (!navigating) e.currentTarget.style.transform = 'translateY(-2px) scale(1.03)'; }}
             >
-              Register Now →
+              {navigating ? 'Opening…' : 'Register Now →'}
             </button>
           </div>
         </>
@@ -304,5 +312,46 @@ export default function Portal({ onSelectForm, onTrackStatus }) {
         </div>
       </footer>
     </div >
+
+    {/* Full-page loading overlay when navigating to convocation form */}
+    {navigating && (
+      <>
+        <style>{`
+          @keyframes convLoadFadeIn { from { opacity:0; } to { opacity:1; } }
+          @keyframes convLoadSpin { to { transform: rotate(360deg); } }
+          @keyframes convLoadPulse { 0%,100%{ opacity:0.6; transform:scale(1); } 50%{ opacity:1; transform:scale(1.04); } }
+          @keyframes convLoadDot { 0%,80%,100%{ opacity:0.2; transform:scale(0.8); } 40%{ opacity:1; transform:scale(1); } }
+        `}</style>
+        <div style={{
+          position: 'fixed', inset: 0, zIndex: 9999,
+          background: 'linear-gradient(135deg, #0f2d6e 0%, #1a4db8 55%, #2563eb 100%)',
+          display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: '28px',
+          animation: 'convLoadFadeIn 0.35s ease forwards',
+        }}>
+          {/* Logo */}
+          <div style={{ width: '90px', height: '90px', borderRadius: '50%', background: '#ffffff', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '10px', boxSizing: 'border-box', boxShadow: '0 8px 32px rgba(0,0,0,0.25)', animation: 'convLoadPulse 1.5s ease-in-out infinite' }}>
+            <img src="/logo.png" alt="SSSIHL" style={{ width: '100%', height: '100%', objectFit: 'contain' }} />
+          </div>
+
+          {/* Text */}
+          <div style={{ textAlign: 'center' }}>
+            <p style={{ margin: '0 0 6px', color: '#ffffff', fontWeight: '800', fontSize: '1.25rem', letterSpacing: '0.02em' }}>XLV Annual Convocation 2026</p>
+            <p style={{ margin: 0, color: 'rgba(255,255,255,0.7)', fontSize: '0.9rem', fontWeight: '400' }}>Loading registration form…</p>
+          </div>
+
+          {/* Animated dots */}
+          <div style={{ display: 'flex', gap: '8px' }}>
+            {[0, 1, 2].map(i => (
+              <span key={i} style={{
+                width: '10px', height: '10px', borderRadius: '50%', background: '#facc15',
+                display: 'inline-block',
+                animation: `convLoadDot 1.2s ease-in-out ${i * 0.2}s infinite`,
+              }} />
+            ))}
+          </div>
+        </div>
+      </>
+    )}
+    </>
   );
 }

@@ -10,7 +10,7 @@ const inAbsentiaItems = sectionIdx === -1 ? [] : allInstructions.slice(sectionId
 
 const API_URL = import.meta.env.VITE_BACKEND_URL || 'http://localhost:8787';
 
-export default function ConvocationLanding({ onTrackStatus }) {
+export default function ConvocationLanding({ onTrackStatus, onBack }) {
     const [showForm, setShowForm] = useState(() => window.location.pathname === '/convocation/register');
     const [loadingForm, setLoadingForm] = useState(false);
     const [formStep, setFormStep] = useState(1);
@@ -32,13 +32,12 @@ export default function ConvocationLanding({ onTrackStatus }) {
 
     const scrollToInfo = (e) => { e?.preventDefault(); infoRef.current?.scrollIntoView({ behavior: 'smooth' }); };
     const openForm = () => {
-        window.history.pushState({}, '', '/convocation/register');
         setLoadingForm(true);
         window.scrollTo(0, 0);
         setTimeout(() => { setLoadingForm(false); setShowForm(true); }, 1800);
     };
     const closeForm = () => {
-        window.history.pushState({}, '', '/convocation');
+        if (onBack) { onBack(); return; }
         setShowForm(false);
         window.scrollTo(0, 0);
     };

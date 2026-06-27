@@ -102,7 +102,9 @@ function App() {
 
   const handleSelectForm = (id) => {
     if (id === 'convocation-2026') {
-      window.location.href = '/convocation';
+      window.history.pushState({ view: 'convocation-landing' }, '', '/convocation');
+      setView('convocation-landing');
+      window.scrollTo(0, 0);
       return;
     }
     navigateTo('instructions', id, null);
@@ -133,6 +135,7 @@ function App() {
     return (
       <ConvocationLanding
         onTrackStatus={() => navigateTo('status', null, null)}
+        onBack={() => navigateTo('portal', null, null)}
       />
     );
   }

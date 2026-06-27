@@ -3001,17 +3001,17 @@ export default function AdminPortal() {
                                             </button>
                                         )}
 
-                                        {/* Mark as Completed */}
-                                        {(app.status === 'APPROVED' || app.status === 'PENDING') && (
-                                            <button className="btn-complete" onClick={() => markAsCompleted(app.id)} style={{ ...sidebarBtnBase, background: '#10b981', color: 'white' }}>
-                                                <CheckCircle size={16} /> Mark as Completed
+                                        {/* Notify Dispatched / Uploaded */}
+                                        {(app.status === 'APPROVED' || app.status === 'DISPATCHED') && (
+                                            <button onClick={() => notifyDispatched(app.id, app.form_type)} style={{ ...sidebarBtnBase, background: '#0ea5e9', color: 'white' }}>
+                                                &#9993; {['Application for Supplementary Examinations Registration', 'Application for Repeating Examinations Registration (CIE and ESE)'].includes(app.form_type) ? 'Notify Student' : app.status === 'DISPATCHED' ? 'Notify: Hard Copy Dispatched' : `Notify: Document ${app.form_type === 'Application for Migration Certificate' ? 'Uploaded' : 'Dispatched'}`}
                                             </button>
                                         )}
 
-                                        {/* Notify Dispatched / Uploaded */}
-                                        {(app.status === 'COMPLETED' || app.status === 'DISPATCHED') && (
-                                            <button onClick={() => notifyDispatched(app.id, app.form_type)} style={{ ...sidebarBtnBase, background: '#0ea5e9', color: 'white' }}>
-                                                &#9993; {['Application for Supplementary Examinations Registration', 'Application for Repeating Examinations Registration (CIE and ESE)'].includes(app.form_type) ? 'Notify Student' : app.status === 'DISPATCHED' ? 'Notify: Hard Copy Dispatched' : `Notify: Document ${app.form_type === 'Application for Migration Certificate' ? 'Uploaded' : 'Dispatched'}`}
+                                        {/* Mark as Completed */}
+                                        {(app.status === 'DISPATCHED' || app.status === 'COMPLETED') && (
+                                            <button className="btn-complete" onClick={() => markAsCompleted(app.id)} style={{ ...sidebarBtnBase, background: '#10b981', color: 'white' }}>
+                                                <CheckCircle size={16} /> Mark as Completed
                                             </button>
                                         )}
 
