@@ -145,6 +145,7 @@ export default function ConvocationForm({ onCancel, onTrackStatus, hiddenData, o
             if (!formData.studentName) errs.studentName = 'Student name is required.';
             if (!formData.campus) errs.campus = 'Campus is required.';
             if (!formData.email) errs.email = 'Email address is required.';
+            else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) errs.email = 'Please enter a valid email address (e.g. name@example.com).';
             if (!formData.attendanceType) errs.attendanceType = 'Please select In Person or In Absentia.';
         } else if (step === 2) {
             if (!formData.dob) errs.dob = 'Date of birth is required.';
@@ -455,7 +456,7 @@ export default function ConvocationForm({ onCancel, onTrackStatus, hiddenData, o
                         <h3 style={{ marginBottom: '20px', color: '#1e293b' }}>Details of Previous Qualification</h3>
                         <div style={fieldWrap}>
                             <label style={labelStyle}>Scanned Documents <span style={{ color: '#ef4444' }}>*</span></label>
-                            <input ref={fileRef} type="file" accept=".pdf,.jpg,.jpeg,.png" onChange={e => { setDocFile(e.target.files[0] || null); setFieldErrors(prev => ({ ...prev, docFile: '' })); }} style={{ ...inputStyle('docFile'), padding: '6px' }} />
+                            <input ref={fileRef} type="file" accept=".pdf,application/pdf" onChange={e => { setDocFile(e.target.files[0] || null); setFieldErrors(prev => ({ ...prev, docFile: '' })); }} style={{ ...inputStyle('docFile'), padding: '6px' }} />
                             {fieldErrors.docFile && <p style={errorStyle}>{fieldErrors.docFile}</p>}
                         </div>
                         <div style={fieldWrap}>

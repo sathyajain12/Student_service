@@ -480,19 +480,21 @@ async function handleGetApplications(request, env, corsHeaders) {
     }
 
     const role = admin.role || 'admin';
-    const phd_forms = `('Application for On-Request Degree Certificate', 'Application for Migration Certificate')`;
+    // On-Request Degree Certificate is PhD-only; Migration Certificate is visible to UG/PG based on programme
+    const phd_exclusive = `('Application for On-Request Degree Certificate')`;
+    const phd_all_forms = `('Application for On-Request Degree Certificate', 'Application for Migration Certificate')`;
 
     const convExclude = `form_type != '${CONV_FORM_TYPE}'`;
 
     let roleFilter = '';
     if (role === 'ug') {
         roleFilter = `WHERE programme LIKE 'Bachelor%' AND programme != 'Bachelor of Education'
-                      AND form_type NOT IN ${phd_forms} AND ${convExclude}`;
+                      AND form_type NOT IN ${phd_exclusive} AND ${convExclude}`;
     } else if (role === 'pg') {
         roleFilter = `WHERE (programme LIKE 'Master%' OR programme = 'Bachelor of Education')
-                      AND form_type NOT IN ${phd_forms} AND ${convExclude}`;
+                      AND form_type NOT IN ${phd_exclusive} AND ${convExclude}`;
     } else if (role === 'phd') {
-        roleFilter = `WHERE form_type IN ${phd_forms} AND ${convExclude}`;
+        roleFilter = `WHERE form_type IN ${phd_all_forms} AND ${convExclude}`;
     } else {
         roleFilter = `WHERE ${convExclude}`;
     }
@@ -653,15 +655,16 @@ async function handleGetStats(request, env, corsHeaders) {
     }
 
     const role = admin.role || 'admin';
-    const phd_forms = `('Application for On-Request Degree Certificate', 'Application for Migration Certificate')`;
+    const phd_exclusive = `('Application for On-Request Degree Certificate')`;
+    const phd_all_forms = `('Application for On-Request Degree Certificate', 'Application for Migration Certificate')`;
     const convExclude = `form_type != '${CONV_FORM_TYPE}'`;
     let roleWhere = '';
     if (role === 'ug') {
-        roleWhere = `programme LIKE 'Bachelor%' AND programme != 'Bachelor of Education' AND form_type NOT IN ${phd_forms} AND ${convExclude}`;
+        roleWhere = `programme LIKE 'Bachelor%' AND programme != 'Bachelor of Education' AND form_type NOT IN ${phd_exclusive} AND ${convExclude}`;
     } else if (role === 'pg') {
-        roleWhere = `(programme LIKE 'Master%' OR programme = 'Bachelor of Education') AND form_type NOT IN ${phd_forms} AND ${convExclude}`;
+        roleWhere = `(programme LIKE 'Master%' OR programme = 'Bachelor of Education') AND form_type NOT IN ${phd_exclusive} AND ${convExclude}`;
     } else if (role === 'phd') {
-        roleWhere = `form_type IN ${phd_forms} AND ${convExclude}`;
+        roleWhere = `form_type IN ${phd_all_forms} AND ${convExclude}`;
     } else {
         roleWhere = convExclude;
     }
@@ -879,8 +882,8 @@ async function handleNotifyDispatched(request, env, corsHeaders) {
             });
         }
 
-        if (!['COMPLETED', 'DISPATCHED'].includes(application.status)) {
-            return new Response(JSON.stringify({ error: 'Application must be in COMPLETED or DISPATCHED status to notify' }), {
+        if (!['PENDING', 'APPROVED', 'COMPLETED', 'DISPATCHED'].includes(application.status)) {
+            return new Response(JSON.stringify({ error: 'Application must be in APPROVED or DISPATCHED status to notify' }), {
                 status: 400,
                 headers: { ...corsHeaders, 'Content-Type': 'application/json' }
             });
@@ -914,16 +917,30 @@ async function handleNotifyDispatched(request, env, corsHeaders) {
 
         let digilockerUrl = null;
         let deliveryPreference = null;
-        if (application.form_type === 'Application for Migration Certificate') {
+
+        // Fetch delivery_preference from the relevant form table
+        const deliveryFormTableMap = {
+            'Application for Migration Certificate': 'form_migration_certificate',
+            'Application for CGPA to Percentage Conversion': 'form_cgpa_conversion',
+            'Application for Duplicate Grade Card': 'form_duplicate_grade_card',
+            'Application for Duplicate Degree Certificate': 'form_duplicate_degree',
+            'Application for On-Request Degree Certificate': 'form_on_request_degree',
+            'Application for Re-Totalling of Marks': 'form_retotaling',
+            'Application for Registration of Student Name change in the Institute Records': 'form_name_change',
+        };
+        const deliveryFormTable = deliveryFormTableMap[application.form_type];
+        if (deliveryFormTable) {
             try {
-                const migrationDetails = await env.DB.prepare(
-                    `SELECT delivery_preference FROM form_migration_certificate WHERE application_id = ?`
+                const formDetails = await env.DB.prepare(
+                    `SELECT delivery_preference FROM ${deliveryFormTable} WHERE application_id = ?`
                 ).bind(applicationId).first();
-                deliveryPreference = migrationDetails?.delivery_preference || null;
-                if (['Soft Copy', 'DigiLocker', 'Both Hard Copy and Soft Copy', 'Both Scanned Copy and DigiLocker'].includes(deliveryPreference)) {
-                    digilockerUrl = 'https://accounts.digilocker.gov.in/v3/7b9f84c86732efd21cd8076ff06f3fd60b1fbe146732fa57444b03b35f3740a4--en';
-                }
-            } catch (e) { /* ignore */ }
+                deliveryPreference = formDetails?.delivery_preference || null;
+            } catch (e) { /* ignore — table may not have this column */ }
+        }
+
+        if (application.form_type === 'Application for Migration Certificate' &&
+            ['Soft Copy', 'DigiLocker', 'Both Hard Copy and Soft Copy', 'Both Scanned Copy and DigiLocker'].includes(deliveryPreference)) {
+            digilockerUrl = 'https://accounts.digilocker.gov.in/v3/7b9f84c86732efd21cd8076ff06f3fd60b1fbe146732fa57444b03b35f3740a4--en';
         }
 
         const backendUrl = new URL(request.url).origin;
@@ -931,10 +948,12 @@ async function handleNotifyDispatched(request, env, corsHeaders) {
             `SELECT id, file_name FROM file_blobs WHERE application_id = ? AND is_response = TRUE`
         ).bind(applicationId).all();
         const isScannedCopyDelivery = deliveryPreference === 'Scanned Copy' || deliveryPreference === 'Both Scanned Copy and DigiLocker';
+        const isHardCopyOnly = deliveryPreference === 'Hard Copy';
         let downloadLinks = [];
         if (isScannedCopyDelivery && (responseDocsResult.results || []).length > 0) {
             downloadLinks = [{ label: 'Track Application', url: `https://sssihl-student-service.pages.dev/#track=${applicationId}` }];
-        } else {
+        } else if (!isHardCopyOnly) {
+            // Only include download links for soft copy / no preference; skip for hard copy
             downloadLinks = (responseDocsResult.results || []).map(doc => ({
                 label: `Download ${doc.file_name}`,
                 url: `${backendUrl}/download/${doc.id}?appId=${applicationId}${application.access_token ? `&token=${application.access_token}` : ''}`
@@ -1019,6 +1038,12 @@ async function handleUploadResponse(request, env, corsHeaders) {
             true,
             admin.username
         ).run();
+
+        // Auto-advance PENDING → APPROVED when a response document is uploaded
+        const currentApp = await env.DB.prepare('SELECT status FROM applications WHERE id = ?').bind(applicationId).first();
+        if (currentApp && currentApp.status === 'PENDING') {
+            await env.DB.prepare('UPDATE applications SET status = \'APPROVED\', updated_at = CURRENT_TIMESTAMP WHERE id = ?').bind(applicationId).run();
+        }
 
         await logAuditEvent(env, admin.username, 'RESPONSE_UPLOADED', applicationId, { fileName: file.name });
 
@@ -3864,6 +3889,21 @@ async function handleMigration(formData, request, env, corsHeaders) {
     });
 }
 
+// Stores convocation files — accepts PDF + images (JPG/PNG), unlike the strict PDF-only storeFileBlob
+async function storeConvocationFile(env, appId, fieldName, file) {
+    const MAX_SIZE = 5 * 1024 * 1024; // 5 MB
+    if (file.size > MAX_SIZE) throw new Error(`File "${file.name}" exceeds 5 MB limit.`);
+    const arrayBuffer = await file.arrayBuffer();
+    let binary = '';
+    const bytes = new Uint8Array(arrayBuffer);
+    for (let i = 0; i < bytes.length; i++) binary += String.fromCharCode(bytes[i]);
+    const base64 = btoa(binary);
+    await env.DB.prepare(
+        `INSERT INTO file_blobs (application_id, field_name, file_name, file_type, file_size, file_data)
+         VALUES (?, ?, ?, ?, ?, ?)`
+    ).bind(appId, fieldName, file.name, file.type, file.size, base64).run();
+}
+
 // Handler for Convocation 2026 Registration
 async function handleConvocation2026(formData, request, env, corsHeaders) {
     const email = formData.get('email') || '';
@@ -3873,10 +3913,26 @@ async function handleConvocation2026(formData, request, env, corsHeaders) {
     const programme = formData.get('program') || '';
     const formType = formData.get('formType');
 
-    // Require at least one uploaded document
-    const hasFile = [...formData.entries()].some(([, v]) => v instanceof File && v.size > 0);
-    if (!hasFile) {
-        return new Response(JSON.stringify({ error: 'At least one scanned document is required.' }), {
+    // Collect valid files first — validate BEFORE creating any DB records
+    const filesToStore = [];
+    for (const [key, value] of formData.entries()) {
+        if (!value || typeof value.size !== 'number' || value.size === 0) continue;
+        if (value.type !== 'application/pdf') {
+            return new Response(JSON.stringify({
+                error: `File "${value.name}" is not allowed. Only PDF files are accepted.`
+            }), { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+        }
+        const MAX_SIZE = 5 * 1024 * 1024;
+        if (value.size > MAX_SIZE) {
+            return new Response(JSON.stringify({
+                error: `File "${value.name}" exceeds the 5 MB limit. Please compress or reduce the file size and try again.`
+            }), { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+        }
+        filesToStore.push({ key, value });
+    }
+
+    if (filesToStore.length === 0) {
+        return new Response(JSON.stringify({ error: 'Please upload at least one scanned document in PDF format before submitting.' }), {
             status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' }
         });
     }
@@ -3916,10 +3972,9 @@ async function handleConvocation2026(formData, request, env, corsHeaders) {
         formData.get('declaration') || 'No'
     ).run();
 
-    for (const [key, value] of formData.entries()) {
-        if (value instanceof File && value.size > 0) {
-            await storeFileBlob(env, appId, key, value);
-        }
+    // Files already validated — store them now
+    for (const { key, value } of filesToStore) {
+        await storeConvocationFile(env, appId, key, value);
     }
 
     await sendAdminNotification(env, appId, formType, applicantName, email, 'convocation@sssihl.edu.in');

@@ -703,7 +703,7 @@ export const FORM_CONFIGS = {
         instructions: [
             'No fee is charged for registration for the Convocation.',
             'Once the application is submitted, please wait for it to be processed and for a verification acknowledgment to be issued. In case of any queries, kindly email us at convocation@sssihl.edu.in',
-            'Candidates applying for admission to the convocation for Postgraduate degrees such as M.A. / M.Sc. / M.B.A. / M.Tech. / B.Ed. should upload only the softcopy of the Original Degree Certificate of the qualifying degree issued by the Institute / University.',
+            'Candidates applying for admission to the convocation for Postgraduate degrees such as M.A. / M.Sc. / M.B.A. / M.Tech. / B.Ed. should upload only the softcopy of the Original Degree Certificate of the qualifying degree issued by the Institute / University, in PDF format only.',
             'Candidates applying for admission to the convocation for the Ph.D. programme should upload only the softcopy of the Original Post Graduation Degree Certificate issued by the Institute / University.',
             { type: 'sectionHeader', text: 'Candidates opting for "IN-ABSENTIA"' },
             { type: 'address', text: 'Candidates are required to send a self-addressed, stamped, waterproof envelope to the address mentioned below. The Institute requires this in order to send the degree certificates back to the candidates by post.', details: CONTROLLER_ADDRESS },

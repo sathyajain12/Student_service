@@ -34,6 +34,10 @@ Thumbs.db
 *.sqlite
 *.db
 
+# Student data files (sensitive — never commit)
+airflow/data/students.sql
+airflow/data/students.xlsx
+
 # Misc
 C:/Users/sathy/.gemini/antigravity/brain/
 .claude/

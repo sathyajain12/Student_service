@@ -47,7 +47,7 @@ const STATUS_COLORS = {
     ARCHIVED: { bg: '#f3f4f6', color: '#4b5563', label: 'Archived' },
 };
 
-const CATEGORIES = ['Undergraduate', 'Postgraduate', 'Professional', 'Doctor of Philosophy'];
+const DEGREE = ['Undergraduate', 'Postgraduate', 'Professional', 'Doctor of Philosophy'];
 const CAMPUSES = ['Prasanthi Nilayam Campus', 'Anantapur Campus', 'Brindavan Campus', 'Nandigiri Campus'];
 
 const PROGRAMME_MAP = {
@@ -56,7 +56,6 @@ const PROGRAMME_MAP = {
         'Bachelor of Arts (Honours) / (Honours with Research) in English Language and Literature',
         'Bachelor of Business Administration (Honours)',
         'Bachelor of Commerce (Honours) / (Honours with Research)',
-        'Bachelor of Education',
         'Bachelor of Science (Honours) / (Honours with Research) in Biosciences',
         'Bachelor of Science (Honours) / (Honours with Research) in Chemistry',
         'Bachelor of Science (Honours) / (Honours with Research) in Computer Science',
@@ -241,6 +240,7 @@ export default function ConvocationAdminPortal() {
     const [categoryFilter, setCategoryFilter] = useState('ALL');
     const [programmeFilter, setProgrammeFilter] = useState('ALL');
     const [campusFilter, setCampusFilter] = useState('ALL');
+    const [attendanceFilter, setAttendanceFilter] = useState('ALL');
 
     // Detail view
     const [selectedApp, setSelectedApp] = useState(null);
@@ -516,10 +516,11 @@ export default function ConvocationAdminPortal() {
         .filter(a => statusFilter === 'ALL' ? a.status !== 'ARCHIVED' : a.status === statusFilter)
         .filter(a => categoryFilter === 'ALL' || a.category === categoryFilter)
         .filter(a => programmeFilter === 'ALL' || a.programme === programmeFilter)
-        .filter(a => campusFilter === 'ALL' || a.campus === campusFilter);
+        .filter(a => campusFilter === 'ALL' || a.campus === campusFilter)
+        .filter(a => attendanceFilter === 'ALL' || a.attendance_type === attendanceFilter);
 
     // Bump listKey when filters change so rows re-mount and stagger animation replays
-    useEffect(() => { setListKey(k => k + 1); }, [searchQuery, statusFilter, categoryFilter, programmeFilter, campusFilter]);
+    useEffect(() => { setListKey(k => k + 1); }, [searchQuery, statusFilter, categoryFilter, programmeFilter, campusFilter, attendanceFilter]);
 
     // ─── Login screen ───────────────────────────────────────────────────────
     if (!isLoggedIn) {
@@ -990,10 +991,10 @@ export default function ConvocationAdminPortal() {
                             <NeuSelect
                                 value={categoryFilter}
                                 onChange={v => { setCategoryFilter(v); setProgrammeFilter('ALL'); setCurrentPage(1); }}
-                                placeholder="CATEGORIES"
+                                placeholder="DEGREE"
                                 options={[
-                                    { value: 'ALL', label: 'CATEGORIES' },
-                                    ...CATEGORIES.map(c => ({ value: c, label: c }))
+                                    { value: 'ALL', label: 'DEGREE' },
+                                    ...DEGREE.map(c => ({ value: c, label: c }))
                                 ]}
                             />
                             {categoryFilter !== 'ALL' && (PROGRAMME_MAP[categoryFilter]?.length > 0) && (
@@ -1014,6 +1015,16 @@ export default function ConvocationAdminPortal() {
                                 options={[
                                     { value: 'ALL', label: 'CAMPUSES' },
                                     ...CAMPUSES.map(c => ({ value: c, label: c.replace(' Campus', '') }))
+                                ]}
+                            />
+                            <NeuSelect
+                                value={attendanceFilter}
+                                onChange={v => { setAttendanceFilter(v); setCurrentPage(1); }}
+                                placeholder="ATTENDANCE"
+                                options={[
+                                    { value: 'ALL', label: 'ATTENDANCE' },
+                                    { value: 'In Person', label: 'In Person' },
+                                    { value: 'In Absentia', label: 'In Absentia' },
                                 ]}
                             />
                             <div style={{ display: 'flex', borderRadius: '12px', overflow: 'hidden', boxShadow: 'inset 4px 4px 8px #b2bec9, inset -4px -4px 8px #ffffff', background: '#dde1e7' }}>
@@ -1053,7 +1064,7 @@ export default function ConvocationAdminPortal() {
                                     <div style={{ width: '72px', height: '72px', background: '#f3f4f6', borderRadius: '8px', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 20px' }}><IconFolder size={32} color="#9ca3af" /></div>
                                     <h3 style={{ margin: '0 0 8px', fontSize: '1.1rem', fontWeight: '700', color: '#111' }}>System Empty</h3>
                                     <p style={{ margin: '0 0 24px', color: '#6b7280', fontSize: '0.9rem' }}>There are currently no records matching your active filter configuration.</p>
-                                    <button onClick={() => { setSearchQuery(''); setStatusFilter('ALL'); setCategoryFilter('ALL'); setProgrammeFilter('ALL'); setCampusFilter('ALL'); setCurrentPage(1); }}
+                                    <button onClick={() => { setSearchQuery(''); setStatusFilter('ALL'); setCategoryFilter('ALL'); setProgrammeFilter('ALL'); setCampusFilter('ALL'); setAttendanceFilter('ALL'); setCurrentPage(1); }}
                                         style={{ padding: '10px 24px', background: '#dde1e7', color: '#1e40af', border: 'none', borderRadius: '12px', fontWeight: '700', fontSize: '0.82rem', letterSpacing: '0.05em', cursor: 'pointer', boxShadow: '4px 4px 8px #b2bec9, -4px -4px 8px #ffffff' }}>
                                         RESET REGISTRY VIEW
                                     </button>

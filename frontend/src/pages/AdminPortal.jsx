@@ -273,6 +273,15 @@ export default function AdminPortal() {
     const [searchQuery, setSearchQuery] = useState('');
     const [currentPage, setCurrentPage] = useState(1);
     const [statusFilter, setStatusFilter] = useState('ALL');
+    const [colWidths, setColWidths] = useState(() => {
+        const role = localStorage.getItem('adminRole') || 'admin';
+        // admin has 260px sidebar so table is narrower — needs wider status column
+        // ug/pg/phd have full-width table — redistribute from status/date to form type
+        return role === 'admin'
+            ? [88, 255, 145, 102, 148, 84, 70]
+            : [84, 252, 190, 98, 108, 70, 66];
+    });
+    const colDragRef = useRef(null);
     const [campusFilter, setCampusFilter] = useState('ALL');
     const [formSettings, setFormSettings] = useState(null);
     const [formsDrawerOpen, setFormsDrawerOpen] = useState(false);
@@ -297,6 +306,7 @@ export default function AdminPortal() {
     const [exportingFormType, setExportingFormType] = useState(null);
 
     const [showAuditLog, setShowAuditLog] = useState(false);
+    const [showActivityPanel, setShowActivityPanel] = useState(false);
     const [auditEntries, setAuditEntries] = useState([]);
     const [auditActionFilter, setAuditActionFilter] = useState('ALL');
     const [auditLoading, setAuditLoading] = useState(false);
@@ -2634,6 +2644,10 @@ export default function AdminPortal() {
                         style={{ display: 'flex', alignItems: 'center', gap: '6px', padding: '5px 12px', background: 'transparent', color: '#94a3b8', border: '1px solid rgba(255,255,255,0.12)', borderRadius: '6px', cursor: 'pointer', fontSize: '0.75rem', fontWeight: 500, fontFamily: 'inherit', flexShrink: 0 }}>
                         ⚙ Forms
                     </button>
+                    <button onClick={() => setShowActivityPanel(true)}
+                        style={{ display: 'flex', alignItems: 'center', gap: '6px', padding: '5px 12px', background: 'transparent', color: '#94a3b8', border: '1px solid rgba(255,255,255,0.12)', borderRadius: '6px', cursor: 'pointer', fontSize: '0.75rem', fontWeight: 500, fontFamily: 'inherit', flexShrink: 0 }}>
+                        🕐 Activity
+                    </button>
                     <span style={{ padding: '3px 10px', borderRadius: '12px', fontSize: '0.7rem', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.05em', background: adminRole === 'ug' ? '#1d4ed8' : adminRole === 'pg' ? '#7c3aed' : adminRole === 'phd' ? '#065f46' : '#1e293b', color: 'white', flexShrink: 0 }}>
                         {adminRole === 'ug' ? 'UG Team' : adminRole === 'pg' ? 'PG Team' : adminRole === 'phd' ? 'PhD Team' : 'Admin'}
                     </span>
@@ -2649,8 +2663,8 @@ export default function AdminPortal() {
                         /* DETAIL VIEW */
                         <div style={{ padding: '28px 24px' }}>
                             <button className="btn-back-det" onClick={() => { setSelectedApp(null); setAppDetails(null); }}
-                                style={{ display: 'flex', alignItems: 'center', gap: '6px', background: 'none', border: 'none', cursor: 'pointer', color: '#64748b', fontSize: '0.875rem', fontWeight: 600, marginBottom: '24px', padding: 0, fontFamily: 'inherit' }}>
-                                <ArrowLeft size={15} /> Back to Applications
+                                style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', background: '#f1f5f9', border: '1px solid #e2e8f0', borderRadius: '6px', cursor: 'pointer', color: '#334155', fontSize: '0.8rem', fontWeight: 600, marginBottom: '20px', padding: '6px 14px', fontFamily: 'inherit' }}>
+                                <ArrowLeft size={14} /> Back to Applications
                             </button>
 
                             {/* Breadcrumb + Title */}
@@ -3002,7 +3016,7 @@ export default function AdminPortal() {
                                         )}
 
                                         {/* Notify Dispatched / Uploaded */}
-                                        {(app.status === 'APPROVED' || app.status === 'DISPATCHED') && (
+                                        {(app.status === 'APPROVED' || app.status === 'DISPATCHED' || (appDetails.responseDocuments && appDetails.responseDocuments.length > 0)) && (
                                             <button onClick={() => notifyDispatched(app.id, app.form_type)} style={{ ...sidebarBtnBase, background: '#0ea5e9', color: 'white' }}>
                                                 &#9993; {['Application for Supplementary Examinations Registration', 'Application for Repeating Examinations Registration (CIE and ESE)'].includes(app.form_type) ? 'Notify Student' : app.status === 'DISPATCHED' ? 'Notify: Hard Copy Dispatched' : `Notify: Document ${app.form_type === 'Application for Migration Certificate' ? 'Uploaded' : 'Dispatched'}`}
                                             </button>
@@ -3142,31 +3156,50 @@ export default function AdminPortal() {
                             const safePage = Math.min(currentPage, totalPages);
                             const pagedApplications = filteredApplications.slice((safePage - 1) * PAGE_SIZE, safePage * PAGE_SIZE);
 
-                            const thStyle = { padding: '12px 20px', textAlign: 'left', fontSize: '0.72rem', fontWeight: 700, color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.05em', borderBottom: '1px solid #e2e8f0', background: '#f8fafc', whiteSpace: 'nowrap' };
-                            const tdStyle = { padding: '14px 20px', fontSize: '0.875rem', color: '#334155', borderBottom: '1px solid #f1f5f9' };
+                            const thStyle = { padding: '12px 20px', textAlign: 'left', fontSize: '0.72rem', fontWeight: 700, color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.05em', borderBottom: '1px solid #e2e8f0', background: '#f8fafc', whiteSpace: 'nowrap', position: 'relative', userSelect: 'none' };
+                            const tdStyle = { padding: '14px 20px', fontSize: '0.875rem', color: '#334155', borderBottom: '1px solid #f1f5f9', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' };
+
+                            const startColResize = (colIndex, e) => {
+                                e.preventDefault();
+                                const startX = e.clientX;
+                                const startWidth = colWidths[colIndex];
+                                colDragRef.current = { colIndex, startX, startWidth };
+                                const onMove = (ev) => {
+                                    if (!colDragRef.current) return;
+                                    const delta = ev.clientX - colDragRef.current.startX;
+                                    const newWidth = Math.max(60, colDragRef.current.startWidth + delta);
+                                    setColWidths(prev => { const next = [...prev]; next[colDragRef.current.colIndex] = newWidth; return next; });
+                                };
+                                const onUp = () => { colDragRef.current = null; window.removeEventListener('mousemove', onMove); window.removeEventListener('mouseup', onUp); };
+                                window.addEventListener('mousemove', onMove);
+                                window.addEventListener('mouseup', onUp);
+                            };
+
+                            const ResizeHandle = ({ idx }) => (
+                                <div onMouseDown={(e) => startColResize(idx, e)} style={{ position: 'absolute', right: 0, top: 0, bottom: 0, width: '5px', cursor: 'col-resize', zIndex: 1 }}
+                                    onMouseEnter={e => e.currentTarget.style.background = '#cbd5e1'}
+                                    onMouseLeave={e => e.currentTarget.style.background = 'transparent'} />
+                            );
 
                             return (
                                 <>
                                     <div style={{ overflowX: 'auto' }}>
-                                        <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+                                        <table style={{ tableLayout: 'fixed', width: '100%', minWidth: colWidths.reduce((a, b) => a + b, 0), borderCollapse: 'collapse' }}>
+                                            <colgroup>{colWidths.map((w, i) => <col key={i} style={{ width: w }} />)}</colgroup>
                                             <thead>
                                                 <tr>
-                                                    <th style={thStyle}>ID</th>
-                                                    <th style={thStyle}>Form Type</th>
-                                                    <th style={thStyle}>Applicant</th>
-                                                    <th style={thStyle}>Campus</th>
-                                                    <th style={thStyle}>Status</th>
-                                                    <th style={thStyle}>Date</th>
-                                                    <th style={thStyle}>Action</th>
+                                                    {['ID', 'Form Type', 'Applicant', 'Campus', 'Status', 'Date', 'Action'].map((label, i) => (
+                                                        <th key={label} style={thStyle}>{label}{i < 6 && <ResizeHandle idx={i} />}</th>
+                                                    ))}
                                                 </tr>
                                             </thead>
                                             <tbody>
                                                 {pagedApplications.map((app) => (
                                                     <tr key={app.id} className="dash-row" style={{ borderLeft: `4px solid ${getCampusColor(app.campus)}` }}>
                                                         <td style={{ ...tdStyle, fontFamily: 'monospace', fontSize: '0.78rem', color: '#64748b' }}>{app.id}</td>
-                                                        <td style={{ ...tdStyle, maxWidth: '200px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', fontWeight: 500 }}>{app.form_type}</td>
-                                                        <td style={{ ...tdStyle, fontWeight: 600, color: '#0F172A' }}>{app.applicant_name}</td>
-                                                        <td style={tdStyle}><div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}><div style={{ width: '8px', height: '8px', borderRadius: '50%', background: getCampusColor(app.campus), flexShrink: 0 }} /><span>{app.campus || '—'}</span></div></td>
+                                                        <td style={{ ...tdStyle, fontWeight: 500, whiteSpace: 'normal', lineHeight: '1.3' }} title={app.form_type}>{app.form_type}</td>
+                                                        <td style={{ ...tdStyle, fontWeight: 600, color: '#0F172A' }} title={app.applicant_name}>{app.applicant_name}</td>
+                                                        <td style={tdStyle} title={app.campus}><div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}><div style={{ width: '8px', height: '8px', borderRadius: '50%', background: getCampusColor(app.campus), flexShrink: 0 }} /><span>{(app.campus || '—').replace(' Campus', '')}</span></div></td>
                                                         <td style={tdStyle}>
                                                             <div style={{ display: 'flex', alignItems: 'center', gap: '6px', flexWrap: 'wrap' }}>
                                                                 <span style={getStatusStyle(app.status)}>{app.status}</span>
@@ -3185,10 +3218,10 @@ export default function AdminPortal() {
                                                             </div>
                                                         </td>
                                                         <td style={{ ...tdStyle, color: '#64748b' }}>{new Date(app.created_at + 'Z').toLocaleDateString('en-IN', { timeZone: 'Asia/Kolkata' })}</td>
-                                                        <td style={tdStyle}>
+                                                        <td style={{ ...tdStyle, padding: '12px 10px', overflow: 'visible' }}>
                                                             <button
                                                                 onClick={() => fetchAppDetails(app.id)}
-                                                                style={{ padding: '6px 14px', background: 'white', color: '#334155', border: '1px solid #e2e8f0', borderRadius: '6px', cursor: 'pointer', fontSize: '0.8rem', fontWeight: 600, fontFamily: 'inherit', transition: 'all 0.15s ease' }}
+                                                                style={{ padding: '5px 12px', background: 'white', color: '#334155', border: '1px solid #e2e8f0', borderRadius: '6px', cursor: 'pointer', fontSize: '0.8rem', fontWeight: 600, fontFamily: 'inherit', transition: 'all 0.15s ease', whiteSpace: 'nowrap' }}
                                                                 onMouseEnter={e => { e.currentTarget.style.background = '#f8fafc'; e.currentTarget.style.borderColor = '#94a3b8'; }}
                                                                 onMouseLeave={e => { e.currentTarget.style.background = 'white'; e.currentTarget.style.borderColor = '#e2e8f0'; }}
                                                             >
@@ -3237,32 +3270,40 @@ export default function AdminPortal() {
                     </div>
                     </div>
 
-                    {/* ACTIVITY PANEL */}
-                    <aside style={{ width: '260px', flexShrink: 0, display: 'flex', flexDirection: 'column', gap: '16px' }}>
-                        <div style={{ background: 'white', borderRadius: '12px', border: '1px solid #e2e8f0', boxShadow: '0 1px 3px rgba(0,0,0,0.04)', overflow: 'hidden' }}>
-                            <div style={{ padding: '14px 16px', borderBottom: '1px solid #e2e8f0' }}>
-                                <h3 style={{ fontSize: '0.85rem', fontWeight: 700, color: '#0f172a', margin: 0 }}>Recent Activity</h3>
-                            </div>
-                            <div style={{ padding: '8px 0' }}>
-                                {recentActivity.length === 0
-                                    ? <p style={{ color: '#94a3b8', fontSize: '0.8rem', padding: '16px', margin: 0 }}>No activity yet</p>
-                                    : recentActivity.map(a => (
-                                        <div key={a.id} onClick={() => fetchAppDetails(a.id)}
-                                            style={{ padding: '10px 16px', cursor: 'pointer', borderBottom: '1px solid #f8fafc' }}
-                                            onMouseEnter={e => e.currentTarget.style.background = '#f8fafc'}
-                                            onMouseLeave={e => e.currentTarget.style.background = 'transparent'}>
-                                            <p style={{ margin: '0 0 2px', fontSize: '0.78rem', fontWeight: 600, color: '#0f172a', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                                                {a.applicant_name || 'Unknown'}
-                                            </p>
-                                            <p style={{ margin: 0, fontSize: '0.72rem', color: '#64748b', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                                                {getShortLabel(a.form_type)} · {getTimeAgo(a.created_at)}
-                                            </p>
-                                        </div>
-                                    ))
-                                }
+                    {/* ACTIVITY SLIDE-IN PANEL */}
+                    {showActivityPanel && (
+                        <div style={{ position: 'fixed', inset: 0, zIndex: 9997, background: 'rgba(0,0,0,0.4)' }} onClick={() => setShowActivityPanel(false)}>
+                            <div style={{ position: 'absolute', top: 0, right: 0, width: '300px', height: '100%', background: 'white', boxShadow: '-4px 0 24px rgba(0,0,0,0.12)', display: 'flex', flexDirection: 'column' }}
+                                onClick={e => e.stopPropagation()}>
+                                <div style={{ padding: '16px 20px', borderBottom: '1px solid #e2e8f0', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexShrink: 0 }}>
+                                    <h3 style={{ margin: 0, fontSize: '0.9rem', fontWeight: 700, color: '#0f172a' }}>Recent Activity</h3>
+                                    <button onClick={() => setShowActivityPanel(false)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#64748b', fontSize: '1rem', padding: '2px 6px' }}>✕</button>
+                                </div>
+                                <div style={{ overflowY: 'auto', flex: 1, padding: '8px 0' }}>
+                                    {recentActivity.length === 0
+                                        ? <p style={{ color: '#94a3b8', fontSize: '0.8rem', padding: '16px', margin: 0 }}>No activity yet</p>
+                                        : recentActivity.map(a => (
+                                            <div key={a.id} onClick={() => { fetchAppDetails(a.id); setShowActivityPanel(false); }}
+                                                style={{ padding: '10px 20px', cursor: 'pointer', borderBottom: '1px solid #f8fafc' }}
+                                                onMouseEnter={e => e.currentTarget.style.background = '#f8fafc'}
+                                                onMouseLeave={e => e.currentTarget.style.background = 'transparent'}>
+                                                <p style={{ margin: '0 0 2px', fontSize: '0.8rem', fontWeight: 600, color: '#0f172a', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                                                    {a.applicant_name || 'Unknown'}
+                                                </p>
+                                                <p style={{ margin: 0, fontSize: '0.73rem', color: '#64748b', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                                                    {getShortLabel(a.form_type)} · {getTimeAgo(a.created_at)}
+                                                </p>
+                                            </div>
+                                        ))
+                                    }
+                                </div>
                             </div>
                         </div>
-                        <div style={{ background: 'white', borderRadius: '12px', border: '1px solid #e2e8f0', boxShadow: '0 1px 3px rgba(0,0,0,0.04)', padding: '16px' }}>
+                    )}
+
+                    {/* ASIDE — Quick Actions only (admin only) */}
+                    <aside style={{ width: adminRole === 'admin' ? '260px' : '0', flexShrink: 0, display: adminRole === 'admin' ? 'flex' : 'none', flexDirection: 'column', gap: '16px' }}>
+                        {adminRole === 'admin' && <div style={{ background: 'white', borderRadius: '12px', border: '1px solid #e2e8f0', boxShadow: '0 1px 3px rgba(0,0,0,0.04)', padding: '16px' }}>
                             <h3 style={{ fontSize: '0.85rem', fontWeight: 700, color: '#0f172a', margin: '0 0 12px' }}>Quick Actions</h3>
                             <button onClick={() => { setShowExportModal(true); setExportSearch(''); }}
                                 style={{ width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px', padding: '8px 14px', background: '#f8fafc', border: '1px solid #e2e8f0', borderRadius: '8px', cursor: 'pointer', fontSize: '0.8rem', fontWeight: 600, color: '#334155', fontFamily: 'inherit' }}>
@@ -3298,7 +3339,7 @@ export default function AdminPortal() {
                             >
                                 📋 Test Campus Exam Emails
                             </button>
-                        </div>
+                        </div>}
                     </aside>
                 </div>
 
