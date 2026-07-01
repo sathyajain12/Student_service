@@ -165,8 +165,9 @@ export default {
 
         // Rate limiting — 10 req/min per IP for public routes; 120 req/min for admin routes
         const ip = request.headers.get('CF-Connecting-IP') || 'unknown';
-        const isAdminRoute = url.pathname.startsWith('/admin/');
-        const rateLimit = isAdminRoute ? 120 : 10;
+        const isAdminRoute = url.pathname.startsWith('/admin/') || url.pathname.startsWith('/convocation-admin/');
+        const isSettingsRoute = url.pathname === '/form-settings';
+        const rateLimit = isAdminRoute ? 120 : isSettingsRoute ? 60 : 10;
         const rateLimitKey = isAdminRoute ? `admin:${ip}` : ip;
         if (!checkRateLimit(rateLimitKey, rateLimit)) {
             return addSecurityHeaders(new Response(JSON.stringify({ error: 'Too many requests' }), {
