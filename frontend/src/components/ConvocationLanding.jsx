@@ -10,6 +10,19 @@ const inAbsentiaItems = sectionIdx === -1 ? [] : allInstructions.slice(sectionId
 
 const API_URL = import.meta.env.VITE_BACKEND_URL || 'http://localhost:8787';
 
+function highlightText(text) {
+    const keywords = ['PDF format only', 'maximum 5 MB', 'softcopy of the Original'];
+    let parts = [text];
+    for (const kw of keywords) {
+        parts = parts.flatMap(p =>
+            typeof p === 'string'
+                ? p.split(kw).flatMap((s, i, a) => i < a.length - 1 ? [s, <strong key={kw + i}>{kw}</strong>] : [s])
+                : [p]
+        );
+    }
+    return parts;
+}
+
 export default function ConvocationLanding({ onTrackStatus, onBack }) {
     const [showForm, setShowForm] = useState(() => window.location.pathname === '/convocation/register');
     const [loadingForm, setLoadingForm] = useState(false);
@@ -236,7 +249,11 @@ export default function ConvocationLanding({ onTrackStatus, onBack }) {
                     <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '32px', alignItems: 'start' }}>
 
                         {/* General Guidelines */}
-                        <div ref={generalRef} style={{ opacity: generalVisible ? 1 : 0, transform: generalVisible ? 'translateY(0)' : 'translateY(24px)', transition: 'opacity 0.6s ease, transform 0.6s ease' }}>
+                        <div ref={generalRef} style={{
+                            opacity: generalVisible ? 1 : 0, transform: generalVisible ? 'translateY(0)' : 'translateY(24px)', transition: 'opacity 0.6s ease, transform 0.6s ease',
+                            background: '#fff', borderRadius: '12px', padding: '24px', borderLeft: '3px solid #991b1b',
+                            boxShadow: '0 2px 12px rgba(0,0,0,0.07)',
+                        }}>
                             <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '22px' }}>
                                 <div style={{ width: '32px', height: '32px', background: '#eff6ff', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
                                     <span style={{ color: '#2563eb', fontSize: '15px', fontWeight: '700' }}>ℹ</span>
@@ -252,7 +269,7 @@ export default function ConvocationLanding({ onTrackStatus, onBack }) {
                                             justifyContent: 'center', fontSize: '0.7rem', fontWeight: '700', marginTop: '2px',
                                         }}>{i + 1}</span>
                                         <p style={{ color: '#374151', fontSize: '0.88rem', lineHeight: '1.65', margin: 0 }}>
-                                            {typeof item === 'string' ? item : item.text}
+                                            {highlightText(typeof item === 'string' ? item : item.text)}
                                         </p>
                                     </div>
                                 ))}
@@ -260,7 +277,11 @@ export default function ConvocationLanding({ onTrackStatus, onBack }) {
                         </div>
 
                         {/* In-Absentia Details */}
-                        <div ref={absRef} style={{ opacity: absVisible ? 1 : 0, transform: absVisible ? 'translateY(0)' : 'translateY(24px)', transition: 'opacity 0.6s ease, transform 0.6s ease', transitionDelay: absVisible ? '120ms' : '0ms' }}>
+                        <div ref={absRef} style={{
+                            opacity: absVisible ? 1 : 0, transform: absVisible ? 'translateY(0)' : 'translateY(24px)', transition: 'opacity 0.6s ease, transform 0.6s ease', transitionDelay: absVisible ? '120ms' : '0ms',
+                            background: '#fff', borderRadius: '12px', padding: '24px', borderLeft: '3px solid #e11d48',
+                            boxShadow: '0 2px 12px rgba(0,0,0,0.07)',
+                        }}>
                             <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '22px' }}>
                                 <div style={{ width: '32px', height: '32px', background: '#fff1f2', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
                                     <span style={{ color: '#e11d48', fontSize: '14px' }}>✉</span>
@@ -273,7 +294,13 @@ export default function ConvocationLanding({ onTrackStatus, onBack }) {
                                     if (item?.type === 'address') {
                                         const d = item.details || {};
                                         return (
-                                            <div key={i} style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                                            <div key={i} style={{ display: 'flex', gap: '12px', alignItems: 'flex-start' }}>
+                                                <span style={{
+                                                    flexShrink: 0, width: '22px', height: '22px', background: '#991b1b',
+                                                    color: '#fff', borderRadius: '50%', display: 'flex', alignItems: 'center',
+                                                    justifyContent: 'center', fontSize: '0.7rem', fontWeight: '700', marginTop: '2px',
+                                                }}>{num}</span>
+                                                <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', flex: 1 }}>
                                                 <p style={{ color: '#374151', fontSize: '0.88rem', lineHeight: '1.65', margin: 0 }}>{item.text}</p>
                                                 <div style={{ background: '#fff', border: '1px solid #e5e7eb', borderRadius: '10px', padding: '16px' }}>
                                                     <div style={{ display: 'flex', gap: '10px', marginBottom: '10px' }}>
@@ -292,6 +319,7 @@ export default function ConvocationLanding({ onTrackStatus, onBack }) {
                                                             {d.email && <span style={{ color: '#64748b', fontSize: '0.82rem' }}>✉ {d.email}</span>}
                                                         </div>
                                                     )}
+                                                </div>
                                                 </div>
                                             </div>
                                         );

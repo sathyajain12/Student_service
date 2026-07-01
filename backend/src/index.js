@@ -3895,9 +3895,12 @@ async function storeConvocationFile(env, appId, fieldName, file) {
     const MAX_SIZE = 5 * 1024 * 1024; // 5 MB
     if (file.size > MAX_SIZE) throw new Error(`File "${file.name}" exceeds 5 MB limit.`);
     const arrayBuffer = await file.arrayBuffer();
-    let binary = '';
     const bytes = new Uint8Array(arrayBuffer);
-    for (let i = 0; i < bytes.length; i++) binary += String.fromCharCode(bytes[i]);
+    const CHUNK = 8192;
+    let binary = '';
+    for (let i = 0; i < bytes.length; i += CHUNK) {
+        binary += String.fromCharCode(...bytes.subarray(i, i + CHUNK));
+    }
     const base64 = btoa(binary);
     await env.DB.prepare(
         `INSERT INTO file_blobs (application_id, field_name, file_name, file_type, file_size, file_data)
@@ -3944,13 +3947,28 @@ async function handleConvocation2026(formData, request, env, corsHeaders) {
     const regSuffix = (regNo || '').replace(/[^A-Z0-9]/gi, '').toUpperCase();
     const appId = `CONV${yy}${mm}${regSuffix}`;
 
-    await env.DB.prepare(
-        `INSERT INTO applications (id, student_email, form_type, applicant_name, reg_no, campus, programme)
-         VALUES (?, ?, ?, ?, ?, ?, ?)`
-    ).bind(appId, email, formType, applicantName, regNo, campus, programme).run();
+    const existing = await env.DB.prepare(
+        'SELECT id FROM applications WHERE id = ?'
+    ).bind(appId).first();
+    const existingFiles = existing
+        ? await env.DB.prepare('SELECT id FROM file_blobs WHERE application_id = ?').bind(appId).first()
+        : null;
+
+    if (existing && existingFiles) {
+        return new Response(JSON.stringify({
+            error: `You have already submitted a convocation registration. Your application ID is ${appId}. Please email convocation@sssihl.edu.in if you need assistance.`
+        }), { status: 409, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+    }
+
+    if (!existing) {
+        await env.DB.prepare(
+            `INSERT INTO applications (id, student_email, form_type, applicant_name, reg_no, campus, programme)
+             VALUES (?, ?, ?, ?, ?, ?, ?)`
+        ).bind(appId, email, formType, applicantName, regNo, campus, programme).run();
+    }
 
     await env.DB.prepare(
-        `INSERT INTO form_convocation_2026
+        `INSERT OR IGNORE INTO form_convocation_2026
          (application_id, student_name, registration_number, category, programme, campus, attendance_type,
           date_of_birth, postal_address, active_mobile, alternate_mobile,
           prev_board_university, prev_qualification_programme, prev_qualification_certificate_no, declaration)
@@ -5665,7 +5683,7 @@ async function handleStatusRequest(url, env, corsHeaders) {
 
     try {
         const app = await env.DB.prepare(
-            `SELECT id, form_type, applicant_name, campus, status, director_status, director_comment, controller_status, campus_exam_status, created_at, updated_at
+            `SELECT id, form_type, applicant_name, campus, status, director_status, director_comment, controller_status, campus_exam_status, created_at, updated_at, access_token
              FROM applications WHERE id = ?`
         ).bind(id).first();
 
@@ -5720,6 +5738,7 @@ async function handleStatusRequest(url, env, corsHeaders) {
             'Application for Re-Totalling of Marks': 'form_retotaling',
             'Application for On-Request Degree Certificate': 'form_on_request_degree',
             'Application for Migration Certificate': 'form_migration_certificate',
+            'SSSIHL - XLV Annual Convocation November 2026 - Registration Form': 'form_convocation_2026',
         };
 
         let formData = null;
@@ -5751,6 +5770,7 @@ async function handleStatusRequest(url, env, corsHeaders) {
             campus_exam_status: app.campus_exam_status,
             created_at: app.created_at,
             updated_at: app.updated_at,
+            access_token: app.access_token || null,
             needs_director_approval: shouldNotifyDirector(app.form_type),
             needs_campus_exam_review: needsCampusExamReview,
             formData,

@@ -135,7 +135,6 @@ function App() {
     return (
       <ConvocationLanding
         onTrackStatus={() => navigateTo('status', null, null)}
-        onBack={() => navigateTo('portal', null, null)}
       />
     );
   }

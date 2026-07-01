@@ -1086,7 +1086,7 @@ export default function ConvocationAdminPortal() {
                                                     onMouseEnter={e => e.currentTarget.style.background = '#d5dae2'}
                                                     onMouseLeave={e => e.currentTarget.style.background = 'transparent'}>
                                                     <td style={{ padding: '12px 16px' }}>
-                                                        <span title={app.id} style={{ fontFamily: 'monospace', fontSize: '0.75rem', color: '#1e40af', fontWeight: '700', display: 'block', maxWidth: '100px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{app.id}</span>
+                                                        <span style={{ fontFamily: 'monospace', fontSize: '0.75rem', color: '#1e40af', fontWeight: '700', display: 'block', whiteSpace: 'nowrap' }}>{app.id}</span>
                                                     </td>
                                                     <td style={{ padding: '12px 16px', fontWeight: '600', color: '#2d3748' }}>{app.applicant_name}</td>
                                                     <td style={{ padding: '12px 16px', color: '#4a5568', fontFamily: 'monospace', fontSize: '0.82rem' }}>{app.reg_no || '—'}</td>

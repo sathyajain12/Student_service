@@ -14,8 +14,304 @@ import {
     X,
     Download,
     Send,
-    PauseCircle
+    PauseCircle,
+    GraduationCap,
+    Award,
+    BookOpen
 } from 'lucide-react';
+
+function ConvocationStatusView({ application, fmtDate, downloadResponseDocument }) {
+    const s = application.status;
+    const fd = application.formData;
+    const attendanceType = fd?.attendance_type || null;
+    const category = fd?.category || null;
+    const programme = fd?.programme || null;
+
+    const isApproved = ['APPROVED', 'COMPLETED'].includes(s);
+    const isRejected = s === 'REJECTED';
+    const isDispatched = s === 'DISPATCHED';
+    const isDone = isApproved || isDispatched;
+
+    const statusLabel = isDispatched ? 'Certificate Ready' : isApproved ? 'Confirmed' : isRejected ? 'Rejected' : 'Pending Review';
+    const statusDesc = isDispatched
+        ? 'Your registration is confirmed. Please check with the Registrar for certificate collection details.'
+        : isApproved
+        ? 'Your convocation registration has been confirmed by the Registrar.'
+        : isRejected
+        ? "Your registration was not approved. Please contact the Registrar's Office."
+        : "Your application is currently being reviewed by the Registrar's Office.";
+
+    const statusBg = isDone ? '#dcfce7' : isRejected ? '#fee2e2' : '#dbeafe';
+    const statusColor = isDone ? '#166534' : isRejected ? '#991b1b' : '#1e40af';
+    const statusIconBg = isDone ? '#f0fdf4' : isRejected ? '#fef2f2' : '#eff6ff';
+    const statusIconColor = isDone ? '#16a34a' : isRejected ? '#dc2626' : '#2563eb';
+
+    const isInPerson = attendanceType && attendanceType.toLowerCase().includes('person');
+
+    const convStages = [
+        { num: 1, label: 'Registration Received', sublabel: fmtDate(application.created_at), stageStatus: 'COMPLETED' },
+        {
+            num: 2, label: 'Document Verification',
+            sublabel: s === 'PENDING' ? 'In Progress' : isRejected ? 'Rejected' : 'Completed',
+            stageStatus: s === 'PENDING' ? 'IN_PROGRESS' : isRejected ? 'REJECTED' : 'COMPLETED',
+        },
+        {
+            num: 3, label: 'Registration Confirmed',
+            sublabel: isDone ? 'Completed' : isRejected ? 'Rejected' : 'Pending',
+            stageStatus: isDone ? 'COMPLETED' : isRejected ? 'REJECTED' : 'PENDING',
+        },
+        {
+            num: 4, label: 'Certificate Ready',
+            sublabel: isDispatched ? 'Completed' : 'Pending',
+            stageStatus: isDispatched ? 'COMPLETED' : 'PENDING',
+        },
+    ];
+
+    return (
+        <div>
+            <style>{`
+                @keyframes conv-pulse {
+                    0%, 100% { opacity: 1; transform: scale(1); box-shadow: 0 0 0 0 rgba(153,27,27,0.35); }
+                    50% { opacity: 0.85; transform: scale(1.1); box-shadow: 0 0 0 10px rgba(153,27,27,0); }
+                }
+                @keyframes conv-spin {
+                    from { transform: rotate(0deg); }
+                    to { transform: rotate(360deg); }
+                }
+                .conv-step-pulse { animation: conv-pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite; }
+                .conv-icon-spin { animation: conv-spin 1.8s linear infinite; display: block; }
+            `}</style>
+
+            {/* Maroon header banner */}
+            <div style={{
+                background: 'linear-gradient(135deg, #760009 0%, #991b1b 100%)',
+                borderRadius: '16px', padding: '40px', marginBottom: '24px',
+                position: 'relative', overflow: 'hidden',
+                boxShadow: '0 8px 32px rgba(118,0,9,0.22)', color: 'white',
+            }}>
+                <div style={{ position: 'relative', zIndex: 1, display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: '20px' }}>
+                    <div>
+                        <p style={{ fontSize: '0.68rem', fontWeight: '700', letterSpacing: '0.15em', textTransform: 'uppercase', opacity: 0.8, marginBottom: '20px' }}>
+                            Sri Sathya Sai Institute of Higher Learning
+                        </p>
+                        <p style={{ fontSize: '0.88rem', fontWeight: '500', opacity: 0.85, marginBottom: '8px' }}>
+                            XLV Annual Convocation — November 2026
+                        </p>
+                        <h2 style={{ fontSize: '2rem', fontWeight: '800', lineHeight: 1.2, marginBottom: '10px', letterSpacing: '-0.01em' }}>
+                            {application.applicant_name}
+                        </h2>
+                        <p style={{ fontSize: '0.88rem', opacity: 0.72 }}>{application.campus}</p>
+                    </div>
+                    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', justifyContent: 'space-between', gap: '24px' }}>
+                        <span style={{ fontFamily: 'monospace', fontSize: '0.75rem', opacity: 0.6, background: 'rgba(0,0,0,0.18)', padding: '4px 12px', borderRadius: '6px' }}>
+                            ID: {application.id}
+                        </span>
+                        <GraduationCap size={60} style={{ opacity: 0.15 }} />
+                    </div>
+                </div>
+                <div style={{ position: 'absolute', top: 0, right: 0, width: '33%', height: '100%', opacity: 0.08, pointerEvents: 'none' }}>
+                    <svg viewBox="0 0 100 100" style={{ height: '100%', width: '100%' }}>
+                        <path d="M0,0 L100,0 L100,100 Z" fill="currentColor" />
+                    </svg>
+                </div>
+            </div>
+
+            {/* Main 2-col grid: details+timeline left, status right */}
+            <div style={{ display: 'grid', gridTemplateColumns: 'minmax(0, 2fr) minmax(220px, 1fr)', gap: '24px', marginBottom: '24px' }}>
+
+                {/* Left column */}
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
+
+                    {/* Application detail chips */}
+                    <div className="glass-card" style={{ padding: '24px' }}>
+                        <p style={{ fontSize: '0.72rem', fontWeight: '700', textTransform: 'uppercase', letterSpacing: '0.1em', color: 'var(--text-muted)', marginBottom: '16px' }}>
+                            Application Details
+                        </p>
+                        <div style={{ display: 'flex', flexWrap: 'wrap', gap: '10px' }}>
+                            {attendanceType && (
+                                <span style={{
+                                    display: 'inline-flex', alignItems: 'center', gap: '6px',
+                                    padding: '6px 14px', borderRadius: '9999px', fontSize: '0.8rem', fontWeight: '600',
+                                    background: isInPerson ? '#dcfce7' : '#fef3c7',
+                                    color: isInPerson ? '#166534' : '#92400e',
+                                    border: `1px solid ${isInPerson ? '#bbf7d0' : '#fde68a'}`,
+                                }}>
+                                    <CheckCircle2 size={14} />
+                                    {attendanceType}
+                                </span>
+                            )}
+                            {category && (
+                                <span style={{
+                                    display: 'inline-flex', alignItems: 'center', gap: '6px',
+                                    padding: '6px 14px', borderRadius: '9999px', fontSize: '0.8rem', fontWeight: '600',
+                                    background: '#f1f5f9', color: 'var(--text-muted)', border: '1px solid #e2e8f0',
+                                }}>
+                                    <Award size={14} />
+                                    {category}
+                                </span>
+                            )}
+                            {programme && (
+                                <span style={{
+                                    display: 'inline-flex', alignItems: 'center', gap: '6px',
+                                    padding: '6px 14px', borderRadius: '9999px', fontSize: '0.8rem', fontWeight: '600',
+                                    background: '#f1f5f9', color: 'var(--text-muted)', border: '1px solid #e2e8f0',
+                                }}>
+                                    <BookOpen size={14} />
+                                    {programme}
+                                </span>
+                            )}
+                            {!attendanceType && !category && !programme && (
+                                <span style={{ fontSize: '0.85rem', color: 'var(--text-muted)', fontStyle: 'italic' }}>Loading details…</span>
+                            )}
+                        </div>
+                    </div>
+
+                    {/* Verification timeline */}
+                    <div className="glass-card" style={{ padding: '32px', overflowX: 'auto' }}>
+                        <p style={{ fontSize: '0.72rem', fontWeight: '700', textTransform: 'uppercase', letterSpacing: '0.1em', color: 'var(--text-muted)', marginBottom: '40px' }}>
+                            Verification Timeline
+                        </p>
+                        <div style={{ position: 'relative', display: 'flex', justifyContent: 'space-between', minWidth: '480px', padding: '0 20px' }}>
+                            <div style={{ position: 'absolute', top: '20px', left: 0, right: 0, height: '2px', background: '#e2e8f0', zIndex: 0 }} />
+                            {convStages.map((stage) => {
+                                const isDoneStep = stage.stageStatus === 'COMPLETED';
+                                const isProgressStep = stage.stageStatus === 'IN_PROGRESS';
+                                const isRejectedStep = stage.stageStatus === 'REJECTED';
+                                const isPendingStep = stage.stageStatus === 'PENDING';
+                                return (
+                                    <div key={stage.num} style={{ position: 'relative', zIndex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', textAlign: 'center', flex: 1 }}>
+                                        <div
+                                            className={isProgressStep ? 'conv-step-pulse' : undefined}
+                                            style={{
+                                                width: '40px', height: '40px', borderRadius: '50%',
+                                                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                                                marginBottom: '12px', flexShrink: 0,
+                                                background: isDoneStep ? '#16a34a' : isProgressStep ? '#991b1b' : isRejectedStep ? '#dc2626' : 'white',
+                                                border: isPendingStep ? '2px solid #cbd5e1' : 'none',
+                                                color: (isDoneStep || isProgressStep || isRejectedStep) ? 'white' : '#94a3b8',
+                                                boxShadow: (isDoneStep || isProgressStep) ? '0 4px 12px rgba(0,0,0,0.18)' : 'none',
+                                            }}
+                                        >
+                                            {isDoneStep ? <CheckCircle2 size={20} /> : isRejectedStep ? <X size={20} /> : isProgressStep ? <Clock size={20} className="conv-icon-spin" /> : (
+                                                <span style={{ fontWeight: '600', fontSize: '0.82rem' }}>{stage.num}</span>
+                                            )}
+                                        </div>
+                                        <p style={{
+                                            fontSize: '0.78rem', fontWeight: (isDoneStep || isProgressStep) ? '700' : '500',
+                                            color: isProgressStep ? '#991b1b' : isDoneStep ? 'var(--text-main)' : isRejectedStep ? '#dc2626' : 'var(--text-muted)',
+                                            marginBottom: '4px', maxWidth: '90px',
+                                        }}>
+                                            {stage.label}
+                                        </p>
+                                        <p style={{
+                                            fontSize: '0.7rem',
+                                            color: isProgressStep ? '#991b1b' : isRejectedStep ? '#dc2626' : 'var(--text-muted)',
+                                            fontWeight: isProgressStep ? '600' : 'normal',
+                                        }}>
+                                            {stage.sublabel}
+                                        </p>
+                                    </div>
+                                );
+                            })}
+                        </div>
+                    </div>
+                </div>
+
+                {/* Right column: status card */}
+                <div>
+                    <div className="glass-card" style={{
+                        padding: '32px', textAlign: 'center',
+                        display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
+                        minHeight: '300px',
+                    }}>
+                        <div style={{
+                            width: '72px', height: '72px', borderRadius: '50%',
+                            background: statusIconBg, display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: '20px',
+                        }}>
+                            <FileText size={32} style={{ color: statusIconColor }} />
+                        </div>
+                        <span style={{
+                            display: 'inline-block', padding: '8px 20px', borderRadius: '9999px',
+                            background: statusBg, color: statusColor,
+                            fontSize: '0.82rem', fontWeight: '800', letterSpacing: '0.02em', marginBottom: '16px',
+                        }}>
+                            {statusLabel}
+                        </span>
+                        <p style={{ fontSize: '0.88rem', color: 'var(--text-muted)', lineHeight: 1.6, marginBottom: '16px', maxWidth: '220px' }}>
+                            {statusDesc}
+                        </p>
+                        <p style={{ fontSize: '0.72rem', color: '#94a3b8', letterSpacing: '0.03em', textTransform: 'uppercase' }}>
+                            Submitted on {fmtDate(application.created_at)}
+                        </p>
+                    </div>
+                </div>
+            </div>
+
+            {/* Uploaded documents */}
+            {application.files && application.files.length > 0 && (
+                <div className="glass-card" style={{ padding: '24px', marginBottom: '24px' }}>
+                    <p style={{ fontSize: '0.72rem', fontWeight: '700', textTransform: 'uppercase', letterSpacing: '0.1em', color: 'var(--text-muted)', marginBottom: '16px' }}>
+                        Uploaded Documents
+                    </p>
+                    <div style={{ display: 'flex', flexWrap: 'wrap', gap: '10px' }}>
+                        {application.files.map((file, index) => (
+                            <div key={index} style={{
+                                display: 'inline-flex', alignItems: 'center', gap: '8px',
+                                padding: '8px 14px', background: 'rgba(37,99,235,0.05)',
+                                border: '1px solid rgba(37,99,235,0.2)', borderRadius: '8px',
+                            }}>
+                                <FileText size={15} style={{ color: 'var(--accent)' }} />
+                                <span style={{ fontSize: '0.83rem', color: 'var(--text-main)' }}>{file.file_name}</span>
+                            </div>
+                        ))}
+                    </div>
+                </div>
+            )}
+
+            {/* Response documents */}
+            {application.responseDocuments && application.responseDocuments.length > 0 && (
+                <div className="glass-card" style={{ padding: '30px' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '20px' }}>
+                        <div style={{ width: '40px', height: '40px', borderRadius: '10px', background: 'rgba(5,150,105,0.1)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                            <FileText size={20} style={{ color: 'var(--success)' }} />
+                        </div>
+                        <div>
+                            <h4 style={{ fontSize: '1.1rem', color: 'var(--text-main)', margin: 0 }}>Your Documents are Ready!</h4>
+                            <p style={{ fontSize: '0.85rem', color: 'var(--text-muted)', margin: 0 }}>Download your documents below</p>
+                        </div>
+                    </div>
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                        {application.responseDocuments.map((doc) => (
+                            <div key={doc.id} style={{
+                                display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+                                padding: '16px 20px', background: 'rgba(5,150,105,0.05)',
+                                border: '1px solid rgba(5,150,105,0.2)', borderRadius: '12px', flexWrap: 'wrap', gap: '12px',
+                            }}>
+                                <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                                    <FileText size={24} style={{ color: 'var(--success)' }} />
+                                    <div>
+                                        <p style={{ color: 'var(--text-main)', fontWeight: '600', margin: 0, fontSize: '0.95rem' }}>{doc.file_name}</p>
+                                        <p style={{ color: 'var(--text-muted)', fontSize: '0.8rem', margin: 0, marginTop: '4px' }}>
+                                            {(doc.file_size / 1024).toFixed(1)} KB • Uploaded {fmtDate(doc.created_at)}
+                                        </p>
+                                    </div>
+                                </div>
+                                <button
+                                    onClick={() => downloadResponseDocument(doc.id, doc.file_name, application.id)}
+                                    className="btn-primary"
+                                    style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '10px 20px', background: 'var(--success)', fontSize: '0.9rem' }}
+                                >
+                                    <Download size={18} />
+                                    Download
+                                </button>
+                            </div>
+                        ))}
+                    </div>
+                </div>
+            )}
+        </div>
+    );
+}
 
 export default function StatusTracker({ onBack }) {
     const [appId, setAppId] = useState('');
@@ -181,6 +477,7 @@ export default function StatusTracker({ onBack }) {
     const parseDate = (val) => val ? new Date(String(val).replace(' ', 'T') + (String(val).includes('Z') ? '' : 'Z')) : null;
     const fmtDate = (val) => { const d = parseDate(val); return d && !isNaN(d) ? d.toLocaleDateString('en-IN', { timeZone: 'Asia/Kolkata' }) : '—'; };
     const fmtDateTime = (val) => { const d = parseDate(val); return d && !isNaN(d) ? d.toLocaleString('en-IN', { timeZone: 'Asia/Kolkata' }) : '—'; };
+    const isConvocation = application?.form_type === 'SSSIHL - XLV Annual Convocation November 2026 - Registration Form';
 
     return (
         <div className="animate-fade-in">
@@ -283,6 +580,14 @@ export default function StatusTracker({ onBack }) {
 
             {application && !application.archived && (
                 <div className="animate-fade-in">
+                    {isConvocation ? (
+                        <ConvocationStatusView
+                            application={application}
+                            fmtDate={fmtDate}
+                            fmtDateTime={fmtDateTime}
+                            downloadResponseDocument={downloadResponseDocument}
+                        />
+                    ) : (<>
                     <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '30px', marginBottom: '40px' }}>
                         <div className="glass-card" style={{ padding: '25px', borderLeft: '4px solid var(--accent)' }}>
                             <p style={{ fontSize: '0.75rem', fontWeight: '700', color: 'var(--text-muted)', textTransform: 'uppercase', marginBottom: '8px' }}>Applicant Details</p>
@@ -704,6 +1009,8 @@ export default function StatusTracker({ onBack }) {
                                 ))}
                             </div>
                         </div>
+                    )}
+                    </>
                     )}
                 </div>
             )}
