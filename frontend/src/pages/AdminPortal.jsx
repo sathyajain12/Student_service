@@ -1024,12 +1024,12 @@ export default function AdminPortal() {
                       <tr>
                         <td class="num-col">${6 + i}</td>
                         <td class="label-col">Course Code</td>
-                        <td>${escapeHtml(c.code || c.Code || '')}</td>
+                        <td>${escapeHtml(c.paperCode || c.code || c.Code || '')}</td>
                       </tr>
                       <tr>
                         <td class="num-col"></td>
                         <td class="label-col">Title of the Course</td>
-                        <td>${escapeHtml(c.title || c.Title || '')}</td>
+                        <td>${escapeHtml(c.paperTitle || c.title || c.Title || '')}</td>
                       </tr>
                       <tr>
                         <td class="num-col"></td>
@@ -2745,7 +2745,7 @@ export default function AdminPortal() {
                                                             <th style={{ border: '1px solid #e2e8f0', padding: '6px 10px', textAlign: 'left', fontWeight: 600, color: '#64748b' }}>Semester</th>
                                                         </tr></thead>
                                                         <tbody>{courses.map((c, i) => (
-                                                            <tr key={i}><td style={{ border: '1px solid #e2e8f0', padding: '6px 10px', fontFamily: 'monospace' }}>{c.code || c.Code || ''}</td><td style={{ border: '1px solid #e2e8f0', padding: '6px 10px' }}>{c.title || c.Title || ''}</td><td style={{ border: '1px solid #e2e8f0', padding: '6px 10px' }}>{c.semester || c.Semester || ''}</td></tr>
+                                                            <tr key={i}><td style={{ border: '1px solid #e2e8f0', padding: '6px 10px', fontFamily: 'monospace' }}>{c.paperCode || c.code || c.Code || ''}</td><td style={{ border: '1px solid #e2e8f0', padding: '6px 10px' }}>{c.paperTitle || c.title || c.Title || ''}</td><td style={{ border: '1px solid #e2e8f0', padding: '6px 10px' }}>{c.semester || c.Semester || ''}</td></tr>
                                                         ))}</tbody>
                                                     </table>
                                                 </div>

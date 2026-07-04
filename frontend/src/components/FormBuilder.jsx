@@ -241,6 +241,14 @@ export default function FormBuilder({ config, onSubmit, onCancel, onTrackStatus,
         if (hiddenData) {
             Object.entries(hiddenData).forEach(([k, v]) => { if (v != null) bundle.append(k, v); });
         }
+        // conditionalSelect fields rendered as hidden inputs (pre-filled from hiddenData)
+        // don't go through handleChange, so they're absent from formData state — append them now
+        config.fields.forEach(field => {
+            if (field.type === 'conditionalSelect' && hiddenData?.[field.dependsOn] && !formData[field.name]) {
+                const preVal = field.optionsMap?.[hiddenData[field.dependsOn]]?.[0] || '';
+                if (preVal) bundle.append(field.name, preVal);
+            }
+        });
 
         try {
             const backendUrl = import.meta.env.VITE_BACKEND_URL || 'http://localhost:8787';
@@ -294,6 +302,12 @@ export default function FormBuilder({ config, onSubmit, onCancel, onTrackStatus,
         if (hiddenData) {
             Object.entries(hiddenData).forEach(([k, v]) => { if (v != null) bundle.append(k, v); });
         }
+        config.fields.forEach(field => {
+            if (field.type === 'conditionalSelect' && hiddenData?.[field.dependsOn] && !formData[field.name]) {
+                const preVal = field.optionsMap?.[hiddenData[field.dependsOn]]?.[0] || '';
+                if (preVal) bundle.append(field.name, preVal);
+            }
+        });
 
         try {
             const backendUrl = import.meta.env.VITE_BACKEND_URL || 'http://localhost:8787';
