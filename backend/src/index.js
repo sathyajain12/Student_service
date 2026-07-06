@@ -2282,7 +2282,12 @@ async function sendAdminNotification(env, appId, formType, applicantName, email,
                     { label: 'Submitted On', value: new Date().toLocaleString() }
                 ],
                 actionButtons: [
-                    { label: 'Login to Admin Portal', link: 'https://sssihl-student-service.pages.dev/admin' }
+                    {
+                        label: 'Login to Admin Portal',
+                        link: formType === 'SSSIHL - XLV Annual Convocation November 2026 - Registration Form'
+                            ? 'https://sssihl-student-service.pages.dev/convocation-admin'
+                            : 'https://sssihl-student-service.pages.dev/admin'
+                    }
                 ]
             });
 
