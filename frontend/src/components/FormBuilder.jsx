@@ -85,7 +85,12 @@ export default function FormBuilder({ config, onSubmit, onCancel, onTrackStatus,
     const [fieldErrors, setFieldErrors] = useState({});
 
     const handleChange = (e) => {
-        const { name, value } = e.target;
+        const { name } = e.target;
+        let { value } = e.target;
+        if (name === 'mobile') {
+            value = value.replace(/\D/g, '');
+            e.target.value = value;
+        }
         setFormData(prev => ({ ...prev, [name]: value }));
 
         const field = (config.fields || []).find(f => f.name === name);
@@ -860,11 +865,17 @@ export default function FormBuilder({ config, onSubmit, onCancel, onTrackStatus,
                                     ) : (
                                         <>
                                             <input
-                                                type={field.type}
+                                                type={field.name === 'mobile' ? 'text' : field.type}
+                                                inputMode={field.name === 'mobile' ? 'numeric' : undefined}
                                                 name={field.name}
                                                 required={field.required}
                                                 placeholder={field.placeholder}
                                                 onChange={handleChange}
+                                                onKeyDown={field.name === 'mobile' ? (e) => {
+                                                    if (!/^\d$/.test(e.key) && !['Backspace', 'Delete', 'ArrowLeft', 'ArrowRight', 'Tab', 'Home', 'End'].includes(e.key)) {
+                                                        e.preventDefault();
+                                                    }
+                                                } : undefined}
                                                 onInput={field.max !== undefined ? (e) => {
                                                     if (e.target.value !== '' && parseFloat(e.target.value) > parseFloat(field.max)) {
                                                         e.target.value = field.max;

@@ -269,6 +269,7 @@ export default function AdminPortal() {
     const [showDispatchModal, setShowDispatchModal] = useState(false);
     const [dispatchAppId, setDispatchAppId] = useState(null);
     const [dispatchFormType, setDispatchFormType] = useState(null);
+    const [notifySuccessAppId, setNotifySuccessAppId] = useState(null);
     const dispatchTrackingRef = useRef(null);
     const [searchQuery, setSearchQuery] = useState('');
     const [currentPage, setCurrentPage] = useState(1);
@@ -729,7 +730,7 @@ export default function AdminPortal() {
     .form-subtitle { text-align: center; font-size: 12px; margin-bottom: 3px; }
     .section-label { font-weight: bold; padding: 4px 8px; border: 1px solid #000; border-bottom: none; background: #fff; margin-top: 14px; font-size: 12px; }
     table { width: 100%; border-collapse: collapse; }
-    td, th { border: 1px solid #000; padding: 5px 8px; font-size: 11px; vertical-align: top; }
+    td, th { border: 1px solid #000; padding: 3px 8px; font-size: 11px; vertical-align: top; }
     th { font-weight: bold; text-align: center; background: #fff; }
     .num-col { width: 28px; text-align: center; }
     .label-col { width: 44%; }
@@ -1022,17 +1023,17 @@ export default function AdminPortal() {
                 if (Array.isArray(courses) && courses.length > 0) {
                     courseRows = courses.map((c, i) => `
                       <tr>
-                        <td class="num-col">${6 + i}</td>
+                        <td class="num-col">${6 + i * 3}</td>
                         <td class="label-col">Course Code</td>
                         <td>${escapeHtml(c.paperCode || c.code || c.Code || '')}</td>
                       </tr>
                       <tr>
-                        <td class="num-col"></td>
+                        <td class="num-col">${7 + i * 3}</td>
                         <td class="label-col">Title of the Course</td>
                         <td>${escapeHtml(c.paperTitle || c.title || c.Title || '')}</td>
                       </tr>
                       <tr>
-                        <td class="num-col"></td>
+                        <td class="num-col">${8 + i * 3}</td>
                         <td class="label-col">Semester</td>
                         <td>${escapeHtml(String(c.semester || c.Semester || ''))}</td>
                       </tr>`).join('');
@@ -1064,9 +1065,9 @@ export default function AdminPortal() {
     .form-subtitle { text-align: center; font-size: 11px; font-style: italic; margin-bottom: 14px; }
     .section-label { font-weight: bold; padding: 4px 8px; border: 1px solid #000; border-bottom: none; background: #fff; margin-top: 14px; font-size: 12px; }
     table { width: 100%; border-collapse: collapse; }
-    td { border: 1px solid #000; padding: 5px 8px; font-size: 11px; vertical-align: top; }
+    td { border: 1px solid #000; padding: 3px 8px; font-size: 11px; vertical-align: top; }
     .num-col { width: 28px; text-align: center; }
-    .label-col { width: 44%; }
+    .label-col { width: 30%; }
     @media print { body { padding: 15px; } }
   </style>
 </head>
@@ -1584,6 +1585,8 @@ export default function AdminPortal() {
             if (response.ok) {
                 const word = formType === 'Application for Migration Certificate' ? 'uploaded' : 'dispatched';
                 showToast(`Student notified — document marked as ${word}!`, 'success');
+                setNotifySuccessAppId(applicationId);
+                setTimeout(() => setNotifySuccessAppId(null), 3000);
                 fetchAppDetails(applicationId);
                 fetchStats();
                 fetchApplications();
@@ -3016,14 +3019,20 @@ export default function AdminPortal() {
                                         )}
 
                                         {/* Notify Dispatched / Uploaded */}
-                                        {(app.status === 'APPROVED' || app.status === 'DISPATCHED' || (appDetails.responseDocuments && appDetails.responseDocuments.length > 0)) && (
-                                            <button onClick={() => notifyDispatched(app.id, app.form_type)} style={{ ...sidebarBtnBase, background: '#0ea5e9', color: 'white' }}>
-                                                &#9993; {['Application for Supplementary Examinations Registration', 'Application for Repeating Examinations Registration (CIE and ESE)'].includes(app.form_type) ? 'Notify Student' : app.status === 'DISPATCHED' ? 'Notify: Hard Copy Dispatched' : `Notify: Document ${app.form_type === 'Application for Migration Certificate' ? 'Uploaded' : 'Dispatched'}`}
-                                            </button>
+                                        {(
+                                            notifySuccessAppId === app.id ? (
+                                                <button disabled style={{ ...sidebarBtnBase, background: '#16a34a', color: 'white', cursor: 'default', opacity: 0.9 }}>
+                                                    ✓ Notification Sent
+                                                </button>
+                                            ) : (
+                                                <button onClick={() => notifyDispatched(app.id, app.form_type)} style={{ ...sidebarBtnBase, background: '#0ea5e9', color: 'white' }}>
+                                                    &#9993; {['Application for Supplementary Examinations Registration', 'Application for Repeating Examinations Registration (CIE and ESE)', 'Application for Re-Totalling of Marks'].includes(app.form_type) ? 'Notify Student' : ['DISPATCHED', 'COMPLETED'].includes(app.status) ? 'Notify: Hard Copy Dispatched' : `Notify: Document ${app.form_type === 'Application for Migration Certificate' ? 'Uploaded' : 'Dispatched'}`}
+                                                </button>
+                                            )
                                         )}
 
                                         {/* Mark as Completed */}
-                                        {(app.status === 'DISPATCHED' || app.status === 'COMPLETED') && (
+                                        {app.status === 'DISPATCHED' && (
                                             <button className="btn-complete" onClick={() => markAsCompleted(app.id)} style={{ ...sidebarBtnBase, background: '#10b981', color: 'white' }}>
                                                 <CheckCircle size={16} /> Mark as Completed
                                             </button>

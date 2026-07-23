@@ -781,6 +781,7 @@ async function sendDocumentDispatchedEmail(env, application, programme = null, t
             const isMigration = application.form_type === 'Application for Migration Certificate';
             const isExamRegistration = application.form_type === 'Application for Supplementary Examinations Registration'
                 || application.form_type === 'Application for Repeating Examinations Registration (CIE and ESE)';
+            const isRetotalling = application.form_type === 'Application for Re-Totalling of Marks';
             const hasSoftCopy = !isMigration && !isExamRegistration && downloadLinks.length > 0 && !trackingNumber;
             const actionWord = isMigration ? 'Uploaded' : hasSoftCopy ? 'Ready' : 'Dispatched';
             const processedOn = new Date().toLocaleDateString('en-IN', { day: '2-digit', month: 'long', year: 'numeric' });
@@ -806,6 +807,8 @@ async function sendDocumentDispatchedEmail(env, application, programme = null, t
                 content = 'Your application has been processed and your document has been uploaded by the Office of the Controller of Examinations, SSSIHL. You may download it from the Track Application page on the portal.';
             } else if (isExamRegistration) {
                 content = 'Your application has been processed and your exam registration has been confirmed by the Office of the Controller of Examinations, SSSIHL.';
+            } else if (isRetotalling) {
+                content = 'Your Re-Totalling application has been processed by the Office of the Controller of Examinations, SSSIHL.';
             } else if (hasSoftCopy) {
                 const softCopyMessages = {
                     'Application for CGPA to Percentage Conversion': 'Your CGPA to Percentage Conversion certificate is now ready for download. Please click the button below to download your document from the portal.',
@@ -821,7 +824,7 @@ async function sendDocumentDispatchedEmail(env, application, programme = null, t
             } else {
                 content = 'Your application has been processed and your document has been dispatched from the Office of the Controller of Examinations, SSSIHL. Please collect or expect to receive your document shortly.';
             }
-            const emailTitle = isExamRegistration ? 'Application Processed' : `Document ${actionWord}`;
+            const emailTitle = (isExamRegistration || (isRetotalling && !hasSoftCopy)) ? 'Application Processed' : `Document ${actionWord}`;
             const htmlBody = renderEmailTemplate({
                 title: emailTitle,
                 greeting: `Sai Ram!<br><br>Dear ${escapeHtml(application.applicant_name)},`,
@@ -842,7 +845,7 @@ async function sendDocumentDispatchedEmail(env, application, programme = null, t
 
             await sendEmail(accessToken, {
                 to: application.student_email,
-                subject: isExamRegistration ? `Application Processed : ${application.form_type} (${application.id})` : `Document ${actionWord} : ${application.form_type} (${application.id})`,
+                subject: (isExamRegistration || (isRetotalling && !hasSoftCopy)) ? `Application Processed : ${application.form_type} (${application.id})` : `Document ${actionWord} : ${application.form_type} (${application.id})`,
                 htmlBody
             });
             console.log(`Document dispatched email sent for app ${application.id}`);
@@ -889,7 +892,7 @@ async function handleNotifyDispatched(request, env, corsHeaders) {
                 headers: { ...corsHeaders, 'Content-Type': 'application/json' }
             });
         }
-        const isFollowUp = application.status === 'DISPATCHED';
+        const isFollowUp = ['DISPATCHED', 'COMPLETED'].includes(application.status);
 
         // Fetch programme from form-specific table if available
         const dispatchFormTableMap = {
@@ -963,9 +966,11 @@ async function handleNotifyDispatched(request, env, corsHeaders) {
 
         await sendDocumentDispatchedEmail(env, application, programme, trackingNumber || null, digilockerUrl, deliveryPreference, downloadLinks, isFollowUp);
 
-        await env.DB.prepare(
-            `UPDATE applications SET status = 'DISPATCHED', updated_at = CURRENT_TIMESTAMP WHERE id = ?`
-        ).bind(applicationId).run();
+        if (application.status !== 'COMPLETED') {
+            await env.DB.prepare(
+                `UPDATE applications SET status = 'DISPATCHED', updated_at = CURRENT_TIMESTAMP WHERE id = ?`
+            ).bind(applicationId).run();
+        }
 
         await logAuditEvent(env, admin.username, 'DISPATCHED', applicationId, { trackingNumber: trackingNumber || null });
 
