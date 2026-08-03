@@ -1108,14 +1108,32 @@ async function handleDeleteResponseFile(fileId, request, env, corsHeaders) {
 
     await env.DB.prepare('DELETE FROM file_blobs WHERE id = ?').bind(fileId).run();
 
+    // If that was the last response document, the student was already notified it's ready —
+    // pull the application back to APPROVED so admins re-upload and re-notify before it goes out again.
+    let statusReverted = false;
+    const remaining = await env.DB.prepare(
+        'SELECT COUNT(*) as count FROM file_blobs WHERE application_id = ? AND is_response = TRUE'
+    ).bind(file.application_id).first();
+
+    if (remaining.count === 0) {
+        const application = await env.DB.prepare('SELECT status FROM applications WHERE id = ?').bind(file.application_id).first();
+        if (application && ['DISPATCHED', 'COMPLETED'].includes(application.status)) {
+            await env.DB.prepare(
+                `UPDATE applications SET status = 'APPROVED', updated_at = CURRENT_TIMESTAMP WHERE id = ?`
+            ).bind(file.application_id).run();
+            statusReverted = true;
+        }
+    }
+
     await logAuditEvent(env, admin.username, 'RESPONSE_DELETED', file.application_id, {
         fileName: file.file_name,
-        uploadedBy: file.uploaded_by || 'Admin'
+        uploadedBy: file.uploaded_by || 'Admin',
+        statusReverted
     });
 
-    console.log(`Response document deleted: ${file.file_name} for app ${file.application_id} by admin ${admin.username}`);
+    console.log(`Response document deleted: ${file.file_name} for app ${file.application_id} by admin ${admin.username}${statusReverted ? ' (status reverted to APPROVED)' : ''}`);
 
-    return new Response(JSON.stringify({ success: true, message: 'Response document removed' }), {
+    return new Response(JSON.stringify({ success: true, message: 'Response document removed', statusReverted }), {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' }
     });
 }

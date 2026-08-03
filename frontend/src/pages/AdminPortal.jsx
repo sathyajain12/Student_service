@@ -1701,10 +1701,14 @@ export default function AdminPortal() {
             const data = await response.json();
 
             if (response.ok) {
-                showToast('Uploaded document removed successfully!', 'success');
+                showToast(data.statusReverted
+                    ? 'Document removed — application moved back to Approved. Re-upload and notify the student when ready.'
+                    : 'Uploaded document removed successfully!', 'success');
                 setUploadError(null);
                 setUploadSuccess(false);
                 fetchAppDetails(applicationId);
+                fetchStats();
+                fetchApplications();
             } else {
                 showToast('Error: ' + (data.error || 'Failed to remove document'), 'error');
             }
