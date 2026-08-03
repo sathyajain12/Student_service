@@ -236,6 +236,7 @@ const getAuditActionStyle = (action) => {
         DISPATCHED: { background: '#f0f9ff', color: '#0369a1', border: '1px solid #bae6fd' },
         HOLD_RESOLVED: { background: '#faf5ff', color: '#7c3aed', border: '1px solid #e9d5ff' },
         RESPONSE_UPLOADED: { background: '#eef2ff', color: '#4338ca', border: '1px solid #c7d2fe' },
+        RESPONSE_DELETED: { background: '#fef2f2', color: '#dc2626', border: '1px solid #fecaca' },
         FORM_TOGGLED: { background: '#f8fafc', color: '#475569', border: '1px solid #e2e8f0' },
         LOGIN: { background: '#f8fafc', color: '#475569', border: '1px solid #e2e8f0' },
     };
@@ -261,6 +262,7 @@ export default function AdminPortal() {
     const [uploading, setUploading] = useState(false);
     const [uploadError, setUploadError] = useState(null);
     const [uploadSuccess, setUploadSuccess] = useState(false);
+    const [deletingFileId, setDeletingFileId] = useState(null);
     const [toast, setToast] = useState(null);
     const [confirmModal, setConfirmModal] = useState(null);
     const [showEditModal, setShowEditModal] = useState(false);
@@ -1674,6 +1676,46 @@ export default function AdminPortal() {
         }
     };
 
+    const removeResponseDocument = (file, applicationId) => {
+        setConfirmModal({
+            title: 'Remove Uploaded Document',
+            message: `Are you sure you want to remove "${file.file_name}"? The student will no longer be able to download it. This cannot be undone.`,
+            confirmText: 'Yes, Remove',
+            confirmColor: '#ef4444',
+            confirmGradient: 'linear-gradient(135deg, #ef4444 0%, #dc2626 100%)',
+            onConfirm: () => {
+                setConfirmModal(null);
+                doRemoveResponseDocument(file.id, applicationId);
+            }
+        });
+    };
+
+    const doRemoveResponseDocument = async (fileId, applicationId) => {
+        setDeletingFileId(fileId);
+        try {
+            const response = await fetch(`${API_URL}/admin/response-file/${fileId}`, {
+                method: 'DELETE',
+                headers: { 'Authorization': `Bearer ${token}` }
+            });
+
+            const data = await response.json();
+
+            if (response.ok) {
+                showToast('Uploaded document removed successfully!', 'success');
+                setUploadError(null);
+                setUploadSuccess(false);
+                fetchAppDetails(applicationId);
+            } else {
+                showToast('Error: ' + (data.error || 'Failed to remove document'), 'error');
+            }
+        } catch (err) {
+            console.error('Failed to remove response document:', err);
+            showToast('Failed to remove document. Please try again.', 'error');
+        } finally {
+            setDeletingFileId(null);
+        }
+    };
+
     const handleFileSelect = (event, applicationId) => {
         const file = event.target.files[0];
         if (file) {
@@ -2232,7 +2274,7 @@ export default function AdminPortal() {
 
     const AuditLogPanel = () => {
         if (!showAuditLog) return null;
-        const ACTION_FILTERS = ['ALL', 'LOGIN', 'APPROVED', 'REJECTED', 'COMPLETED', 'DISPATCHED', 'HOLD_RESOLVED', 'RESPONSE_UPLOADED', 'DELETED', 'FORM_TOGGLED'];
+        const ACTION_FILTERS = ['ALL', 'LOGIN', 'APPROVED', 'REJECTED', 'COMPLETED', 'DISPATCHED', 'HOLD_RESOLVED', 'RESPONSE_UPLOADED', 'RESPONSE_DELETED', 'DELETED', 'FORM_TOGGLED'];
         return (
             <div style={{ position: 'fixed', inset: 0, zIndex: 9998, background: 'rgba(0,0,0,0.5)', display: 'flex', justifyContent: 'flex-end' }}>
                 <div style={{ width: 'min(800px, 95vw)', height: '100%', background: 'white', display: 'flex', flexDirection: 'column', boxShadow: '-4px 0 24px rgba(0,0,0,0.12)' }}>
@@ -2936,6 +2978,22 @@ export default function AdminPortal() {
                                                                 <Eye size={13} /> View
                                                             </button>
                                                             <button className="det-dl-btn" onClick={() => downloadFile(file.id, file.file_name)} style={downloadBtnStyle}><Download size={14} /> Download</button>
+                                                            <button
+                                                                onClick={() => removeResponseDocument(file, app.id)}
+                                                                disabled={deletingFileId === file.id}
+                                                                title="Remove this uploaded document"
+                                                                style={{
+                                                                    display: 'flex', alignItems: 'center', gap: '5px',
+                                                                    padding: '6px 14px', fontSize: '0.8rem', fontWeight: 600,
+                                                                    background: 'white', border: '1px solid #fecaca',
+                                                                    color: '#dc2626', borderRadius: '8px',
+                                                                    cursor: deletingFileId === file.id ? 'not-allowed' : 'pointer',
+                                                                    opacity: deletingFileId === file.id ? 0.6 : 1,
+                                                                    fontFamily: 'inherit'
+                                                                }}
+                                                            >
+                                                                <Trash2 size={13} /> {deletingFileId === file.id ? 'Removing...' : 'Remove'}
+                                                            </button>
                                                         </div>
                                                     </div>
                                                 ))}

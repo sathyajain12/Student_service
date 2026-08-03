@@ -289,6 +289,11 @@ export default {
                     return await handleUploadResponse(request, env, corsHeaders);
                 }
 
+                if (url.pathname.startsWith('/admin/response-file/') && request.method === 'DELETE') {
+                    const fileId = url.pathname.split('/').pop();
+                    return await handleDeleteResponseFile(fileId, request, env, corsHeaders);
+                }
+
                 if (url.pathname === '/admin/test-director-email' && request.method === 'POST') {
                     return await handleTestDirectorEmail(request, env, corsHeaders);
                 }
@@ -1071,6 +1076,48 @@ async function handleUploadResponse(request, env, corsHeaders) {
             headers: { ...corsHeaders, 'Content-Type': 'application/json' }
         });
     }
+}
+
+async function handleDeleteResponseFile(fileId, request, env, corsHeaders) {
+    const admin = await verifyAdminToken(request, env);
+    if (!admin) {
+        return new Response(JSON.stringify({ error: 'Unauthorized' }), {
+            status: 401,
+            headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+        });
+    }
+
+    const file = await env.DB.prepare(
+        'SELECT id, application_id, file_name, is_response, uploaded_by FROM file_blobs WHERE id = ?'
+    ).bind(fileId).first();
+
+    if (!file) {
+        return new Response(JSON.stringify({ error: 'File not found' }), {
+            status: 404,
+            headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+        });
+    }
+
+    // Only admin-uploaded response documents can be removed — student submissions are evidence
+    if (!file.is_response) {
+        return new Response(JSON.stringify({ error: 'Only uploaded response documents can be removed' }), {
+            status: 400,
+            headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+        });
+    }
+
+    await env.DB.prepare('DELETE FROM file_blobs WHERE id = ?').bind(fileId).run();
+
+    await logAuditEvent(env, admin.username, 'RESPONSE_DELETED', file.application_id, {
+        fileName: file.file_name,
+        uploadedBy: file.uploaded_by || 'Admin'
+    });
+
+    console.log(`Response document deleted: ${file.file_name} for app ${file.application_id} by admin ${admin.username}`);
+
+    return new Response(JSON.stringify({ success: true, message: 'Response document removed' }), {
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+    });
 }
 
 async function handleExportApplication(id, request, env, corsHeaders) {
