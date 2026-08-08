@@ -4020,16 +4020,34 @@ async function handleConvocation2026(formData, request, env, corsHeaders) {
     const yy = String(now.getFullYear()).slice(-2);
     const mm = String(now.getMonth() + 1).padStart(2, '0');
     const regSuffix = (regNo || '').replace(/[^A-Z0-9]/gi, '').toUpperCase();
-    const appId = `CONV${yy}${mm}${regSuffix}`;
+    if (!regSuffix) {
+        return new Response(JSON.stringify({ error: 'Registration number is required.' }), {
+            status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+        });
+    }
+    const generatedId = `CONV${yy}${mm}${regSuffix}`;
 
+    // Convocation IDs are CONV + yy + mm + reg_no, so the month sits in characters 5-8 and the
+    // normalised reg_no from character 9 on. Matching that tail finds the student's earlier
+    // registration whatever month it was filed in — a plain id match would miss it after a month
+    // rollover, and a plain reg_no match would miss it if they typed the number differently.
     const existing = await env.DB.prepare(
-        'SELECT id FROM applications WHERE id = ?'
-    ).bind(appId).first();
+        `SELECT id, status FROM applications
+         WHERE form_type = ? AND (substr(id, 9) = ? OR reg_no = ?)
+         ORDER BY created_at DESC LIMIT 1`
+    ).bind(CONV_FORM_TYPE, regSuffix, regNo).first();
+
+    const appId = existing ? existing.id : generatedId;
+
     const existingFiles = existing
         ? await env.DB.prepare('SELECT id FROM file_blobs WHERE application_id = ?').bind(appId).first()
         : null;
 
-    if (existing && existingFiles) {
+    // A rejection means the student was asked to correct something and send it back in,
+    // so a rejected registration is reopened in place instead of blocking the submission.
+    const isReapplication = existing?.status === 'REJECTED';
+
+    if (existing && existingFiles && !isReapplication) {
         return new Response(JSON.stringify({
             error: `You have already submitted a convocation registration. Your application ID is ${appId}. Please email convocation@sssihl.edu.in if you need assistance.`
         }), { status: 409, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
@@ -4040,6 +4058,17 @@ async function handleConvocation2026(formData, request, env, corsHeaders) {
             `INSERT INTO applications (id, student_email, form_type, applicant_name, reg_no, campus, programme)
              VALUES (?, ?, ?, ?, ?, ?, ?)`
         ).bind(appId, email, formType, applicantName, regNo, campus, programme).run();
+    } else if (isReapplication) {
+        // Clear the rejected attempt so this submission fully replaces it, then reopen the record
+        await env.DB.prepare('DELETE FROM file_blobs WHERE application_id = ?').bind(appId).run();
+        await env.DB.prepare('DELETE FROM form_convocation_2026 WHERE application_id = ?').bind(appId).run();
+        await env.DB.prepare(
+            `UPDATE applications
+             SET status = 'PENDING', student_email = ?, applicant_name = ?, campus = ?, programme = ?,
+                 updated_at = datetime('now')
+             WHERE id = ?`
+        ).bind(email, applicantName, campus, programme, appId).run();
+        await logAuditEvent(env, 'Student', 'CONV_RESUBMITTED', appId, { regNo, previousStatus: 'REJECTED' });
     }
 
     await env.DB.prepare(

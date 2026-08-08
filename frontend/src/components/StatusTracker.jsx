@@ -34,12 +34,12 @@ function ConvocationStatusView({ application, fmtDate, downloadResponseDocument 
 
     const statusLabel = isDispatched ? 'Certificate Ready' : isApproved ? 'Confirmed' : isRejected ? 'Rejected' : 'Pending Review';
     const statusDesc = isDispatched
-        ? 'Your registration is confirmed. Please check with the Registrar for certificate collection details.'
+        ? 'Your registration is confirmed. Please check with the Office of the Controller of Examinations for certificate collection details.'
         : isApproved
-        ? 'Your convocation registration has been confirmed by the Registrar.'
+        ? 'Your convocation registration has been confirmed by the Office of the Controller of Examinations.'
         : isRejected
-        ? "Your registration was not approved. Please contact the Registrar's Office."
-        : "Your application is currently being reviewed by the Registrar's Office.";
+        ? 'Your registration was not approved. Please correct the point noted in the rejection email and submit your registration again.'
+        : 'Your application is currently being reviewed by the Office of the Controller of Examinations.';
 
     const statusBg = isDone ? '#dcfce7' : isRejected ? '#fee2e2' : '#dbeafe';
     const statusColor = isDone ? '#166534' : isRejected ? '#991b1b' : '#1e40af';
